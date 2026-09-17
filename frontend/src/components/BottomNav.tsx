@@ -8,24 +8,18 @@ const ITEMS = [
 
 export function BottomNav() {
   return (
-    <nav className="sticky bottom-0 border-t border-neutral-200 bg-white">
-      <ul className="flex justify-around py-2">
-        {ITEMS.map((item) => (
-          <li key={item.to}>
-            <NavLink
-              to={item.to}
-              className={({ isActive }) =>
-                `flex flex-col items-center gap-0.5 px-3 py-1 text-xs ${
-                  isActive ? 'text-amber-600 font-semibold' : 'text-neutral-500'
-                }`
-              }
-            >
-              <span className="text-lg">{item.icon}</span>
-              {item.label}
-            </NavLink>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <div className="dock md:hidden">
+      {ITEMS.map((item) => (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          end={item.to === '/'}
+          className={({ isActive }) => (isActive ? 'dock-active' : '')}
+        >
+          <span className="text-lg">{item.icon}</span>
+          <span className="dock-label">{item.label}</span>
+        </NavLink>
+      ))}
+    </div>
   )
 }

@@ -1,5 +1,11 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+
+const NAV_LINKS = [
+  { to: '/', label: 'Explorar' },
+  { to: '/ranking', label: 'Ranking' },
+  { to: '/wishlist', label: 'Deseados' },
+]
 
 export function TopBar() {
   const { user, logout } = useAuth()
@@ -11,31 +17,48 @@ export function TopBar() {
   }
 
   return (
-    <header className="flex items-center justify-between border-b border-neutral-200 px-4 py-3">
-      <Link to="/" className="text-sm font-semibold text-neutral-800">
-        🍔 Hamburgueserías
-      </Link>
+    <header className="navbar border-b border-base-300 px-4 md:px-6">
+      <div className="navbar-start">
+        <NavLink to="/" className="text-sm font-semibold" end>
+          🍔 Hamburgueserías
+        </NavLink>
+      </div>
 
-      {user ? (
-        <div className="flex items-center gap-2 text-sm">
-          <span className="font-medium text-neutral-700">{user.name}</span>
-          <button onClick={handleLogout} className="text-xs text-neutral-400 hover:text-neutral-600 hover:underline">
-            Salir
-          </button>
-        </div>
-      ) : (
-        <div className="flex items-center gap-2 text-sm">
-          <Link to="/login" className="text-neutral-600 hover:underline">
-            Iniciar sesión
-          </Link>
-          <Link
-            to="/register"
-            className="rounded-full bg-amber-500 px-3 py-1 text-xs font-medium text-white hover:bg-amber-600"
-          >
-            Registrarse
-          </Link>
-        </div>
-      )}
+      <div className="navbar-center hidden md:flex">
+        <ul className="menu menu-horizontal gap-1 px-1">
+          {NAV_LINKS.map((link) => (
+            <li key={link.to}>
+              <NavLink
+                to={link.to}
+                end={link.to === '/'}
+                className={({ isActive }) => (isActive ? 'menu-active' : '')}
+              >
+                {link.label}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="navbar-end gap-2 text-sm">
+        {user ? (
+          <>
+            <span className="hidden font-medium sm:inline">{user.name}</span>
+            <button onClick={handleLogout} className="btn btn-ghost btn-sm">
+              Salir
+            </button>
+          </>
+        ) : (
+          <>
+            <NavLink to="/login" className="btn btn-ghost btn-sm">
+              Iniciar sesión
+            </NavLink>
+            <NavLink to="/register" className="btn btn-primary btn-sm">
+              Registrarse
+            </NavLink>
+          </>
+        )}
+      </div>
     </header>
   )
 }

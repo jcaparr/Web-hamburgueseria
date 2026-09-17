@@ -87,69 +87,67 @@ export function BurgerJointDetail() {
     }
   }
 
-  if (!burgerJoint) return <p className="p-4 text-sm text-neutral-400">Cargando...</p>
+  if (!burgerJoint) return <p className="p-4 text-sm text-base-content/60">Cargando...</p>
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <img
-        src={burgerJoint.photoUrl ?? 'https://placehold.co/600x300?text=%F0%9F%8D%94'}
-        alt={burgerJoint.name}
-        className="h-48 w-full rounded-xl object-cover"
-      />
+    <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-4xl md:grid md:grid-cols-2 md:gap-6 md:p-0">
+      <div className="flex flex-col gap-4">
+        <img
+          src={burgerJoint.photoUrl ?? 'https://placehold.co/600x300?text=%F0%9F%8D%94'}
+          alt={burgerJoint.name}
+          className="h-48 w-full rounded-xl object-cover"
+        />
 
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">{burgerJoint.name}</h1>
-          <p className="text-sm text-neutral-500">{burgerJoint.address}</p>
-          <p className="text-sm text-amber-600">
-            {burgerJoint.averageScore
-              ? `★ ${burgerJoint.averageScore.toFixed(1)} (${burgerJoint.ratingsCount} reseñas)`
-              : 'Todavía sin calificaciones'}
-          </p>
-          <a
-            href={mapsUrl(burgerJoint.latitude, burgerJoint.longitude, `${burgerJoint.name} ${burgerJoint.address}`)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-blue-600 hover:underline"
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-xl font-semibold">{burgerJoint.name}</h1>
+            <p className="text-sm text-base-content/60">{burgerJoint.address}</p>
+            <p className="text-sm text-primary">
+              {burgerJoint.averageScore
+                ? `★ ${burgerJoint.averageScore.toFixed(1)} (${burgerJoint.ratingsCount} reseñas)`
+                : 'Todavía sin calificaciones'}
+            </p>
+            <a
+              href={mapsUrl(burgerJoint.latitude, burgerJoint.longitude, `${burgerJoint.name} ${burgerJoint.address}`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="link link-hover text-xs text-info"
+            >
+              📍 Ver en Maps
+            </a>
+          </div>
+
+          <button
+            onClick={toggleWishlist}
+            aria-pressed={burgerJoint.inWishlist}
+            className="btn btn-ghost btn-circle text-2xl"
+            title={burgerJoint.inWishlist ? 'Quitar de deseados' : 'Guardar en deseados'}
           >
-            📍 Ver en Maps
-          </a>
+            {burgerJoint.inWishlist ? '❤️' : '🤍'}
+          </button>
         </div>
 
-        <button
-          onClick={toggleWishlist}
-          aria-pressed={burgerJoint.inWishlist}
-          className="text-2xl"
-          title={burgerJoint.inWishlist ? 'Quitar de deseados' : 'Guardar en deseados'}
-        >
-          {burgerJoint.inWishlist ? '❤️' : '🤍'}
-        </button>
+        <form onSubmit={submitRating} className="card card-border flex flex-col gap-2 p-3">
+          <span className="text-sm font-medium">{myRating ? 'Editá tu opinión' : 'Dejá tu opinión'}</span>
+          <Stars value={score} onChange={setScore} size={28} />
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="¿Qué te pareció?"
+            maxLength={1000}
+            className="textarea textarea-bordered min-h-20 focus:border-primary"
+          />
+          {error && <p className="text-xs text-error">{error}</p>}
+          <button type="submit" disabled={submitting} className="btn btn-primary rounded-full">
+            {submitting ? 'Guardando...' : myRating ? 'Actualizar reseña' : 'Publicar reseña'}
+          </button>
+        </form>
       </div>
-
-      <form onSubmit={submitRating} className="flex flex-col gap-2 rounded-xl border border-neutral-200 p-3">
-        <span className="text-sm font-medium">{myRating ? 'Editá tu opinión' : 'Dejá tu opinión'}</span>
-        <Stars value={score} onChange={setScore} size={28} />
-        <textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder="¿Qué te pareció?"
-          maxLength={1000}
-          className="min-h-20 rounded-lg border border-neutral-300 p-2 text-sm outline-none focus:border-amber-500"
-        />
-        {error && <p className="text-xs text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-full bg-amber-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-        >
-          {submitting ? 'Guardando...' : myRating ? 'Actualizar reseña' : 'Publicar reseña'}
-        </button>
-      </form>
 
       <div className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold">Reseñas ({ratings.length})</h2>
         {ratings.map((r) => (
-          <div key={r.id} className="rounded-lg border border-neutral-200 p-3">
+          <div key={r.id} className="card card-border p-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">
                 {r.userName}
@@ -157,11 +155,11 @@ export function BurgerJointDetail() {
               </span>
               <Stars value={r.score} size={14} />
             </div>
-            {r.comment && <p className="mt-1 text-sm text-neutral-600">{r.comment}</p>}
+            {r.comment && <p className="mt-1 text-sm text-base-content/70">{r.comment}</p>}
           </div>
         ))}
         {ratings.length === 0 && (
-          <p className="text-sm text-neutral-400">Sé el primero en dejar una reseña.</p>
+          <p className="text-sm text-base-content/60">Sé el primero en dejar una reseña.</p>
         )}
       </div>
     </div>

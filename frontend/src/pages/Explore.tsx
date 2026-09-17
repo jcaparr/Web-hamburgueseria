@@ -22,7 +22,7 @@ export function Explore() {
   }, [query])
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-4 p-4 md:p-0">
       <h1 className="text-xl font-semibold">Explorar hamburgueserías</h1>
 
       <input
@@ -30,24 +30,24 @@ export function Explore() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Buscar hamburguesería..."
-        className="rounded-full border border-neutral-300 px-4 py-2 text-sm outline-none focus:border-amber-500"
+        className="input input-bordered w-full rounded-full focus:border-primary"
       />
 
-      {loading && <p className="text-sm text-neutral-400">Buscando...</p>}
+      {loading && <p className="text-sm text-base-content/60">Buscando...</p>}
 
-      <ul className="flex flex-col gap-3">
+      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((b) => (
-          <li key={b.id} className="rounded-xl border border-neutral-200 p-3 hover:border-amber-400">
-            <Link to={`/burger-joints/${b.id}`} className="flex gap-3">
+          <li key={b.id} className="card card-border hover:border-primary">
+            <Link to={`/burger-joints/${b.id}`} className="flex flex-1 gap-3 p-3">
               <img
                 src={b.photoUrl ?? 'https://placehold.co/80x80?text=%F0%9F%8D%94'}
                 alt={b.name}
                 className="h-16 w-16 rounded-lg object-cover"
               />
-              <div className="flex flex-col justify-center gap-1">
-                <span className="font-medium">{b.name}</span>
-                <span className="text-xs text-neutral-500">{b.address}</span>
-                <span className="text-xs text-amber-600">
+              <div className="flex flex-col justify-center gap-1 overflow-hidden">
+                <span className="truncate font-medium">{b.name}</span>
+                <span className="truncate text-xs text-base-content/60">{b.address}</span>
+                <span className="text-xs text-primary">
                   {b.averageScore ? `★ ${b.averageScore.toFixed(1)} (${b.ratingsCount})` : 'Sin calificaciones'}
                 </span>
               </div>
@@ -56,14 +56,14 @@ export function Explore() {
               href={mapsUrl(b.latitude, b.longitude, `${b.name} ${b.address}`)}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 inline-block text-xs text-blue-600 hover:underline"
+              className="link link-hover self-end pr-3 pb-3 text-xs text-info"
             >
               📍 Ver en Maps
             </a>
           </li>
         ))}
         {!loading && items.length === 0 && (
-          <p className="text-sm text-neutral-400">No encontramos hamburgueserías con ese nombre.</p>
+          <p className="text-sm text-base-content/60">No encontramos hamburgueserías con ese nombre.</p>
         )}
       </ul>
     </div>
