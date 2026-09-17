@@ -1,0 +1,29 @@
+# Backend (Maven / Java)
+backend/target/
+*.class
+*.log
+
+# Frontend (Node)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# Env / secrets
+.env
+*.env
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Herramientas locales / clones sueltos
+.claude/
+/auth/
+tools/
+/.vite/
