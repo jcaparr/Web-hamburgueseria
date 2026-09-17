@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
-import { apiClient } from '../api/client'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { apiClient, SESSION_EXPIRED_EVENT } from '../api/client'
 import type { User } from '../types'
 
 interface AuthContextValue {
@@ -41,6 +41,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('user')
     setUser(null)
   }
+
+  useEffect(() => {
+    function handleSessionExpired() {
+      setUser(null)
+    }
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired)
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired)
+  }, [])
 
   return (
     <AuthContext.Provider value={{ user, login, register, logout }}>

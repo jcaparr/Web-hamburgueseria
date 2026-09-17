@@ -4,6 +4,7 @@ import { apiClient } from '../api/client'
 import { Stars } from '../components/Stars'
 import { useAuth } from '../context/AuthContext'
 import type { BurgerJoint, PageResponse, Rating } from '../types'
+import { isSessionExpired } from '../utils/errors'
 import { mapsUrl } from '../utils/maps'
 
 export function BurgerJointDetail() {
@@ -40,12 +41,20 @@ export function BurgerJointDetail() {
     if (!user) return navigate('/login')
     if (!burgerJoint) return
 
-    if (burgerJoint.inWishlist) {
-      await apiClient.delete(`/wishlist/${burgerJoint.id}`)
-    } else {
-      await apiClient.post(`/wishlist/${burgerJoint.id}`)
+    try {
+      if (burgerJoint.inWishlist) {
+        await apiClient.delete(`/wishlist/${burgerJoint.id}`)
+      } else {
+        await apiClient.post(`/wishlist/${burgerJoint.id}`)
+      }
+      load()
+    } catch (err) {
+      if (isSessionExpired(err)) {
+        navigate('/login')
+      } else {
+        setError('No pudimos actualizar tu lista de deseados')
+      }
     }
-    load()
   }
 
   async function submitRating(e: FormEvent) {
@@ -67,8 +76,12 @@ export function BurgerJointDetail() {
         setComment('')
       }
       load()
-    } catch {
-      setError('No pudimos guardar tu reseña')
+    } catch (err) {
+      if (isSessionExpired(err)) {
+        navigate('/login')
+      } else {
+        setError('No pudimos guardar tu reseña')
+      }
     } finally {
       setSubmitting(false)
     }

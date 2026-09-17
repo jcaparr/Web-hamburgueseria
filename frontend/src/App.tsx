@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
+import { TopBar } from './components/TopBar'
 import { AuthProvider } from './context/AuthContext'
 import { BurgerJointDetail } from './pages/BurgerJointDetail'
 import { Explore } from './pages/Explore'
@@ -13,6 +14,7 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <div className="flex flex-1 flex-col">
+          <TopBar />
           <main className="flex-1 overflow-y-auto pb-4">
             <Routes>
               <Route path="/" element={<Explore />} />

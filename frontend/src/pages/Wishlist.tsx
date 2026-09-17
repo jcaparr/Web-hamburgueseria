@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import type { BurgerJoint } from '../types'
+import { isSessionExpired } from '../utils/errors'
 import { mapsUrl } from '../utils/maps'
 
 export function Wishlist() {
@@ -19,12 +20,19 @@ export function Wishlist() {
     apiClient
       .get<BurgerJoint[]>('/wishlist')
       .then(({ data }) => setItems(data))
+      .catch((err) => {
+        if (isSessionExpired(err)) navigate('/login')
+      })
       .finally(() => setLoading(false))
   }, [user, navigate])
 
   async function remove(id: number) {
-    await apiClient.delete(`/wishlist/${id}`)
-    setItems((prev) => prev.filter((b) => b.id !== id))
+    try {
+      await apiClient.delete(`/wishlist/${id}`)
+      setItems((prev) => prev.filter((b) => b.id !== id))
+    } catch (err) {
+      if (isSessionExpired(err)) navigate('/login')
+    }
   }
 
   return (
