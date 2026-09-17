@@ -1,34 +1,34 @@
-export interface Hamburgueseria {
+export interface BurgerJoint {
   id: number
-  nombre: string
-  direccion: string
-  zona: string | null
-  fotoUrl: string | null
-  latitud: number | null
-  longitud: number | null
-  promedio: number | null
-  cantidadCalificaciones: number
-  enListaDeseados: boolean
+  name: string
+  address: string
+  area: string | null
+  photoUrl: string | null
+  latitude: number | null
+  longitude: number | null
+  averageScore: number | null
+  ratingsCount: number
+  inWishlist: boolean
 }
 
-export interface Calificacion {
+export interface Rating {
   id: number
-  usuarioId: number
-  usuarioNombre: string
-  puntaje: number
-  comentario: string | null
-  fecha: string
+  userId: number
+  userName: string
+  score: number
+  comment: string | null
+  createdAt: string
 }
 
 export interface RankingItem {
-  hamburgueseriaId: number
-  nombre: string
-  direccion: string
-  zona: string | null
-  fotoUrl: string | null
-  promedio: number
-  cantidadCalificaciones: number
-  miPuntaje: number | null
+  burgerJointId: number
+  name: string
+  address: string
+  area: string | null
+  photoUrl: string | null
+  averageScore: number
+  ratingsCount: number
+  myScore: number | null
 }
 
 export interface PageResponse<T> {
@@ -39,8 +39,8 @@ export interface PageResponse<T> {
   last: boolean
 }
 
-export interface Usuario {
-  usuarioId: number
-  nombre: string
+export interface User {
+  userId: number
+  name: string
   email: string
 }

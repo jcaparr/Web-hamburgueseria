@@ -1,11 +1,11 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
 import { AuthProvider } from './context/AuthContext'
-import { DetalleHamburgueseria } from './pages/DetalleHamburgueseria'
-import { Explorar } from './pages/Explorar'
+import { BurgerJointDetail } from './pages/BurgerJointDetail'
+import { Explore } from './pages/Explore'
 import { Login } from './pages/Login'
 import { Ranking } from './pages/Ranking'
-import { Registro } from './pages/Registro'
+import { Register } from './pages/Register'
 import { Wishlist } from './pages/Wishlist'
 
 export default function App() {
@@ -15,12 +15,12 @@ export default function App() {
         <div className="flex flex-1 flex-col">
           <main className="flex-1 overflow-y-auto pb-4">
             <Routes>
-              <Route path="/" element={<Explorar />} />
-              <Route path="/hamburguesuerias/:id" element={<DetalleHamburgueseria />} />
+              <Route path="/" element={<Explore />} />
+              <Route path="/burger-joints/:id" element={<BurgerJointDetail />} />
               <Route path="/ranking" element={<Ranking />} />
-              <Route path="/deseados" element={<Wishlist />} />
+              <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/registro" element={<Registro />} />
+              <Route path="/register" element={<Register />} />
             </Routes>
           </main>
           <BottomNav />

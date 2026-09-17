@@ -1,20 +1,20 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiClient } from '../api/client'
-import type { Hamburgueseria, PageResponse } from '../types'
+import type { BurgerJoint, PageResponse } from '../types'
 
-export function Explorar() {
+export function Explore() {
   const [query, setQuery] = useState('')
-  const [items, setItems] = useState<Hamburgueseria[]>([])
-  const [cargando, setCargando] = useState(false)
+  const [items, setItems] = useState<BurgerJoint[]>([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      setCargando(true)
+      setLoading(true)
       apiClient
-        .get<PageResponse<Hamburgueseria>>('/hamburguesuerias', { params: { q: query || undefined } })
+        .get<PageResponse<BurgerJoint>>('/burger-joints', { params: { q: query || undefined } })
         .then(({ data }) => setItems(data.content))
-        .finally(() => setCargando(false))
+        .finally(() => setLoading(false))
     }, 300)
 
     return () => clearTimeout(timeout)
@@ -32,31 +32,31 @@ export function Explorar() {
         className="rounded-full border border-neutral-300 px-4 py-2 text-sm outline-none focus:border-amber-500"
       />
 
-      {cargando && <p className="text-sm text-neutral-400">Buscando...</p>}
+      {loading && <p className="text-sm text-neutral-400">Buscando...</p>}
 
       <ul className="flex flex-col gap-3">
-        {items.map((h) => (
-          <li key={h.id}>
+        {items.map((b) => (
+          <li key={b.id}>
             <Link
-              to={`/hamburguesuerias/${h.id}`}
+              to={`/burger-joints/${b.id}`}
               className="flex gap-3 rounded-xl border border-neutral-200 p-3 hover:border-amber-400"
             >
               <img
-                src={h.fotoUrl ?? 'https://placehold.co/80x80?text=%F0%9F%8D%94'}
-                alt={h.nombre}
+                src={b.photoUrl ?? 'https://placehold.co/80x80?text=%F0%9F%8D%94'}
+                alt={b.name}
                 className="h-16 w-16 rounded-lg object-cover"
               />
               <div className="flex flex-col justify-center gap-1">
-                <span className="font-medium">{h.nombre}</span>
-                <span className="text-xs text-neutral-500">{h.direccion}</span>
+                <span className="font-medium">{b.name}</span>
+                <span className="text-xs text-neutral-500">{b.address}</span>
                 <span className="text-xs text-amber-600">
-                  {h.promedio ? `★ ${h.promedio.toFixed(1)} (${h.cantidadCalificaciones})` : 'Sin calificaciones'}
+                  {b.averageScore ? `★ ${b.averageScore.toFixed(1)} (${b.ratingsCount})` : 'Sin calificaciones'}
                 </span>
               </div>
             </Link>
           </li>
         ))}
-        {!cargando && items.length === 0 && (
+        {!loading && items.length === 0 && (
           <p className="text-sm text-neutral-400">No encontramos hamburgueserías con ese nombre.</p>
         )}
       </ul>

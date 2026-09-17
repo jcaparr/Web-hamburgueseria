@@ -2,26 +2,26 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-export function Registro() {
-  const { registrar } = useAuth()
+export function Register() {
+  const { register } = useAuth()
   const navigate = useNavigate()
-  const [nombre, setNombre] = useState('')
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [enviando, setEnviando] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
-    setEnviando(true)
+    setSubmitting(true)
     setError(null)
     try {
-      await registrar(nombre, email, password)
+      await register(name, email, password)
       navigate('/')
     } catch (err: any) {
       setError(err.response?.data?.error ?? 'No pudimos crear tu cuenta')
     } finally {
-      setEnviando(false)
+      setSubmitting(false)
     }
   }
 
@@ -31,8 +31,8 @@ export function Registro() {
       <form onSubmit={onSubmit} className="flex flex-col gap-3">
         <input
           required
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           placeholder="Nombre"
           className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-amber-500"
         />
@@ -56,10 +56,10 @@ export function Registro() {
         {error && <p className="text-xs text-red-600">{error}</p>}
         <button
           type="submit"
-          disabled={enviando}
+          disabled={submitting}
           className="rounded-full bg-amber-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
-          {enviando ? 'Creando...' : 'Crear cuenta'}
+          {submitting ? 'Creando...' : 'Crear cuenta'}
         </button>
       </form>
       <p className="text-sm text-neutral-500">

@@ -8,11 +8,11 @@ export function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [enviando, setEnviando] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
-    setEnviando(true)
+    setSubmitting(true)
     setError(null)
     try {
       await login(email, password)
@@ -20,7 +20,7 @@ export function Login() {
     } catch {
       setError('Email o contraseña incorrectos')
     } finally {
-      setEnviando(false)
+      setSubmitting(false)
     }
   }
 
@@ -47,14 +47,14 @@ export function Login() {
         {error && <p className="text-xs text-red-600">{error}</p>}
         <button
           type="submit"
-          disabled={enviando}
+          disabled={submitting}
           className="rounded-full bg-amber-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
-          {enviando ? 'Ingresando...' : 'Ingresar'}
+          {submitting ? 'Ingresando...' : 'Ingresar'}
         </button>
       </form>
       <p className="text-sm text-neutral-500">
-        ¿No tenés cuenta? <Link to="/registro" className="text-amber-600">Registrate</Link>
+        ¿No tenés cuenta? <Link to="/register" className="text-amber-600">Registrate</Link>
       </p>
     </div>
   )

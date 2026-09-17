@@ -17,7 +17,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
-      localStorage.removeItem('usuario')
+      localStorage.removeItem('user')
     }
     return Promise.reject(error)
   },

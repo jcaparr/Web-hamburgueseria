@@ -2,56 +2,56 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import type { Hamburgueseria } from '../types'
+import type { BurgerJoint } from '../types'
 
 export function Wishlist() {
-  const { usuario } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
-  const [items, setItems] = useState<Hamburgueseria[]>([])
-  const [cargando, setCargando] = useState(true)
+  const [items, setItems] = useState<BurgerJoint[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!usuario) {
+    if (!user) {
       navigate('/login')
       return
     }
     apiClient
-      .get<Hamburgueseria[]>('/wishlist')
+      .get<BurgerJoint[]>('/wishlist')
       .then(({ data }) => setItems(data))
-      .finally(() => setCargando(false))
-  }, [usuario, navigate])
+      .finally(() => setLoading(false))
+  }, [user, navigate])
 
-  async function quitar(id: number) {
+  async function remove(id: number) {
     await apiClient.delete(`/wishlist/${id}`)
-    setItems((prev) => prev.filter((h) => h.id !== id))
+    setItems((prev) => prev.filter((b) => b.id !== id))
   }
 
   return (
     <div className="flex flex-col gap-4 p-4">
       <h1 className="text-xl font-semibold">Lista de deseados</h1>
 
-      {cargando && <p className="text-sm text-neutral-400">Cargando...</p>}
+      {loading && <p className="text-sm text-neutral-400">Cargando...</p>}
 
       <ul className="flex flex-col gap-3">
-        {items.map((h) => (
-          <li key={h.id} className="flex items-center gap-3 rounded-xl border border-neutral-200 p-3">
-            <Link to={`/hamburguesuerias/${h.id}`} className="flex flex-1 items-center gap-3">
+        {items.map((b) => (
+          <li key={b.id} className="flex items-center gap-3 rounded-xl border border-neutral-200 p-3">
+            <Link to={`/burger-joints/${b.id}`} className="flex flex-1 items-center gap-3">
               <img
-                src={h.fotoUrl ?? 'https://placehold.co/64x64?text=%F0%9F%8D%94'}
-                alt={h.nombre}
+                src={b.photoUrl ?? 'https://placehold.co/64x64?text=%F0%9F%8D%94'}
+                alt={b.name}
                 className="h-14 w-14 rounded-lg object-cover"
               />
               <div className="flex flex-col">
-                <span className="font-medium">{h.nombre}</span>
-                <span className="text-xs text-neutral-500">{h.direccion}</span>
+                <span className="font-medium">{b.name}</span>
+                <span className="text-xs text-neutral-500">{b.address}</span>
               </div>
             </Link>
-            <button onClick={() => quitar(h.id)} className="text-xl" title="Quitar de deseados">
+            <button onClick={() => remove(b.id)} className="text-xl" title="Quitar de deseados">
               ❤️
             </button>
           </li>
         ))}
-        {!cargando && items.length === 0 && (
+        {!loading && items.length === 0 && (
           <p className="text-sm text-neutral-400">Todavía no guardaste ninguna hamburguesería.</p>
         )}
       </ul>

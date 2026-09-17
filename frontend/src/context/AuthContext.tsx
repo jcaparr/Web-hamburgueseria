@@ -1,49 +1,49 @@
 import { createContext, useContext, useState, type ReactNode } from 'react'
 import { apiClient } from '../api/client'
-import type { Usuario } from '../types'
+import type { User } from '../types'
 
 interface AuthContextValue {
-  usuario: Usuario | null
+  user: User | null
   login: (email: string, password: string) => Promise<void>
-  registrar: (nombre: string, email: string, password: string) => Promise<void>
+  register: (name: string, email: string, password: string) => Promise<void>
   logout: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-function leerUsuarioGuardado(): Usuario | null {
-  const raw = localStorage.getItem('usuario')
-  return raw ? (JSON.parse(raw) as Usuario) : null
+function readStoredUser(): User | null {
+  const raw = localStorage.getItem('user')
+  return raw ? (JSON.parse(raw) as User) : null
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [usuario, setUsuario] = useState<Usuario | null>(leerUsuarioGuardado)
+  const [user, setUser] = useState<User | null>(readStoredUser)
 
-  function guardarSesion(data: { token: string; usuarioId: number; nombre: string; email: string }) {
-    const usuarioActual: Usuario = { usuarioId: data.usuarioId, nombre: data.nombre, email: data.email }
+  function saveSession(data: { token: string; userId: number; name: string; email: string }) {
+    const currentUser: User = { userId: data.userId, name: data.name, email: data.email }
     localStorage.setItem('token', data.token)
-    localStorage.setItem('usuario', JSON.stringify(usuarioActual))
-    setUsuario(usuarioActual)
+    localStorage.setItem('user', JSON.stringify(currentUser))
+    setUser(currentUser)
   }
 
   async function login(email: string, password: string) {
     const { data } = await apiClient.post('/auth/login', { email, password })
-    guardarSesion(data)
+    saveSession(data)
   }
 
-  async function registrar(nombre: string, email: string, password: string) {
-    const { data } = await apiClient.post('/auth/registro', { nombre, email, password })
-    guardarSesion(data)
+  async function register(name: string, email: string, password: string) {
+    const { data } = await apiClient.post('/auth/register', { name, email, password })
+    saveSession(data)
   }
 
   function logout() {
     localStorage.removeItem('token')
-    localStorage.removeItem('usuario')
-    setUsuario(null)
+    localStorage.removeItem('user')
+    setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ usuario, login, registrar, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   )
@@ -51,6 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth debe usarse dentro de AuthProvider')
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
   return ctx
 }
