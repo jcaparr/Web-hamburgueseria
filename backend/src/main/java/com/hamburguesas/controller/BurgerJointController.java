@@ -1,8 +1,8 @@
 package com.hamburguesas.controller;
 
-import com.hamburguesas.dto.HamburgueseriaDto;
+import com.hamburguesas.dto.BurgerJointDto;
 import com.hamburguesas.security.CurrentUser;
-import com.hamburguesas.service.HamburgueseriaService;
+import com.hamburguesas.service.BurgerJointService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,22 +10,22 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/hamburguesuerias")
+@RequestMapping("/api/burger-joints")
 @RequiredArgsConstructor
-public class HamburgueseriaController {
+public class BurgerJointController {
 
-    private final HamburgueseriaService hamburgueseriaService;
+    private final BurgerJointService burgerJointService;
 
     @GetMapping
-    public Page<HamburgueseriaDto> buscar(
+    public Page<BurgerJointDto> search(
         @RequestParam(required = false) String q,
         @PageableDefault(size = 20) Pageable pageable
     ) {
-        return hamburgueseriaService.buscar(q, CurrentUser.idOrNull(), pageable);
+        return burgerJointService.search(q, CurrentUser.idOrNull(), pageable);
     }
 
     @GetMapping("/{id}")
-    public HamburgueseriaDto obtener(@PathVariable Long id) {
-        return hamburgueseriaService.obtener(id, CurrentUser.idOrNull());
+    public BurgerJointDto get(@PathVariable Long id) {
+        return burgerJointService.get(id, CurrentUser.idOrNull());
     }
 }

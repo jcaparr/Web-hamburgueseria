@@ -1,7 +1,7 @@
 package com.hamburguesas.service;
 
 import com.hamburguesas.dto.RankingItemDto;
-import com.hamburguesas.repository.CalificacionRepository;
+import com.hamburguesas.repository.RatingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,16 +11,16 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class RankingService {
 
-    private final CalificacionRepository calificacionRepository;
+    private final RatingRepository ratingRepository;
 
-    public Page<RankingItemDto> rankingGeneral(String zona, String orden, Pageable pageable) {
-        if ("popularidad".equalsIgnoreCase(orden)) {
-            return calificacionRepository.rankingPorPopularidad(zona, pageable);
+    public Page<RankingItemDto> generalRanking(String area, String order, Pageable pageable) {
+        if ("popularity".equalsIgnoreCase(order)) {
+            return ratingRepository.rankingByPopularity(area, pageable);
         }
-        return calificacionRepository.rankingPorPuntaje(zona, pageable);
+        return ratingRepository.rankingByScore(area, pageable);
     }
 
-    public Page<RankingItemDto> rankingPersonal(Long usuarioId, Pageable pageable) {
-        return calificacionRepository.rankingPersonal(usuarioId, pageable);
+    public Page<RankingItemDto> personalRanking(Long userId, Pageable pageable) {
+        return ratingRepository.personalRanking(userId, pageable);
     }
 }

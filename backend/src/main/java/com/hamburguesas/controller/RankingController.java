@@ -18,15 +18,15 @@ public class RankingController {
 
     @GetMapping("/general")
     public Page<RankingItemDto> general(
-        @RequestParam(required = false) String zona,
-        @RequestParam(required = false, defaultValue = "puntaje") String orden,
+        @RequestParam(required = false) String area,
+        @RequestParam(required = false, defaultValue = "score") String order,
         @PageableDefault(size = 20) Pageable pageable
     ) {
-        return rankingService.rankingGeneral(zona, orden, pageable);
+        return rankingService.generalRanking(area, order, pageable);
     }
 
-    @GetMapping("/mio")
-    public Page<RankingItemDto> mio(@PageableDefault(size = 20) Pageable pageable) {
-        return rankingService.rankingPersonal(CurrentUser.idRequerido(), pageable);
+    @GetMapping("/mine")
+    public Page<RankingItemDto> mine(@PageableDefault(size = 20) Pageable pageable) {
+        return rankingService.personalRanking(CurrentUser.requireId(), pageable);
     }
 }

@@ -73,7 +73,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("GET", "/api/hamburguesuerias/**").permitAll()
+                .requestMatchers("GET", "/api/burger-joints/**").permitAll()
                 .requestMatchers("GET", "/api/ranking/general").permitAll()
                 .anyRequest().authenticated()
             )

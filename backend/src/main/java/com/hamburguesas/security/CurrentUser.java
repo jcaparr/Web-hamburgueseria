@@ -12,13 +12,13 @@ public final class CurrentUser {
         if (auth == null || !(auth.getPrincipal() instanceof UserPrincipal principal)) {
             return null;
         }
-        return principal.getUsuarioId();
+        return principal.getUserId();
     }
 
-    public static Long idRequerido() {
+    public static Long requireId() {
         Long id = idOrNull();
         if (id == null) {
-            throw new org.springframework.security.access.AccessDeniedException("No autenticado");
+            throw new org.springframework.security.access.AccessDeniedException("Not authenticated");
         }
         return id;
     }

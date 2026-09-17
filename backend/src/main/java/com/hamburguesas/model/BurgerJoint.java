@@ -7,30 +7,30 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "hamburgueserias")
+@Table(name = "burger_joints")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Hamburgueseria {
+public class BurgerJoint {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, length = 150)
-    private String nombre;
+    private String name;
 
     @Column(nullable = false, length = 250)
-    private String direccion;
+    private String address;
 
-    @Column(name = "zona", length = 100)
-    private String zona;
+    @Column(name = "area", length = 100)
+    private String area;
 
-    @Column(name = "foto_url", length = 500)
-    private String fotoUrl;
+    @Column(name = "photo_url", length = 500)
+    private String photoUrl;
 
-    private Double latitud;
+    private Double latitude;
 
-    private Double longitud;
+    private Double longitude;
 }

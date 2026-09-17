@@ -1,21 +1,19 @@
 package com.hamburguesas.security;
 
-import com.hamburguesas.model.Usuario;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 
 import java.util.List;
 
 @Getter
-public class UserPrincipal extends User {
+public class UserPrincipal extends org.springframework.security.core.userdetails.User {
 
-    private final Long usuarioId;
-    private final String nombre;
+    private final Long userId;
+    private final String name;
 
-    public UserPrincipal(Usuario usuario, List<GrantedAuthority> authorities) {
-        super(usuario.getEmail(), usuario.getPasswordHash(), authorities);
-        this.usuarioId = usuario.getId();
-        this.nombre = usuario.getNombre();
+    public UserPrincipal(com.hamburguesas.model.User user, List<GrantedAuthority> authorities) {
+        super(user.getEmail(), user.getPasswordHash(), authorities);
+        this.userId = user.getId();
+        this.name = user.getName();
     }
 }

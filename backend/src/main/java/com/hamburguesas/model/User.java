@@ -9,19 +9,19 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 @Entity
-@Table(name = "usuarios", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
+@Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Usuario {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, length = 120)
-    private String nombre;
+    private String name;
 
     @Column(nullable = false, length = 180)
     private String email;
@@ -29,13 +29,13 @@ public class Usuario {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(name = "fecha_registro", nullable = false, updatable = false)
-    private Instant fechaRegistro;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 
     @PrePersist
     void prePersist() {
-        if (fechaRegistro == null) {
-            fechaRegistro = Instant.now();
+        if (createdAt == null) {
+            createdAt = Instant.now();
         }
     }
 }

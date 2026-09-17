@@ -2,7 +2,7 @@ package com.hamburguesas.dto;
 
 public record AuthResponse(
     String token,
-    Long usuarioId,
-    String nombre,
+    Long userId,
+    String name,
     String email
 ) {}

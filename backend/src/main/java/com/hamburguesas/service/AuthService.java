@@ -4,8 +4,8 @@ import com.hamburguesas.dto.AuthResponse;
 import com.hamburguesas.dto.LoginRequest;
 import com.hamburguesas.dto.RegisterRequest;
 import com.hamburguesas.exception.ConflictException;
-import com.hamburguesas.model.Usuario;
-import com.hamburguesas.repository.UsuarioRepository;
+import com.hamburguesas.model.User;
+import com.hamburguesas.repository.UserRepository;
 import com.hamburguesas.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,26 +17,26 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UsuarioRepository usuarioRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
-    public AuthResponse registrar(RegisterRequest request) {
-        if (usuarioRepository.existsByEmail(request.email())) {
-            throw new ConflictException("Ya existe una cuenta con ese email");
+    public AuthResponse register(RegisterRequest request) {
+        if (userRepository.existsByEmail(request.email())) {
+            throw new ConflictException("An account with that email already exists");
         }
 
-        Usuario usuario = Usuario.builder()
-            .nombre(request.nombre())
+        User user = User.builder()
+            .name(request.name())
             .email(request.email())
             .passwordHash(passwordEncoder.encode(request.password()))
             .build();
 
-        usuario = usuarioRepository.save(usuario);
+        user = userRepository.save(user);
 
-        String token = jwtService.generarToken(usuario.getId(), usuario.getEmail());
-        return new AuthResponse(token, usuario.getId(), usuario.getNombre(), usuario.getEmail());
+        String token = jwtService.generateToken(user.getId(), user.getEmail());
+        return new AuthResponse(token, user.getId(), user.getName(), user.getEmail());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -44,10 +44,10 @@ public class AuthService {
             new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
 
-        Usuario usuario = usuarioRepository.findByEmail(request.email())
-            .orElseThrow(() -> new IllegalStateException("Usuario no encontrado tras autenticar"));
+        User user = userRepository.findByEmail(request.email())
+            .orElseThrow(() -> new IllegalStateException("User not found after authentication"));
 
-        String token = jwtService.generarToken(usuario.getId(), usuario.getEmail());
-        return new AuthResponse(token, usuario.getId(), usuario.getNombre(), usuario.getEmail());
+        String token = jwtService.generateToken(user.getId(), user.getEmail());
+        return new AuthResponse(token, user.getId(), user.getName(), user.getEmail());
     }
 }

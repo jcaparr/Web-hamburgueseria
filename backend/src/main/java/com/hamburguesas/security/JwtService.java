@@ -24,10 +24,10 @@ public class JwtService {
         this.expirationMinutes = expirationMinutes;
     }
 
-    public String generarToken(Long usuarioId, String email) {
+    public String generateToken(Long userId, String email) {
         Instant now = Instant.now();
         return Jwts.builder()
-            .subject(String.valueOf(usuarioId))
+            .subject(String.valueOf(userId))
             .claim("email", email)
             .issuedAt(java.util.Date.from(now))
             .expiration(java.util.Date.from(now.plus(expirationMinutes, ChronoUnit.MINUTES)))
@@ -35,7 +35,7 @@ public class JwtService {
             .compact();
     }
 
-    public Long extraerUsuarioId(String token) {
+    public Long extractUserId(String token) {
         String subject = Jwts.parser()
             .verifyWith(key)
             .build()

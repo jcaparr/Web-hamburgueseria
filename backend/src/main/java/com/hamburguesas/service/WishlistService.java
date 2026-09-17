@@ -1,15 +1,15 @@
 package com.hamburguesas.service;
 
-import com.hamburguesas.dto.HamburgueseriaDto;
+import com.hamburguesas.dto.BurgerJointDto;
 import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.exception.ResourceNotFoundException;
-import com.hamburguesas.model.Hamburgueseria;
-import com.hamburguesas.model.ListaDeseados;
-import com.hamburguesas.model.Usuario;
-import com.hamburguesas.repository.CalificacionRepository;
-import com.hamburguesas.repository.HamburgueseriaRepository;
-import com.hamburguesas.repository.ListaDeseadosRepository;
-import com.hamburguesas.repository.UsuarioRepository;
+import com.hamburguesas.model.BurgerJoint;
+import com.hamburguesas.model.User;
+import com.hamburguesas.model.WishlistItem;
+import com.hamburguesas.repository.BurgerJointRepository;
+import com.hamburguesas.repository.RatingRepository;
+import com.hamburguesas.repository.UserRepository;
+import com.hamburguesas.repository.WishlistRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,47 +20,47 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WishlistService {
 
-    private final ListaDeseadosRepository listaDeseadosRepository;
-    private final HamburgueseriaRepository hamburgueseriaRepository;
-    private final UsuarioRepository usuarioRepository;
-    private final CalificacionRepository calificacionRepository;
+    private final WishlistRepository wishlistRepository;
+    private final BurgerJointRepository burgerJointRepository;
+    private final UserRepository userRepository;
+    private final RatingRepository ratingRepository;
 
-    public List<HamburgueseriaDto> listar(Long usuarioId) {
-        return listaDeseadosRepository.findByUsuario_IdOrderByFechaDesc(usuarioId).stream()
-            .map(ld -> toDto(ld.getHamburgueseria()))
+    public List<BurgerJointDto> list(Long userId) {
+        return wishlistRepository.findByUser_IdOrderByCreatedAtDesc(userId).stream()
+            .map(item -> toDto(item.getBurgerJoint()))
             .toList();
     }
 
     @Transactional
-    public void agregar(Long usuarioId, Long hamburgueseriaId) {
-        if (listaDeseadosRepository.existsByUsuario_IdAndHamburgueseria_Id(usuarioId, hamburgueseriaId)) {
-            throw new ConflictException("Ya esta en tu lista de deseados");
+    public void add(Long userId, Long burgerJointId) {
+        if (wishlistRepository.existsByUser_IdAndBurgerJoint_Id(userId, burgerJointId)) {
+            throw new ConflictException("Already in your wishlist");
         }
 
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
-        Hamburgueseria hamburgueseria = hamburgueseriaRepository.findById(hamburgueseriaId)
-            .orElseThrow(() -> new ResourceNotFoundException("Hamburgueseria no encontrada"));
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        BurgerJoint burgerJoint = burgerJointRepository.findById(burgerJointId)
+            .orElseThrow(() -> new ResourceNotFoundException("Burger joint not found"));
 
-        listaDeseadosRepository.save(
-            ListaDeseados.builder().usuario(usuario).hamburgueseria(hamburgueseria).build()
+        wishlistRepository.save(
+            WishlistItem.builder().user(user).burgerJoint(burgerJoint).build()
         );
     }
 
     @Transactional
-    public void quitar(Long usuarioId, Long hamburgueseriaId) {
-        ListaDeseados item = listaDeseadosRepository
-            .findByUsuario_IdAndHamburgueseria_Id(usuarioId, hamburgueseriaId)
-            .orElseThrow(() -> new ResourceNotFoundException("No estaba en tu lista de deseados"));
-        listaDeseadosRepository.delete(item);
+    public void remove(Long userId, Long burgerJointId) {
+        WishlistItem item = wishlistRepository
+            .findByUser_IdAndBurgerJoint_Id(userId, burgerJointId)
+            .orElseThrow(() -> new ResourceNotFoundException("It wasn't in your wishlist"));
+        wishlistRepository.delete(item);
     }
 
-    private HamburgueseriaDto toDto(Hamburgueseria h) {
-        Double promedio = calificacionRepository.promedioPorHamburgueseria(h.getId());
-        long cantidad = calificacionRepository.countByHamburgueseria_Id(h.getId());
-        return new HamburgueseriaDto(
-            h.getId(), h.getNombre(), h.getDireccion(), h.getZona(), h.getFotoUrl(),
-            h.getLatitud(), h.getLongitud(), promedio, cantidad, true
+    private BurgerJointDto toDto(BurgerJoint b) {
+        Double averageScore = ratingRepository.averageScoreByBurgerJoint(b.getId());
+        long ratingsCount = ratingRepository.countByBurgerJoint_Id(b.getId());
+        return new BurgerJointDto(
+            b.getId(), b.getName(), b.getAddress(), b.getArea(), b.getPhotoUrl(),
+            b.getLatitude(), b.getLongitude(), averageScore, ratingsCount, true
         );
     }
 }

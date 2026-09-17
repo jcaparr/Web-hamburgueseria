@@ -1,6 +1,6 @@
 package com.hamburguesas.controller;
 
-import com.hamburguesas.dto.HamburgueseriaDto;
+import com.hamburguesas.dto.BurgerJointDto;
 import com.hamburguesas.security.CurrentUser;
 import com.hamburguesas.service.WishlistService;
 import lombok.RequiredArgsConstructor;
@@ -18,19 +18,19 @@ public class WishlistController {
     private final WishlistService wishlistService;
 
     @GetMapping
-    public List<HamburgueseriaDto> listar() {
-        return wishlistService.listar(CurrentUser.idRequerido());
+    public List<BurgerJointDto> list() {
+        return wishlistService.list(CurrentUser.requireId());
     }
 
-    @PostMapping("/{hamburgueseriaId}")
-    public ResponseEntity<Void> agregar(@PathVariable Long hamburgueseriaId) {
-        wishlistService.agregar(CurrentUser.idRequerido(), hamburgueseriaId);
+    @PostMapping("/{burgerJointId}")
+    public ResponseEntity<Void> add(@PathVariable Long burgerJointId) {
+        wishlistService.add(CurrentUser.requireId(), burgerJointId);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @DeleteMapping("/{hamburgueseriaId}")
-    public ResponseEntity<Void> quitar(@PathVariable Long hamburgueseriaId) {
-        wishlistService.quitar(CurrentUser.idRequerido(), hamburgueseriaId);
+    @DeleteMapping("/{burgerJointId}")
+    public ResponseEntity<Void> remove(@PathVariable Long burgerJointId) {
+        wishlistService.remove(CurrentUser.requireId(), burgerJointId);
         return ResponseEntity.noContent().build();
     }
 }
