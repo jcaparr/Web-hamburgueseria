@@ -20,3 +20,39 @@ app:
     expiration-minutes: 60
   cors:
     allowed-origins: ${ALLOWED_ORIGIN:http://localhost:5173}
+  places:
+    api-key: ${GOOGLE_MAPS_API_KEY:}
+    sync:
+      # Off by default even with a key configured: flip to true only when you're ready for it to run.
+      enabled: ${PLACES_SYNC_ENABLED:false}
+      cron: ${PLACES_SYNC_CRON:0 0 4 * * SUN}
+      trigger-token: ${PLACES_SYNC_TOKEN:}
+      max-pages-per-area: 2
+      delay-between-calls-ms: 500
+      areas:
+        - Palermo
+        - Belgrano
+        - San Telmo
+        - Almagro
+        - Recoleta
+        - Caballito
+        - Villa Crespo
+        - Flores
+        - Nuñez
+        - Barracas
+        - La Boca
+        - Retiro
+        - Puerto Madero
+        - Villa Urquiza
+        - Chacarita
+        - Colegiales
+        - Balvanera
+        - Constitución
+        - San Nicolás
+        - Monserrat
+    quota:
+      monthly-search-calls: 4000
+      monthly-photo-calls: 800
+    photos:
+      directory: ${PLACE_PHOTOS_DIR:./data/place-photos}
+      max-width-px: 800

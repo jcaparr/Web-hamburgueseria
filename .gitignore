@@ -2,6 +2,7 @@
 backend/target/
 *.class
 *.log
+backend/data/
 
 # Frontend (Node)
 frontend/node_modules/
