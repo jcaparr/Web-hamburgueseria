@@ -6,6 +6,8 @@ public record RankingItemDto(
     String address,
     String area,
     String photoUrl,
+    Double latitude,
+    Double longitude,
     Double averageScore,
     Long ratingsCount,
     Integer myScore

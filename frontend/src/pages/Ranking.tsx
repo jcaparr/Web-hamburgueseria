@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import type { PageResponse, RankingItem } from '../types'
+import { mapsUrl } from '../utils/maps'
 
 type Tab = 'general' | 'mine'
 type Order = 'score' | 'popularity'
@@ -68,11 +69,8 @@ export function Ranking() {
 
       <ol className="flex flex-col gap-3">
         {items.map((item, index) => (
-          <li key={item.burgerJointId}>
-            <Link
-              to={`/burger-joints/${item.burgerJointId}`}
-              className="flex items-center gap-3 rounded-xl border border-neutral-200 p-3"
-            >
+          <li key={item.burgerJointId} className="rounded-xl border border-neutral-200 p-3">
+            <Link to={`/burger-joints/${item.burgerJointId}`} className="flex items-center gap-3">
               <span className="w-5 text-center text-sm font-semibold text-neutral-400">{index + 1}</span>
               <img
                 src={item.photoUrl ?? 'https://placehold.co/60x60?text=%F0%9F%8D%94'}
@@ -94,6 +92,14 @@ export function Ranking() {
                 )}
               </div>
             </Link>
+            <a
+              href={mapsUrl(item.latitude, item.longitude, `${item.name} ${item.address}`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-block pl-8 text-xs text-blue-600 hover:underline"
+            >
+              📍 Ver en Maps
+            </a>
           </li>
         ))}
         {!loading && items.length === 0 && (

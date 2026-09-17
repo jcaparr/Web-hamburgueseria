@@ -4,6 +4,7 @@ import { apiClient } from '../api/client'
 import { Stars } from '../components/Stars'
 import { useAuth } from '../context/AuthContext'
 import type { BurgerJoint, PageResponse, Rating } from '../types'
+import { mapsUrl } from '../utils/maps'
 
 export function BurgerJointDetail() {
   const { id } = useParams()
@@ -92,6 +93,14 @@ export function BurgerJointDetail() {
               ? `★ ${burgerJoint.averageScore.toFixed(1)} (${burgerJoint.ratingsCount} reseñas)`
               : 'Todavía sin calificaciones'}
           </p>
+          <a
+            href={mapsUrl(burgerJoint.latitude, burgerJoint.longitude, `${burgerJoint.name} ${burgerJoint.address}`)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-blue-600 hover:underline"
+          >
+            📍 Ver en Maps
+          </a>
         </div>
 
         <button
