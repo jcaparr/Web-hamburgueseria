@@ -76,6 +76,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/burger-joints/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/ranking/general").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/place-photos/**").permitAll()
+                // Protected by its own X-Sync-Token header, not by user JWT auth (see PlacesSyncController).
+                .requestMatchers("/api/admin/places-sync/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

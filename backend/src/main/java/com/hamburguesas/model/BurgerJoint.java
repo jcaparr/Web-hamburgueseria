@@ -6,8 +6,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
+
 @Entity
-@Table(name = "burger_joints")
+@Table(
+    name = "burger_joints",
+    uniqueConstraints = @UniqueConstraint(columnNames = "place_id")
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -33,4 +38,11 @@ public class BurgerJoint {
     private Double latitude;
 
     private Double longitude;
+
+    /** Google Places identifier. Null for joints loaded by hand instead of by the sync job. */
+    @Column(name = "place_id", length = 300)
+    private String placeId;
+
+    @Column(name = "last_synced_at")
+    private Instant lastSyncedAt;
 }
