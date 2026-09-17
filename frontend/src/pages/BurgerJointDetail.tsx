@@ -17,6 +17,8 @@ export function BurgerJointDetail() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const myRating = user ? ratings.find((r) => r.userId === user.userId) ?? null : null
+
   function load() {
     apiClient.get<BurgerJoint>(`/burger-joints/${id}`).then(({ data }) => setBurgerJoint(data))
     apiClient
@@ -25,6 +27,13 @@ export function BurgerJointDetail() {
   }
 
   useEffect(load, [id])
+
+  useEffect(() => {
+    if (myRating) {
+      setScore(myRating.score)
+      setComment(myRating.comment ?? '')
+    }
+  }, [myRating?.id])
 
   async function toggleWishlist() {
     if (!user) return navigate('/login')
@@ -49,12 +58,16 @@ export function BurgerJointDetail() {
     setSubmitting(true)
     setError(null)
     try {
-      await apiClient.post(`/burger-joints/${id}/ratings`, { score, comment })
-      setScore(0)
-      setComment('')
+      if (myRating) {
+        await apiClient.put(`/burger-joints/${id}/ratings`, { score, comment })
+      } else {
+        await apiClient.post(`/burger-joints/${id}/ratings`, { score, comment })
+        setScore(0)
+        setComment('')
+      }
       load()
-    } catch (err: any) {
-      setError(err.response?.data?.error ?? 'No pudimos guardar tu reseña')
+    } catch {
+      setError('No pudimos guardar tu reseña')
     } finally {
       setSubmitting(false)
     }
@@ -92,7 +105,7 @@ export function BurgerJointDetail() {
       </div>
 
       <form onSubmit={submitRating} className="flex flex-col gap-2 rounded-xl border border-neutral-200 p-3">
-        <span className="text-sm font-medium">Dejá tu opinión</span>
+        <span className="text-sm font-medium">{myRating ? 'Editá tu opinión' : 'Dejá tu opinión'}</span>
         <Stars value={score} onChange={setScore} size={28} />
         <textarea
           value={comment}
@@ -107,7 +120,7 @@ export function BurgerJointDetail() {
           disabled={submitting}
           className="rounded-full bg-amber-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
-          {submitting ? 'Guardando...' : 'Publicar reseña'}
+          {submitting ? 'Guardando...' : myRating ? 'Actualizar reseña' : 'Publicar reseña'}
         </button>
       </form>
 
@@ -116,7 +129,10 @@ export function BurgerJointDetail() {
         {ratings.map((r) => (
           <div key={r.id} className="rounded-lg border border-neutral-200 p-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">{r.userName}</span>
+              <span className="text-sm font-medium">
+                {r.userName}
+                {user && r.userId === user.userId && ' (vos)'}
+              </span>
               <Stars value={r.score} size={14} />
             </div>
             {r.comment && <p className="mt-1 text-sm text-neutral-600">{r.comment}</p>}
