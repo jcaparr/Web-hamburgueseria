@@ -26,6 +26,8 @@ export interface RankingItem {
   address: string
   area: string | null
   photoUrl: string | null
+  latitude: number | null
+  longitude: number | null
   averageScore: number
   ratingsCount: number
   myScore: number | null

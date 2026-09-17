@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import type { BurgerJoint } from '../types'
+import { mapsUrl } from '../utils/maps'
 
 export function Wishlist() {
   const { user } = useAuth()
@@ -34,21 +35,31 @@ export function Wishlist() {
 
       <ul className="flex flex-col gap-3">
         {items.map((b) => (
-          <li key={b.id} className="flex items-center gap-3 rounded-xl border border-neutral-200 p-3">
-            <Link to={`/burger-joints/${b.id}`} className="flex flex-1 items-center gap-3">
-              <img
-                src={b.photoUrl ?? 'https://placehold.co/64x64?text=%F0%9F%8D%94'}
-                alt={b.name}
-                className="h-14 w-14 rounded-lg object-cover"
-              />
-              <div className="flex flex-col">
-                <span className="font-medium">{b.name}</span>
-                <span className="text-xs text-neutral-500">{b.address}</span>
-              </div>
-            </Link>
-            <button onClick={() => remove(b.id)} className="text-xl" title="Quitar de deseados">
-              ❤️
-            </button>
+          <li key={b.id} className="rounded-xl border border-neutral-200 p-3">
+            <div className="flex items-center gap-3">
+              <Link to={`/burger-joints/${b.id}`} className="flex flex-1 items-center gap-3">
+                <img
+                  src={b.photoUrl ?? 'https://placehold.co/64x64?text=%F0%9F%8D%94'}
+                  alt={b.name}
+                  className="h-14 w-14 rounded-lg object-cover"
+                />
+                <div className="flex flex-col">
+                  <span className="font-medium">{b.name}</span>
+                  <span className="text-xs text-neutral-500">{b.address}</span>
+                </div>
+              </Link>
+              <button onClick={() => remove(b.id)} className="text-xl" title="Quitar de deseados">
+                ❤️
+              </button>
+            </div>
+            <a
+              href={mapsUrl(b.latitude, b.longitude, `${b.name} ${b.address}`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-block text-xs text-blue-600 hover:underline"
+            >
+              📍 Ver en Maps
+            </a>
           </li>
         ))}
         {!loading && items.length === 0 && (

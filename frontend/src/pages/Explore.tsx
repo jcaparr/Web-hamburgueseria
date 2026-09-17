@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import type { BurgerJoint, PageResponse } from '../types'
+import { mapsUrl } from '../utils/maps'
 
 export function Explore() {
   const [query, setQuery] = useState('')
@@ -36,11 +37,8 @@ export function Explore() {
 
       <ul className="flex flex-col gap-3">
         {items.map((b) => (
-          <li key={b.id}>
-            <Link
-              to={`/burger-joints/${b.id}`}
-              className="flex gap-3 rounded-xl border border-neutral-200 p-3 hover:border-amber-400"
-            >
+          <li key={b.id} className="rounded-xl border border-neutral-200 p-3 hover:border-amber-400">
+            <Link to={`/burger-joints/${b.id}`} className="flex gap-3">
               <img
                 src={b.photoUrl ?? 'https://placehold.co/80x80?text=%F0%9F%8D%94'}
                 alt={b.name}
@@ -54,6 +52,14 @@ export function Explore() {
                 </span>
               </div>
             </Link>
+            <a
+              href={mapsUrl(b.latitude, b.longitude, `${b.name} ${b.address}`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-block text-xs text-blue-600 hover:underline"
+            >
+              📍 Ver en Maps
+            </a>
           </li>
         ))}
         {!loading && items.length === 0 && (
