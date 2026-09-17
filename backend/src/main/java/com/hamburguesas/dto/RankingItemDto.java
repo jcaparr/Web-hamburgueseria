@@ -1,0 +1,12 @@
+package com.hamburguesas.dto;
+
+public record RankingItemDto(
+    Long burgerJointId,
+    String name,
+    String address,
+    String area,
+    String photoUrl,
+    Double averageScore,
+    Long ratingsCount,
+    Integer myScore
+) {}
