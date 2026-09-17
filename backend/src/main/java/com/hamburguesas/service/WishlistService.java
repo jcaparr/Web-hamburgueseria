@@ -25,6 +25,7 @@ public class WishlistService {
     private final UserRepository userRepository;
     private final RatingRepository ratingRepository;
 
+    @Transactional(readOnly = true)
     public List<BurgerJointDto> list(Long userId) {
         return wishlistRepository.findByUser_IdOrderByCreatedAtDesc(userId).stream()
             .map(item -> toDto(item.getBurgerJoint()))

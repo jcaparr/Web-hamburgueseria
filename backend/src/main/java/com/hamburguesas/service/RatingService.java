@@ -57,6 +57,7 @@ public class RatingService {
         return toResponse(rating);
     }
 
+    @Transactional(readOnly = true)
     public Page<RatingResponse> list(Long burgerJointId, Pageable pageable) {
         return ratingRepository
             .findByBurgerJoint_IdOrderByCreatedAtDesc(burgerJointId, pageable)
