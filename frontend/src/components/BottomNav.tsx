@@ -1,17 +1,23 @@
 import { NavLink } from 'react-router-dom'
-import { IconHeart, IconMedal, IconSearch } from './icons'
+import { useHideOnScroll } from '../hooks/useScrollDirection'
+import { IconMedal, IconSearch, IconUser } from './icons'
 
 const ITEMS = [
   { to: '/', label: 'Explorar', Icon: IconSearch },
   { to: '/ranking', label: 'Ranking', Icon: IconMedal },
-  { to: '/wishlist', label: 'Deseados', Icon: IconHeart },
+  { to: '/profile', label: 'Perfil', Icon: IconUser },
 ]
 
 export function BottomNav() {
+  const hidden = useHideOnScroll()
+
   return (
     <div className="fixed inset-x-0 bottom-0 z-20 md:hidden">
-      <div className="checker-strip" />
-      <div className="flex items-center justify-around bg-neutral pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+      <div
+        className={`flex items-center justify-around pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 transition-colors duration-300 ${
+          hidden ? 'bg-neutral/40 backdrop-blur-md' : 'bg-neutral'
+        }`}
+      >
         {ITEMS.map(({ to, label, Icon }) => (
           <NavLink
             key={to}

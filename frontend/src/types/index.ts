@@ -46,3 +46,18 @@ export interface User {
   name: string
   email: string
 }
+
+export interface ProfileStats {
+  ratingsCount: number
+  averageScore: number | null
+}
+
+export interface MyRating {
+  id: number
+  burgerJointId: number
+  burgerJointName: string
+  photoUrl: string | null
+  score: number
+  comment: string | null
+  createdAt: string
+}

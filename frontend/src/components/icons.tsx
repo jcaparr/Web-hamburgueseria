@@ -45,3 +45,29 @@ export function IconPin({ size = 14, className }: IconProps) {
     </svg>
   )
 }
+
+export function IconUser({ size = 18, className }: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.7} className={className}>
+      <circle cx="10" cy="7" r="3.5" />
+      <path d="M3.5 17c1-3.2 3.8-5 6.5-5s5.5 1.8 6.5 5" />
+    </svg>
+  )
+}
+
+export function IconSettings({ size = 18, className }: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.6} className={className}>
+      <circle cx="10" cy="10" r="2.6" />
+      <path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.6 4.6l1.4 1.4M14 14l1.4 1.4M15.4 4.6 14 6M6 14l-1.4 1.4" />
+    </svg>
+  )
+}
+
+export function IconChevronRight({ size = 16, className }: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.8} className={className}>
+      <path d="M7.5 4.5 13 10l-5.5 5.5" />
+    </svg>
+  )
+}
