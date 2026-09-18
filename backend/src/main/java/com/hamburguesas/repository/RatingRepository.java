@@ -49,6 +49,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
             select r2.burgerJoint.id from Rating r2 where r2.user.id = :userId
         )
         group by b.id, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude
+        order by max(case when r.user.id = :userId then r.score else null end) desc
         """)
     Page<RankingItemDto> personalRanking(@Param("userId") Long userId, Pageable pageable);
 
