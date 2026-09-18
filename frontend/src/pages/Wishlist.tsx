@@ -36,27 +36,27 @@ export function Wishlist() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-4 p-4 md:p-0">
       <h1 className="text-xl font-semibold">Lista de deseados</h1>
 
-      {loading && <p className="text-sm text-neutral-400">Cargando...</p>}
+      {loading && <p className="text-sm text-base-content/60">Cargando...</p>}
 
-      <ul className="flex flex-col gap-3">
+      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((b) => (
-          <li key={b.id} className="rounded-xl border border-neutral-200 p-3">
-            <div className="flex items-center gap-3">
-              <Link to={`/burger-joints/${b.id}`} className="flex flex-1 items-center gap-3">
+          <li key={b.id} className="card card-border">
+            <div className="flex items-center gap-3 p-3 pb-0">
+              <Link to={`/burger-joints/${b.id}`} className="flex flex-1 items-center gap-3 overflow-hidden">
                 <img
                   src={b.photoUrl ?? 'https://placehold.co/64x64?text=%F0%9F%8D%94'}
                   alt={b.name}
                   className="h-14 w-14 rounded-lg object-cover"
                 />
-                <div className="flex flex-col">
-                  <span className="font-medium">{b.name}</span>
-                  <span className="text-xs text-neutral-500">{b.address}</span>
+                <div className="flex flex-col overflow-hidden">
+                  <span className="truncate font-medium">{b.name}</span>
+                  <span className="truncate text-xs text-base-content/60">{b.address}</span>
                 </div>
               </Link>
-              <button onClick={() => remove(b.id)} className="text-xl" title="Quitar de deseados">
+              <button onClick={() => remove(b.id)} className="btn btn-ghost btn-circle" title="Quitar de deseados">
                 ❤️
               </button>
             </div>
@@ -64,14 +64,14 @@ export function Wishlist() {
               href={mapsUrl(b.latitude, b.longitude, `${b.name} ${b.address}`)}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 inline-block text-xs text-blue-600 hover:underline"
+              className="link link-hover p-3 pt-2 text-xs text-info"
             >
               📍 Ver en Maps
             </a>
           </li>
         ))}
         {!loading && items.length === 0 && (
-          <p className="text-sm text-neutral-400">Todavía no guardaste ninguna hamburguesería.</p>
+          <p className="text-sm text-base-content/60">Todavía no guardaste ninguna hamburguesería.</p>
         )}
       </ul>
     </div>

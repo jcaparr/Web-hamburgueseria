@@ -26,45 +26,45 @@ export function Register() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <h1 className="text-xl font-semibold">Crear cuenta</h1>
-      <form onSubmit={onSubmit} className="flex flex-col gap-3">
-        <input
-          required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Nombre"
-          className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-amber-500"
-        />
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-amber-500"
-        />
-        <input
-          type="password"
-          required
-          minLength={8}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Contraseña (mínimo 8 caracteres)"
-          className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-amber-500"
-        />
-        {error && <p className="text-xs text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-full bg-amber-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-        >
-          {submitting ? 'Creando...' : 'Crear cuenta'}
-        </button>
-      </form>
-      <p className="text-sm text-neutral-500">
-        ¿Ya tenés cuenta? <Link to="/login" className="text-amber-600">Iniciá sesión</Link>
-      </p>
+    <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-sm md:p-0 md:pt-8">
+      <div className="card card-border md:p-2">
+        <div className="card-body gap-3">
+          <h1 className="card-title">Crear cuenta</h1>
+          <form onSubmit={onSubmit} className="flex flex-col gap-3">
+            <input
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Nombre"
+              className="input input-bordered focus:border-primary"
+            />
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              className="input input-bordered focus:border-primary"
+            />
+            <input
+              type="password"
+              required
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Contraseña (mínimo 8 caracteres)"
+              className="input input-bordered focus:border-primary"
+            />
+            {error && <p className="text-xs text-error">{error}</p>}
+            <button type="submit" disabled={submitting} className="btn btn-primary rounded-full">
+              {submitting ? 'Creando...' : 'Crear cuenta'}
+            </button>
+          </form>
+          <p className="text-sm text-base-content/60">
+            ¿Ya tenés cuenta? <Link to="/login" className="link text-primary">Iniciá sesión</Link>
+          </p>
+        </div>
+      </div>
     </div>
   )
 }

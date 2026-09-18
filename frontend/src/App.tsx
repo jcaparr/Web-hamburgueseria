@@ -13,9 +13,9 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div className="flex flex-1 flex-col">
+        <div className="flex min-h-dvh flex-col bg-base-100 text-base-content">
           <TopBar />
-          <main className="flex-1 overflow-y-auto pb-4">
+          <main className="mx-auto w-full max-w-[480px] flex-1 pb-20 md:max-w-5xl md:px-6 md:pb-8 md:pt-6">
             <Routes>
               <Route path="/" element={<Explore />} />
               <Route path="/burger-joints/:id" element={<BurgerJointDetail />} />

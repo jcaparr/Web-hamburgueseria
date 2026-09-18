@@ -25,37 +25,37 @@ export function Login() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <h1 className="text-xl font-semibold">Iniciar sesión</h1>
-      <form onSubmit={onSubmit} className="flex flex-col gap-3">
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-amber-500"
-        />
-        <input
-          type="password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Contraseña"
-          className="rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-amber-500"
-        />
-        {error && <p className="text-xs text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-full bg-amber-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-        >
-          {submitting ? 'Ingresando...' : 'Ingresar'}
-        </button>
-      </form>
-      <p className="text-sm text-neutral-500">
-        ¿No tenés cuenta? <Link to="/register" className="text-amber-600">Registrate</Link>
-      </p>
+    <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-sm md:p-0 md:pt-8">
+      <div className="card card-border md:p-2">
+        <div className="card-body gap-3">
+          <h1 className="card-title">Iniciar sesión</h1>
+          <form onSubmit={onSubmit} className="flex flex-col gap-3">
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              className="input input-bordered focus:border-primary"
+            />
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Contraseña"
+              className="input input-bordered focus:border-primary"
+            />
+            {error && <p className="text-xs text-error">{error}</p>}
+            <button type="submit" disabled={submitting} className="btn btn-primary rounded-full">
+              {submitting ? 'Ingresando...' : 'Ingresar'}
+            </button>
+          </form>
+          <p className="text-sm text-base-content/60">
+            ¿No tenés cuenta? <Link to="/register" className="link text-primary">Registrate</Link>
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
