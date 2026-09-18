@@ -9,9 +9,9 @@ const ITEMS = [
 
 export function BottomNav() {
   return (
-    <div className="md:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-20 md:hidden">
       <div className="checker-strip" />
-      <div className="flex items-center justify-around bg-neutral py-3">
+      <div className="flex items-center justify-around bg-neutral pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
         {ITEMS.map(({ to, label, Icon }) => (
           <NavLink
             key={to}
