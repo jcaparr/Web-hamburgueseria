@@ -1,21 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Work+Sans:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap');
 @import "tailwindcss";
+
 @plugin "daisyui" {
-  themes: light --default;
+  themes: burger --default;
 }
 @plugin "daisyui/theme" {
-  name: "light";
+  name: "burger";
   default: true;
-  --color-primary: #f59e0b;
-  --color-primary-content: #ffffff;
+  --color-primary: #b23a2e;
+  --color-primary-content: #f7efd8;
+  --color-secondary: #f2b705;
+  --color-secondary-content: #3a2a1e;
+  --color-accent: #6b8e4e;
+  --color-accent-content: #f7efd8;
+  --color-neutral: #3a2a1e;
+  --color-neutral-content: #f2b705;
+  --color-base-100: #f7efd8;
+  --color-base-200: #efe4c4;
+  --color-base-300: #e3d6b4;
+  --color-base-content: #3a2a1e;
+  --color-info: #b23a2e;
+  --color-info-content: #f7efd8;
+  --radius-field: 0.625rem;
+  --radius-box: 0.875rem;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  font-family: "Work Sans", system-ui, "Segoe UI", sans-serif;
 }
 
 #root {
   min-height: 100svh;
   display: flex;
   flex-direction: column;
+}
+
+.font-display {
+  font-family: "Baloo 2", "Work Sans", sans-serif;
+}
+
+.font-hand {
+  font-family: "Caveat", cursive;
+}
+
+.checker-strip {
+  height: 6px;
+  background: repeating-conic-gradient(var(--color-primary) 0% 25%, var(--color-base-100) 0% 50%) 0 0 / 14px 14px;
 }

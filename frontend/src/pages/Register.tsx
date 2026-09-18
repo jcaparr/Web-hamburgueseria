@@ -29,7 +29,7 @@ export function Register() {
     <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-sm md:p-0 md:pt-8">
       <div className="card card-border md:p-2">
         <div className="card-body gap-3">
-          <h1 className="card-title">Crear cuenta</h1>
+          <h1 className="card-title font-display">Crear cuenta</h1>
           <form onSubmit={onSubmit} className="flex flex-col gap-3">
             <input
               required
@@ -56,7 +56,7 @@ export function Register() {
               className="input input-bordered focus:border-primary"
             />
             {error && <p className="text-xs text-error">{error}</p>}
-            <button type="submit" disabled={submitting} className="btn btn-primary rounded-full">
+            <button type="submit" disabled={submitting} className="btn btn-primary">
               {submitting ? 'Creando...' : 'Crear cuenta'}
             </button>
           </form>

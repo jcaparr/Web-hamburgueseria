@@ -28,7 +28,7 @@ export function Login() {
     <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-sm md:p-0 md:pt-8">
       <div className="card card-border md:p-2">
         <div className="card-body gap-3">
-          <h1 className="card-title">Iniciar sesión</h1>
+          <h1 className="card-title font-display">Iniciar sesión</h1>
           <form onSubmit={onSubmit} className="flex flex-col gap-3">
             <input
               type="email"
@@ -47,7 +47,7 @@ export function Login() {
               className="input input-bordered focus:border-primary"
             />
             {error && <p className="text-xs text-error">{error}</p>}
-            <button type="submit" disabled={submitting} className="btn btn-primary rounded-full">
+            <button type="submit" disabled={submitting} className="btn btn-primary">
               {submitting ? 'Ingresando...' : 'Ingresar'}
             </button>
           </form>
