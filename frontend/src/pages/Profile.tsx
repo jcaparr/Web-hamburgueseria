@@ -12,7 +12,7 @@ export function Profile() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [stats, setStats] = useState<ProfileStats | null>(null)
-  const [recentRatings, setRecentRatings] = useState<MyRating[]>([])
+  const [ratings, setRatings] = useState<MyRating[]>([])
   const [favorites, setFavorites] = useState<BurgerJoint[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -24,12 +24,12 @@ export function Profile() {
 
     Promise.all([
       apiClient.get<ProfileStats>('/profile/stats'),
-      apiClient.get<MyRating[]>('/profile/ratings/recent'),
+      apiClient.get<MyRating[]>('/profile/ratings'),
       apiClient.get<BurgerJoint[]>('/wishlist'),
     ])
       .then(([statsRes, ratingsRes, wishlistRes]) => {
         setStats(statsRes.data)
-        setRecentRatings(ratingsRes.data)
+        setRatings(ratingsRes.data)
         setFavorites(wishlistRes.data.slice(0, 5))
       })
       .catch((err) => {
@@ -37,6 +37,8 @@ export function Profile() {
       })
       .finally(() => setLoading(false))
   }, [user, navigate])
+
+  const recentRatings = ratings.slice(0, 3)
 
   if (!user) return null
 
@@ -87,7 +89,15 @@ export function Profile() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-display text-sm font-bold">Historial</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-sm font-bold">Historial</h2>
+          {ratings.length > 0 && (
+            <Link to="/reviews" className="flex items-center gap-1 text-xs font-semibold text-primary">
+              Ver todo
+              <IconChevronRight size={14} />
+            </Link>
+          )}
+        </div>
         {loading && <p className="text-sm text-base-content/60">Cargando...</p>}
         <div className="flex flex-col gap-2">
           {recentRatings.map((r) => (
@@ -109,7 +119,7 @@ export function Profile() {
             </Link>
           ))}
           {!loading && recentRatings.length === 0 && (
-            <p className="text-sm text-base-content/60">Todavía no calificaste ninguna hamburguesería esta semana.</p>
+            <p className="text-sm text-base-content/60">Todavía no calificaste ninguna hamburguesería.</p>
           )}
         </div>
       </section>

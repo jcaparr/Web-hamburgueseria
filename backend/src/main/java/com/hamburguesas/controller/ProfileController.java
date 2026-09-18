@@ -23,8 +23,8 @@ public class ProfileController {
         return profileService.stats(CurrentUser.requireId());
     }
 
-    @GetMapping("/ratings/recent")
-    public List<MyRatingDto> recentRatings() {
-        return profileService.recentRatings(CurrentUser.requireId());
+    @GetMapping("/ratings")
+    public List<MyRatingDto> ratings() {
+        return profileService.myRatings(CurrentUser.requireId());
     }
 }

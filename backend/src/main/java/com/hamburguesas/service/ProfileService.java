@@ -6,8 +6,6 @@ import com.hamburguesas.repository.RatingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -22,8 +20,7 @@ public class ProfileService {
         return new ProfileStatsDto(ratingsCount, averageScore);
     }
 
-    public List<MyRatingDto> recentRatings(Long userId) {
-        Instant since = Instant.now().minus(7, ChronoUnit.DAYS);
-        return ratingRepository.findRecentByUser(userId, since);
+    public List<MyRatingDto> myRatings(Long userId) {
+        return ratingRepository.findAllByUserOrderByCreatedAtDesc(userId);
     }
 }

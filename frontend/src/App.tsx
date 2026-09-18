@@ -8,6 +8,7 @@ import { Login } from './pages/Login'
 import { Profile } from './pages/Profile'
 import { Ranking } from './pages/Ranking'
 import { Register } from './pages/Register'
+import { Reviews } from './pages/Reviews'
 import { Wishlist } from './pages/Wishlist'
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
               <Route path="/burger-joints/:id" element={<BurgerJointDetail />} />
               <Route path="/ranking" element={<Ranking />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/reviews" element={<Reviews />} />
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />

@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,8 +66,8 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
         select new com.hamburguesas.dto.MyRatingDto(
             r.id, b.id, b.name, b.photoUrl, r.score, r.comment, r.createdAt)
         from Rating r join r.burgerJoint b
-        where r.user.id = :userId and r.createdAt >= :since
+        where r.user.id = :userId
         order by r.createdAt desc
         """)
-    List<MyRatingDto> findRecentByUser(@Param("userId") Long userId, @Param("since") Instant since);
+    List<MyRatingDto> findAllByUserOrderByCreatedAtDesc(@Param("userId") Long userId);
 }
