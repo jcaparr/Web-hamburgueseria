@@ -1,25 +1,31 @@
 import { NavLink } from 'react-router-dom'
+import { IconHeart, IconMedal, IconSearch } from './icons'
 
 const ITEMS = [
-  { to: '/', label: 'Explorar', icon: '🔍' },
-  { to: '/ranking', label: 'Ranking', icon: '🏆' },
-  { to: '/wishlist', label: 'Deseados', icon: '❤️' },
+  { to: '/', label: 'Explorar', Icon: IconSearch },
+  { to: '/ranking', label: 'Ranking', Icon: IconMedal },
+  { to: '/wishlist', label: 'Deseados', Icon: IconHeart },
 ]
 
 export function BottomNav() {
   return (
-    <div className="dock md:hidden">
-      {ITEMS.map((item) => (
-        <NavLink
-          key={item.to}
-          to={item.to}
-          end={item.to === '/'}
-          className={({ isActive }) => (isActive ? 'dock-active' : '')}
-        >
-          <span className="text-lg">{item.icon}</span>
-          <span className="dock-label">{item.label}</span>
-        </NavLink>
-      ))}
+    <div className="md:hidden">
+      <div className="checker-strip" />
+      <div className="flex items-center justify-around bg-neutral py-3">
+        {ITEMS.map(({ to, label, Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={to === '/'}
+            className={({ isActive }) =>
+              `flex flex-col items-center gap-1 ${isActive ? 'text-secondary' : 'text-base-100/70'}`
+            }
+          >
+            <Icon size={21} />
+            <span className="text-[11px] font-semibold">{label}</span>
+          </NavLink>
+        ))}
+      </div>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
+import { IconHeart, IconPin } from '../components/icons'
 import { useAuth } from '../context/AuthContext'
 import type { BurgerJoint } from '../types'
 import { isSessionExpired } from '../utils/errors'
@@ -37,13 +38,13 @@ export function Wishlist() {
 
   return (
     <div className="flex flex-col gap-4 p-4 md:p-0">
-      <h1 className="text-xl font-semibold">Lista de deseados</h1>
+      <h1 className="font-display text-2xl font-bold">Lista de deseados</h1>
 
       {loading && <p className="text-sm text-base-content/60">Cargando...</p>}
 
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((b) => (
-          <li key={b.id} className="card card-border">
+          <li key={b.id} className="rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15">
             <div className="flex items-center gap-3 p-3 pb-0">
               <Link to={`/burger-joints/${b.id}`} className="flex flex-1 items-center gap-3 overflow-hidden">
                 <img
@@ -52,21 +53,26 @@ export function Wishlist() {
                   className="h-14 w-14 rounded-lg object-cover"
                 />
                 <div className="flex flex-col overflow-hidden">
-                  <span className="truncate font-medium">{b.name}</span>
+                  <span className="truncate font-display font-semibold">{b.name}</span>
                   <span className="truncate text-xs text-base-content/60">{b.address}</span>
                 </div>
               </Link>
-              <button onClick={() => remove(b.id)} className="btn btn-ghost btn-circle" title="Quitar de deseados">
-                ❤️
+              <button
+                onClick={() => remove(b.id)}
+                className="btn btn-ghost btn-circle text-primary"
+                title="Quitar de deseados"
+              >
+                <IconHeart size={20} filled />
               </button>
             </div>
             <a
               href={mapsUrl(b.latitude, b.longitude, `${b.name} ${b.address}`)}
               target="_blank"
               rel="noopener noreferrer"
-              className="link link-hover p-3 pt-2 text-xs text-info"
+              className="flex items-center gap-1 p-3 pt-2 text-xs font-semibold text-primary"
             >
-              📍 Ver en Maps
+              <IconPin />
+              Ver en Maps
             </a>
           </li>
         ))}

@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
+import { IconHeart, IconPin } from '../components/icons'
+import { ScoreBadge } from '../components/ScoreBadge'
 import { Stars } from '../components/Stars'
 import { useAuth } from '../context/AuthContext'
 import type { BurgerJoint, PageResponse, Rating } from '../types'
@@ -95,40 +97,41 @@ export function BurgerJointDetail() {
         <img
           src={burgerJoint.photoUrl ?? 'https://placehold.co/600x300?text=%F0%9F%8D%94'}
           alt={burgerJoint.name}
-          className="h-48 w-full rounded-xl object-cover"
+          className="h-48 w-full rounded-box object-cover"
         />
 
         <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-xl font-semibold">{burgerJoint.name}</h1>
+          <div className="flex flex-col gap-1.5">
+            <h1 className="font-display text-2xl font-bold">{burgerJoint.name}</h1>
             <p className="text-sm text-base-content/60">{burgerJoint.address}</p>
-            <p className="text-sm text-primary">
-              {burgerJoint.averageScore
-                ? `★ ${burgerJoint.averageScore.toFixed(1)} (${burgerJoint.ratingsCount} reseñas)`
-                : 'Todavía sin calificaciones'}
-            </p>
+            {burgerJoint.averageScore ? (
+              <ScoreBadge score={burgerJoint.averageScore} size="sm" />
+            ) : (
+              <p className="text-sm text-base-content/50">Todavía sin calificaciones</p>
+            )}
             <a
               href={mapsUrl(burgerJoint.latitude, burgerJoint.longitude, `${burgerJoint.name} ${burgerJoint.address}`)}
               target="_blank"
               rel="noopener noreferrer"
-              className="link link-hover text-xs text-info"
+              className="flex items-center gap-1 text-xs font-semibold text-primary"
             >
-              📍 Ver en Maps
+              <IconPin />
+              Ver en Maps
             </a>
           </div>
 
           <button
             onClick={toggleWishlist}
             aria-pressed={burgerJoint.inWishlist}
-            className="btn btn-ghost btn-circle text-2xl"
+            className={`btn btn-ghost btn-circle ${burgerJoint.inWishlist ? 'text-primary' : 'text-base-content/40'}`}
             title={burgerJoint.inWishlist ? 'Quitar de deseados' : 'Guardar en deseados'}
           >
-            {burgerJoint.inWishlist ? '❤️' : '🤍'}
+            <IconHeart size={24} filled={burgerJoint.inWishlist} />
           </button>
         </div>
 
-        <form onSubmit={submitRating} className="card card-border flex flex-col gap-2 p-3">
-          <span className="text-sm font-medium">{myRating ? 'Editá tu opinión' : 'Dejá tu opinión'}</span>
+        <form onSubmit={submitRating} className="rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15 flex flex-col gap-2 p-4">
+          <span className="font-display text-sm font-bold">{myRating ? 'Editá tu opinión' : 'Dejá tu opinión'}</span>
           <Stars value={score} onChange={setScore} size={28} />
           <textarea
             value={comment}
@@ -138,16 +141,16 @@ export function BurgerJointDetail() {
             className="textarea textarea-bordered min-h-20 focus:border-primary"
           />
           {error && <p className="text-xs text-error">{error}</p>}
-          <button type="submit" disabled={submitting} className="btn btn-primary rounded-full">
+          <button type="submit" disabled={submitting} className="btn btn-primary">
             {submitting ? 'Guardando...' : myRating ? 'Actualizar reseña' : 'Publicar reseña'}
           </button>
         </form>
       </div>
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold">Reseñas ({ratings.length})</h2>
+        <h2 className="font-display text-sm font-bold">Reseñas ({ratings.length})</h2>
         {ratings.map((r) => (
-          <div key={r.id} className="card card-border p-3">
+          <div key={r.id} className="rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15 p-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">
                 {r.userName}

@@ -18,7 +18,7 @@ export function Stars({ value, onChange, size = 20 }: Props) {
           aria-label={`${n} stars`}
           aria-pressed={n <= value}
           className={interactive ? 'cursor-pointer' : 'cursor-default'}
-          style={{ fontSize: size, lineHeight: 1, color: n <= value ? '#f59e0b' : '#d4d4d8' }}
+          style={{ fontSize: size, lineHeight: 1, color: n <= value ? '#f2b705' : '#e3d6b4' }}
         >
           ★
         </button>
