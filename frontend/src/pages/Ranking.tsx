@@ -34,16 +34,16 @@ export function Ranking() {
       <div role="tablist" className="flex w-full gap-1 rounded-full border border-base-300 bg-base-100 p-1">
         <button
           role="tab"
-          className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+          className={`flex-1 cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
             tab === 'general' ? 'bg-neutral text-secondary' : 'text-base-content'
           }`}
           onClick={() => setTab('general')}
         >
-          Rankeadas por la gente
+          Ranking general
         </button>
         <button
           role="tab"
-          className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+          className={`flex-1 cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
             tab === 'mine' ? 'bg-neutral text-secondary' : 'text-base-content'
           }`}
           onClick={() => setTab('mine')}
@@ -90,13 +90,11 @@ export function Ranking() {
                 <span className="truncate text-xs text-base-content/60">{item.address}</span>
               </div>
               <div className="flex flex-col items-end gap-1 text-right text-sm">
-                <ScoreBadge score={item.averageScore} size="sm" />
+                <ScoreBadge score={tab === 'mine' ? (item.myScore ?? item.averageScore) : item.averageScore} size="sm" />
                 {tab === 'general' ? (
                   <div className="text-xs text-base-content/40">{item.ratingsCount} reseñas</div>
                 ) : (
-                  item.myScore != null && (
-                    <div className="text-xs text-base-content/40">vos: {item.myScore}★</div>
-                  )
+                  <div className="text-xs text-base-content/40">general: {item.averageScore.toFixed(1)}</div>
                 )}
               </div>
             </Link>
