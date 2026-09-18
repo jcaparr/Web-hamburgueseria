@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext'
 import { BurgerJointDetail } from './pages/BurgerJointDetail'
 import { Explore } from './pages/Explore'
 import { Login } from './pages/Login'
+import { Profile } from './pages/Profile'
 import { Ranking } from './pages/Ranking'
 import { Register } from './pages/Register'
 import { Wishlist } from './pages/Wishlist'
@@ -20,6 +21,7 @@ export default function App() {
               <Route path="/" element={<Explore />} />
               <Route path="/burger-joints/:id" element={<BurgerJointDetail />} />
               <Route path="/ranking" element={<Ranking />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />

@@ -1,5 +1,6 @@
 package com.hamburguesas.repository;
 
+import com.hamburguesas.dto.MyRatingDto;
 import com.hamburguesas.dto.RankingItemDto;
 import com.hamburguesas.model.Rating;
 import org.springframework.data.domain.Page;
@@ -8,6 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 public interface RatingRepository extends JpaRepository<Rating, Long> {
@@ -54,4 +57,18 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
     Double averageScoreByBurgerJoint(@Param("burgerJointId") Long burgerJointId);
 
     long countByBurgerJoint_Id(Long burgerJointId);
+
+    long countByUser_Id(Long userId);
+
+    @Query("select avg(r.score) from Rating r where r.user.id = :userId")
+    Double averageScoreByUser(@Param("userId") Long userId);
+
+    @Query("""
+        select new com.hamburguesas.dto.MyRatingDto(
+            r.id, b.id, b.name, b.photoUrl, r.score, r.comment, r.createdAt)
+        from Rating r join r.burgerJoint b
+        where r.user.id = :userId and r.createdAt >= :since
+        order by r.createdAt desc
+        """)
+    List<MyRatingDto> findRecentByUser(@Param("userId") Long userId, @Param("since") Instant since);
 }

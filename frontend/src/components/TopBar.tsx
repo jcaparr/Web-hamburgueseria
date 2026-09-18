@@ -1,15 +1,17 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useHideOnScroll } from '../hooks/useScrollDirection'
 
 const NAV_LINKS = [
   { to: '/', label: 'Explorar' },
   { to: '/ranking', label: 'Ranking' },
-  { to: '/wishlist', label: 'Deseados' },
+  { to: '/profile', label: 'Perfil' },
 ]
 
 export function TopBar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const hidden = useHideOnScroll()
 
   function handleLogout() {
     logout()
@@ -17,7 +19,9 @@ export function TopBar() {
   }
 
   return (
-    <div className="sticky top-0 z-20 bg-base-100">
+    <div
+      className={`sticky top-0 z-20 transition-colors duration-300 ${hidden ? 'bg-base-100/40 backdrop-blur-md' : 'bg-base-100'}`}
+    >
       <header className="flex items-center justify-between gap-2 px-4 py-2 md:px-6">
         <div className="flex min-w-0 items-center gap-2.5">
           <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-neutral">
