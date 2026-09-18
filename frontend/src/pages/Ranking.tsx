@@ -34,7 +34,7 @@ export function Ranking() {
       <div role="tablist" className="flex w-full gap-1 rounded-full border border-base-300 bg-base-100 p-1">
         <button
           role="tab"
-          className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+          className={`flex-1 cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
             tab === 'general' ? 'bg-neutral text-secondary' : 'text-base-content'
           }`}
           onClick={() => setTab('general')}
@@ -43,7 +43,7 @@ export function Ranking() {
         </button>
         <button
           role="tab"
-          className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+          className={`flex-1 cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
             tab === 'mine' ? 'bg-neutral text-secondary' : 'text-base-content'
           }`}
           onClick={() => setTab('mine')}
