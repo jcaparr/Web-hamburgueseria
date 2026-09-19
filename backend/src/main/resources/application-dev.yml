@@ -1,0 +1,21 @@
+# Local development. The values here are throwaway on purpose: this profile must never
+# be the one running in production, which is why every secret below is obviously fake.
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/hamburguesas}
+    username: ${DB_USER:hamburguesas}
+    password: ${DB_PASSWORD:hamburguesas}
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+
+app:
+  jwt:
+    # Long enough for HS256 and useless to anyone: tokens signed with it only work locally.
+    secret: ${JWT_SECRET:dev-only-secret-not-used-anywhere-but-your-laptop}
+  cors:
+    allowed-origins: ${ALLOWED_ORIGIN:http://localhost:5173}

@@ -1,0 +1,31 @@
+# Production. Every secret comes from the environment with no fallback on purpose:
+# a missing variable must stop the app at boot instead of silently running on a
+# default that ends up published. See deploy/.env.example for the full list.
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+server:
+  # The app sits behind Caddy, so it must trust X-Forwarded-* to build correct URLs
+  # and to know the request arrived over HTTPS.
+  forward-headers-strategy: framework
+  shutdown: graceful
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+
+app:
+  places:
+    photos:
+      # A Docker volume, so photos survive redeploys.
+      directory: ${PLACE_PHOTOS_DIR:/data/place-photos}
+
+logging:
+  level:
+    root: INFO
+    com.hamburguesas: INFO
+    # Logging SQL in production is both noise and a way to leak data into the logs.
+    org.hibernate.SQL: WARN

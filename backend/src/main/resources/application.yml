@@ -1,11 +1,15 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
+  # Everything environment-specific lives in application-dev.yml / application-prod.yml.
+  # Dev is the default so that running the app locally needs no extra setup.
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   datasource:
-    url: jdbc:postgresql://localhost:5432/hamburguesas
-    username: ${DB_USER:hamburguesas}
-    password: ${DB_PASSWORD:hamburguesas}
+    url: ${DATABASE_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
   flyway:
     enabled: true
     # Existing databases already carry the V1 schema from the ddl-auto=update days:
@@ -16,17 +20,14 @@ spring:
     hibernate:
       # Flyway owns the schema now; Hibernate only checks that the entities still match it.
       ddl-auto: validate
-    properties:
-      hibernate:
-        format_sql: true
     open-in-view: false
 
 app:
   jwt:
-    secret: ${JWT_SECRET:change-this-secret-in-production-please-32bytes-min}
-    expiration-minutes: 60
+    secret: ${JWT_SECRET}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
   cors:
-    allowed-origins: ${ALLOWED_ORIGIN:http://localhost:5173}
+    allowed-origins: ${ALLOWED_ORIGIN}
   places:
     api-key: ${GOOGLE_MAPS_API_KEY:}
     sync:

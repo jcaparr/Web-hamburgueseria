@@ -1,0 +1,35 @@
+# SITE_ADDRESS is the public hostname (for example hamburguesas.duckdns.org).
+# Caddy gets and renews the Let's Encrypt certificate for it on its own.
+# Set it to :80 to serve plain HTTP when testing locally.
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	# The API and the site share an origin, so the session cookie needs no CORS exception.
+	handle /api/* {
+		reverse_proxy backend:8080
+	}
+
+	handle {
+		root * /srv
+		# Hashed asset filenames change on every build, so they can be cached forever.
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		# Client-side routing: unknown paths are React Router's problem, not a 404.
+		try_files {path} /index.html
+		file_server
+	}
+
+	header {
+		# Caddy serves HTTPS on its own; this tells browsers never to try plain HTTP.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
