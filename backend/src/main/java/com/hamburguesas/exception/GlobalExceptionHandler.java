@@ -1,5 +1,6 @@
 package com.hamburguesas.exception;
 
+import com.hamburguesas.mail.EmailDeliveryException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -29,6 +30,31 @@ public class GlobalExceptionHandler {
         return body(HttpStatus.UNAUTHORIZED, "Credenciales invalidas");
     }
 
+    /**
+     * Carries a machine-readable code so the frontend can send the user to the
+     * verification screen instead of just showing the message.
+     */
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<Map<String, Object>> handleNotVerified(EmailNotVerifiedException ex) {
+        return body(HttpStatus.FORBIDDEN, ex.getMessage(), "EMAIL_NOT_VERIFIED");
+    }
+
+    @ExceptionHandler(InvalidCodeException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidCode(InvalidCodeException ex) {
+        return body(HttpStatus.BAD_REQUEST, ex.getMessage(), "INVALID_CODE");
+    }
+
+    /**
+     * Only reached on registration, where the account is rolled back with it: telling
+     * the user to try again is honest, and hiding it would leave them waiting for an
+     * email that is never coming.
+     */
+    @ExceptionHandler(EmailDeliveryException.class)
+    public ResponseEntity<Map<String, Object>> handleEmailDelivery(EmailDeliveryException ex) {
+        return body(HttpStatus.SERVICE_UNAVAILABLE,
+            "No pudimos mandarte el email. Probá de nuevo en un rato.", "EMAIL_DELIVERY_FAILED");
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()
@@ -39,10 +65,17 @@ public class GlobalExceptionHandler {
     }
 
     private ResponseEntity<Map<String, Object>> body(HttpStatus status, String message) {
+        return body(status, message, null);
+    }
+
+    private ResponseEntity<Map<String, Object>> body(HttpStatus status, String message, String code) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("timestamp", Instant.now().toString());
         payload.put("status", status.value());
         payload.put("error", message);
+        if (code != null) {
+            payload.put("code", code);
+        }
         return ResponseEntity.status(status).body(payload);
     }
 }

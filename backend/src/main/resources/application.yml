@@ -21,6 +21,20 @@ spring:
       # Flyway owns the schema now; Hibernate only checks that the entities still match it.
       ddl-auto: validate
     open-in-view: false
+  mail:
+    # host/username/password come from the environment only (SPRING_MAIL_HOST and
+    # friends). With no host set, Spring creates no mail sender and EmailService
+    # writes the message to the log instead, which is what makes local development
+    # work without an SMTP account.
+    port: ${MAIL_PORT:587}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      # Without timeouts a hung SMTP server would hang the request thread with it.
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
 
 app:
   jwt:
@@ -28,6 +42,17 @@ app:
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
   cors:
     allowed-origins: ${ALLOWED_ORIGIN}
+  mail:
+    # Must be the same address as SPRING_MAIL_USERNAME: Gmail rejects a From it
+    # did not authenticate.
+    from: ${MAIL_FROM:}
+    from-name: ${MAIL_FROM_NAME:Hamburgueserías BA}
+  auth:
+    verification:
+      code-length: 6
+      ttl-minutes: 10
+      max-attempts: 5
+      resend-cooldown-seconds: 60
   places:
     api-key: ${GOOGLE_MAPS_API_KEY:}
     sync:
