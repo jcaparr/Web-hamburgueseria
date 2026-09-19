@@ -1,5 +1,7 @@
 package com.hamburguesas.service;
 
+import com.hamburguesas.auth.AuthProperties;
+import com.hamburguesas.auth.RateLimiter;
 import com.hamburguesas.auth.VerificationService;
 import com.hamburguesas.dto.AuthResponse;
 import com.hamburguesas.dto.EmailOnlyRequest;
@@ -10,6 +12,7 @@ import com.hamburguesas.dto.ResetPasswordRequest;
 import com.hamburguesas.dto.VerifyEmailRequest;
 import com.hamburguesas.exception.EmailNotVerifiedException;
 import com.hamburguesas.exception.InvalidCodeException;
+import com.hamburguesas.exception.TooManyRequestsException;
 import com.hamburguesas.mail.EmailService;
 import com.hamburguesas.model.User;
 import com.hamburguesas.model.VerificationPurpose;
@@ -23,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.Optional;
 
 /**
@@ -48,6 +52,8 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final VerificationService verificationService;
     private final EmailService emailService;
+    private final RateLimiter rateLimiter;
+    private final AuthProperties authProperties;
 
     /**
      * Never reports that the address is taken. If it is, the owner gets an email
@@ -56,6 +62,7 @@ public class AuthService {
     @Transactional
     public MessageResponse register(RegisterRequest request) {
         String email = normalize(request.email());
+        requireSendAllowance(email);
         Optional<User> existing = userRepository.findByEmail(email);
 
         if (existing.isPresent()) {
@@ -84,6 +91,7 @@ public class AuthService {
 
     @Transactional
     public AuthResponse verifyEmail(VerifyEmailRequest request) {
+        requireAttemptAllowance(normalize(request.email()));
         User user = userRepository.findByEmail(normalize(request.email()))
             .filter(candidate -> !candidate.isEmailVerified())
             .orElseThrow(() -> new InvalidCodeException(CODE_REJECTED));
@@ -99,6 +107,7 @@ public class AuthService {
 
     @Transactional
     public MessageResponse resendVerificationCode(EmailOnlyRequest request) {
+        requireSendAllowance(normalize(request.email()));
         userRepository.findByEmail(normalize(request.email()))
             .filter(user -> !user.isEmailVerified())
             .ifPresent(user -> issueQuietly(user, VerificationPurpose.EMAIL_VERIFICATION));
@@ -107,6 +116,7 @@ public class AuthService {
 
     @Transactional
     public MessageResponse forgotPassword(EmailOnlyRequest request) {
+        requireSendAllowance(normalize(request.email()));
         userRepository.findByEmail(normalize(request.email()))
             // An unverified account has never proved it owns the address, so sending it
             // a reset code would hand the account to whoever typed that address.
@@ -117,6 +127,7 @@ public class AuthService {
 
     @Transactional
     public MessageResponse resetPassword(ResetPasswordRequest request) {
+        requireAttemptAllowance(normalize(request.email()));
         User user = userRepository.findByEmail(normalize(request.email()))
             .filter(User::isEmailVerified)
             .orElseThrow(() -> new InvalidCodeException(CODE_REJECTED));
@@ -133,6 +144,7 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
         String email = normalize(request.email());
+        requireAttemptAllowance(email);
 
         authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(email, request.password())
@@ -195,6 +207,32 @@ public class AuthService {
             emailService.send(user.getEmail(), "Ya tenés una cuenta con este email", body);
         } catch (RuntimeException ex) {
             log.error("Could not send the duplicate registration notice: {}", ex.getMessage());
+        }
+    }
+
+    /**
+     * Caps how many emails one address can be made to receive, whoever asks and from
+     * wherever. Without it, anyone could use registration or "forgot password" to bury
+     * someone else's inbox, and burn our daily sending quota doing it.
+     */
+    private void requireSendAllowance(String email) {
+        var config = authProperties.getRateLimit();
+        if (!rateLimiter.tryAcquire("send:" + email, config.getPerEmailSends(),
+                Duration.ofMinutes(config.getPerEmailSendWindowMinutes()))) {
+            throw new TooManyRequestsException(
+                "Ya te mandamos varios emails. Esperá un rato antes de pedir otro.");
+        }
+    }
+
+    /**
+     * Caps guesses against one account. The per-address limit alone would not stop
+     * someone spreading attempts across many addresses to attack a single account.
+     */
+    private void requireAttemptAllowance(String email) {
+        var config = authProperties.getRateLimit();
+        if (!rateLimiter.tryAcquire("attempt:" + email, config.getPerEmailLoginAttempts(),
+                Duration.ofMinutes(config.getPerEmailLoginWindowMinutes()))) {
+            throw new TooManyRequestsException("Demasiados intentos. Esperá unos minutos.");
         }
     }
 

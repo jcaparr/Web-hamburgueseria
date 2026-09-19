@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AuthProperties {
 
     private Verification verification = new Verification();
+    private RateLimit rateLimit = new RateLimit();
 
     @Data
     public static class Verification {
@@ -18,5 +19,26 @@ public class AuthProperties {
         private int maxAttempts = 5;
         /** Stops someone using "resend" to flood an inbox they do not own. */
         private int resendCooldownSeconds = 60;
+    }
+
+    @Data
+    public static class RateLimit {
+        /**
+         * Everything under /api/auth from one address. Generous enough for a family
+         * behind one connection, tight enough to make scripted guessing pointless.
+         */
+        private int perIpRequests = 30;
+        private int perIpWindowMinutes = 15;
+
+        /** Password guesses against one account, wherever they come from. */
+        private int perEmailLoginAttempts = 10;
+        private int perEmailLoginWindowMinutes = 15;
+
+        /**
+         * Emails we will send to one address per hour. The resend cooldown already
+         * spaces them out; this caps the daily total someone can trigger.
+         */
+        private int perEmailSends = 5;
+        private int perEmailSendWindowMinutes = 60;
     }
 }
