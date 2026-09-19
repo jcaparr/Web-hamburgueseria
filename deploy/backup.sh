@@ -11,6 +11,13 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
+# A failing dump still creates the output file, and set -e aborts the script before
+# any check below can run. Without this trap the directory ends up holding a 0-byte
+# file that looks like a backup until the day you try to restore it.
+DUMP=""
+PHOTOS=""
+trap 'status=$?; if [ "$status" -ne 0 ]; then echo "!! Backup failed (exit $status), removing partial files" >&2; rm -f "$DUMP" "$PHOTOS"; fi' EXIT
+
 COMPOSE="docker compose -f docker-compose.prod.yml --env-file .env"
 RETENTION_DAYS="${RETENTION_DAYS:-14}"
 BACKUP_DIR="${BACKUP_DIR:-$(pwd)/backups}"
@@ -42,6 +49,14 @@ echo "==> Archiving photos to $PHOTOS"
 $COMPOSE exec -T backend tar -czf - -C /data place-photos > "$PHOTOS"
 chmod 600 "$PHOTOS"
 
+# Same reasoning as the dump: an empty archive is a failure that would otherwise
+# only surface the day you need the photos back.
+if [ ! -s "$PHOTOS" ]; then
+    echo "!! Photo archive is empty, removing it" >&2
+    rm -f "$PHOTOS"
+    exit 1
+fi
+
 if [ -n "${RCLONE_REMOTE:-}" ]; then
     echo "==> Uploading to $RCLONE_REMOTE"
     rclone copy "$DUMP" "$RCLONE_REMOTE"
@@ -52,4 +67,6 @@ echo "==> Deleting local backups older than $RETENTION_DAYS days"
 find "$BACKUP_DIR" -name 'db-*.sql.gz' -mtime "+$RETENTION_DAYS" -delete
 find "$BACKUP_DIR" -name 'photos-*.tar.gz' -mtime "+$RETENTION_DAYS" -delete
 
-echo "==> Done: $(du -h "$DUMP" | cut -f1) database, $(du -h "$PHOTOS" | cut -f1) photos"
+# --apparent-size, because a few-hundred-byte archive rounds to 0 with block sizes
+# and makes a perfectly good backup look like a failed one.
+echo "==> Done: $(du -h --apparent-size "$DUMP" | cut -f1) database, $(du -h --apparent-size "$PHOTOS" | cut -f1) photos"
