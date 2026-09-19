@@ -4,11 +4,13 @@ import { TopBar } from './components/TopBar'
 import { AuthProvider } from './context/AuthContext'
 import { BurgerJointDetail } from './pages/BurgerJointDetail'
 import { Explore } from './pages/Explore'
+import { ForgotPassword } from './pages/ForgotPassword'
 import { Login } from './pages/Login'
 import { Profile } from './pages/Profile'
 import { Ranking } from './pages/Ranking'
 import { Register } from './pages/Register'
 import { Reviews } from './pages/Reviews'
+import { VerifyEmail } from './pages/VerifyEmail'
 import { Wishlist } from './pages/Wishlist'
 
 export default function App() {
@@ -27,6 +29,8 @@ export default function App() {
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
             </Routes>
           </main>
           <BottomNav />

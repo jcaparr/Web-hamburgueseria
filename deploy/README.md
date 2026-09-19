@@ -37,6 +37,27 @@ Flyway crea el esquema en el primer arranque. Si faltara alguna variable de ento
 el backend no arranca: eso es a propósito, para que nada quede corriendo con un valor
 por defecto.
 
+## Email
+
+Los códigos de verificación y de recuperación de contraseña salen por SMTP de Gmail,
+desde una cuenta dedicada a la app. Hace falta:
+
+1. Activar la **verificación en dos pasos** en esa cuenta.
+2. Generar una **contraseña de aplicación** en https://myaccount.google.com/apppasswords
+   (la contraseña normal de la cuenta no funciona por SMTP).
+3. Pegarla en `SPRING_MAIL_PASSWORD` dentro del `.env`.
+
+El límite es de unos 500 mails por día, de sobra para arrancar.
+
+Como todavía no hay dominio propio, los mails salen desde una dirección `@gmail.com`
+y pueden caer en spam. Por eso todos los mensajes de la app avisan de revisar esa
+carpeta. Cuando haya dominio, conviene pasar a un proveedor con SPF y DKIM propios:
+se cambia solo la configuración, el código queda igual.
+
+Si `SPRING_MAIL_HOST` queda vacío no se envía nada y los códigos se escriben en el
+log. Sirve para desarrollo, **nunca para producción**: cualquiera con acceso a los
+logs podría activar cuentas ajenas.
+
 ## Actualizar
 
 ```bash

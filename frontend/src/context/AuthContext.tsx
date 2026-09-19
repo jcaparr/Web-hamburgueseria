@@ -5,7 +5,9 @@ import type { User } from '../types'
 interface AuthContextValue {
   user: User | null
   login: (email: string, password: string) => Promise<void>
-  register: (name: string, email: string, password: string) => Promise<void>
+  /** Does not start a session: the account is unusable until the emailed code is entered. */
+  register: (name: string, email: string, password: string) => Promise<string>
+  verifyEmail: (email: string, code: string) => Promise<void>
   logout: () => void
 }
 
@@ -31,8 +33,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     saveSession(data)
   }
 
-  async function register(name: string, email: string, password: string) {
+  async function register(name: string, email: string, password: string): Promise<string> {
     const { data } = await apiClient.post('/auth/register', { name, email, password })
+    return data.message as string
+  }
+
+  async function verifyEmail(email: string, code: string) {
+    const { data } = await apiClient.post('/auth/verify-email', { email, code })
     saveSession(data)
   }
 
@@ -51,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, register, verifyEmail, logout }}>
       {children}
     </AuthContext.Provider>
   )
