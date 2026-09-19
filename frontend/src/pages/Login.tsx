@@ -2,9 +2,11 @@ import { useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { GoogleSignInButton } from '../components/GoogleSignInButton'
 import { useAuth } from '../context/AuthContext'
+import { useGoogleSignIn } from '../hooks/useGoogleSignIn'
 
 export function Login() {
-  const { login, loginWithGoogle } = useAuth()
+  const { login } = useAuth()
+  const { onCredential, googleError, setGoogleError } = useGoogleSignIn()
   const navigate = useNavigate()
   const location = useLocation()
   const state = location.state as { notice?: string } | null
@@ -44,26 +46,6 @@ export function Login() {
     }
   }
 
-  async function onGoogleCredential(credential: string) {
-    setError(null)
-    setNotice(null)
-    try {
-      await loginWithGoogle(credential)
-      navigate('/')
-    } catch (err: any) {
-      const data = err.response?.data
-
-      // This email already has an account here, so linking has to be confirmed by
-      // the code the server just sent before Google gets control of it.
-      if (data?.code === 'GOOGLE_LINK_REQUIRED') {
-        navigate('/link-google', { state: { credential, notice: data.error } })
-        return
-      }
-
-      setError(data?.error ?? 'No pudimos iniciar sesión con Google')
-    }
-  }
-
   return (
     <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-sm md:p-0 md:pt-8">
       <div className="card card-border md:p-2">
@@ -94,7 +76,8 @@ export function Login() {
             </button>
           </form>
 
-          <GoogleSignInButton onCredential={onGoogleCredential} onError={setError} />
+          {googleError && <p className="text-xs text-error">{googleError}</p>}
+          <GoogleSignInButton onCredential={onCredential} onError={setGoogleError} text="signin_with" />
 
           <p className="text-sm text-base-content/60">
             <Link to="/forgot-password" className="link text-primary">

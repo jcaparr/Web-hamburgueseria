@@ -68,9 +68,12 @@ function loadScript(): Promise<void> {
 export function GoogleSignInButton({
   onCredential,
   onError,
+  text = 'continue_with',
 }: {
   onCredential: (credential: string) => void
   onError: (message: string) => void
+  /** Google's own wording options, so the button reads right on each screen. */
+  text?: 'continue_with' | 'signin_with' | 'signup_with'
 }) {
   const container = useRef<HTMLDivElement>(null)
   // Kept in a ref so re-renders do not re-initialise Google's script with a stale
@@ -95,7 +98,7 @@ export function GoogleSignInButton({
           theme: 'outline',
           size: 'large',
           width: 320,
-          text: 'continue_with',
+          text,
           locale: 'es-419',
         })
       })
@@ -108,7 +111,7 @@ export function GoogleSignInButton({
     }
     // onError is intentionally not a dependency: it would re-run this on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [text])
 
   if (!CLIENT_ID) return null
 

@@ -1,9 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { GoogleSignInButton } from '../components/GoogleSignInButton'
 import { useAuth } from '../context/AuthContext'
+import { useGoogleSignIn } from '../hooks/useGoogleSignIn'
 
 export function Register() {
   const { register } = useAuth()
+  const { onCredential, googleError, setGoogleError } = useGoogleSignIn()
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -63,6 +66,15 @@ export function Register() {
               {submitting ? 'Creando...' : 'Crear cuenta'}
             </button>
           </form>
+
+          {/* Same endpoint as on the login screen: Google users skip the emailed code
+              entirely, because Google has already verified the address. */}
+          {googleError && <p className="text-xs text-error">{googleError}</p>}
+          <GoogleSignInButton
+            onCredential={onCredential}
+            onError={setGoogleError}
+            text="signup_with"
+          />
           <p className="text-sm text-base-content/60">
             ¿Ya tenés cuenta? <Link to="/login" className="link text-primary">Iniciá sesión</Link>
           </p>
