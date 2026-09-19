@@ -1,7 +1,6 @@
 package com.hamburguesas.service;
 
-import com.hamburguesas.auth.AuthProperties;
-import com.hamburguesas.auth.RateLimiter;
+import com.hamburguesas.auth.AuthRateLimits;
 import com.hamburguesas.auth.VerificationService;
 import com.hamburguesas.dto.AuthResponse;
 import com.hamburguesas.dto.EmailOnlyRequest;
@@ -12,7 +11,6 @@ import com.hamburguesas.dto.ResetPasswordRequest;
 import com.hamburguesas.dto.VerifyEmailRequest;
 import com.hamburguesas.exception.EmailNotVerifiedException;
 import com.hamburguesas.exception.InvalidCodeException;
-import com.hamburguesas.exception.TooManyRequestsException;
 import com.hamburguesas.mail.EmailService;
 import com.hamburguesas.model.User;
 import com.hamburguesas.model.VerificationPurpose;
@@ -26,7 +24,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.util.Optional;
 
 /**
@@ -52,8 +49,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final VerificationService verificationService;
     private final EmailService emailService;
-    private final RateLimiter rateLimiter;
-    private final AuthProperties authProperties;
+    private final AuthRateLimits rateLimits;
 
     /**
      * Never reports that the address is taken. If it is, the owner gets an email
@@ -210,30 +206,12 @@ public class AuthService {
         }
     }
 
-    /**
-     * Caps how many emails one address can be made to receive, whoever asks and from
-     * wherever. Without it, anyone could use registration or "forgot password" to bury
-     * someone else's inbox, and burn our daily sending quota doing it.
-     */
     private void requireSendAllowance(String email) {
-        var config = authProperties.getRateLimit();
-        if (!rateLimiter.tryAcquire("send:" + email, config.getPerEmailSends(),
-                Duration.ofMinutes(config.getPerEmailSendWindowMinutes()))) {
-            throw new TooManyRequestsException(
-                "Ya te mandamos varios emails. Esperá un rato antes de pedir otro.");
-        }
+        rateLimits.requireSendAllowance(email);
     }
 
-    /**
-     * Caps guesses against one account. The per-address limit alone would not stop
-     * someone spreading attempts across many addresses to attack a single account.
-     */
     private void requireAttemptAllowance(String email) {
-        var config = authProperties.getRateLimit();
-        if (!rateLimiter.tryAcquire("attempt:" + email, config.getPerEmailLoginAttempts(),
-                Duration.ofMinutes(config.getPerEmailLoginWindowMinutes()))) {
-            throw new TooManyRequestsException("Demasiados intentos. Esperá unos minutos.");
-        }
+        rateLimits.requireAttemptAllowance(email);
     }
 
     /** Emails are case-insensitive in practice, and the column is unique. */

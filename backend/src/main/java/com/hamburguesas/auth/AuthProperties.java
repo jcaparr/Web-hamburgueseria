@@ -9,6 +9,16 @@ public class AuthProperties {
 
     private Verification verification = new Verification();
     private RateLimit rateLimit = new RateLimit();
+    private Google google = new Google();
+
+    @Data
+    public static class Google {
+        /**
+         * OAuth client id for the web app. Public by design: it ships inside the
+         * frontend bundle. Empty disables signing in with Google entirely.
+         */
+        private String clientId = "";
+    }
 
     @Data
     public static class Verification {

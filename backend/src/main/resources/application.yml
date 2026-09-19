@@ -48,6 +48,10 @@ app:
     from: ${MAIL_FROM:}
     from-name: ${MAIL_FROM_NAME:Hamburgueserías BA}
   auth:
+    google:
+      # Public by design: it ships inside the frontend bundle. Empty disables signing
+      # in with Google.
+      client-id: ${GOOGLE_CLIENT_ID:}
     verification:
       code-length: 6
       ttl-minutes: 10

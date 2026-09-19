@@ -39,6 +39,15 @@ public class GlobalExceptionHandler {
         return body(HttpStatus.FORBIDDEN, ex.getMessage(), "EMAIL_NOT_VERIFIED");
     }
 
+    /**
+     * Not really an error: the frontend turns it into the screen that asks for the
+     * code confirming the link.
+     */
+    @ExceptionHandler(GoogleLinkRequiredException.class)
+    public ResponseEntity<Map<String, Object>> handleLinkRequired(GoogleLinkRequiredException ex) {
+        return body(HttpStatus.CONFLICT, ex.getMessage(), "GOOGLE_LINK_REQUIRED");
+    }
+
     @ExceptionHandler(InvalidCodeException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidCode(InvalidCodeException ex) {
         return body(HttpStatus.BAD_REQUEST, ex.getMessage(), "INVALID_CODE");

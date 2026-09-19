@@ -26,8 +26,16 @@ public class User {
     @Column(nullable = false, length = 180)
     private String email;
 
-    @Column(name = "password_hash", nullable = false)
+    /** Null for accounts that only ever sign in with Google. */
+    @Column(name = "password_hash")
     private String passwordHash;
+
+    /**
+     * Google's stable id for the account. The link is anchored here and not on the
+     * email, which a person can change on their Google account.
+     */
+    @Column(name = "google_sub", length = 64)
+    private String googleSub;
 
     /** False until the user enters the code we emailed them. They cannot log in before that. */
     @Column(name = "email_verified", nullable = false)

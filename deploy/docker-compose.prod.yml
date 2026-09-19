@@ -36,6 +36,7 @@ services:
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
       MAIL_FROM: ${MAIL_FROM:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
       PLACES_SYNC_ENABLED: ${PLACES_SYNC_ENABLED:-false}
       PLACES_SYNC_TOKEN: ${PLACES_SYNC_TOKEN:-}
@@ -46,6 +47,10 @@ services:
   caddy:
     build:
       context: ../frontend
+      args:
+        # Baked into the bundle at build time, which is why it is a build arg and not
+        # an environment variable: the browser needs it, not the container.
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     restart: unless-stopped
     depends_on:
       - backend

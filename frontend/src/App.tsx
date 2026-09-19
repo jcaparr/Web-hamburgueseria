@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext'
 import { BurgerJointDetail } from './pages/BurgerJointDetail'
 import { Explore } from './pages/Explore'
 import { ForgotPassword } from './pages/ForgotPassword'
+import { LinkGoogle } from './pages/LinkGoogle'
 import { Login } from './pages/Login'
 import { Profile } from './pages/Profile'
 import { Ranking } from './pages/Ranking'
@@ -31,6 +32,7 @@ export default function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/link-google" element={<LinkGoogle />} />
             </Routes>
           </main>
           <BottomNav />
