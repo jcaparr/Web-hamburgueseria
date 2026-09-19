@@ -108,7 +108,10 @@ public class GoogleAuthService {
 
         rateLimits.requireSendAllowance(user.getEmail());
         try {
-            verificationService.issue(user, VerificationPurpose.GOOGLE_LINK);
+            // In its own transaction: this method's caller throws, and that rollback
+            // would undo the saved code while the email had already gone out, leaving
+            // the user holding a code that does not exist.
+            verificationService.issueSeparately(user, VerificationPurpose.GOOGLE_LINK);
         } catch (RuntimeException ex) {
             log.error("Could not issue a Google link code: {}", ex.getMessage());
         }

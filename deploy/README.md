@@ -58,6 +58,31 @@ Si `SPRING_MAIL_HOST` queda vacío no se envía nada y los códigos se escriben 
 log. Sirve para desarrollo, **nunca para producción**: cualquiera con acceso a los
 logs podría activar cuentas ajenas.
 
+## Ingreso con Google
+
+Hace falta un **ID de cliente de OAuth** (tipo "Aplicación web") creado en Google Cloud
+Console, en el mismo proyecto que la API key de Maps.
+
+En **Orígenes autorizados de JavaScript** hay que listar cada dominio desde el que se
+sirve la app. Sin eso, Google no dibuja el botón:
+
+```
+http://localhost:5173          (desarrollo)
+https://tu-dominio             (producción)
+```
+
+El Client ID va en `GOOGLE_CLIENT_ID` dentro del `.env`. Es público: viaja dentro del
+bundle del frontend, y por eso el `docker-compose` lo pasa como argumento de build y no
+como variable de entorno del contenedor. El *client secret* no se usa: validamos el ID
+token, no hacemos intercambio de código.
+
+Vacío, el botón simplemente no aparece y el endpoint rechaza cualquier intento.
+
+Mientras la app esté en modo "Prueba" en la pantalla de consentimiento, funciona igual
+para cualquier cuenta, porque solo pedimos permisos básicos (email y perfil). Antes de
+abrirla al público conviene completar la pantalla de consentimiento con el nombre real
+de la app: es lo que ve el usuario al entrar.
+
 ## Actualizar
 
 ```bash
