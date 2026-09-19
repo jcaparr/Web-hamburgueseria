@@ -13,6 +13,10 @@ frontend/.env.local
 # Env / secrets
 .env
 *.env
+!deploy/.env.example
+
+# Backups: contienen los emails de todos los usuarios
+deploy/backups/
 
 # IDE
 .idea/

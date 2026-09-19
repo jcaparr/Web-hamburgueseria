@@ -1,6 +1,7 @@
 services:
   db:
-    image: postgres:16-alpine
+    # Same major version as production (see deploy/docker-compose.prod.yml).
+    image: postgres:17-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: hamburguesas

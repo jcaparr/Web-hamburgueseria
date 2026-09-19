@@ -20,7 +20,15 @@ public class JwtService {
         @Value("${app.jwt.secret}") String secret,
         @Value("${app.jwt.expiration-minutes}") long expirationMinutes
     ) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
+        if (secretBytes.length < 32) {
+            // Fail at boot with a readable message instead of letting HS256 be signed
+            // with a key short enough to brute force.
+            throw new IllegalStateException(
+                "app.jwt.secret must be at least 32 characters (got " + secretBytes.length + "). "
+                    + "Set the JWT_SECRET environment variable to a long random value.");
+        }
+        this.key = Keys.hmacShaKeyFor(secretBytes);
         this.expirationMinutes = expirationMinutes;
     }
 

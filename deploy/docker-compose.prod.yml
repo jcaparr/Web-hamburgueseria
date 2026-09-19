@@ -1,0 +1,64 @@
+# The whole stack on one VPS. Run it from this directory:
+#   docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    # Deliberately no published ports: Postgres is only reachable from the other
+    # containers, never from the internet.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ../backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DATABASE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      ALLOWED_ORIGIN: ${SITE_URL}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
+      PLACES_SYNC_ENABLED: ${PLACES_SYNC_ENABLED:-false}
+      PLACES_SYNC_TOKEN: ${PLACES_SYNC_TOKEN:-}
+    volumes:
+      - place_photos:/data/place-photos
+    # Also not published: only Caddy talks to it, over the internal network.
+
+  caddy:
+    build:
+      context: ../frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificates: without these volumes Caddy would ask Let's Encrypt for a new
+      # one on every restart and hit the rate limit.
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  db_data:
+  place_photos:
+  caddy_data:
+  caddy_config:
