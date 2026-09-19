@@ -27,18 +27,42 @@ declare global {
 const SCRIPT_SRC = 'https://accounts.google.com/gsi/client'
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
 
+/**
+ * Shared across every caller and every mount.
+ *
+ * Checking for the script tag instead would resolve the moment the tag exists, which
+ * is well before it has run: React mounts effects twice in development, and the
+ * second mount would find the tag the first one just added, resolve immediately and
+ * then find no `window.google` to call.
+ */
+let scriptPromise: Promise<void> | null = null
+
 function loadScript(): Promise<void> {
-  if (document.querySelector(`script[src="${SCRIPT_SRC}"]`)) {
+  if (window.google?.accounts?.id) {
     return Promise.resolve()
   }
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script')
-    script.src = SCRIPT_SRC
-    script.async = true
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('No se pudo cargar el script de Google'))
-    document.head.appendChild(script)
+  if (scriptPromise) {
+    return scriptPromise
+  }
+
+  scriptPromise = new Promise<void>((resolve, reject) => {
+    const script =
+      (document.querySelector(`script[src="${SCRIPT_SRC}"]`) as HTMLScriptElement | null) ??
+      Object.assign(document.createElement('script'), { src: SCRIPT_SRC, async: true })
+
+    script.addEventListener('load', () => resolve())
+    script.addEventListener('error', () => {
+      // Cleared so a later attempt can retry instead of reusing a rejected promise.
+      scriptPromise = null
+      reject(new Error('No se pudo cargar el script de Google'))
+    })
+
+    if (!script.isConnected) {
+      document.head.appendChild(script)
+    }
   })
+
+  return scriptPromise
 }
 
 export function GoogleSignInButton({
