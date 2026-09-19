@@ -17,7 +17,10 @@ export function Register() {
     setError(null)
     try {
       await register(name, email, password)
-      navigate('/')
+      // No session yet: the account is not usable until the emailed code is entered.
+      // The message the server returns is not passed along: the verification screen
+      // already says the same thing, with the address filled in.
+      navigate('/verify-email', { state: { email } })
     } catch (err: any) {
       setError(err.response?.data?.error ?? 'No pudimos crear tu cuenta')
     } finally {
