@@ -48,6 +48,12 @@ app:
     from: ${MAIL_FROM:}
     from-name: ${MAIL_FROM_NAME:Hamburgueserías BA}
   auth:
+    session:
+      access-token-minutes: 15
+      refresh-token-days: 30
+      # Una cookie Secure no viaja por HTTP, que es todo entorno de desarrollo.
+      # Producción lo pisa en true y no debe correr sin eso.
+      cookie-secure: false
     google:
       # Public by design: it ships inside the frontend bundle. Empty disables signing
       # in with Google.

@@ -10,6 +10,23 @@ public class AuthProperties {
     private Verification verification = new Verification();
     private RateLimit rateLimit = new RateLimit();
     private Google google = new Google();
+    private Session session = new Session();
+
+    @Data
+    public static class Session {
+        /**
+         * Short on purpose: a JWT cannot be revoked, so its lifetime is how long a
+         * stolen one keeps working. The refresh token covers staying logged in.
+         */
+        private int accessTokenMinutes = 15;
+        private int refreshTokenDays = 30;
+
+        /**
+         * Secure cookies are not sent over plain HTTP, which is every developer
+         * machine. Production overrides this to true and must never run without it.
+         */
+        private boolean cookieSecure = false;
+    }
 
     @Data
     public static class Google {

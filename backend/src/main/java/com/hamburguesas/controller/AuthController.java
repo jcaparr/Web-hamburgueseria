@@ -1,5 +1,9 @@
 package com.hamburguesas.controller;
 
+import com.hamburguesas.auth.SessionCookies;
+import com.hamburguesas.auth.SessionIssuer;
+import com.hamburguesas.auth.SessionRejectedException;
+import com.hamburguesas.auth.SessionService;
 import com.hamburguesas.dto.AuthResponse;
 import com.hamburguesas.dto.EmailOnlyRequest;
 import com.hamburguesas.dto.GoogleLoginRequest;
@@ -8,12 +12,15 @@ import com.hamburguesas.dto.MessageResponse;
 import com.hamburguesas.dto.RegisterRequest;
 import com.hamburguesas.dto.ResetPasswordRequest;
 import com.hamburguesas.dto.VerifyEmailRequest;
+import com.hamburguesas.repository.UserRepository;
+import com.hamburguesas.security.CurrentUser;
 import com.hamburguesas.service.AuthService;
 import com.hamburguesas.service.GoogleAuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,20 +33,23 @@ public class AuthController {
 
     private final AuthService authService;
     private final GoogleAuthService googleAuthService;
+    private final SessionIssuer sessionIssuer;
+    private final SessionService sessionService;
+    private final SessionCookies cookies;
+    private final UserRepository userRepository;
 
     /**
-     * 202, not 201: the account is not usable until the emailed code is entered, and
-     * the answer is the same whether or not the address was already registered.
+     * 202, not 201: the account is not usable until the emailed code is entered.
      */
     @PostMapping("/register")
     public ResponseEntity<MessageResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.accepted().body(authService.register(request));
     }
 
-    /** The only place a brand-new account gets its first token. */
+    /** The only place a brand-new account gets its first session. */
     @PostMapping("/verify-email")
     public ResponseEntity<AuthResponse> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
-        return ResponseEntity.ok(authService.verifyEmail(request));
+        return sessionIssuer.start(authService.verifyEmail(request));
     }
 
     @PostMapping("/resend-code")
@@ -57,14 +67,45 @@ public class AuthController {
         return ResponseEntity.ok(authService.resetPassword(request));
     }
 
-    /** Google has already verified the address, so this can hand back a session directly. */
     @PostMapping("/google")
     public ResponseEntity<AuthResponse> google(@Valid @RequestBody GoogleLoginRequest request) {
-        return ResponseEntity.ok(googleAuthService.login(request));
+        return sessionIssuer.start(googleAuthService.login(request));
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+        return sessionIssuer.start(authService.login(request));
+    }
+
+    /**
+     * Swaps the refresh cookie for a new pair. The access token is deliberately short
+     * lived, so the app calls this whenever it expires, and on every page load.
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(HttpServletRequest request) {
+        String presented = cookies.read(request, SessionCookies.REFRESH_COOKIE)
+            .orElseThrow(() -> new SessionRejectedException("No hay sesión"));
+
+        SessionService.RotatedSession rotated = sessionService.rotate(presented);
+        return sessionIssuer.renew(rotated.user(), rotated.refreshToken());
+    }
+
+    /** Ends this session only. Other devices keep theirs. */
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        cookies.read(request, SessionCookies.REFRESH_COOKIE).ifPresent(sessionService::revoke);
+        return sessionIssuer.end();
+    }
+
+    /**
+     * Who the cookie belongs to. With the tokens out of reach of JavaScript, this is
+     * how the app finds out on load whether it is signed in.
+     */
+    @GetMapping("/me")
+    public ResponseEntity<AuthResponse> me() {
+        return userRepository.findById(CurrentUser.requireId())
+            .map(user -> ResponseEntity.ok(
+                new AuthResponse(user.getId(), user.getName(), user.getEmail())))
+            .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

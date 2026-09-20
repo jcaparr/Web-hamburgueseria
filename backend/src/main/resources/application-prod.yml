@@ -18,6 +18,10 @@ server:
     include-exception: false
 
 app:
+  auth:
+    session:
+      # Sin esto las cookies de sesión viajarían por HTTP en claro.
+      cookie-secure: true
   places:
     photos:
       # A Docker volume, so photos survive redeploys.

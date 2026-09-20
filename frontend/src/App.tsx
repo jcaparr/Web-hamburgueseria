@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
+import { RequireAuth } from './components/RequireAuth'
 import { TopBar } from './components/TopBar'
 import { AuthProvider } from './context/AuthContext'
 import { BurgerJointDetail } from './pages/BurgerJointDetail'
@@ -24,9 +25,9 @@ export default function App() {
               <Route path="/" element={<Explore />} />
               <Route path="/burger-joints/:id" element={<BurgerJointDetail />} />
               <Route path="/ranking" element={<Ranking />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/reviews" element={<Reviews />} />
-              <Route path="/wishlist" element={<Wishlist />} />
+              <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+              <Route path="/reviews" element={<RequireAuth><Reviews /></RequireAuth>} />
+              <Route path="/wishlist" element={<RequireAuth><Wishlist /></RequireAuth>} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/verify-email" element={<VerifyEmail />} />

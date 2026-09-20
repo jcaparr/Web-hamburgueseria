@@ -14,10 +14,7 @@ export function Reviews() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login')
-      return
-    }
+    // RequireAuth guarantees there is a session by the time this renders.
     apiClient
       .get<MyRating[]>('/profile/ratings')
       .then(({ data }) => setRatings(data))
