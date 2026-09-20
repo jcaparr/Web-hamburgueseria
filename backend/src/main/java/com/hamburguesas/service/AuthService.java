@@ -77,10 +77,10 @@ public class AuthService {
             // alternative left people staring at a code screen waiting for a code that
             // was never coming. The other flows that take an email stay generic, so
             // this is the only place that admits an account exists.
-            throw new ConflictException(user.getGoogleSub() != null
-                ? "Ese email ya tiene una cuenta creada con Google. Entrá con el botón "
-                    + "\"Continuar con Google\"."
-                : "Ese email ya tiene una cuenta. Iniciá sesión con tu contraseña.");
+            //
+            // Which method the account uses is not named, and costs the user nothing:
+            // the login screen offers both, so they will find theirs there either way.
+            throw new ConflictException("Ese email ya tiene una cuenta. Probá iniciar sesión.");
         }
 
         User user = userRepository.save(User.builder()
