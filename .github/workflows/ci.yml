@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           # La misma que <java.version> en el pom: el CI no sirve si prueba
           # contra una JDK distinta de la que usa el Dockerfile.
