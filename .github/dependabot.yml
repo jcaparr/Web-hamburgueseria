@@ -1,6 +1,11 @@
 # Avisa cuando una dependencia tiene una versión nueva, que casi siempre es cómo
 # llegan los parches de seguridad. Semanal y agrupado: un PR por ecosistema en vez
 # de veinte sueltos, que es lo que hace que la gente los empiece a ignorar.
+#
+# El grupo junta solo minor y patch. Con patterns "*" sin filtrar, un salto de
+# major del framework viajaba adentro de un PR titulado "5 updates" —así se coló
+# Spring Boot 3.3.4 → 4.1.1, que no compila— y aprobarlo de un vistazo parecía
+# razonable. Ahora cada major llega en su propio PR, imposible de confundir.
 version: 2
 updates:
   - package-ecosystem: maven
@@ -12,6 +17,9 @@ updates:
       backend:
         patterns:
           - "*"
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: npm
     directory: /frontend
@@ -22,6 +30,9 @@ updates:
       frontend:
         patterns:
           - "*"
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: docker
     directories:
@@ -29,6 +40,16 @@ updates:
       - /frontend
     schedule:
       interval: weekly
+    # Los majors de las imágenes base se manejan a mano. Dependabot mira cuál es
+    # el número más alto, no cuál tiene soporte, y las dos veces que propuso uno
+    # apuntó a algo ya sin parches: Java 24 (no es LTS, EOL en 09/2025) y Node 25
+    # (impar, EOL el 01/06/2026). Las LTS de Java son 8, 11, 17, 21 y 25; las de
+    # Node, las pares. Mover el runtime es mover el pom y los dos Dockerfiles
+    # juntos, no una línea suelta.
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
 
   - package-ecosystem: github-actions
     directory: /
