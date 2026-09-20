@@ -18,6 +18,11 @@ server:
     include-exception: false
 
 app:
+  mail:
+    # Encendido salvo que se apague a propósito. Con esto, un deploy al que le falte
+    # la configuración de SMTP no arranca, en vez de escribir en el log los códigos
+    # que activan cuentas.
+    enabled: ${MAIL_ENABLED:true}
   auth:
     session:
       # Sin esto las cookies de sesión viajarían por HTTP en claro.

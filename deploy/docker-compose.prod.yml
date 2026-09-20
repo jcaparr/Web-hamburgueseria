@@ -32,6 +32,9 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       ALLOWED_ORIGIN: ${SITE_URL}
+      # Vacío es distinto de ausente: Spring ve la variable igual. Por eso la decisión
+      # de enviar o no la toma MAIL_ENABLED, no la presencia de estas.
+      MAIL_ENABLED: ${MAIL_ENABLED:-true}
       SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-}
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}

@@ -1,5 +1,6 @@
 package com.hamburguesas.mail;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -25,8 +26,31 @@ public class EmailService {
     private final ObjectProvider<JavaMailSender> mailSenderProvider;
     private final MailProperties properties;
 
+    /**
+     * Checked at startup, because the alternative is finding out at the moment
+     * somebody tries to register.
+     */
+    @PostConstruct
+    void checkConfiguration() {
+        if (!properties.isEnabled()) {
+            log.warn("El envío de email está deshabilitado: los códigos se escriben en "
+                + "el log. Correcto en desarrollo, nunca en producción.");
+            return;
+        }
+        if (properties.getFrom().isBlank()) {
+            throw new IllegalStateException(
+                "app.mail.enabled es true pero falta app.mail.from (MAIL_FROM). "
+                    + "Gmail rechaza un From que no autenticó.");
+        }
+        if (mailSenderProvider.getIfAvailable() == null) {
+            throw new IllegalStateException(
+                "app.mail.enabled es true pero no hay servidor SMTP configurado "
+                    + "(SPRING_MAIL_HOST).");
+        }
+    }
+
     public void send(String to, String subject, String body) {
-        JavaMailSender sender = mailSenderProvider.getIfAvailable();
+        JavaMailSender sender = properties.isEnabled() ? mailSenderProvider.getIfAvailable() : null;
 
         if (sender == null) {
             log.warn("""
