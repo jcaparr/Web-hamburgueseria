@@ -11,6 +11,17 @@ public class AuthProperties {
     private RateLimit rateLimit = new RateLimit();
     private Google google = new Google();
     private Session session = new Session();
+    private Password password = new Password();
+
+    @Data
+    public static class Password {
+        /**
+         * Consulta a Have I Been Pwned si la contraseña apareció en alguna filtración.
+         * Se puede apagar para correr sin salida a internet; en producción apagarlo
+         * significa aceptar contraseñas que ya están en las listas que usa cualquiera.
+         */
+        private boolean checkBreaches = true;
+    }
 
     @Data
     public static class Session {

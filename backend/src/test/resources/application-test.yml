@@ -1,0 +1,31 @@
+# H2 en vez de Postgres con Testcontainers: estos tests miran límites de transacción,
+# no SQL específico del motor, y así corren sin depender de Docker. El esquema lo
+# genera Hibernate desde las entidades; de las migraciones se encarga el arranque real.
+spring:
+  datasource:
+    url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  flyway:
+    enabled: false
+  sql:
+    init:
+      # Sin esto, Spring corre cualquier data.sql que haya en el classpath antes de
+      # que Hibernate cree las tablas. Los tests traen sus propios datos.
+      mode: never
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+app:
+  jwt:
+    secret: secreto-solo-para-tests-largo-de-sobra-32
+  cors:
+    allowed-origins: http://localhost:5173
+  mail:
+    enabled: false
+  auth:
+    password:
+      # Los tests no salen a internet.
+      check-breaches: false
