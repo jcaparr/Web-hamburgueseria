@@ -143,6 +143,8 @@ public class AuthService {
             .filter(candidate -> candidate.getGoogleSub() == null)
             .orElseThrow(() -> new InvalidCodeException(CODE_REJECTED));
 
+        // Antes de validar el código, no después: validarlo lo consume, y rechazar
+        // después la contraseña obligaría a pedir un código nuevo para reintentar.
         requireUnbreachedPassword(request.newPassword());
 
         requireValidCode(user, VerificationPurpose.PASSWORD_RESET, request.code());

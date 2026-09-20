@@ -1,6 +1,8 @@
 package com.hamburguesas.auth;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -48,9 +50,42 @@ public class PwnedPasswordChecker {
     }
 
     /**
+     * Prueba al arrancar que el chequeo realmente funciona.
+     *
+     * Dejar pasar la contraseña cuando HIBP no responde es aceptable para una caída
+     * pasajera: se vuelve al estado anterior a tener el chequeo. Lo que no es
+     * aceptable es que falle siempre —una regla de firewall, un proxy, la salida
+     * HTTPS cerrada— y que eso se note solo en un warning que nadie lee. Quedaría una
+     * protección apagada en la que igual se confía.
+     *
+     * Por eso al arrancar se consulta una contraseña que con certeza está filtrada.
+     * Si la respuesta no es la esperada, el problema queda en un ERROR al inicio del
+     * log, donde se mira, y no escondido entre los registros de cada usuario.
+     *
+     * Va en ApplicationReadyEvent y no en PostConstruct para no demorar el arranque
+     * ni tumbarlo si el servicio está caído: es diagnóstico, no un requisito.
+     */
+    @EventListener(ApplicationReadyEvent.class)
+    public void verifyItWorks() {
+        if (!properties.getPassword().isCheckBreaches()) {
+            log.warn("El chequeo de contraseñas filtradas está apagado");
+            return;
+        }
+
+        if (isBreached("password")) {
+            log.info("Chequeo de contraseñas filtradas: funcionando");
+        } else {
+            log.error("El chequeo de contraseñas filtradas NO está funcionando: HIBP no "
+                + "respondió lo esperado para una contraseña que sí está filtrada. "
+                + "Se van a aceptar contraseñas conocidas hasta que se resuelva.");
+        }
+    }
+
+    /**
      * @return true when the password is known to be breached. Returns false if HIBP
      *         cannot be reached: refusing every registration because somebody else's
      *         service is down would be worse than letting a weak password through.
+     *         El arranque avisa si esa situación es permanente y no pasajera.
      */
     public boolean isBreached(String password) {
         if (!properties.getPassword().isCheckBreaches()) {
