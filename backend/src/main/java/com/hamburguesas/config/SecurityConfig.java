@@ -1,5 +1,6 @@
 package com.hamburguesas.config;
 
+import com.hamburguesas.security.CustomUserDetailsService;
 import com.hamburguesas.security.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -39,20 +40,26 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Armado a mano en vez de pedirlo por AuthenticationConfiguration.
+     *
+     * Antes había dos beans —el manager y un DaoAuthenticationProvider suelto— y
+     * Spring los unía por su cuenta. Eso dejaba un warning en cada arranque
+     * avisando que, al haber un AuthenticationProvider publicado como bean, el
+     * UserDetailsService no se iba a usar para el login automático. Funcionaba,
+     * pero por un camino que nadie había elegido explícitamente.
+     *
+     * Security 7 además sacó setUserDetailsService: el provider recibe el
+     * UserDetailsService por constructor, así que no puede quedar a medio armar.
+     */
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
-
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider(
-        com.hamburguesas.security.CustomUserDetailsService userDetailsService,
+    public AuthenticationManager authenticationManager(
+        CustomUserDetailsService userDetailsService,
         PasswordEncoder passwordEncoder
     ) {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService);
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
-        return provider;
+        return new ProviderManager(provider);
     }
 
     @Bean

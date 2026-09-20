@@ -1,6 +1,6 @@
 package com.hamburguesas.places;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -61,7 +61,9 @@ public class PlacesClient {
             .body(byte[].class);
     }
 
-    private PlacesSearchResult parse(JsonNode response) {
+    // Package-private y estático para poder probarlo sin salir a la red: es la
+    // parte de este archivo que la migración a Jackson 3 podía romper en silencio.
+    static PlacesSearchResult parse(JsonNode response) {
         List<PlacesSearchResult.Place> places = new ArrayList<>();
         if (response == null) {
             return new PlacesSearchResult(places, null);
