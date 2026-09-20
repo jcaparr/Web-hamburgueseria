@@ -8,6 +8,7 @@ interface AuthContextValue {
   /** Does not start a session: the account is unusable until the emailed code is entered. */
   register: (name: string, email: string, password: string) => Promise<string>
   verifyEmail: (email: string, code: string) => Promise<void>
+  loginWithGoogle: (credential: string) => Promise<void>
   logout: () => void
 }
 
@@ -43,6 +44,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     saveSession(data)
   }
 
+  async function loginWithGoogle(credential: string) {
+    const { data } = await apiClient.post('/auth/google', { credential })
+    saveSession(data)
+  }
+
   function logout() {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
@@ -58,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, login, register, verifyEmail, logout }}>
+    <AuthContext.Provider value={{ user, login, register, verifyEmail, loginWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   )

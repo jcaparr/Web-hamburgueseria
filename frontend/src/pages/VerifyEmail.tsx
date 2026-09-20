@@ -69,6 +69,9 @@ export function VerifyEmail() {
       <div className="card card-border md:p-2">
         <div className="card-body gap-3">
           <h1 className="card-title font-display">Revisá tu email</h1>
+          {/* Plain again: registration now refuses an address that already has an
+              account, so everyone who reaches this screen really does have a code
+              on the way. */}
           <p className="text-sm text-base-content/60">
             Te mandamos un código de 6 dígitos a <span className="font-medium">{email}</span>.
             Si no lo ves, fijate en la carpeta de spam.

@@ -7,6 +7,9 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 # Same origin as the site, so no absolute URL is baked into the bundle.
+# Public by design; empty simply hides the Google button.
+ARG VITE_GOOGLE_CLIENT_ID=""
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 ENV VITE_API_URL=/api
 RUN npm run build
 

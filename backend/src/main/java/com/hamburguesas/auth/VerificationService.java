@@ -121,16 +121,20 @@ public class VerificationService {
         return sb.toString();
     }
 
+    // Switches rather than ternaries, so adding a purpose without writing its wording
+    // fails to compile instead of silently sending the wrong email.
     private String subjectFor(VerificationPurpose purpose) {
-        return purpose == VerificationPurpose.EMAIL_VERIFICATION
-            ? "Tu código para activar la cuenta"
-            : "Tu código para cambiar la contraseña";
+        return switch (purpose) {
+            case EMAIL_VERIFICATION -> "Tu código para activar la cuenta";
+            case PASSWORD_RESET -> "Tu código para cambiar la contraseña";
+        };
     }
 
     private String bodyFor(VerificationPurpose purpose, String name, String code, int ttlMinutes) {
-        String action = purpose == VerificationPurpose.EMAIL_VERIFICATION
-            ? "activar tu cuenta"
-            : "cambiar tu contraseña";
+        String action = switch (purpose) {
+            case EMAIL_VERIFICATION -> "activar tu cuenta";
+            case PASSWORD_RESET -> "cambiar tu contraseña";
+        };
 
         // Plain text on purpose: an HTML email from a brand-new sender is likelier
         // to be filtered as spam, and we have no domain to authenticate with yet.

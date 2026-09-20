@@ -2,12 +2,14 @@ package com.hamburguesas.controller;
 
 import com.hamburguesas.dto.AuthResponse;
 import com.hamburguesas.dto.EmailOnlyRequest;
+import com.hamburguesas.dto.GoogleLoginRequest;
 import com.hamburguesas.dto.LoginRequest;
 import com.hamburguesas.dto.MessageResponse;
 import com.hamburguesas.dto.RegisterRequest;
 import com.hamburguesas.dto.ResetPasswordRequest;
 import com.hamburguesas.dto.VerifyEmailRequest;
 import com.hamburguesas.service.AuthService;
+import com.hamburguesas.service.GoogleAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final GoogleAuthService googleAuthService;
 
     /**
      * 202, not 201: the account is not usable until the emailed code is entered, and
@@ -52,6 +55,12 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<MessageResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         return ResponseEntity.ok(authService.resetPassword(request));
+    }
+
+    /** Google has already verified the address, so this can hand back a session directly. */
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> google(@Valid @RequestBody GoogleLoginRequest request) {
+        return ResponseEntity.ok(googleAuthService.login(request));
     }
 
     @PostMapping("/login")

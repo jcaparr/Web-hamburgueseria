@@ -39,6 +39,15 @@ public class GlobalExceptionHandler {
         return body(HttpStatus.FORBIDDEN, ex.getMessage(), "EMAIL_NOT_VERIFIED");
     }
 
+    /**
+     * The account exists but belongs to the other sign-in method. Raised only once the
+     * caller has proved they own the address, so the message can say what to do.
+     */
+    @ExceptionHandler(WrongSignInMethodException.class)
+    public ResponseEntity<Map<String, Object>> handleWrongMethod(WrongSignInMethodException ex) {
+        return body(HttpStatus.CONFLICT, ex.getMessage(), "WRONG_SIGN_IN_METHOD");
+    }
+
     @ExceptionHandler(InvalidCodeException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidCode(InvalidCodeException ex) {
         return body(HttpStatus.BAD_REQUEST, ex.getMessage(), "INVALID_CODE");

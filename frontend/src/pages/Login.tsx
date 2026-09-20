@@ -1,9 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { GoogleSignInButton } from '../components/GoogleSignInButton'
 import { useAuth } from '../context/AuthContext'
+import { useGoogleSignIn } from '../hooks/useGoogleSignIn'
 
 export function Login() {
   const { login } = useAuth()
+  const { onCredential, googleError, setGoogleError } = useGoogleSignIn()
   const navigate = useNavigate()
   const location = useLocation()
   const state = location.state as { notice?: string } | null
@@ -72,6 +75,10 @@ export function Login() {
               {submitting ? 'Ingresando...' : 'Ingresar'}
             </button>
           </form>
+
+          {googleError && <p className="text-xs text-error">{googleError}</p>}
+          <GoogleSignInButton onCredential={onCredential} onError={setGoogleError} text="signin_with" />
+
           <p className="text-sm text-base-content/60">
             <Link to="/forgot-password" className="link text-primary">
               ¿Olvidaste tu contraseña?

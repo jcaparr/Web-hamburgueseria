@@ -44,6 +44,15 @@
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
+        <!-- Verifies Google ID tokens: signature against Google's rotating keys, issuer,
+             audience and expiry. Doing that by hand is how people end up accepting
+             unsigned tokens. -->
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>2.7.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
