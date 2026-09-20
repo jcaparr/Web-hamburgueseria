@@ -43,11 +43,21 @@ app:
   cors:
     allowed-origins: ${ALLOWED_ORIGIN}
   mail:
+    # Off by default: a machine with no SMTP configured writes the messages to the
+    # log instead of failing. Production turns it on, and then refuses to start
+    # unless there is a real sender behind it.
+    enabled: ${MAIL_ENABLED:false}
     # Must be the same address as SPRING_MAIL_USERNAME: Gmail rejects a From it
     # did not authenticate.
     from: ${MAIL_FROM:}
     from-name: ${MAIL_FROM_NAME:Hamburgueserías BA}
   auth:
+    session:
+      access-token-minutes: 15
+      refresh-token-days: 30
+      # Una cookie Secure no viaja por HTTP, que es todo entorno de desarrollo.
+      # Producción lo pisa en true y no debe correr sin eso.
+      cookie-secure: false
     google:
       # Public by design: it ships inside the frontend bundle. Empty disables signing
       # in with Google.

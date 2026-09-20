@@ -26,6 +26,21 @@
 		Referrer-Policy "strict-origin-when-cross-origin"
 		X-Frame-Options "DENY"
 		-Server
+
+		# The session cookies are out of reach of JavaScript, so an injected script
+		# cannot steal them. This is the other half: making it hard to get a script
+		# in at all, and limiting where one could send anything it did read.
+		#
+		# Everything comes from us except Google's sign-in button, which loads its
+		# script, renders itself in an iframe and talks back to Google, and Google
+		# Fonts, which the stylesheet imports.
+		# En una sola línea a propósito: un valor de header no puede contener saltos
+		# de línea, y partido en varias Caddy lo descarta en silencio.
+		Content-Security-Policy "default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; frame-src https://accounts.google.com/gsi/; connect-src 'self' https://accounts.google.com/gsi/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://lh3.googleusercontent.com; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'"
+
+		# Nothing here uses a camera, a microphone or a location, so none of it is
+		# available to a script that gets in.
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
 	}
 
 	log {

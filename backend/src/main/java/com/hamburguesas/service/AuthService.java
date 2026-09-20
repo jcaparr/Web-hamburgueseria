@@ -2,7 +2,6 @@ package com.hamburguesas.service;
 
 import com.hamburguesas.auth.AuthRateLimits;
 import com.hamburguesas.auth.VerificationService;
-import com.hamburguesas.dto.AuthResponse;
 import com.hamburguesas.dto.EmailOnlyRequest;
 import com.hamburguesas.dto.LoginRequest;
 import com.hamburguesas.dto.MessageResponse;
@@ -15,7 +14,6 @@ import com.hamburguesas.exception.InvalidCodeException;
 import com.hamburguesas.model.User;
 import com.hamburguesas.model.VerificationPurpose;
 import com.hamburguesas.repository.UserRepository;
-import com.hamburguesas.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -51,7 +49,6 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final VerificationService verificationService;
     private final AuthRateLimits rateLimits;
@@ -96,8 +93,9 @@ public class AuthService {
         return new MessageResponse(CODE_SENT);
     }
 
+    /** @return the activated user, for the caller to turn into a session. */
     @Transactional
-    public AuthResponse verifyEmail(VerifyEmailRequest request) {
+    public User verifyEmail(VerifyEmailRequest request) {
         requireAttemptAllowance(normalize(request.email()));
         User user = userRepository.findByEmail(normalize(request.email()))
             .filter(candidate -> !candidate.isEmailVerified())
@@ -106,10 +104,7 @@ public class AuthService {
         requireValidCode(user, VerificationPurpose.EMAIL_VERIFICATION, request.code());
 
         user.setEmailVerified(true);
-        userRepository.save(user);
-
-        String token = jwtService.generateToken(user.getId(), user.getEmail());
-        return new AuthResponse(token, user.getId(), user.getName(), user.getEmail());
+        return userRepository.save(user);
     }
 
     @Transactional
@@ -153,7 +148,7 @@ public class AuthService {
         return new MessageResponse("Listo, ya podés entrar con tu nueva contraseña.");
     }
 
-    public AuthResponse login(LoginRequest request) {
+    public User login(LoginRequest request) {
         String email = normalize(request.email());
         requireAttemptAllowance(email);
 
@@ -173,8 +168,7 @@ public class AuthService {
                 "Te falta activar la cuenta. Te mandamos un código nuevo por email.");
         }
 
-        String token = jwtService.generateToken(user.getId(), user.getEmail());
-        return new AuthResponse(token, user.getId(), user.getName(), user.getEmail());
+        return user;
     }
 
     private void requireValidCode(User user, VerificationPurpose purpose, String code) {

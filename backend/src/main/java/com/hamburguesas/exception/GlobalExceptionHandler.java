@@ -1,5 +1,6 @@
 package com.hamburguesas.exception;
 
+import com.hamburguesas.auth.SessionRejectedException;
 import com.hamburguesas.mail.EmailDeliveryException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -62,6 +63,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleEmailDelivery(EmailDeliveryException ex) {
         return body(HttpStatus.SERVICE_UNAVAILABLE,
             "No pudimos mandarte el email. Probá de nuevo en un rato.", "EMAIL_DELIVERY_FAILED");
+    }
+
+    /**
+     * The refresh cookie is missing, expired or already used. 401 so the frontend
+     * treats it like any other lost session and sends the person to log in.
+     */
+    @ExceptionHandler(SessionRejectedException.class)
+    public ResponseEntity<Map<String, Object>> handleSessionRejected(SessionRejectedException ex) {
+        return body(HttpStatus.UNAUTHORIZED, ex.getMessage(), "SESSION_EXPIRED");
     }
 
     @ExceptionHandler(TooManyRequestsException.class)

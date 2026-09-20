@@ -76,6 +76,9 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
             .authorizeHttpRequests(auth -> auth
+                // Everything under /api/auth is open except this one, which is the
+                // question "whose cookie is this?" and needs a valid one to answer.
+                .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/burger-joints/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/ranking/general").permitAll()

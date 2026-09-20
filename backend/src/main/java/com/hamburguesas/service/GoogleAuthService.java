@@ -1,12 +1,10 @@
 package com.hamburguesas.service;
 
 import com.hamburguesas.auth.GoogleTokenVerifier;
-import com.hamburguesas.dto.AuthResponse;
 import com.hamburguesas.dto.GoogleLoginRequest;
 import com.hamburguesas.exception.WrongSignInMethodException;
 import com.hamburguesas.model.User;
 import com.hamburguesas.repository.UserRepository;
-import com.hamburguesas.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -30,15 +28,15 @@ public class GoogleAuthService {
 
     private final GoogleTokenVerifier tokenVerifier;
     private final UserRepository userRepository;
-    private final JwtService jwtService;
 
+    /** @return the user, for the caller to turn into a session. */
     @Transactional
-    public AuthResponse login(GoogleLoginRequest request) {
+    public User login(GoogleLoginRequest request) {
         GoogleTokenVerifier.GoogleAccount account = verifyOrReject(request.credential());
 
         Optional<User> byGoogle = userRepository.findByGoogleSub(account.subject());
         if (byGoogle.isPresent()) {
-            return sessionFor(byGoogle.get());
+            return byGoogle.get();
         }
 
         Optional<User> byEmail = userRepository.findByEmail(account.email());
@@ -62,7 +60,7 @@ public class GoogleAuthService {
             .emailVerified(true)
             .build());
 
-        return sessionFor(user);
+        return user;
     }
 
     private GoogleTokenVerifier.GoogleAccount verifyOrReject(String credential) {
@@ -76,8 +74,4 @@ public class GoogleAuthService {
             .orElseThrow(() -> new BadCredentialsException("No pudimos iniciar sesión con Google"));
     }
 
-    private AuthResponse sessionFor(User user) {
-        String token = jwtService.generateToken(user.getId(), user.getEmail());
-        return new AuthResponse(token, user.getId(), user.getName(), user.getEmail());
-    }
 }

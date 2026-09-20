@@ -13,9 +13,13 @@ export function TopBar() {
   const navigate = useNavigate()
   const hidden = useHideOnScroll()
 
-  function handleLogout() {
-    logout()
+  async function handleLogout() {
+    // Navigate first. Clearing the user while a private page is still mounted lets
+    // RequireAuth fire and send the person to /login, so logging out would land
+    // somewhere different depending on which page you were on. The revocation below
+    // happens either way.
     navigate('/')
+    await logout()
   }
 
   return (

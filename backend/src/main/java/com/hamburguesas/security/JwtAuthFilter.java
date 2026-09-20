@@ -1,5 +1,6 @@
 package com.hamburguesas.security;
 
+import com.hamburguesas.auth.SessionCookies;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
+    private final SessionCookies sessionCookies;
 
     @Override
     protected void doFilterInternal(
@@ -28,11 +31,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         @NonNull HttpServletResponse response,
         @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        String header = request.getHeader("Authorization");
+        // The cookie is the only place the browser keeps a token now. The Authorization
+        // header is still read for anything that is not a browser, but nothing in this
+        // app sends it any more.
+        Optional<String> token = sessionCookies
+            .read(request, SessionCookies.ACCESS_COOKIE)
+            .or(() -> bearerHeader(request));
 
-        if (header != null && header.startsWith("Bearer ")) {
+        if (token.isPresent()) {
             try {
-                Long userId = jwtService.extractUserId(header.substring(7));
+                Long userId = jwtService.extractUserId(token.get());
                 if (SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserPrincipal principal = userDetailsService.loadById(userId);
                     var authentication = new UsernamePasswordAuthenticationToken(
@@ -46,5 +54,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private Optional<String> bearerHeader(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        return header != null && header.startsWith("Bearer ")
+            ? Optional.of(header.substring(7))
+            : Optional.empty();
     }
 }

@@ -17,11 +17,7 @@ export function Profile() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login')
-      return
-    }
-
+    // RequireAuth guarantees there is a session by the time this renders.
     Promise.all([
       apiClient.get<ProfileStats>('/profile/stats'),
       apiClient.get<MyRating[]>('/profile/ratings'),
@@ -40,6 +36,8 @@ export function Profile() {
 
   const recentRatings = ratings.slice(0, 3)
 
+  // RequireAuth already guarantees this, but the compiler cannot see through it and
+  // the name is read below.
   if (!user) return null
 
   return (

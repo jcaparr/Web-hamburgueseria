@@ -1,0 +1,36 @@
+# Avisa cuando una dependencia tiene una versión nueva, que casi siempre es cómo
+# llegan los parches de seguridad. Semanal y agrupado: un PR por ecosistema en vez
+# de veinte sueltos, que es lo que hace que la gente los empiece a ignorar.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      backend:
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      frontend:
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker
+    directories:
+      - /backend
+      - /frontend
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
