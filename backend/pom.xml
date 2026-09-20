@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.16</version>
+        <version>4.1.1</version>
         <relativePath/>
     </parent>
 
@@ -59,9 +59,16 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!--
+            El starter, no flyway-core suelto. Boot 4 partió las autoconfiguraciones
+            en módulos aparte: con solo flyway-core en el classpath, Flyway queda
+            presente pero nadie lo arranca. La app levanta igual y no dice nada —lo
+            vimos— y recién se nota contra una base vacía, cuando no hay tablas.
+            El starter trae flyway-core más el módulo que lo autoconfigura.
+        -->
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
