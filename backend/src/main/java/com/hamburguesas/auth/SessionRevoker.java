@@ -4,6 +4,8 @@ import com.hamburguesas.model.User;
 import com.hamburguesas.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.time.Instant;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,6 @@ public class SessionRevoker {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public int revokeAllFor(User user) {
-        return refreshTokenRepository.revokeAllFor(user);
+        return refreshTokenRepository.revokeAllFor(user, Instant.now());
     }
 }

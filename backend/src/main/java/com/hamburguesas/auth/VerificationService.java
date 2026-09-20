@@ -64,7 +64,7 @@ public class VerificationService {
         }
 
         // An old code left sitting in an inbox must stop working once a new one exists.
-        codeRepository.consumeAllFor(user, purpose);
+        codeRepository.consumeAllFor(user, purpose, now);
 
         String code = generateCode(config.getCodeLength());
         codeRepository.save(VerificationCode.builder()
