@@ -1,7 +1,7 @@
 # The frontend is static files, so the same container that serves them also terminates
 # HTTPS and proxies /api to the backend: one origin, which is what lets the session
 # cookie be SameSite without any CORS exception.
-FROM node:22-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /build
 COPY package.json package-lock.json ./
 RUN npm ci
