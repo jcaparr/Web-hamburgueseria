@@ -69,14 +69,12 @@ export function VerifyEmail() {
       <div className="card card-border md:p-2">
         <div className="card-body gap-3">
           <h1 className="card-title font-display">Revisá tu email</h1>
-          {/* Worded to be true either way. Someone who typed an address that already
-              has an account gets no code, and the server cannot say so without
-              turning this screen into a way to find out who is registered. Promising
-              a code that is never coming just leaves them waiting for it. */}
+          {/* Plain again: registration now refuses an address that already has an
+              account, so everyone who reaches this screen really does have a code
+              on the way. */}
           <p className="text-sm text-base-content/60">
-            Te escribimos a <span className="font-medium">{email}</span>. Si es tu
-            primera vez, el mail trae un código de 6 dígitos para activar la cuenta;
-            si ya tenías una, te explica cómo entrar. Revisá también la carpeta de spam.
+            Te mandamos un código de 6 dígitos a <span className="font-medium">{email}</span>.
+            Si no lo ves, fijate en la carpeta de spam.
           </p>
 
           <form onSubmit={onSubmit} className="flex flex-col gap-3">

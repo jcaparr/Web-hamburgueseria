@@ -9,9 +9,9 @@ import com.hamburguesas.dto.MessageResponse;
 import com.hamburguesas.dto.RegisterRequest;
 import com.hamburguesas.dto.ResetPasswordRequest;
 import com.hamburguesas.dto.VerifyEmailRequest;
+import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.exception.EmailNotVerifiedException;
 import com.hamburguesas.exception.InvalidCodeException;
-import com.hamburguesas.mail.EmailService;
 import com.hamburguesas.model.User;
 import com.hamburguesas.model.VerificationPurpose;
 import com.hamburguesas.repository.UserRepository;
@@ -29,17 +29,23 @@ import java.util.Optional;
 /**
  * Registration, email verification and password recovery.
  *
- * Every entry point that takes an email answers the same thing whether or not that
- * address has an account. Otherwise this API would be a way to find out who is
- * registered, which is both a privacy leak and a list worth spamming.
+ * Registration is the one place that admits an address already has an account, so the
+ * person is not left waiting for a code that is never coming. Everywhere else the
+ * answer is the same whether or not the account exists: those flows gain nothing from
+ * saying so, and each one that does is another way to find out who is registered.
  */
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class AuthService {
 
+    /** For the flows that must not admit whether the address has an account. */
     private static final String CHECK_YOUR_EMAIL =
         "Si el email es válido, te mandamos un código. Revisá también la carpeta de spam.";
+
+    /** Registration can be direct: it already refuses an address that is taken. */
+    private static final String CODE_SENT =
+        "Te mandamos un código a tu email. Revisá también la carpeta de spam.";
 
     private static final String CODE_REJECTED = "El código no es válido o venció";
 
@@ -48,13 +54,8 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final VerificationService verificationService;
-    private final EmailService emailService;
     private final AuthRateLimits rateLimits;
 
-    /**
-     * Never reports that the address is taken. If it is, the owner gets an email
-     * about it instead: they are the only person entitled to know.
-     */
     @Transactional
     public MessageResponse register(RegisterRequest request) {
         String email = normalize(request.email());
@@ -63,13 +64,23 @@ public class AuthService {
 
         if (existing.isPresent()) {
             User user = existing.get();
-            if (user.isEmailVerified()) {
-                notifyRegistrationAttempt(user);
-            } else {
-                // Same address, still unverified: most likely the same person retrying.
+
+            // Still unverified: almost certainly the same person retrying, so send
+            // another code instead of telling them they are in their own way.
+            if (!user.isEmailVerified()) {
                 issueQuietly(user, VerificationPurpose.EMAIL_VERIFICATION);
+                return new MessageResponse(CODE_SENT);
             }
-            return new MessageResponse(CHECK_YOUR_EMAIL);
+
+            // Saying the address is taken is a deliberate trade: it lets anyone test
+            // addresses to learn who has an account here. It is accepted because the
+            // alternative left people staring at a code screen waiting for a code that
+            // was never coming. The other flows that take an email stay generic, so
+            // this is the only place that admits an account exists.
+            throw new ConflictException(user.getGoogleSub() != null
+                ? "Ese email ya tiene una cuenta creada con Google. Entrá con el botón "
+                    + "\"Continuar con Google\"."
+                : "Ese email ya tiene una cuenta. Iniciá sesión con tu contraseña.");
         }
 
         User user = userRepository.save(User.builder()
@@ -82,7 +93,7 @@ public class AuthService {
         // Inside the transaction on purpose: if the email cannot be sent, the account
         // is rolled back rather than left stranded with no way to activate it.
         verificationService.issue(user, VerificationPurpose.EMAIL_VERIFICATION);
-        return new MessageResponse(CHECK_YOUR_EMAIL);
+        return new MessageResponse(CODE_SENT);
     }
 
     @Transactional
@@ -185,34 +196,6 @@ public class AuthService {
             verificationService.issue(user, purpose);
         } catch (RuntimeException ex) {
             log.error("Could not issue a {} code: {}", purpose, ex.getMessage());
-        }
-    }
-
-    private void notifyRegistrationAttempt(User user) {
-        // Telling a Google user to use "forgot my password" would send them down a road
-        // that leads nowhere: their account has no password to recover.
-        String howToGetIn = user.getGoogleSub() != null
-            ? "Si fuiste vos, entrá con el botón \"Continuar con Google\"."
-            : "Si fuiste vos, entrá con tu contraseña de siempre. Si no la recordás, usá\n"
-                + "            la opción \"Olvidé mi contraseña\".";
-
-        String body = """
-            ¡Hola, %s!
-
-            Alguien intentó crear una cuenta con tu email. Como ya tenés una, no creamos
-            ninguna cuenta nueva ni cambiamos nada.
-
-            %s
-
-            Si no fuiste vos, podés ignorar este mail tranquilo.
-
-            Hamburgueserías BA
-            """.formatted(user.getName(), howToGetIn);
-
-        try {
-            emailService.send(user.getEmail(), "Ya tenés una cuenta con este email", body);
-        } catch (RuntimeException ex) {
-            log.error("Could not send the duplicate registration notice: {}", ex.getMessage());
         }
     }
 
