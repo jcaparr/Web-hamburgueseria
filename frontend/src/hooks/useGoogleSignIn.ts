@@ -21,13 +21,9 @@ export function useGoogleSignIn() {
     } catch (err: any) {
       const data = err.response?.data
 
-      // The address already has an account here, so linking is confirmed with the
-      // code the server just sent before Google gets control of it.
-      if (data?.code === 'GOOGLE_LINK_REQUIRED') {
-        navigate('/link-google', { state: { credential, notice: data.error } })
-        return
-      }
-
+      // WRONG_SIGN_IN_METHOD means the address has a password account. The server's
+      // message already says what to do, so it is shown as-is rather than replaced
+      // by a generic failure.
       setError(data?.error ?? 'No pudimos iniciar sesión con Google')
     }
   }

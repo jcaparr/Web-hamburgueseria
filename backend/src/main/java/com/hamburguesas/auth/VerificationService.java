@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
@@ -82,18 +81,6 @@ public class VerificationService {
         return true;
     }
 
-    /**
-     * Same as {@link #issue}, but in a transaction of its own.
-     *
-     * For callers that email a code and then throw, to tell the frontend the flow is
-     * not finished. Sharing their transaction would roll the code back while the email
-     * has already gone out, leaving the user holding a code that was never saved.
-     */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public boolean issueSeparately(User user, VerificationPurpose purpose) {
-        return issue(user, purpose);
-    }
-
     @Transactional
     public Result check(User user, VerificationPurpose purpose, String code) {
         var config = properties.getVerification();
@@ -140,7 +127,6 @@ public class VerificationService {
         return switch (purpose) {
             case EMAIL_VERIFICATION -> "Tu código para activar la cuenta";
             case PASSWORD_RESET -> "Tu código para cambiar la contraseña";
-            case GOOGLE_LINK -> "Tu código para vincular tu cuenta con Google";
         };
     }
 
@@ -148,7 +134,6 @@ public class VerificationService {
         String action = switch (purpose) {
             case EMAIL_VERIFICATION -> "activar tu cuenta";
             case PASSWORD_RESET -> "cambiar tu contraseña";
-            case GOOGLE_LINK -> "vincular tu cuenta con Google";
         };
 
         // Plain text on purpose: an HTML email from a brand-new sender is likelier

@@ -2,7 +2,6 @@ package com.hamburguesas.controller;
 
 import com.hamburguesas.dto.AuthResponse;
 import com.hamburguesas.dto.EmailOnlyRequest;
-import com.hamburguesas.dto.GoogleLinkRequest;
 import com.hamburguesas.dto.GoogleLoginRequest;
 import com.hamburguesas.dto.LoginRequest;
 import com.hamburguesas.dto.MessageResponse;
@@ -62,12 +61,6 @@ public class AuthController {
     @PostMapping("/google")
     public ResponseEntity<AuthResponse> google(@Valid @RequestBody GoogleLoginRequest request) {
         return ResponseEntity.ok(googleAuthService.login(request));
-    }
-
-    /** Confirms linking Google to an account that already existed with the same email. */
-    @PostMapping("/google/link")
-    public ResponseEntity<AuthResponse> googleLink(@Valid @RequestBody GoogleLinkRequest request) {
-        return ResponseEntity.ok(googleAuthService.confirmLink(request));
     }
 
     @PostMapping("/login")

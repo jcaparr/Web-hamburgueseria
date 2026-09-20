@@ -40,12 +40,12 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Not really an error: the frontend turns it into the screen that asks for the
-     * code confirming the link.
+     * The account exists but belongs to the other sign-in method. Raised only once the
+     * caller has proved they own the address, so the message can say what to do.
      */
-    @ExceptionHandler(GoogleLinkRequiredException.class)
-    public ResponseEntity<Map<String, Object>> handleLinkRequired(GoogleLinkRequiredException ex) {
-        return body(HttpStatus.CONFLICT, ex.getMessage(), "GOOGLE_LINK_REQUIRED");
+    @ExceptionHandler(WrongSignInMethodException.class)
+    public ResponseEntity<Map<String, Object>> handleWrongMethod(WrongSignInMethodException ex) {
+        return body(HttpStatus.CONFLICT, ex.getMessage(), "WRONG_SIGN_IN_METHOD");
     }
 
     @ExceptionHandler(InvalidCodeException.class)

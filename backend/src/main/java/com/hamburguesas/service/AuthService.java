@@ -117,6 +117,9 @@ public class AuthService {
             // An unverified account has never proved it owns the address, so sending it
             // a reset code would hand the account to whoever typed that address.
             .filter(User::isEmailVerified)
+            // A Google account has no password to recover, and handing it one would be
+            // a way in that the account was never meant to have.
+            .filter(user -> user.getGoogleSub() == null)
             .ifPresent(user -> issueQuietly(user, VerificationPurpose.PASSWORD_RESET));
         return new MessageResponse(CHECK_YOUR_EMAIL);
     }
@@ -126,6 +129,7 @@ public class AuthService {
         requireAttemptAllowance(normalize(request.email()));
         User user = userRepository.findByEmail(normalize(request.email()))
             .filter(User::isEmailVerified)
+            .filter(candidate -> candidate.getGoogleSub() == null)
             .orElseThrow(() -> new InvalidCodeException(CODE_REJECTED));
 
         requireValidCode(user, VerificationPurpose.PASSWORD_RESET, request.code());
@@ -185,19 +189,25 @@ public class AuthService {
     }
 
     private void notifyRegistrationAttempt(User user) {
+        // Telling a Google user to use "forgot my password" would send them down a road
+        // that leads nowhere: their account has no password to recover.
+        String howToGetIn = user.getGoogleSub() != null
+            ? "Si fuiste vos, entrá con el botón \"Continuar con Google\"."
+            : "Si fuiste vos, entrá con tu contraseña de siempre. Si no la recordás, usá\n"
+                + "            la opción \"Olvidé mi contraseña\".";
+
         String body = """
             ¡Hola, %s!
 
             Alguien intentó crear una cuenta con tu email. Como ya tenés una, no creamos
             ninguna cuenta nueva ni cambiamos nada.
 
-            Si fuiste vos, entrá con tu contraseña de siempre. Si no la recordás, usá la
-            opción "Olvidé mi contraseña".
+            %s
 
             Si no fuiste vos, podés ignorar este mail tranquilo.
 
             Hamburgueserías BA
-            """.formatted(user.getName());
+            """.formatted(user.getName(), howToGetIn);
 
         try {
             emailService.send(user.getEmail(), "Ya tenés una cuenta con este email", body);

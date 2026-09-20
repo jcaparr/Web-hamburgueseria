@@ -1,15 +1,10 @@
 package com.hamburguesas.service;
 
-import com.hamburguesas.auth.AuthRateLimits;
 import com.hamburguesas.auth.GoogleTokenVerifier;
-import com.hamburguesas.auth.VerificationService;
 import com.hamburguesas.dto.AuthResponse;
-import com.hamburguesas.dto.GoogleLinkRequest;
 import com.hamburguesas.dto.GoogleLoginRequest;
-import com.hamburguesas.exception.GoogleLinkRequiredException;
-import com.hamburguesas.exception.InvalidCodeException;
+import com.hamburguesas.exception.WrongSignInMethodException;
 import com.hamburguesas.model.User;
-import com.hamburguesas.model.VerificationPurpose;
 import com.hamburguesas.repository.UserRepository;
 import com.hamburguesas.security.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -23,23 +18,19 @@ import java.util.Optional;
 /**
  * Signing in with Google.
  *
- * Three cases, and the third is the one that matters: an address that already has an
- * account here. Accepting the Google token on its own would mean anyone who can get
- * Google to assert an address takes over the account using it. So that case is not a
- * login, it is a request to link, and it is confirmed by email first.
+ * Each account belongs to exactly one sign-in method. An address that already has a
+ * password account here is not a Google account, and is told so rather than merged:
+ * one way in per account is far easier to reason about, and to audit, than accounts
+ * that can be reached from two directions.
  */
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class GoogleAuthService {
 
-    private static final String CODE_REJECTED = "El código no es válido o venció";
-
     private final GoogleTokenVerifier tokenVerifier;
     private final UserRepository userRepository;
     private final JwtService jwtService;
-    private final VerificationService verificationService;
-    private final AuthRateLimits rateLimits;
 
     @Transactional
     public AuthResponse login(GoogleLoginRequest request) {
@@ -52,11 +43,18 @@ public class GoogleAuthService {
 
         Optional<User> byEmail = userRepository.findByEmail(account.email());
         if (byEmail.isPresent()) {
-            throw linkRequired(byEmail.get());
+            // Saying so plainly leaks nothing: getting here means Google already
+            // confirmed the caller owns this address, so they are the account's owner.
+            if (byEmail.get().getGoogleSub() != null) {
+                log.warn("Google sign-in for an email already tied to a different Google account");
+                throw new BadCredentialsException("No pudimos iniciar sesión con Google");
+            }
+            throw new WrongSignInMethodException(
+                "Ese email ya tiene una cuenta con contraseña. Entrá con tu contraseña.");
         }
 
-        // Nobody here yet: Google has already verified the address, so the account works
-        // straight away and never needs a password.
+        // Google has already verified the address, so the account works straight away
+        // and never has a password.
         User user = userRepository.save(User.builder()
             .name(account.name())
             .email(account.email())
@@ -65,60 +63,6 @@ public class GoogleAuthService {
             .build());
 
         return sessionFor(user);
-    }
-
-    /** Completes the link once the emailed code is entered. */
-    @Transactional
-    public AuthResponse confirmLink(GoogleLinkRequest request) {
-        GoogleTokenVerifier.GoogleAccount account = verifyOrReject(request.credential());
-
-        rateLimits.requireAttemptAllowance(account.email());
-
-        User user = userRepository.findByEmail(account.email())
-            .filter(candidate -> candidate.getGoogleSub() == null)
-            .orElseThrow(() -> new InvalidCodeException(CODE_REJECTED));
-
-        switch (verificationService.check(user, VerificationPurpose.GOOGLE_LINK, request.code())) {
-            case OK -> { }
-            case EXPIRED -> throw new InvalidCodeException("El código venció. Pedí uno nuevo.");
-            case TOO_MANY_ATTEMPTS -> throw new InvalidCodeException(
-                "Demasiados intentos con este código. Pedí uno nuevo.");
-            case INVALID -> throw new InvalidCodeException(CODE_REJECTED);
-        }
-
-        user.setGoogleSub(account.subject());
-        // Google verified the address and the code proved it again, so an account that
-        // was still sitting unactivated is activated by this.
-        user.setEmailVerified(true);
-        userRepository.save(user);
-
-        return sessionFor(user);
-    }
-
-    /**
-     * @return the exception to throw. Sends the confirmation code on the way, unless
-     *         the address is already linked to a different Google account, which is
-     *         refused outright: whatever that is, it is not the owner coming back.
-     */
-    private RuntimeException linkRequired(User user) {
-        if (user.getGoogleSub() != null) {
-            log.warn("Google sign-in for an email already linked to a different Google account");
-            return new BadCredentialsException("No pudimos iniciar sesión con Google");
-        }
-
-        rateLimits.requireSendAllowance(user.getEmail());
-        try {
-            // In its own transaction: this method's caller throws, and that rollback
-            // would undo the saved code while the email had already gone out, leaving
-            // the user holding a code that does not exist.
-            verificationService.issueSeparately(user, VerificationPurpose.GOOGLE_LINK);
-        } catch (RuntimeException ex) {
-            log.error("Could not issue a Google link code: {}", ex.getMessage());
-        }
-
-        return new GoogleLinkRequiredException(
-            "Ya tenés una cuenta con ese email. Te mandamos un código para vincularla "
-                + "con Google. Revisá también la carpeta de spam.");
     }
 
     private GoogleTokenVerifier.GoogleAccount verifyOrReject(String credential) {
