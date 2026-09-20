@@ -1,6 +1,6 @@
 # Build stage: dependencies are resolved in their own layer so that editing source
 # code does not re-download the world on every rebuild.
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM maven:3-eclipse-temurin-24 AS build
 WORKDIR /build
 COPY pom.xml .
 RUN mvn -B -q dependency:go-offline
