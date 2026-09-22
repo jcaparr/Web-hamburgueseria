@@ -7,6 +7,7 @@ import { JointPhoto } from '../components/JointPhoto'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { useAuth } from '../context/AuthContext'
 import type { PageResponse, RankingItem } from '../types'
+import { shortAddress } from '../utils/address'
 import { mapsUrl } from '../utils/maps'
 
 type Tab = 'general' | 'mine'
@@ -121,7 +122,7 @@ export function Ranking() {
               />
               <div className="flex flex-1 flex-col overflow-hidden">
                 <span className="truncate font-display font-semibold">{item.name}</span>
-                <span className="truncate text-xs text-base-content/60">{item.address}</span>
+                <span className="truncate text-xs text-base-content/60">{shortAddress(item.address, item.area)}</span>
               </div>
               <div className="flex flex-col items-end gap-1 text-right text-sm">
                 <ScoreBadge score={tab === 'mine' ? (item.myScore ?? item.averageScore) : item.averageScore} size="sm" />
@@ -133,7 +134,7 @@ export function Ranking() {
               </div>
             </Link>
             <a
-              href={mapsUrl(item.latitude, item.longitude, `${item.name} ${item.address}`)}
+              href={mapsUrl(item.placeId, item.name, item.latitude, item.longitude)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 p-3 pt-0 pl-11 text-xs font-semibold text-primary"

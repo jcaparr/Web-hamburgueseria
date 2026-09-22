@@ -60,7 +60,7 @@ public class WishlistService {
         Double averageScore = ratingRepository.averageScoreByBurgerJoint(b.getId());
         long ratingsCount = ratingRepository.countByBurgerJoint_Id(b.getId());
         return new BurgerJointDto(
-            b.getId(), b.getName(), b.getAddress(), b.getArea(), b.getPhotoUrl(),
+            b.getId(), b.getPlaceId(), b.getName(), b.getAddress(), b.getArea(), b.getPhotoUrl(),
             b.getLatitude(), b.getLongitude(), averageScore, ratingsCount, true
         );
     }

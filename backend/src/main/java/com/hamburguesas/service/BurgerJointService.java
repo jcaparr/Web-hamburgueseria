@@ -40,7 +40,7 @@ public class BurgerJointService {
             wishlistRepository.existsByUser_IdAndBurgerJoint_Id(userId, b.getId());
 
         return new BurgerJointDto(
-            b.getId(), b.getName(), b.getAddress(), b.getArea(), b.getPhotoUrl(),
+            b.getId(), b.getPlaceId(), b.getName(), b.getAddress(), b.getArea(), b.getPhotoUrl(),
             b.getLatitude(), b.getLongitude(),
             averageScore, ratingsCount, inWishlist
         );

@@ -6,6 +6,7 @@ import { LoadError } from '../components/LoadError'
 import { JointPhoto } from '../components/JointPhoto'
 import { ScoreBadge } from '../components/ScoreBadge'
 import type { BurgerJoint, PageResponse } from '../types'
+import { shortAddress } from '../utils/address'
 import { mapsUrl } from '../utils/maps'
 
 const PAGE_SIZE = 20
@@ -36,6 +37,12 @@ export function Explore() {
 
     return () => clearTimeout(timeout)
   }, [query, page, attempt])
+
+  // Al cambiar de página la lista se renueva entera, pero el navegador conserva el
+  // scroll: quedabas a mitad de la página nueva, empezando a leer por el medio.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [page])
 
   const items = pageData?.content ?? []
 
@@ -72,7 +79,7 @@ export function Explore() {
               <div className="checker-strip" />
               <div className="flex flex-col gap-1 p-4">
                 <h2 className="font-display line-clamp-1 text-base font-bold">{b.name}</h2>
-                <p className="line-clamp-2 text-xs text-base-content/60">{b.address}</p>
+                <p className="line-clamp-2 text-xs text-base-content/60">{shortAddress(b.address, b.area)}</p>
                 <div className="mt-2 flex items-center justify-between">
                   {b.averageScore ? (
                     <ScoreBadge score={b.averageScore} size="sm" />
@@ -84,7 +91,7 @@ export function Explore() {
             </Link>
             <div className="px-4 pb-4">
               <a
-                href={mapsUrl(b.latitude, b.longitude, `${b.name} ${b.address}`)}
+                href={mapsUrl(b.placeId, b.name, b.latitude, b.longitude)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 text-xs font-semibold text-primary"
