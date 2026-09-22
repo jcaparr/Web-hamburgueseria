@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { LoadError } from '../components/LoadError'
+import { JointPhoto } from '../components/JointPhoto'
 import { IconChevronRight, IconMedal, IconSettings, IconUser } from '../components/icons'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { useAuth } from '../context/AuthContext'
@@ -113,9 +114,9 @@ export function Profile() {
               to={`/burger-joints/${r.burgerJointId}`}
               className="flex items-center gap-3 rounded-box bg-base-100 p-3 ring-1 ring-inset ring-base-content/15"
             >
-              <img
-                src={r.photoUrl ?? 'https://placehold.co/48x48?text=%F0%9F%8D%94'}
-                alt={r.burgerJointName}
+              <JointPhoto
+                src={r.photoUrl}
+                name={r.burgerJointName}
                 className="h-12 w-12 flex-none rounded-lg object-cover"
               />
               <div className="flex flex-1 flex-col overflow-hidden">
@@ -147,11 +148,7 @@ export function Profile() {
                 to={`/burger-joints/${b.id}`}
                 className="w-40 flex-none overflow-hidden rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15"
               >
-                <img
-                  src={b.photoUrl ?? 'https://placehold.co/160x120?text=%F0%9F%8D%94'}
-                  alt={b.name}
-                  className="h-24 w-full object-cover"
-                />
+                <JointPhoto src={b.photoUrl} name={b.name} className="h-24 w-full object-cover" />
                 <div className="flex flex-col gap-1 p-2.5">
                   <span className="truncate text-sm font-semibold">{b.name}</span>
                   {b.averageScore ? (

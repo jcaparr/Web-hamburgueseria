@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { IconPin, IconSearch } from '../components/icons'
 import { LoadError } from '../components/LoadError'
+import { JointPhoto } from '../components/JointPhoto'
 import { ScoreBadge } from '../components/ScoreBadge'
 import type { BurgerJoint, PageResponse } from '../types'
 import { mapsUrl } from '../utils/maps'
@@ -66,11 +67,7 @@ export function Explore() {
           <li key={b.id} className="rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15 overflow-hidden">
             <Link to={`/burger-joints/${b.id}`}>
               <figure className="aspect-[4/3] bg-base-200">
-                <img
-                  src={b.photoUrl ?? 'https://placehold.co/400x300?text=%F0%9F%8D%94'}
-                  alt={b.name}
-                  className="h-full w-full object-cover"
-                />
+                <JointPhoto src={b.photoUrl} name={b.name} className="h-full w-full object-cover" />
               </figure>
               <div className="checker-strip" />
               <div className="flex flex-col gap-1 p-4">

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { IconPin } from '../components/icons'
 import { LoadError } from '../components/LoadError'
+import { JointPhoto } from '../components/JointPhoto'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { useAuth } from '../context/AuthContext'
 import type { PageResponse, RankingItem } from '../types'
@@ -113,10 +114,10 @@ export function Ranking() {
           <li key={item.burgerJointId} className="rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15">
             <Link to={`/burger-joints/${item.burgerJointId}`} className="flex items-center gap-3 p-3 pb-2">
               <span className="w-5 text-center font-display text-sm font-bold text-base-content/40">{index + 1}</span>
-              <img
-                src={item.photoUrl ?? 'https://placehold.co/60x60?text=%F0%9F%8D%94'}
-                alt={item.name}
-                className="h-12 w-12 rounded-lg object-cover"
+              <JointPhoto
+                src={item.photoUrl}
+                name={item.name}
+                className="h-12 w-12 flex-none rounded-lg object-cover"
               />
               <div className="flex flex-1 flex-col overflow-hidden">
                 <span className="truncate font-display font-semibold">{item.name}</span>
