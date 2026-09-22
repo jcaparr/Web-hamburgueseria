@@ -8,7 +8,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
 
+import java.text.Normalizer;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -45,7 +50,7 @@ public class PlacesSyncService {
                 } catch (RestClientResponseException ex) {
                     log.warn("Places search failed for {} (HTTP {}), stopping sync: {}",
                         area, ex.getStatusCode().value(), ex.getMessage());
-                    return new PlacesSyncReport(created, updated, photosDownloaded,
+                    return new PlacesSyncReport(created, updated, photosDownloaded, 0,
                         "Google respondió " + ex.getStatusCode().value() + ", se frenó la sincronización");
                 }
 
@@ -55,15 +60,16 @@ public class PlacesSyncService {
                     }
 
                     var existing = burgerJointRepository.findByPlaceId(place.placeId());
+                    boolean gotPhoto;
                     if (existing.isPresent()) {
-                        refresh(existing.get(), place, area);
+                        gotPhoto = refresh(existing.get(), place, area);
                         updated++;
                     } else {
-                        boolean gotPhoto = create(place, area);
+                        gotPhoto = create(place, area);
                         created++;
-                        if (gotPhoto) {
-                            photosDownloaded++;
-                        }
+                    }
+                    if (gotPhoto) {
+                        photosDownloaded++;
                     }
                 }
 
@@ -77,8 +83,104 @@ public class PlacesSyncService {
             }
         }
 
-        log.info("Places sync finished: {} created, {} updated, {} photos", created, updated, photosDownloaded);
-        return new PlacesSyncReport(created, updated, photosDownloaded, null);
+        MissingPhotosResult missing = fillMissingPhotos();
+        photosDownloaded += missing.downloaded();
+
+        log.info("Places sync finished: {} created, {} updated, {} photos, {} reused",
+            created, updated, photosDownloaded, missing.reused());
+        return new PlacesSyncReport(created, updated, photosDownloaded, missing.reused(), null);
+    }
+
+    /**
+     * Completa las fotos de los locales que las búsquedas por barrio no devuelven.
+     *
+     * Hasta acá la foto llegaba de arriba: se bajaba la de los locales que aparecían
+     * en una búsqueda. Pero un local puede estar en la base y no aparecer en ninguna:
+     * los que Google no clasifica como hamburguesería —Burger King, por ejemplo, que
+     * figura como comida rápida— quedan afuera del filtro estricto, y también queda
+     * afuera cualquiera que no entre en los 60 resultados de su barrio. Esos se
+     * quedaban sin foto para siempre.
+     *
+     * Acá se les pide la ficha por su place_id, que es una llamada aparte y con su
+     * propio límite gratuito.
+     */
+    private record MissingPhotosResult(int downloaded, int reused) {}
+
+    private MissingPhotosResult fillMissingPhotos() {
+        int downloaded = 0;
+        int reused = 0;
+        Map<String, String> fotoPorCadena = photosByChain();
+
+        for (BurgerJoint joint : burgerJointRepository.findByPhotoUrlIsNull()) {
+            if (!quotaGuard.canCall(PlacesCallType.PHOTO) || !quotaGuard.canCall(PlacesCallType.DETAILS)) {
+                log.warn("Cuota mensual alcanzada, quedan locales sin foto para el mes que viene");
+                break;
+            }
+
+            String photoName;
+            try {
+                pause();
+                photoName = placesClient.photoNameFor(joint.getPlaceId());
+                quotaGuard.record(PlacesCallType.DETAILS);
+            } catch (RestClientResponseException ex) {
+                log.warn("No se pudo pedir la ficha de {} (HTTP {})",
+                    joint.getPlaceId(), ex.getStatusCode().value());
+                continue;
+            }
+
+            if (photoName != null) {
+                String photoUrl = downloadPhoto(joint.getPlaceId(), photoName);
+                if (photoUrl != null) {
+                    joint.setPhotoUrl(photoUrl);
+                    burgerJointRepository.save(joint);
+                    fotoPorCadena.putIfAbsent(chainKey(joint.getName()), photoUrl);
+                    downloaded++;
+                    continue;
+                }
+            }
+
+            // Google no tiene fotos de esta dirección. Si es una sucursal de una cadena
+            // que sí tiene, se usa la de la hermana: preferimos el frente de otro local
+            // de la misma marca antes que un recuadro con iniciales. Se intenta recién
+            // acá, después de Google, porque la foto propia de la sucursal siempre es
+            // mejor que la prestada. No cuesta ninguna llamada.
+            String prestada = fotoPorCadena.get(chainKey(joint.getName()));
+            if (prestada != null) {
+                joint.setPhotoUrl(prestada);
+                burgerJointRepository.save(joint);
+                reused++;
+            }
+        }
+
+        return new MissingPhotosResult(downloaded, reused);
+    }
+
+    /** Una foto por cadena, para prestársela a las sucursales que no tengan. */
+    private Map<String, String> photosByChain() {
+        Map<String, String> porCadena = new HashMap<>();
+        for (BurgerJoint joint : burgerJointRepository.findByPhotoUrlIsNotNull()) {
+            porCadena.putIfAbsent(chainKey(joint.getName()), joint.getPhotoUrl());
+        }
+        return porCadena;
+    }
+
+    /**
+     * El nombre de la cadena detrás del nombre del local.
+     *
+     * Las sucursales se escriben de varias formas: "Burger King" repetido tal cual,
+     * o "Dean & Dennys - Palermo Soho" y "Dean & Dennys - Barrio Norte". Se corta en
+     * el guión y se normaliza mayúsculas y acentos, porque la misma cadena aparece
+     * escrita distinto según quién la cargó en Google.
+     *
+     * Se exige igualdad y no parecido: con nombres cortos y genéricos —"Heaven",
+     * "Rubi"— cualquier coincidencia parcial terminaría pegándole la foto de un local
+     * que no tiene nada que ver.
+     */
+    static String chainKey(String name) {
+        String sinSucursal = name.split(" - ")[0];
+        String sinAcentos = Normalizer.normalize(sinSucursal, Normalizer.Form.NFD)
+            .replaceAll("\\p{M}", "");
+        return sinAcentos.toLowerCase(Locale.ROOT).replaceAll("\\s+", " ").trim();
     }
 
     private PlacesSearchResult search(String area, String pageToken) {
@@ -112,20 +214,29 @@ public class PlacesSyncService {
         return gotPhoto;
     }
 
-    /** Photos are only fetched for joints we have never seen, which is what keeps us inside the free tier. */
+    /**
+     * Una foto por local y para siempre: se baja una sola vez, se guarda en disco y
+     * no se vuelve a pedir. Es lo que mantiene el gasto en una descarga por local en
+     * vez de una por visita.
+     */
     private String downloadPhoto(PlacesSearchResult.Place place) {
+        return downloadPhoto(place.placeId(), place.photoName());
+    }
+
+    private String downloadPhoto(String placeId, String photoName) {
         try {
             pause();
-            byte[] bytes = placesClient.downloadPhoto(place.photoName());
+            byte[] bytes = placesClient.downloadPhoto(photoName);
             quotaGuard.record(PlacesCallType.PHOTO);
-            return photoStorage.save(place.placeId(), bytes);
+            return photoStorage.save(placeId, bytes);
         } catch (RestClientResponseException ex) {
-            log.warn("Could not download photo for {} (HTTP {})", place.placeId(), ex.getStatusCode().value());
+            log.warn("Could not download photo for {} (HTTP {})", placeId, ex.getStatusCode().value());
             return null;
         }
     }
 
-    private void refresh(BurgerJoint joint, PlacesSearchResult.Place place, String area) {
+    /** @return true si en esta pasada se le consiguió la foto que le faltaba. */
+    private boolean refresh(BurgerJoint joint, PlacesSearchResult.Place place, String area) {
         joint.setName(place.name());
         if (place.address() != null) {
             joint.setAddress(place.address());
@@ -134,7 +245,25 @@ public class PlacesSyncService {
         joint.setLatitude(place.latitude());
         joint.setLongitude(place.longitude());
         joint.setLastSyncedAt(Instant.now());
+
+        // Los locales cargados antes se quedaron sin foto: al principio Google no las
+        // devolvía —el proyecto no tenía facturación y las omitía de la respuesta— y
+        // además solo se pedían al crear el local, así que nadie volvía a intentarlo.
+        // La búsqueda ya trae el dato, así que completarlas no cuesta llamadas extra
+        // más allá de la descarga, y el tope mensual de fotos las reparte entre varias
+        // sincronizaciones si hacen falta.
+        boolean gotPhoto = false;
+        if (joint.getPhotoUrl() == null && place.photoName() != null
+            && quotaGuard.canCall(PlacesCallType.PHOTO)) {
+            String photoUrl = downloadPhoto(place);
+            if (photoUrl != null) {
+                joint.setPhotoUrl(photoUrl);
+                gotPhoto = true;
+            }
+        }
+
         burgerJointRepository.save(joint);
+        return gotPhoto;
     }
 
     private void pause() {

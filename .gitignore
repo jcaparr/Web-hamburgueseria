@@ -32,3 +32,9 @@ Thumbs.db
 /auth/
 tools/
 /.vite/
+
+# Cualquier copia del .env: respaldos, .env.bak, .env.viejo. Las reglas de arriba
+# solo atrapan los que terminan en .env, así que un deploy/.env.bak-123 quedaba
+# afuera y podía subirse con las claves adentro.
+.env.*
+!.env.example

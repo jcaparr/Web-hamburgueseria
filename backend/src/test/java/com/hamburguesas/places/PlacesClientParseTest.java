@@ -61,6 +61,67 @@ class PlacesClientParseTest {
      * lugar de null —que es justo el tipo de detalle que cambia entre versiones de
      * Jackson— guardaríamos basura en la base sin que fallara nada.
      */
+    /**
+     * Google no dice qué muestra cada foto, así que la única señal disponible es quién
+     * la subió: las del propio local suelen ser el logo o el frente, y las de los
+     * clientes, los platos. En la prueba real sobre Palermo, 14 de 20 locales tenían
+     * una foto propia.
+     */
+    @Test
+    void prefiereLaFotoQueSubioElLocal() {
+        JsonNode response = json("""
+            {
+              "places": [{
+                "id": "ChIJ123",
+                "displayName": { "text": "Thunder Burger" },
+                "formattedAddress": "Costa Rica 5827",
+                "photos": [
+                  {
+                    "name": "places/ChIJ123/photos/de-un-cliente",
+                    "authorAttributions": [{ "displayName": "Andrea Mansilla" }]
+                  },
+                  {
+                    "name": "places/ChIJ123/photos/del-local",
+                    "authorAttributions": [{ "displayName": "Thunder Burger" }]
+                  }
+                ]
+              }]
+            }
+            """);
+
+        PlacesSearchResult.Place place = PlacesClient.parse(response).places().get(0);
+
+        assertThat(place.photoName()).isEqualTo("places/ChIJ123/photos/del-local");
+    }
+
+    /** Si el local no subió ninguna queda la primera, que es la que Google destaca. */
+    @Test
+    void sinFotoDelLocalSeQuedaConLaPrimera() {
+        JsonNode response = json("""
+            {
+              "places": [{
+                "id": "ChIJ123",
+                "displayName": { "text": "Thunder Burger" },
+                "formattedAddress": "Costa Rica 5827",
+                "photos": [
+                  {
+                    "name": "places/ChIJ123/photos/primera",
+                    "authorAttributions": [{ "displayName": "Andrea Mansilla" }]
+                  },
+                  {
+                    "name": "places/ChIJ123/photos/segunda",
+                    "authorAttributions": [{ "displayName": "Micaela Rodríguez" }]
+                  }
+                ]
+              }]
+            }
+            """);
+
+        PlacesSearchResult.Place place = PlacesClient.parse(response).places().get(0);
+
+        assertThat(place.photoName()).isEqualTo("places/ChIJ123/photos/primera");
+    }
+
     @Test
     void unLugarSinFotoNiUbicacionNoInventaValores() {
         JsonNode response = json("""

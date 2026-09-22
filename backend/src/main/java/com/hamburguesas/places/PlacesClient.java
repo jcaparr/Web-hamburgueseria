@@ -4,8 +4,11 @@ import tools.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+
+import java.net.http.HttpClient;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,16 +28,36 @@ import java.util.Map;
 public class PlacesClient {
 
     private static final String SEARCH_URL = "https://places.googleapis.com/v1/places:searchText";
+
+    /**
+     * El tipo de Google para hamburgueserías. Buscar solo por texto traía bares y
+     * parrillas que mencionan hamburguesas —en la base quedaron un wine bar y dos
+     * bares—, y con esto Google filtra por lo que el local es, no por lo que dice.
+     */
+    private static final String BURGER_TYPE = "hamburger_restaurant";
     private static final String FIELD_MASK =
         "places.id,places.displayName,places.formattedAddress,places.location,places.photos,nextPageToken";
 
     private final PlacesProperties properties;
-    private final RestClient restClient = RestClient.create();
+
+    /**
+     * Sigue redirecciones, que es lo que hace falta para bajar una foto: el endpoint
+     * de Google no devuelve la imagen sino un 302 hacia ella, con un JSON en el cuerpo.
+     * El cliente por omisión no las sigue, así que guardábamos ese JSON como si fuera
+     * la foto: 345 archivos de 700 bytes que el navegador mostraba rotos.
+     */
+    private final RestClient restClient = RestClient.builder()
+        .requestFactory(new JdkClientHttpRequestFactory(
+            HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build()))
+        .build();
 
     public PlacesSearchResult searchText(String query, String pageToken) {
         Map<String, Object> body = new HashMap<>();
         body.put("textQuery", query);
         body.put("languageCode", "es");
+        body.put("includedType", BURGER_TYPE);
+        // Sin esto el tipo es apenas una preferencia y Google igual devuelve otros rubros.
+        body.put("strictTypeFiltering", true);
         if (pageToken != null && !pageToken.isBlank()) {
             body.put("pageToken", pageToken);
         }
@@ -50,6 +73,24 @@ public class PlacesClient {
 
         return parse(response);
     }
+
+    /**
+      * Pide la ficha de un local puntual. Existe para los locales que ninguna búsqueda
+      * por barrio devuelve —los que Google no clasifica como hamburguesería, como
+      * Burger King—, que si no se quedarían sin foto para siempre.
+      *
+      * @return el nombre de la foto elegida, o null si el local no tiene ninguna.
+      */
+     public String photoNameFor(String placeId) {
+         JsonNode place = restClient.get()
+             .uri("https://places.googleapis.com/v1/places/{placeId}", placeId)
+             .header("X-Goog-Api-Key", properties.getApiKey())
+             .header("X-Goog-FieldMask", "id,displayName,photos")
+             .retrieve()
+             .body(JsonNode.class);
+
+         return place == null ? null : bestPhotoName(place);
+     }
 
     public byte[] downloadPhoto(String photoName) {
         String uri = "https://places.googleapis.com/v1/%s/media?maxWidthPx=%d&key=%s"
@@ -78,11 +119,38 @@ public class PlacesClient {
                     ? null : node.path("location").path("latitude").asDouble(),
                 node.path("location").path("longitude").isMissingNode()
                     ? null : node.path("location").path("longitude").asDouble(),
-                node.path("photos").isArray() && !node.path("photos").isEmpty()
-                    ? node.path("photos").get(0).path("name").asText(null) : null
+                bestPhotoName(node)
             ));
         }
 
         return new PlacesSearchResult(places, response.path("nextPageToken").asText(null));
+    }
+
+    /**
+     * Elige una foto entre las que devuelve Google, que llegan sin ninguna etiqueta
+     * de qué muestran: no hay forma de pedirle "el logo" o "la fachada".
+     *
+     * Lo que sí viene es quién subió cada una. Las del propio local —las que carga el
+     * dueño en su ficha— son casi siempre el logo o el frente, mientras que las de los
+     * clientes suelen ser platos y mesas. Así que se prefiere la del local y, si no
+     * subió ninguna, queda la primera, que es la que Google muestra como principal.
+     */
+    private static String bestPhotoName(JsonNode place) {
+        JsonNode photos = place.path("photos");
+        if (!photos.isArray() || photos.isEmpty()) {
+            return null;
+        }
+
+        String placeName = place.path("displayName").path("text").asText("");
+        for (JsonNode photo : photos) {
+            for (JsonNode author : photo.path("authorAttributions")) {
+                if (!placeName.isBlank()
+                    && placeName.equalsIgnoreCase(author.path("displayName").asText(""))) {
+                    return photo.path("name").asText(null);
+                }
+            }
+        }
+
+        return photos.get(0).path("name").asText(null);
     }
 }
