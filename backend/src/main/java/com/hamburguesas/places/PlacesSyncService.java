@@ -55,15 +55,16 @@ public class PlacesSyncService {
                     }
 
                     var existing = burgerJointRepository.findByPlaceId(place.placeId());
+                    boolean gotPhoto;
                     if (existing.isPresent()) {
-                        refresh(existing.get(), place, area);
+                        gotPhoto = refresh(existing.get(), place, area);
                         updated++;
                     } else {
-                        boolean gotPhoto = create(place, area);
+                        gotPhoto = create(place, area);
                         created++;
-                        if (gotPhoto) {
-                            photosDownloaded++;
-                        }
+                    }
+                    if (gotPhoto) {
+                        photosDownloaded++;
                     }
                 }
 
@@ -112,7 +113,11 @@ public class PlacesSyncService {
         return gotPhoto;
     }
 
-    /** Photos are only fetched for joints we have never seen, which is what keeps us inside the free tier. */
+    /**
+     * Una foto por local y para siempre: se baja una sola vez, se guarda en disco y
+     * no se vuelve a pedir. Es lo que mantiene el gasto en una descarga por local en
+     * vez de una por visita.
+     */
     private String downloadPhoto(PlacesSearchResult.Place place) {
         try {
             pause();
@@ -125,7 +130,8 @@ public class PlacesSyncService {
         }
     }
 
-    private void refresh(BurgerJoint joint, PlacesSearchResult.Place place, String area) {
+    /** @return true si en esta pasada se le consiguió la foto que le faltaba. */
+    private boolean refresh(BurgerJoint joint, PlacesSearchResult.Place place, String area) {
         joint.setName(place.name());
         if (place.address() != null) {
             joint.setAddress(place.address());
@@ -134,7 +140,25 @@ public class PlacesSyncService {
         joint.setLatitude(place.latitude());
         joint.setLongitude(place.longitude());
         joint.setLastSyncedAt(Instant.now());
+
+        // Los locales cargados antes se quedaron sin foto: al principio Google no las
+        // devolvía —el proyecto no tenía facturación y las omitía de la respuesta— y
+        // además solo se pedían al crear el local, así que nadie volvía a intentarlo.
+        // La búsqueda ya trae el dato, así que completarlas no cuesta llamadas extra
+        // más allá de la descarga, y el tope mensual de fotos las reparte entre varias
+        // sincronizaciones si hacen falta.
+        boolean gotPhoto = false;
+        if (joint.getPhotoUrl() == null && place.photoName() != null
+            && quotaGuard.canCall(PlacesCallType.PHOTO)) {
+            String photoUrl = downloadPhoto(place);
+            if (photoUrl != null) {
+                joint.setPhotoUrl(photoUrl);
+                gotPhoto = true;
+            }
+        }
+
         burgerJointRepository.save(joint);
+        return gotPhoto;
     }
 
     private void pause() {
