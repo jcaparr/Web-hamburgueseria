@@ -78,29 +78,62 @@ app:
       enabled: ${PLACES_SYNC_ENABLED:false}
       cron: ${PLACES_SYNC_CRON:0 0 4 * * SUN}
       trigger-token: ${PLACES_SYNC_TOKEN:}
-      max-pages-per-area: 2
+      # 3 es el máximo que devuelve Google por consulta (60 resultados); pedir más
+      # no trae nada nuevo.
+      max-pages-per-area: 3
       delay-between-calls-ms: 500
+      # Los 48 barrios de la Ciudad de Buenos Aires. Antes eran 20, así que media
+      # ciudad no se buscaba nunca. Cada barrio son hasta 3 llamadas de búsqueda:
+      # 144 en total contra las 5.000 gratis por mes.
       areas:
-        - Palermo
-        - Belgrano
-        - San Telmo
+        - Agronomía
         - Almagro
-        - Recoleta
-        - Caballito
-        - Villa Crespo
-        - Flores
-        - Nuñez
-        - Barracas
-        - La Boca
-        - Retiro
-        - Puerto Madero
-        - Villa Urquiza
-        - Chacarita
-        - Colegiales
         - Balvanera
+        - Barracas
+        - Belgrano
+        - Boedo
+        - Caballito
+        - Chacarita
+        - Coghlan
+        - Colegiales
         - Constitución
-        - San Nicolás
+        - Flores
+        - Floresta
+        - La Boca
+        - La Paternal
+        - Liniers
+        - Mataderos
         - Monserrat
+        - Monte Castro
+        - Nueva Pompeya
+        - Núñez
+        - Palermo
+        - Parque Avellaneda
+        - Parque Chacabuco
+        - Parque Chas
+        - Parque Patricios
+        - Puerto Madero
+        - Recoleta
+        - Retiro
+        - Saavedra
+        - San Cristóbal
+        - San Nicolás
+        - San Telmo
+        - Vélez Sársfield
+        - Versalles
+        - Villa Crespo
+        - Villa del Parque
+        - Villa Devoto
+        - Villa General Mitre
+        - Villa Lugano
+        - Villa Luro
+        - Villa Ortúzar
+        - Villa Pueyrredón
+        - Villa Real
+        - Villa Riachuelo
+        - Villa Santa Rita
+        - Villa Soldati
+        - Villa Urquiza
     quota:
       monthly-search-calls: 4000
       monthly-photo-calls: 800

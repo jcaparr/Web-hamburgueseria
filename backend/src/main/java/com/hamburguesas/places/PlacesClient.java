@@ -25,6 +25,13 @@ import java.util.Map;
 public class PlacesClient {
 
     private static final String SEARCH_URL = "https://places.googleapis.com/v1/places:searchText";
+
+    /**
+     * El tipo de Google para hamburgueserías. Buscar solo por texto traía bares y
+     * parrillas que mencionan hamburguesas —en la base quedaron un wine bar y dos
+     * bares—, y con esto Google filtra por lo que el local es, no por lo que dice.
+     */
+    private static final String BURGER_TYPE = "hamburger_restaurant";
     private static final String FIELD_MASK =
         "places.id,places.displayName,places.formattedAddress,places.location,places.photos,nextPageToken";
 
@@ -35,6 +42,9 @@ public class PlacesClient {
         Map<String, Object> body = new HashMap<>();
         body.put("textQuery", query);
         body.put("languageCode", "es");
+        body.put("includedType", BURGER_TYPE);
+        // Sin esto el tipo es apenas una preferencia y Google igual devuelve otros rubros.
+        body.put("strictTypeFiltering", true);
         if (pageToken != null && !pageToken.isBlank()) {
             body.put("pageToken", pageToken);
         }
@@ -78,11 +88,38 @@ public class PlacesClient {
                     ? null : node.path("location").path("latitude").asDouble(),
                 node.path("location").path("longitude").isMissingNode()
                     ? null : node.path("location").path("longitude").asDouble(),
-                node.path("photos").isArray() && !node.path("photos").isEmpty()
-                    ? node.path("photos").get(0).path("name").asText(null) : null
+                bestPhotoName(node)
             ));
         }
 
         return new PlacesSearchResult(places, response.path("nextPageToken").asText(null));
+    }
+
+    /**
+     * Elige una foto entre las que devuelve Google, que llegan sin ninguna etiqueta
+     * de qué muestran: no hay forma de pedirle "el logo" o "la fachada".
+     *
+     * Lo que sí viene es quién subió cada una. Las del propio local —las que carga el
+     * dueño en su ficha— son casi siempre el logo o el frente, mientras que las de los
+     * clientes suelen ser platos y mesas. Así que se prefiere la del local y, si no
+     * subió ninguna, queda la primera, que es la que Google muestra como principal.
+     */
+    private static String bestPhotoName(JsonNode place) {
+        JsonNode photos = place.path("photos");
+        if (!photos.isArray() || photos.isEmpty()) {
+            return null;
+        }
+
+        String placeName = place.path("displayName").path("text").asText("");
+        for (JsonNode photo : photos) {
+            for (JsonNode author : photo.path("authorAttributions")) {
+                if (!placeName.isBlank()
+                    && placeName.equalsIgnoreCase(author.path("displayName").asText(""))) {
+                    return photo.path("name").asText(null);
+                }
+            }
+        }
+
+        return photos.get(0).path("name").asText(null);
     }
 }
