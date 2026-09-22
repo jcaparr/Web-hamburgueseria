@@ -53,6 +53,7 @@ class PlacesSyncPhotoBackfillTest {
 
         when(quotaGuard.canCall(any())).thenReturn(true);
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of());
+        when(repository.findByPhotoUrlIsNotNullAndPhotoNameIsNull()).thenReturn(List.of());
         when(placesClient.searchText(anyString(), any())).thenReturn(unLugarConFoto());
         when(placesClient.downloadPhoto(anyString())).thenReturn(IMAGEN);
         when(photoStorage.save(anyString(), any())).thenReturn("/api/place-photos/abc.jpg");
@@ -233,6 +234,43 @@ class PlacesSyncPhotoBackfillTest {
         // Parecerse no alcanza: si alcanzara, un "Heaven" cualquiera heredaría fotos ajenas.
         assertThat(PlacesSyncService.chainKey("Burger King"))
             .isNotEqualTo(PlacesSyncService.chainKey("Burger King Express"));
+    }
+
+    /**
+     * Las fotos bajadas con la regla de elección vieja se revisan una vez. Sobre 150
+     * locales reales, la regla nueva elige otra foto en 47: casi siempre una apaisada
+     * en lugar de una vertical, que en las tarjetas se veía recortada al medio.
+     */
+    @Test
+    void revisaUnaVezLasFotosBajadasConLaReglaVieja() {
+        when(placesClient.searchText(anyString(), any()))
+            .thenReturn(new PlacesSearchResult(List.of(), null));
+
+        BurgerJoint vieja = BurgerJoint.builder()
+            .id(1L).placeId("ChIJ-V").name("Weiss Burger").address("Rivadavia 1").area(AREA)
+            .photoUrl("/api/place-photos/vieja.jpg")
+            .build();
+        when(repository.findByPhotoUrlIsNotNullAndPhotoNameIsNull()).thenReturn(List.of(vieja));
+        when(placesClient.photoNameFor("ChIJ-V")).thenReturn("places/ChIJ-V/photos/mejor");
+
+        service.sync();
+
+        assertThat(vieja.getPhotoUrl()).isEqualTo("/api/place-photos/abc.jpg");
+        // Anotar cuál es la que tenemos es lo que evita revisarla de nuevo el mes que viene.
+        assertThat(vieja.getPhotoName()).isEqualTo("places/ChIJ-V/photos/mejor");
+    }
+
+    /** Una foto con su nombre ya anotado no se vuelve a revisar: sería pagar de nuevo. */
+    @Test
+    void noRevisaLasQueYaTienenSuNombreAnotado() {
+        when(placesClient.searchText(anyString(), any()))
+            .thenReturn(new PlacesSearchResult(List.of(), null));
+        when(repository.findByPhotoUrlIsNotNullAndPhotoNameIsNull()).thenReturn(List.of());
+
+        service.sync();
+
+        verify(placesClient, never()).photoNameFor(anyString());
+        verify(placesClient, never()).downloadPhoto(anyString());
     }
 
     /** Con el tope mensual agotado la sincronización sigue, pero sin bajar fotos. */

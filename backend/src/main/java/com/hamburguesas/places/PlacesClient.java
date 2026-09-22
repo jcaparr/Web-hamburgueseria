@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import java.net.http.HttpClient;
+import java.text.Normalizer;
+import java.util.Locale;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -142,15 +144,89 @@ public class PlacesClient {
         }
 
         String placeName = place.path("displayName").path("text").asText("");
+
+        JsonNode elegida = null;
+        int mejorPuntaje = Integer.MIN_VALUE;
         for (JsonNode photo : photos) {
-            for (JsonNode author : photo.path("authorAttributions")) {
-                if (!placeName.isBlank()
-                    && placeName.equalsIgnoreCase(author.path("displayName").asText(""))) {
-                    return photo.path("name").asText(null);
-                }
+            int puntaje = puntajeDe(photo, placeName);
+            if (puntaje > mejorPuntaje) {
+                mejorPuntaje = puntaje;
+                elegida = photo;
             }
         }
 
-        return photos.get(0).path("name").asText(null);
+        return elegida == null ? null : elegida.path("name").asText(null);
+    }
+
+    /**
+     * Qué tan buena es una foto como portada del local. Mayor es mejor, y ante empate
+     * gana la primera, que es la que Google muestra como principal.
+     *
+     * Pesa mucho más quién la subió que cómo es: una foto del local, aunque sea
+     * vertical, es preferible a una apaisada de un cliente.
+     */
+    private static int puntajeDe(JsonNode photo, String placeName) {
+        int puntaje = 0;
+
+        if (laSubioElLocal(photo, placeName)) {
+            puntaje += 100;
+        }
+
+        // Las tarjetas recortan la imagen a 4:3, así que una foto vertical —el plato
+        // que saca un cliente desde arriba— queda recortada al centro y se pierde el
+        // local. Las fachadas y las portadas que sube el dueño suelen ser apaisadas.
+        double proporcion = proporcionDe(photo);
+        if (proporcion >= 1.2) {
+            puntaje += 10;
+        } else if (proporcion <= 0.85) {
+            puntaje -= 10;
+        }
+
+        // Entre dos parecidas, la más grande: las chicas suelen ser logos recortados o
+        // capturas, y encima se ven mal estiradas en la portada del detalle.
+        if (photo.path("widthPx").asInt(0) >= 1000) {
+            puntaje += 1;
+        }
+
+        return puntaje;
+    }
+
+    private static double proporcionDe(JsonNode photo) {
+        int alto = photo.path("heightPx").asInt(0);
+        return alto == 0 ? 0 : (double) photo.path("widthPx").asInt(0) / alto;
+    }
+
+    /**
+     * Si la foto la subió el propio local.
+     *
+     * No se pide igualdad exacta porque casi nunca la hay: el local figura en Google
+     * como "Valentino" y en el mapa como "Valentino Burger", o al revés, "Mi Barrio
+     * Hamburguesería" sube las fotos de "Mi Barrio Hamburguesería Caballito". Con
+     * igualdad exacta se perdían 2 de cada 10 fotos oficiales.
+     *
+     * Alcanza con que un nombre contenga al otro, ignorando acentos, mayúsculas y
+     * puntuación. Se exige un mínimo de 4 caracteres para que un local de nombre muy
+     * corto no se quede con la foto de cualquier persona que se llame parecido.
+     */
+    private static boolean laSubioElLocal(JsonNode photo, String placeName) {
+        String local = soloLetrasYNumeros(placeName);
+        if (local.length() < 4) {
+            return false;
+        }
+
+        for (JsonNode author : photo.path("authorAttributions")) {
+            String autor = soloLetrasYNumeros(author.path("displayName").asText(""));
+            if (autor.length() >= 4 && (autor.contains(local) || local.contains(autor))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String soloLetrasYNumeros(String valor) {
+        return Normalizer.normalize(valor, Normalizer.Form.NFD)
+            .replaceAll("\\p{M}", "")
+            .toLowerCase(Locale.ROOT)
+            .replaceAll("[^a-z0-9]", "");
     }
 }

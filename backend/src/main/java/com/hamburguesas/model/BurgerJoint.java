@@ -35,6 +35,13 @@ public class BurgerJoint {
     @Column(name = "photo_url", length = 500)
     private String photoUrl;
 
+    /**
+     * Cuál de las fotos de Google es la que tenemos bajada. Permite saber si sigue
+     * siendo la mejor sin volver a bajarla: se compara el nombre y listo.
+     */
+    @Column(name = "photo_name", length = 500)
+    private String photoName;
+
     private Double latitude;
 
     private Double longitude;
