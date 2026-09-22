@@ -15,6 +15,13 @@ public interface BurgerJointRepository extends JpaRepository<BurgerJoint, Long> 
 
     /** Los que ya tienen foto, para prestársela a otras sucursales de la misma cadena. */
     List<BurgerJoint> findByPhotoUrlIsNotNull();
+
+    /**
+     * Los que tienen foto pero de los que no sabemos cuál es: son los que se bajaron
+     * antes de empezar a guardar el nombre, con la regla de elección vieja. Se revisan
+     * una vez y después quedan con su nombre anotado.
+     */
+    List<BurgerJoint> findByPhotoUrlIsNotNullAndPhotoNameIsNull();
     Page<BurgerJoint> findByNameContainingIgnoreCase(String name, Pageable pageable);
     Optional<BurgerJoint> findByPlaceId(String placeId);
 }

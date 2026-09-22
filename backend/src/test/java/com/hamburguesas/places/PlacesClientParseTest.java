@@ -94,6 +94,161 @@ class PlacesClientParseTest {
         assertThat(place.photoName()).isEqualTo("places/ChIJ123/photos/del-local");
     }
 
+    /**
+     * Caso real: el local figura como "Valentino Burger" y sus fotos las subió
+     * "Valentino". Con igualdad exacta se perdían 2 de cada 10 fotos oficiales.
+     */
+    @Test
+    void reconoceLaFotoDelLocalAunqueElNombreNoSeaIdentico() {
+        JsonNode response = json("""
+            {
+              "places": [{
+                "id": "ChIJ123",
+                "displayName": { "text": "Valentino Burger" },
+                "formattedAddress": "Puán 1406",
+                "photos": [
+                  {
+                    "name": "places/ChIJ123/photos/de-un-cliente",
+                    "widthPx": 4000, "heightPx": 2252,
+                    "authorAttributions": [{ "displayName": "Andrea Mansilla" }]
+                  },
+                  {
+                    "name": "places/ChIJ123/photos/del-local",
+                    "widthPx": 1280, "heightPx": 720,
+                    "authorAttributions": [{ "displayName": "Valentino" }]
+                  }
+                ]
+              }]
+            }
+            """);
+
+        PlacesSearchResult.Place place = PlacesClient.parse(response).places().get(0);
+
+        assertThat(place.photoName()).isEqualTo("places/ChIJ123/photos/del-local");
+    }
+
+    /**
+     * Las tarjetas recortan a 4:3: una foto vertical de un plato queda recortada al
+     * centro y se pierde el local. Entre varias del propio local, gana la apaisada.
+     */
+    @Test
+    void entreVariasDelLocalPrefiereLaApaisada() {
+        JsonNode response = json("""
+            {
+              "places": [{
+                "id": "ChIJ123",
+                "displayName": { "text": "El Desembarco Caballito" },
+                "formattedAddress": "Acoyte 100",
+                "photos": [
+                  {
+                    "name": "places/ChIJ123/photos/vertical",
+                    "widthPx": 1290, "heightPx": 2266,
+                    "authorAttributions": [{ "displayName": "El Desembarco Caballito" }]
+                  },
+                  {
+                    "name": "places/ChIJ123/photos/apaisada",
+                    "widthPx": 3464, "heightPx": 2309,
+                    "authorAttributions": [{ "displayName": "El Desembarco Caballito" }]
+                  }
+                ]
+              }]
+            }
+            """);
+
+        PlacesSearchResult.Place place = PlacesClient.parse(response).places().get(0);
+
+        assertThat(place.photoName()).isEqualTo("places/ChIJ123/photos/apaisada");
+    }
+
+    /** Una foto del local, aunque sea vertical, vale más que una apaisada de un cliente. */
+    @Test
+    void laDelLocalGanaAunqueSeaVerticalYLaDelClienteApaisada() {
+        JsonNode response = json("""
+            {
+              "places": [{
+                "id": "ChIJ123",
+                "displayName": { "text": "Burger Couple" },
+                "formattedAddress": "Rivadavia 1",
+                "photos": [
+                  {
+                    "name": "places/ChIJ123/photos/cliente-apaisada",
+                    "widthPx": 4032, "heightPx": 3024,
+                    "authorAttributions": [{ "displayName": "Enecehache Enecehache" }]
+                  },
+                  {
+                    "name": "places/ChIJ123/photos/local-vertical",
+                    "widthPx": 1290, "heightPx": 2266,
+                    "authorAttributions": [{ "displayName": "Burger Couple" }]
+                  }
+                ]
+              }]
+            }
+            """);
+
+        PlacesSearchResult.Place place = PlacesClient.parse(response).places().get(0);
+
+        assertThat(place.photoName()).isEqualTo("places/ChIJ123/photos/local-vertical");
+    }
+
+    /** Sin foto del local, entre las de clientes gana la apaisada sobre la vertical. */
+    @Test
+    void sinFotoDelLocalPrefiereLaApaisadaDeUnCliente() {
+        JsonNode response = json("""
+            {
+              "places": [{
+                "id": "ChIJ123",
+                "displayName": { "text": "Mr Tasty Caballito" },
+                "formattedAddress": "Rivadavia 2",
+                "photos": [
+                  {
+                    "name": "places/ChIJ123/photos/vertical",
+                    "widthPx": 3024, "heightPx": 4032,
+                    "authorAttributions": [{ "displayName": "Pablo José Santos" }]
+                  },
+                  {
+                    "name": "places/ChIJ123/photos/apaisada",
+                    "widthPx": 4080, "heightPx": 3060,
+                    "authorAttributions": [{ "displayName": "Analía Lara" }]
+                  }
+                ]
+              }]
+            }
+            """);
+
+        PlacesSearchResult.Place place = PlacesClient.parse(response).places().get(0);
+
+        assertThat(place.photoName()).isEqualTo("places/ChIJ123/photos/apaisada");
+    }
+
+    /**
+     * Un nombre muy corto no puede quedarse con la foto de cualquiera que se llame
+     * parecido: hay locales que se llaman "Rubi" o "Heaven".
+     */
+    @Test
+    void unNombreCortoNoSeQuedaConLaFotoDeUnaPersonaParecida() {
+        JsonNode response = json("""
+            {
+              "places": [{
+                "id": "ChIJ123",
+                "displayName": { "text": "Rubi" },
+                "formattedAddress": "Alsina 3",
+                "photos": [
+                  {
+                    "name": "places/ChIJ123/photos/primera",
+                    "widthPx": 4000, "heightPx": 3000,
+                    "authorAttributions": [{ "displayName": "Rubi Fernández" }]
+                  }
+                ]
+              }]
+            }
+            """);
+
+        PlacesSearchResult.Place place = PlacesClient.parse(response).places().get(0);
+
+        // Igual queda esta porque es la única, pero no por creerla oficial.
+        assertThat(place.photoName()).isEqualTo("places/ChIJ123/photos/primera");
+    }
+
     /** Si el local no subió ninguna queda la primera, que es la que Google destaca. */
     @Test
     void sinFotoDelLocalSeQuedaConLaPrimera() {

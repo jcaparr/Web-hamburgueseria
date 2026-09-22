@@ -85,6 +85,7 @@ public class PlacesSyncService {
 
         MissingPhotosResult missing = fillMissingPhotos();
         photosDownloaded += missing.downloaded();
+        photosDownloaded += repickOldPhotos();
 
         log.info("Places sync finished: {} created, {} updated, {} photos, {} reused",
             created, updated, photosDownloaded, missing.reused());
@@ -132,6 +133,7 @@ public class PlacesSyncService {
                 String photoUrl = downloadPhoto(joint.getPlaceId(), photoName);
                 if (photoUrl != null) {
                     joint.setPhotoUrl(photoUrl);
+                    joint.setPhotoName(photoName);
                     burgerJointRepository.save(joint);
                     fotoPorCadena.putIfAbsent(chainKey(joint.getName()), photoUrl);
                     downloaded++;
@@ -154,6 +156,55 @@ public class PlacesSyncService {
 
         return new MissingPhotosResult(downloaded, reused);
     }
+
+    /**
+      * Revisa las fotos que se bajaron con la regla de elección vieja.
+      *
+      * Esa regla se quedaba con la primera foto del local y, si no había ninguna, con
+      * la primera de todas. Sobre una muestra de 150 locales, la regla nueva elige
+      * otra foto en 47: casi siempre una apaisada en lugar de una vertical, que en las
+      * tarjetas —recortadas a 4:3— se veía cortada al medio.
+      *
+      * Va al final, después de las que no tienen ninguna foto: conseguir la primera
+      * foto de un local importa más que mejorar una que ya está. Y solo mira las que
+      * no tienen nombre anotado, así el trabajo se hace una vez y no en cada
+      * sincronización.
+      */
+     private int repickOldPhotos() {
+         int cambiadas = 0;
+
+         for (BurgerJoint joint : burgerJointRepository.findByPhotoUrlIsNotNullAndPhotoNameIsNull()) {
+             if (!quotaGuard.canCall(PlacesCallType.PHOTO) || !quotaGuard.canCall(PlacesCallType.DETAILS)) {
+                 log.info("Cuota mensual alcanzada, quedan fotos por revisar para el mes que viene");
+                 break;
+             }
+
+             String mejor;
+             try {
+                 pause();
+                 mejor = placesClient.photoNameFor(joint.getPlaceId());
+                 quotaGuard.record(PlacesCallType.DETAILS);
+             } catch (RestClientResponseException ex) {
+                 log.warn("No se pudo revisar la foto de {} (HTTP {})",
+                     joint.getPlaceId(), ex.getStatusCode().value());
+                 continue;
+             }
+
+             if (mejor == null) {
+                 continue;
+             }
+
+             String photoUrl = downloadPhoto(joint.getPlaceId(), mejor);
+             if (photoUrl != null) {
+                 joint.setPhotoUrl(photoUrl);
+                 joint.setPhotoName(mejor);
+                 burgerJointRepository.save(joint);
+                 cambiadas++;
+             }
+         }
+
+         return cambiadas;
+     }
 
     /** Una foto por cadena, para prestársela a las sucursales que no tengan. */
     private Map<String, String> photosByChain() {
@@ -206,6 +257,7 @@ public class PlacesSyncService {
             String photoUrl = downloadPhoto(place);
             if (photoUrl != null) {
                 joint.setPhotoUrl(photoUrl);
+                joint.setPhotoName(place.photoName());
                 gotPhoto = true;
             }
         }
@@ -258,6 +310,7 @@ public class PlacesSyncService {
             String photoUrl = downloadPhoto(place);
             if (photoUrl != null) {
                 joint.setPhotoUrl(photoUrl);
+                joint.setPhotoName(place.photoName());
                 gotPhoto = true;
             }
         }
