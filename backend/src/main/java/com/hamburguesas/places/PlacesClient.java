@@ -4,8 +4,11 @@ import tools.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+
+import java.net.http.HttpClient;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,7 +39,17 @@ public class PlacesClient {
         "places.id,places.displayName,places.formattedAddress,places.location,places.photos,nextPageToken";
 
     private final PlacesProperties properties;
-    private final RestClient restClient = RestClient.create();
+
+    /**
+     * Sigue redirecciones, que es lo que hace falta para bajar una foto: el endpoint
+     * de Google no devuelve la imagen sino un 302 hacia ella, con un JSON en el cuerpo.
+     * El cliente por omisión no las sigue, así que guardábamos ese JSON como si fuera
+     * la foto: 345 archivos de 700 bytes que el navegador mostraba rotos.
+     */
+    private final RestClient restClient = RestClient.builder()
+        .requestFactory(new JdkClientHttpRequestFactory(
+            HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build()))
+        .build();
 
     public PlacesSearchResult searchText(String query, String pageToken) {
         Map<String, Object> body = new HashMap<>();

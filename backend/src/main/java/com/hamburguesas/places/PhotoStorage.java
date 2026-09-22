@@ -26,6 +26,15 @@ public class PhotoStorage {
             return null;
         }
 
+        // Guardar lo que venga es lo que dejó 345 archivos de 700 bytes con un JSON
+        // adentro, que en la app se veían como imágenes rotas y que nadie iba a
+        // reintentar, porque el local ya figuraba "con foto".
+        if (!looksLikeImage(bytes)) {
+            log.warn("Lo que llegó para el lugar {} no es una imagen ({} bytes), no se guarda",
+                placeId, bytes.length);
+            return null;
+        }
+
         String fileName = sanitize(placeId) + ".jpg";
         try {
             Path directory = Paths.get(properties.getPhotos().getDirectory());
@@ -36,6 +45,23 @@ public class PhotoStorage {
             log.warn("Could not store photo for place {}: {}", placeId, ex.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Mira los primeros bytes, que en los formatos de imagen son una firma fija. No
+     * valida que la imagen esté entera, pero alcanza para distinguir una foto de un
+     * error o un JSON, que es de lo que se trata.
+     */
+    private boolean looksLikeImage(byte[] bytes) {
+        if (bytes.length < 12) {
+            return false;
+        }
+        boolean jpeg = (bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xD8;
+        boolean png = (bytes[0] & 0xFF) == 0x89 && bytes[1] == 'P' && bytes[2] == 'N' && bytes[3] == 'G';
+        boolean gif = bytes[0] == 'G' && bytes[1] == 'I' && bytes[2] == 'F';
+        boolean webp = bytes[0] == 'R' && bytes[1] == 'I' && bytes[2] == 'F' && bytes[3] == 'F'
+            && bytes[8] == 'W' && bytes[9] == 'E' && bytes[10] == 'B' && bytes[11] == 'P';
+        return jpeg || png || gif || webp;
     }
 
     public Path resolve(String fileName) {
