@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { IconHeart, IconPin } from '../components/icons'
 import { LoadError } from '../components/LoadError'
+import { JointPhoto } from '../components/JointPhoto'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { Stars } from '../components/Stars'
 import { useAuth } from '../context/AuthContext'
@@ -125,9 +126,9 @@ export function BurgerJointDetail() {
     <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-4xl md:grid md:grid-cols-2 md:gap-6 md:p-0">
       <div className="flex flex-col gap-4">
         {loadError !== null && <LoadError error={loadError} onRetry={load} />}
-        <img
-          src={burgerJoint.photoUrl ?? 'https://placehold.co/600x300?text=%F0%9F%8D%94'}
-          alt={burgerJoint.name}
+        <JointPhoto
+          src={burgerJoint.photoUrl}
+          name={burgerJoint.name}
           className="h-48 w-full rounded-box object-cover"
         />
 
