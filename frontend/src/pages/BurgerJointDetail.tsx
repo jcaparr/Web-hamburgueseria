@@ -1,12 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { IconHeart, IconPin } from '../components/icons'
+import { LoadError } from '../components/LoadError'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { Stars } from '../components/Stars'
 import { useAuth } from '../context/AuthContext'
 import type { BurgerJoint, PageResponse, Rating } from '../types'
-import { isSessionExpired } from '../utils/errors'
+import { isNotFound, isSessionExpired } from '../utils/errors'
 import { mapsUrl } from '../utils/maps'
 
 export function BurgerJointDetail() {
@@ -20,14 +21,24 @@ export function BurgerJointDetail() {
   const [comment, setComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<unknown>(null)
 
   const myRating = user ? ratings.find((r) => r.userId === user.userId) ?? null : null
 
   function load() {
-    apiClient.get<BurgerJoint>(`/burger-joints/${id}`).then(({ data }) => setBurgerJoint(data))
-    apiClient
-      .get<PageResponse<Rating>>(`/burger-joints/${id}/ratings`)
-      .then(({ data }) => setRatings(data.content))
+    // Juntas: si cualquiera de las dos falla, la página no está completa. Antes cada
+    // una iba por su lado y sin manejo de error, así que un local inexistente o un
+    // servidor caído dejaban "Cargando..." en pantalla para siempre.
+    Promise.all([
+      apiClient.get<BurgerJoint>(`/burger-joints/${id}`),
+      apiClient.get<PageResponse<Rating>>(`/burger-joints/${id}/ratings`),
+    ])
+      .then(([jointRes, ratingsRes]) => {
+        setBurgerJoint(jointRes.data)
+        setRatings(ratingsRes.data.content)
+        setLoadError(null)
+      })
+      .catch(setLoadError)
   }
 
   useEffect(load, [id])
@@ -89,11 +100,31 @@ export function BurgerJointDetail() {
     }
   }
 
-  if (!burgerJoint) return <p className="p-4 text-sm text-base-content/60">Cargando...</p>
+  if (!burgerJoint) {
+    if (isNotFound(loadError)) {
+      return (
+        <div className="flex flex-col items-start gap-3 p-4">
+          <p className="text-sm text-base-content/70">No encontramos esta hamburguesería.</p>
+          <Link to="/" className="btn btn-sm btn-outline">
+            Ver todas
+          </Link>
+        </div>
+      )
+    }
+    if (loadError) {
+      return (
+        <div className="p-4">
+          <LoadError error={loadError} onRetry={load} />
+        </div>
+      )
+    }
+    return <p className="p-4 text-sm text-base-content/60">Cargando...</p>
+  }
 
   return (
     <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-4xl md:grid md:grid-cols-2 md:gap-6 md:p-0">
       <div className="flex flex-col gap-4">
+        {loadError !== null && <LoadError error={loadError} onRetry={load} />}
         <img
           src={burgerJoint.photoUrl ?? 'https://placehold.co/600x300?text=%F0%9F%8D%94'}
           alt={burgerJoint.name}

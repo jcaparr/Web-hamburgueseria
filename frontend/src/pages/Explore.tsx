@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { IconPin, IconSearch } from '../components/icons'
+import { LoadError } from '../components/LoadError'
 import { ScoreBadge } from '../components/ScoreBadge'
 import type { BurgerJoint, PageResponse } from '../types'
 import { mapsUrl } from '../utils/maps'
@@ -13,6 +14,9 @@ export function Explore() {
   const [page, setPage] = useState(0)
   const [pageData, setPageData] = useState<PageResponse<BurgerJoint> | null>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<unknown>(null)
+  // Sube con "Reintentar" para volver a correr la búsqueda con los mismos filtros.
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -21,12 +25,16 @@ export function Explore() {
         .get<PageResponse<BurgerJoint>>('/burger-joints', {
           params: { q: query || undefined, page, size: PAGE_SIZE },
         })
-        .then(({ data }) => setPageData(data))
+        .then(({ data }) => {
+          setPageData(data)
+          setError(null)
+        })
+        .catch(setError)
         .finally(() => setLoading(false))
     }, 300)
 
     return () => clearTimeout(timeout)
-  }, [query, page])
+  }, [query, page, attempt])
 
   const items = pageData?.content ?? []
 
@@ -50,6 +58,9 @@ export function Explore() {
 
       {loading && <p className="text-sm text-base-content/60">Buscando...</p>}
 
+      {error ? (
+        <LoadError error={error} onRetry={() => setAttempt((n) => n + 1)} />
+      ) : (
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((b) => (
           <li key={b.id} className="rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15 overflow-hidden">
@@ -91,8 +102,9 @@ export function Explore() {
           <p className="text-sm text-base-content/60">No encontramos hamburgueserías con ese nombre.</p>
         )}
       </ul>
+      )}
 
-      {pageData && pageData.totalPages > 1 && (
+      {!error && pageData && pageData.totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 py-2">
           <div className="join">
             <button

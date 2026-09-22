@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
+import { LoadError } from '../components/LoadError'
 import { IconChevronRight, IconMedal, IconSettings, IconUser } from '../components/icons'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { useAuth } from '../context/AuthContext'
@@ -15,6 +16,8 @@ export function Profile() {
   const [ratings, setRatings] = useState<MyRating[]>([])
   const [favorites, setFavorites] = useState<BurgerJoint[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<unknown>(null)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     // RequireAuth guarantees there is a session by the time this renders.
@@ -30,9 +33,10 @@ export function Profile() {
       })
       .catch((err) => {
         if (isSessionExpired(err)) navigate('/login')
+        else setError(err)
       })
       .finally(() => setLoading(false))
-  }, [user, navigate])
+  }, [user, navigate, attempt])
 
   const recentRatings = ratings.slice(0, 3)
 
@@ -42,6 +46,11 @@ export function Profile() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:mx-auto md:max-w-3xl md:p-0">
+      {error !== null && <LoadError error={error} onRetry={() => {
+          setError(null)
+          setLoading(true)
+          setAttempt((n) => n + 1)
+        }} />}
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Mi perfil</h1>
         <button
@@ -116,7 +125,7 @@ export function Profile() {
               <ScoreBadge score={r.score} size="sm" />
             </Link>
           ))}
-          {!loading && recentRatings.length === 0 && (
+          {!loading && !error && recentRatings.length === 0 && (
             <p className="text-sm text-base-content/60">Todavía no calificaste ninguna hamburguesería.</p>
           )}
         </div>
@@ -155,7 +164,7 @@ export function Profile() {
             ))}
           </div>
         ) : (
-          !loading && <p className="text-sm text-base-content/60">Todavía no guardaste ninguna hamburguesería.</p>
+          !loading && !error && <p className="text-sm text-base-content/60">Todavía no guardaste ninguna hamburguesería.</p>
         )}
       </section>
 
