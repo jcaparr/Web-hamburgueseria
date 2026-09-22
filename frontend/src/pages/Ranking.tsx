@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { IconPin } from '../components/icons'
+import { LoadError } from '../components/LoadError'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { useAuth } from '../context/AuthContext'
 import type { PageResponse, RankingItem } from '../types'
@@ -16,16 +17,45 @@ export function Ranking() {
   const [order, setOrder] = useState<Order>('score')
   const [items, setItems] = useState<RankingItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<unknown>(null)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
+    // Sin sesión "Mi ranking" no tiene qué mostrar. Antes se pedía igual: volvía 401
+    // y en pantalla quedaba la lista del ranking general debajo del aviso de iniciar
+    // sesión, como si fuera la tuya.
+    if (tab === 'mine' && !user) {
+      setItems([])
+      setError(null)
+      setLoading(false)
+      return
+    }
+
+    // Evita que una respuesta lenta de la pestaña anterior pise a la actual.
+    let cancelled = false
     setLoading(true)
     const request =
       tab === 'general'
         ? apiClient.get<PageResponse<RankingItem>>('/ranking/general', { params: { order } })
         : apiClient.get<PageResponse<RankingItem>>('/ranking/mine')
 
-    request.then(({ data }) => setItems(data.content)).finally(() => setLoading(false))
-  }, [tab, order])
+    request
+      .then(({ data }) => {
+        if (cancelled) return
+        setItems(data.content)
+        setError(null)
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [tab, order, user, attempt])
 
   return (
     <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-2xl md:p-0">
@@ -75,6 +105,9 @@ export function Ranking() {
 
       {loading && <p className="text-sm text-base-content/60">Cargando...</p>}
 
+      {error ? (
+        <LoadError error={error} onRetry={() => setAttempt((n) => n + 1)} />
+      ) : (
       <ol className="flex flex-col gap-3">
         {items.map((item, index) => (
           <li key={item.burgerJointId} className="rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15">
@@ -109,12 +142,13 @@ export function Ranking() {
             </a>
           </li>
         ))}
-        {!loading && items.length === 0 && (
+        {!loading && items.length === 0 && (tab === 'general' || user) && (
           <p className="text-sm text-base-content/60">
             {tab === 'mine' ? 'Todavía no calificaste ninguna hamburguesería.' : 'Todavía no hay calificaciones.'}
           </p>
         )}
       </ol>
+      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
+import { LoadError } from '../components/LoadError'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { useAuth } from '../context/AuthContext'
 import type { MyRating } from '../types'
@@ -12,6 +13,8 @@ export function Reviews() {
   const navigate = useNavigate()
   const [ratings, setRatings] = useState<MyRating[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<unknown>(null)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     // RequireAuth guarantees there is a session by the time this renders.
@@ -20,15 +23,21 @@ export function Reviews() {
       .then(({ data }) => setRatings(data))
       .catch((err) => {
         if (isSessionExpired(err)) navigate('/login')
+        else setError(err)
       })
       .finally(() => setLoading(false))
-  }, [user, navigate])
+  }, [user, navigate, attempt])
 
   return (
     <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-2xl md:p-0">
       <h1 className="font-display text-2xl font-bold">Mis reseñas</h1>
 
       {loading && <p className="text-sm text-base-content/60">Cargando...</p>}
+      {error !== null && <LoadError error={error} onRetry={() => {
+          setError(null)
+          setLoading(true)
+          setAttempt((n) => n + 1)
+        }} />}
 
       <ul className="flex flex-col gap-3">
         {ratings.map((r) => (
@@ -48,7 +57,7 @@ export function Reviews() {
             {r.comment && <p className="mt-2 text-sm text-base-content/70">{r.comment}</p>}
           </li>
         ))}
-        {!loading && ratings.length === 0 && (
+        {!loading && !error && ratings.length === 0 && (
           <p className="text-sm text-base-content/60">Todavía no calificaste ninguna hamburguesería.</p>
         )}
       </ul>
