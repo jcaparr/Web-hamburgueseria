@@ -9,6 +9,7 @@ import { Stars } from '../components/Stars'
 import { useAuth } from '../context/AuthContext'
 import type { BurgerJoint, PageResponse, Rating } from '../types'
 import { isNotFound, isSessionExpired } from '../utils/errors'
+import { shortAddress } from '../utils/address'
 import { mapsUrl } from '../utils/maps'
 
 export function BurgerJointDetail() {
@@ -135,14 +136,14 @@ export function BurgerJointDetail() {
         <div className="flex items-start justify-between">
           <div className="flex flex-col gap-1.5">
             <h1 className="font-display text-2xl font-bold">{burgerJoint.name}</h1>
-            <p className="text-sm text-base-content/60">{burgerJoint.address}</p>
+            <p className="text-sm text-base-content/60">{shortAddress(burgerJoint.address, burgerJoint.area)}</p>
             {burgerJoint.averageScore ? (
               <ScoreBadge score={burgerJoint.averageScore} size="sm" />
             ) : (
               <p className="text-sm text-base-content/50">Todavía sin calificaciones</p>
             )}
             <a
-              href={mapsUrl(burgerJoint.latitude, burgerJoint.longitude, `${burgerJoint.name} ${burgerJoint.address}`)}
+              href={mapsUrl(burgerJoint.placeId, burgerJoint.name, burgerJoint.latitude, burgerJoint.longitude)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-xs font-semibold text-primary"

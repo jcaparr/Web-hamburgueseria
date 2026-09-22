@@ -7,6 +7,7 @@ import { JointPhoto } from '../components/JointPhoto'
 import { useAuth } from '../context/AuthContext'
 import type { BurgerJoint } from '../types'
 import { isSessionExpired } from '../utils/errors'
+import { shortAddress } from '../utils/address'
 import { mapsUrl } from '../utils/maps'
 
 export function Wishlist() {
@@ -61,7 +62,7 @@ export function Wishlist() {
                 />
                 <div className="flex flex-col overflow-hidden">
                   <span className="truncate font-display font-semibold">{b.name}</span>
-                  <span className="truncate text-xs text-base-content/60">{b.address}</span>
+                  <span className="truncate text-xs text-base-content/60">{shortAddress(b.address, b.area)}</span>
                 </div>
               </Link>
               <button
@@ -73,7 +74,7 @@ export function Wishlist() {
               </button>
             </div>
             <a
-              href={mapsUrl(b.latitude, b.longitude, `${b.name} ${b.address}`)}
+              href={mapsUrl(b.placeId, b.name, b.latitude, b.longitude)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 p-3 pt-2 text-xs font-semibold text-primary"

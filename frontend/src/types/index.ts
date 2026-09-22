@@ -1,5 +1,7 @@
 export interface BurgerJoint {
   id: number
+  /** El identificador del local en Google, para abrir su ficha en Maps. */
+  placeId: string | null
   name: string
   address: string
   area: string | null
@@ -22,6 +24,7 @@ export interface Rating {
 
 export interface RankingItem {
   burgerJointId: number
+  placeId: string | null
   name: string
   address: string
   area: string | null
