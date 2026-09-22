@@ -78,8 +78,60 @@ public class PlacesSyncService {
             }
         }
 
+        photosDownloaded += fillMissingPhotos();
+
         log.info("Places sync finished: {} created, {} updated, {} photos", created, updated, photosDownloaded);
         return new PlacesSyncReport(created, updated, photosDownloaded, null);
+    }
+
+    /**
+     * Completa las fotos de los locales que las búsquedas por barrio no devuelven.
+     *
+     * Hasta acá la foto llegaba de arriba: se bajaba la de los locales que aparecían
+     * en una búsqueda. Pero un local puede estar en la base y no aparecer en ninguna:
+     * los que Google no clasifica como hamburguesería —Burger King, por ejemplo, que
+     * figura como comida rápida— quedan afuera del filtro estricto, y también queda
+     * afuera cualquiera que no entre en los 60 resultados de su barrio. Esos se
+     * quedaban sin foto para siempre.
+     *
+     * Acá se les pide la ficha por su place_id, que es una llamada aparte y con su
+     * propio límite gratuito.
+     */
+    private int fillMissingPhotos() {
+        int downloaded = 0;
+
+        for (BurgerJoint joint : burgerJointRepository.findByPhotoUrlIsNull()) {
+            if (!quotaGuard.canCall(PlacesCallType.PHOTO) || !quotaGuard.canCall(PlacesCallType.DETAILS)) {
+                log.warn("Cuota mensual alcanzada, quedan locales sin foto para el mes que viene");
+                break;
+            }
+
+            String photoName;
+            try {
+                pause();
+                photoName = placesClient.photoNameFor(joint.getPlaceId());
+                quotaGuard.record(PlacesCallType.DETAILS);
+            } catch (RestClientResponseException ex) {
+                log.warn("No se pudo pedir la ficha de {} (HTTP {})",
+                    joint.getPlaceId(), ex.getStatusCode().value());
+                continue;
+            }
+
+            // Un local sin fotos en Google es normal y no es un error: se lo deja sin
+            // foto y se vuelve a intentar en la próxima sincronización, por si sube una.
+            if (photoName == null) {
+                continue;
+            }
+
+            String photoUrl = downloadPhoto(joint.getPlaceId(), photoName);
+            if (photoUrl != null) {
+                joint.setPhotoUrl(photoUrl);
+                burgerJointRepository.save(joint);
+                downloaded++;
+            }
+        }
+
+        return downloaded;
     }
 
     private PlacesSearchResult search(String area, String pageToken) {
@@ -119,13 +171,17 @@ public class PlacesSyncService {
      * vez de una por visita.
      */
     private String downloadPhoto(PlacesSearchResult.Place place) {
+        return downloadPhoto(place.placeId(), place.photoName());
+    }
+
+    private String downloadPhoto(String placeId, String photoName) {
         try {
             pause();
-            byte[] bytes = placesClient.downloadPhoto(place.photoName());
+            byte[] bytes = placesClient.downloadPhoto(photoName);
             quotaGuard.record(PlacesCallType.PHOTO);
-            return photoStorage.save(place.placeId(), bytes);
+            return photoStorage.save(placeId, bytes);
         } catch (RestClientResponseException ex) {
-            log.warn("Could not download photo for {} (HTTP {})", place.placeId(), ex.getStatusCode().value());
+            log.warn("Could not download photo for {} (HTTP {})", placeId, ex.getStatusCode().value());
             return null;
         }
     }

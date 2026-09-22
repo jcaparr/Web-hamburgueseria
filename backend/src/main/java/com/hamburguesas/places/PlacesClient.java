@@ -74,6 +74,24 @@ public class PlacesClient {
         return parse(response);
     }
 
+    /**
+      * Pide la ficha de un local puntual. Existe para los locales que ninguna búsqueda
+      * por barrio devuelve —los que Google no clasifica como hamburguesería, como
+      * Burger King—, que si no se quedarían sin foto para siempre.
+      *
+      * @return el nombre de la foto elegida, o null si el local no tiene ninguna.
+      */
+     public String photoNameFor(String placeId) {
+         JsonNode place = restClient.get()
+             .uri("https://places.googleapis.com/v1/places/{placeId}", placeId)
+             .header("X-Goog-Api-Key", properties.getApiKey())
+             .header("X-Goog-FieldMask", "id,displayName,photos")
+             .retrieve()
+             .body(JsonNode.class);
+
+         return place == null ? null : bestPhotoName(place);
+     }
+
     public byte[] downloadPhoto(String photoName) {
         String uri = "https://places.googleapis.com/v1/%s/media?maxWidthPx=%d&key=%s"
             .formatted(photoName, properties.getPhotos().getMaxWidthPx(), properties.getApiKey());

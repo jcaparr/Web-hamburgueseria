@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:demo;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  flyway:
+    # The demo profile throws away an in-memory H2 on every run, so Hibernate builds it.
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+
+app:
+  jwt:
+    secret: demo-only-secret-not-used-anywhere-but-your-laptop
+  cors:
+    allowed-origins: http://localhost:5173
+  places:
+    sync:
+      enabled: false
+      areas:
+        - Palermo

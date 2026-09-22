@@ -30,9 +30,11 @@ public class PlacesQuotaGuard {
     }
 
     public int limitFor(PlacesCallType callType) {
-        return callType == PlacesCallType.PHOTO
-            ? properties.getQuota().getMonthlyPhotoCalls()
-            : properties.getQuota().getMonthlySearchCalls();
+        return switch (callType) {
+            case SEARCH -> properties.getQuota().getMonthlySearchCalls();
+            case DETAILS -> properties.getQuota().getMonthlyDetailsCalls();
+            case PHOTO -> properties.getQuota().getMonthlyPhotoCalls();
+        };
     }
 
     /**

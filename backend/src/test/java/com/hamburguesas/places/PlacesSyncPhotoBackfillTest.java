@@ -52,6 +52,7 @@ class PlacesSyncPhotoBackfillTest {
         repository = mock(BurgerJointRepository.class);
 
         when(quotaGuard.canCall(any())).thenReturn(true);
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of());
         when(placesClient.searchText(anyString(), any())).thenReturn(unLugarConFoto());
         when(placesClient.downloadPhoto(anyString())).thenReturn(IMAGEN);
         when(photoStorage.save(anyString(), any())).thenReturn("/api/place-photos/abc.jpg");
@@ -94,6 +95,49 @@ class PlacesSyncPhotoBackfillTest {
         PlacesSyncReport report = service.sync();
 
         assertThat(conFoto.getPhotoUrl()).isEqualTo("/api/place-photos/vieja.jpg");
+        assertThat(report.photosDownloaded()).isZero();
+        verify(placesClient, never()).downloadPhoto(anyString());
+    }
+
+    /**
+     * Los locales que ninguna búsqueda devuelve —Burger King, por ejemplo, que Google
+     * clasifica como comida rápida y el filtro estricto deja afuera— se quedaban sin
+     * foto para siempre, porque la foto solo llegaba a través de una búsqueda.
+     */
+    @Test
+    void lesConsigueFotoALosQueNingunaBusquedaDevuelve() {
+        when(placesClient.searchText(anyString(), any()))
+            .thenReturn(new PlacesSearchResult(List.of(), null));
+
+        BurgerJoint invisible = BurgerJoint.builder()
+            .id(9L).placeId("ChIJ-BK").name("Burger King").address("Av. Corrientes 1").area(AREA)
+            .build();
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(invisible));
+        when(placesClient.photoNameFor("ChIJ-BK")).thenReturn("places/ChIJ-BK/photos/abc");
+
+        PlacesSyncReport report = service.sync();
+
+        assertThat(invisible.getPhotoUrl()).isEqualTo("/api/place-photos/abc.jpg");
+        assertThat(report.photosDownloaded()).isEqualTo(1);
+        verify(quotaGuard).record(PlacesCallType.DETAILS);
+        verify(quotaGuard).record(PlacesCallType.PHOTO);
+    }
+
+    /** Que Google no tenga fotos de un local es normal: no se marca nada y se reintenta. */
+    @Test
+    void unLocalSinFotosEnGoogleQuedaComoEstaba() {
+        when(placesClient.searchText(anyString(), any()))
+            .thenReturn(new PlacesSearchResult(List.of(), null));
+
+        BurgerJoint sinFotos = BurgerJoint.builder()
+            .id(9L).placeId("ChIJ-X").name("Sin Fotos").address("Calle 1").area(AREA)
+            .build();
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(sinFotos));
+        when(placesClient.photoNameFor("ChIJ-X")).thenReturn(null);
+
+        PlacesSyncReport report = service.sync();
+
+        assertThat(sinFotos.getPhotoUrl()).isNull();
         assertThat(report.photosDownloaded()).isZero();
         verify(placesClient, never()).downloadPhoto(anyString());
     }

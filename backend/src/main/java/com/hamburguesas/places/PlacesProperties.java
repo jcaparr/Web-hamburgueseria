@@ -31,8 +31,10 @@ public class PlacesProperties {
     public static class Quota {
         /** Kept under Google's 5.000 free monthly Text Search calls. */
         private int monthlySearchCalls = 4000;
-        /** Kept under Google's 1.000 free monthly Photo calls. */
-        private int monthlyPhotoCalls = 800;
+        /** El tramo gratuito de Google es de 1.000 fotos por mes, y acá se frena antes. */
+        private int monthlyPhotoCalls = 1000;
+        /** Fichas sueltas, para los locales que ninguna búsqueda devuelve. Gratis hasta 5.000. */
+        private int monthlyDetailsCalls = 4000;
     }
 
     @Data
