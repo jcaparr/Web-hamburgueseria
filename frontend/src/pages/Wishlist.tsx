@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { IconHeart, IconPin } from '../components/icons'
 import { LoadError } from '../components/LoadError'
+import { JointPhoto } from '../components/JointPhoto'
 import { useAuth } from '../context/AuthContext'
 import type { BurgerJoint } from '../types'
 import { isSessionExpired } from '../utils/errors'
@@ -53,10 +54,10 @@ export function Wishlist() {
           <li key={b.id} className="rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15">
             <div className="flex items-center gap-3 p-3 pb-0">
               <Link to={`/burger-joints/${b.id}`} className="flex flex-1 items-center gap-3 overflow-hidden">
-                <img
-                  src={b.photoUrl ?? 'https://placehold.co/64x64?text=%F0%9F%8D%94'}
-                  alt={b.name}
-                  className="h-14 w-14 rounded-lg object-cover"
+                <JointPhoto
+                  src={b.photoUrl}
+                  name={b.name}
+                  className="h-14 w-14 flex-none rounded-lg object-cover"
                 />
                 <div className="flex flex-col overflow-hidden">
                   <span className="truncate font-display font-semibold">{b.name}</span>
