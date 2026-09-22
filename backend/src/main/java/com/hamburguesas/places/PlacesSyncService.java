@@ -8,7 +8,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
 
+import java.text.Normalizer;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -45,7 +50,7 @@ public class PlacesSyncService {
                 } catch (RestClientResponseException ex) {
                     log.warn("Places search failed for {} (HTTP {}), stopping sync: {}",
                         area, ex.getStatusCode().value(), ex.getMessage());
-                    return new PlacesSyncReport(created, updated, photosDownloaded,
+                    return new PlacesSyncReport(created, updated, photosDownloaded, 0,
                         "Google respondió " + ex.getStatusCode().value() + ", se frenó la sincronización");
                 }
 
@@ -78,10 +83,12 @@ public class PlacesSyncService {
             }
         }
 
-        photosDownloaded += fillMissingPhotos();
+        MissingPhotosResult missing = fillMissingPhotos();
+        photosDownloaded += missing.downloaded();
 
-        log.info("Places sync finished: {} created, {} updated, {} photos", created, updated, photosDownloaded);
-        return new PlacesSyncReport(created, updated, photosDownloaded, null);
+        log.info("Places sync finished: {} created, {} updated, {} photos, {} reused",
+            created, updated, photosDownloaded, missing.reused());
+        return new PlacesSyncReport(created, updated, photosDownloaded, missing.reused(), null);
     }
 
     /**
@@ -97,8 +104,12 @@ public class PlacesSyncService {
      * Acá se les pide la ficha por su place_id, que es una llamada aparte y con su
      * propio límite gratuito.
      */
-    private int fillMissingPhotos() {
+    private record MissingPhotosResult(int downloaded, int reused) {}
+
+    private MissingPhotosResult fillMissingPhotos() {
         int downloaded = 0;
+        int reused = 0;
+        Map<String, String> fotoPorCadena = photosByChain();
 
         for (BurgerJoint joint : burgerJointRepository.findByPhotoUrlIsNull()) {
             if (!quotaGuard.canCall(PlacesCallType.PHOTO) || !quotaGuard.canCall(PlacesCallType.DETAILS)) {
@@ -117,21 +128,59 @@ public class PlacesSyncService {
                 continue;
             }
 
-            // Un local sin fotos en Google es normal y no es un error: se lo deja sin
-            // foto y se vuelve a intentar en la próxima sincronización, por si sube una.
-            if (photoName == null) {
-                continue;
+            if (photoName != null) {
+                String photoUrl = downloadPhoto(joint.getPlaceId(), photoName);
+                if (photoUrl != null) {
+                    joint.setPhotoUrl(photoUrl);
+                    burgerJointRepository.save(joint);
+                    fotoPorCadena.putIfAbsent(chainKey(joint.getName()), photoUrl);
+                    downloaded++;
+                    continue;
+                }
             }
 
-            String photoUrl = downloadPhoto(joint.getPlaceId(), photoName);
-            if (photoUrl != null) {
-                joint.setPhotoUrl(photoUrl);
+            // Google no tiene fotos de esta dirección. Si es una sucursal de una cadena
+            // que sí tiene, se usa la de la hermana: preferimos el frente de otro local
+            // de la misma marca antes que un recuadro con iniciales. Se intenta recién
+            // acá, después de Google, porque la foto propia de la sucursal siempre es
+            // mejor que la prestada. No cuesta ninguna llamada.
+            String prestada = fotoPorCadena.get(chainKey(joint.getName()));
+            if (prestada != null) {
+                joint.setPhotoUrl(prestada);
                 burgerJointRepository.save(joint);
-                downloaded++;
+                reused++;
             }
         }
 
-        return downloaded;
+        return new MissingPhotosResult(downloaded, reused);
+    }
+
+    /** Una foto por cadena, para prestársela a las sucursales que no tengan. */
+    private Map<String, String> photosByChain() {
+        Map<String, String> porCadena = new HashMap<>();
+        for (BurgerJoint joint : burgerJointRepository.findByPhotoUrlIsNotNull()) {
+            porCadena.putIfAbsent(chainKey(joint.getName()), joint.getPhotoUrl());
+        }
+        return porCadena;
+    }
+
+    /**
+     * El nombre de la cadena detrás del nombre del local.
+     *
+     * Las sucursales se escriben de varias formas: "Burger King" repetido tal cual,
+     * o "Dean & Dennys - Palermo Soho" y "Dean & Dennys - Barrio Norte". Se corta en
+     * el guión y se normaliza mayúsculas y acentos, porque la misma cadena aparece
+     * escrita distinto según quién la cargó en Google.
+     *
+     * Se exige igualdad y no parecido: con nombres cortos y genéricos —"Heaven",
+     * "Rubi"— cualquier coincidencia parcial terminaría pegándole la foto de un local
+     * que no tiene nada que ver.
+     */
+    static String chainKey(String name) {
+        String sinSucursal = name.split(" - ")[0];
+        String sinAcentos = Normalizer.normalize(sinSucursal, Normalizer.Form.NFD)
+            .replaceAll("\\p{M}", "");
+        return sinAcentos.toLowerCase(Locale.ROOT).replaceAll("\\s+", " ").trim();
     }
 
     private PlacesSearchResult search(String area, String pageToken) {

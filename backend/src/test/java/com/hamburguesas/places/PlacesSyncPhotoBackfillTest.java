@@ -142,6 +142,99 @@ class PlacesSyncPhotoBackfillTest {
         verify(placesClient, never()).downloadPhoto(anyString());
     }
 
+    /**
+     * Una sucursal cuya dirección Google no tiene fotografiada se queda con la foto de
+     * otra sucursal de la misma cadena. Es preferible el frente de otro local de la
+     * misma marca antes que un recuadro con iniciales.
+     */
+    @Test
+    void unaSucursalSinFotoUsaLaDeSuHermana() {
+        when(placesClient.searchText(anyString(), any()))
+            .thenReturn(new PlacesSearchResult(List.of(), null));
+
+        BurgerJoint conFoto = BurgerJoint.builder()
+            .id(1L).placeId("ChIJ-BK1").name("Burger King").address("Corrientes 1").area(AREA)
+            .photoUrl("/api/place-photos/burgerking.jpg")
+            .build();
+        BurgerJoint nueva = BurgerJoint.builder()
+            .id(2L).placeId("ChIJ-BK2").name("Burger King").address("Cabildo 2").area(AREA)
+            .build();
+
+        when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(conFoto));
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(nueva));
+        when(placesClient.photoNameFor("ChIJ-BK2")).thenReturn(null);
+
+        PlacesSyncReport report = service.sync();
+
+        assertThat(nueva.getPhotoUrl()).isEqualTo("/api/place-photos/burgerking.jpg");
+        assertThat(report.photosReused()).isEqualTo(1);
+        // Prestarla no cuesta una llamada a Google, que es medio punto del asunto.
+        assertThat(report.photosDownloaded()).isZero();
+        verify(placesClient, never()).downloadPhoto(anyString());
+    }
+
+    /** La foto propia de la sucursal siempre es mejor que la prestada. */
+    @Test
+    void siGoogleTieneLaFotoDeEsaSucursalGanaSobreLaPrestada() {
+        when(placesClient.searchText(anyString(), any()))
+            .thenReturn(new PlacesSearchResult(List.of(), null));
+
+        BurgerJoint hermana = BurgerJoint.builder()
+            .id(1L).placeId("ChIJ-BK1").name("Burger King").address("Corrientes 1").area(AREA)
+            .photoUrl("/api/place-photos/hermana.jpg")
+            .build();
+        BurgerJoint nueva = BurgerJoint.builder()
+            .id(2L).placeId("ChIJ-BK2").name("Burger King").address("Cabildo 2").area(AREA)
+            .build();
+
+        when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(hermana));
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(nueva));
+        when(placesClient.photoNameFor("ChIJ-BK2")).thenReturn("places/ChIJ-BK2/photos/propia");
+
+        PlacesSyncReport report = service.sync();
+
+        assertThat(nueva.getPhotoUrl()).isEqualTo("/api/place-photos/abc.jpg");
+        assertThat(report.photosDownloaded()).isEqualTo(1);
+        assertThat(report.photosReused()).isZero();
+    }
+
+    /** Sin una cadena en común no se presta nada: son dos locales distintos. */
+    @Test
+    void noLePrestaLaFotoAUnLocalDeOtroNombre() {
+        when(placesClient.searchText(anyString(), any()))
+            .thenReturn(new PlacesSearchResult(List.of(), null));
+
+        BurgerJoint otro = BurgerJoint.builder()
+            .id(1L).placeId("ChIJ-A").name("Thunder Burger").address("Costa Rica 1").area(AREA)
+            .photoUrl("/api/place-photos/thunder.jpg")
+            .build();
+        BurgerJoint solitario = BurgerJoint.builder()
+            .id(2L).placeId("ChIJ-B").name("Heaven").address("Alsina 2").area(AREA)
+            .build();
+
+        when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(otro));
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(solitario));
+        when(placesClient.photoNameFor("ChIJ-B")).thenReturn(null);
+
+        PlacesSyncReport report = service.sync();
+
+        assertThat(solitario.getPhotoUrl()).isNull();
+        assertThat(report.photosReused()).isZero();
+    }
+
+    @Test
+    void reconoceLaCadenaAunqueElNombreTraigaElBarrioOAcentos() {
+        assertThat(PlacesSyncService.chainKey("Dean & Dennys - Palermo Soho"))
+            .isEqualTo(PlacesSyncService.chainKey("Dean & Dennys - Barrio Norte"));
+        assertThat(PlacesSyncService.chainKey("Chopi's Burger"))
+            .isEqualTo(PlacesSyncService.chainKey("CHOPI'S  BURGER"));
+        assertThat(PlacesSyncService.chainKey("Ché Burgers"))
+            .isEqualTo(PlacesSyncService.chainKey("che burgers"));
+        // Parecerse no alcanza: si alcanzara, un "Heaven" cualquiera heredaría fotos ajenas.
+        assertThat(PlacesSyncService.chainKey("Burger King"))
+            .isNotEqualTo(PlacesSyncService.chainKey("Burger King Express"));
+    }
+
     /** Con el tope mensual agotado la sincronización sigue, pero sin bajar fotos. */
     @Test
     void conLaCuotaDeFotosAgotadaActualizaIgualPeroNoBaja() {
