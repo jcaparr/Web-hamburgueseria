@@ -16,12 +16,17 @@ public class BurgerJointController {
 
     private final BurgerJointService burgerJointService;
 
+    /**
+     * @param conCadenas si incluir las cadenas de comida rápida. Por omisión sí, que es
+     *                   lo que se veía antes: apagarlas es una decisión de quien mira.
+     */
     @GetMapping
     public Page<BurgerJointDto> search(
         @RequestParam(required = false) String q,
+        @RequestParam(required = false, defaultValue = "true") boolean conCadenas,
         @PageableDefault(size = 20) Pageable pageable
     ) {
-        return burgerJointService.search(q, CurrentUser.idOrNull(), pageable);
+        return burgerJointService.search(q, conCadenas, CurrentUser.idOrNull(), pageable);
     }
 
     @GetMapping("/{id}")

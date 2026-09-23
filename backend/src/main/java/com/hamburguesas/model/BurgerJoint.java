@@ -54,6 +54,14 @@ public class BurgerJoint {
     @Column(name = "photo_rule")
     private Integer photoRule;
 
+    /**
+     * Si es sucursal de una cadena de comida rápida. Lo completa FastFoodMarker al
+     * arrancar, a partir de la lista de marcas de la configuración: el rubro que
+     * declara Google no alcanza, porque clasifica desparejo dentro de una cadena.
+     */
+    @Column(name = "fast_food", nullable = false)
+    private boolean fastFood;
+
     @Column(name = "google_primary_type", length = 80)
     private String googlePrimaryType;
 

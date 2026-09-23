@@ -72,6 +72,15 @@ app:
       max-attempts: 5
       resend-cooldown-seconds: 60
   places:
+    # Las cadenas de comida rápida, que en Explorar se pueden apagar. Se reconocen por
+    # el principio del nombre, sin mayúsculas ni puntuación: "burgerking" abarca a
+    # "Burger King - Sucursal P.Italia", y "wendys" a "Wendy's" y a "Wendys", que en
+    # Google están escritas de las dos formas.
+    fast-food-brands:
+      - burgerking
+      - mcdonalds
+      - wendys
+      - mostaza
     api-key: ${GOOGLE_MAPS_API_KEY:}
     sync:
       # Off by default even with a key configured: flip to true only when you're ready for it to run.

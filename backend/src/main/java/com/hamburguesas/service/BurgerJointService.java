@@ -19,10 +19,19 @@ public class BurgerJointService {
     private final RatingRepository ratingRepository;
     private final WishlistRepository wishlistRepository;
 
-    public Page<BurgerJointDto> search(String query, Long userId, Pageable pageable) {
-        Page<BurgerJoint> page = (query == null || query.isBlank())
-            ? burgerJointRepository.findAll(pageable)
-            : burgerJointRepository.findByNameContainingIgnoreCase(query, pageable);
+    public Page<BurgerJointDto> search(String query, boolean conCadenas, Long userId, Pageable pageable) {
+        boolean buscaPorNombre = query != null && !query.isBlank();
+
+        Page<BurgerJoint> page;
+        if (conCadenas) {
+            page = buscaPorNombre
+                ? burgerJointRepository.findByNameContainingIgnoreCase(query, pageable)
+                : burgerJointRepository.findAll(pageable);
+        } else {
+            page = buscaPorNombre
+                ? burgerJointRepository.findByNameContainingIgnoreCaseAndFastFoodFalse(query, pageable)
+                : burgerJointRepository.findByFastFoodFalse(pageable);
+        }
 
         return page.map(b -> toDto(b, userId));
     }

@@ -170,6 +170,24 @@
   --color-info-content: #f7efd8;
   --radius-field: 0.625rem;
   --radius-box: 0.875rem;
+
+  /*
+   * Las seis de abajo son las que daisyUI da por sentadas y este tema no declaraba.
+   * Un tema propio no hereda nada del tema base: lo que no está acá queda vacío.
+   *
+   * No es cosmético. El ancho del interruptor se calcula restando --border, y con la
+   * variable vacía el cálculo entero queda inválido: el interruptor medía cinco
+   * píxeles y en pantalla no se veía. Cualquier componente que dependa de estas
+   * medidas —casilla, radio, rango— estaba igual.
+   *
+   * Los valores son los que trae daisyUI por omisión.
+   */
+  --radius-selector: 0.5rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
 }
 
 body {

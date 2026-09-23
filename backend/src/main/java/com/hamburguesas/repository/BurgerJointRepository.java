@@ -29,6 +29,22 @@ public interface BurgerJointRepository extends JpaRepository<BurgerJoint, Long> 
         """)
     List<BurgerJoint> conFotoElegidaConUnaReglaVieja(@Param("regla") int regla);
     Page<BurgerJoint> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+    /**
+     * El listado de Explorar cuando se apagaron las cadenas de comida rápida.
+     *
+     * Son 66 de los 417 locales, y entre McDonald's y Burger King ocupan tres páginas
+     * enteras. Quién es cadena lo decide FastFoodMarker al arrancar, así que acá
+     * alcanza con mirar la columna.
+     *
+     * Son dos consultas y no una con el nombre opcional a propósito: con el nombre en
+     * nulo, Postgres no puede deducir de qué tipo es el parámetro y lo toma como
+     * binario, así que falla con "no existe la función lower(bytea)". Los tests corren
+     * sobre H2, que sí lo deduce, y no lo veían.
+     */
+    Page<BurgerJoint> findByFastFoodFalse(Pageable pageable);
+
+    Page<BurgerJoint> findByNameContainingIgnoreCaseAndFastFoodFalse(String name, Pageable pageable);
     Optional<BurgerJoint> findByPlaceId(String placeId);
 
     /**

@@ -11,8 +11,27 @@ import { mapsUrl } from '../utils/maps'
 
 const PAGE_SIZE = 20
 
+/**
+ * Dónde se recuerda si alguien apagó las cadenas.
+ *
+ * Va en el navegador de cada visitante y no en su cuenta, para que también funcione
+ * sin haberse registrado, que es como la mayoría entra a mirar.
+ */
+const CLAVE_CADENAS = 'explorar.conCadenas'
+
+function leerPreferencia(): boolean {
+  // En una ventana de incógnito, o con el almacenamiento bloqueado, esto tira error en
+  // vez de devolver vacío. Ante la duda se muestran todas, que es lo que había antes.
+  try {
+    return window.localStorage.getItem(CLAVE_CADENAS) !== 'false'
+  } catch {
+    return true
+  }
+}
+
 export function Explore() {
   const [query, setQuery] = useState('')
+  const [conCadenas, setConCadenas] = useState(leerPreferencia)
   const [page, setPage] = useState(0)
   const [pageData, setPageData] = useState<PageResponse<BurgerJoint> | null>(null)
   const [loading, setLoading] = useState(false)
@@ -25,7 +44,7 @@ export function Explore() {
       setLoading(true)
       apiClient
         .get<PageResponse<BurgerJoint>>('/burger-joints', {
-          params: { q: query || undefined, page, size: PAGE_SIZE },
+          params: { q: query || undefined, conCadenas, page, size: PAGE_SIZE },
         })
         .then(({ data }) => {
           setPageData(data)
@@ -36,7 +55,7 @@ export function Explore() {
     }, 300)
 
     return () => clearTimeout(timeout)
-  }, [query, page, attempt])
+  }, [query, conCadenas, page, attempt])
 
   // Al cambiar de página la lista se renueva entera, pero el navegador conserva el
   // scroll: quedabas a mitad de la página nueva, empezando a leer por el medio.
@@ -63,6 +82,32 @@ export function Explore() {
           className="w-full bg-transparent text-sm outline-none placeholder:text-base-content/50"
         />
       </div>
+
+      {/*
+        * Las cadenas son 74 de los 417 locales, y 64 de esas son sucursales de
+        * McDonald's, Burger King y Hamburguesas Extremas: entre las tres ocupan tres
+        * páginas enteras de la lista. Quien busca dónde comer algo distinto las quiere
+        * fuera del medio; quien busca la más cercana, no. Por eso es una decisión de
+        * quien mira, y arranca mostrándolas.
+        */}
+      <label className="flex cursor-pointer items-center gap-3 self-start text-sm">
+        <input
+          type="checkbox"
+          className="toggle toggle-sm toggle-secondary shrink-0"
+          checked={conCadenas}
+          onChange={(e) => {
+            const valor = e.target.checked
+            setConCadenas(valor)
+            setPage(0)
+            try {
+              window.localStorage.setItem(CLAVE_CADENAS, String(valor))
+            } catch {
+              // Sin almacenamiento la preferencia dura lo que dure la visita, nada más.
+            }
+          }}
+        />
+        <span>Mostrar cadenas de comida rápida</span>
+      </label>
 
       {loading && <p className="text-sm text-base-content/60">Buscando...</p>}
 
