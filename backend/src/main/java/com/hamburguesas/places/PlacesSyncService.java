@@ -13,9 +13,11 @@ import org.springframework.web.client.RestClientResponseException;
 import java.text.Normalizer;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -42,7 +44,11 @@ public class PlacesSyncService {
         int photosDownloaded = 0;
         int descartados = 0;
 
-        LimpiezaResult limpieza = revisarLoGuardado();
+        // Se arma una vez: son las marcas que Google reconoce como hamburgueserías, y
+        // sirven para rescatar a las sucursales que clasificó distinto al resto.
+        Set<String> cadenas = cadenasDeHamburguesas();
+
+        LimpiezaResult limpieza = revisarLoGuardado(cadenas);
 
         for (String area : properties.getSync().getAreas()) {
             if (!quotaGuard.canCall(PlacesCallType.SEARCH)) {
@@ -67,7 +73,7 @@ public class PlacesSyncService {
                         continue;
                     }
 
-                    if (noEsUnaHamburgueseria(place)) {
+                    if (noEsUnaHamburgueseria(place, cadenas)) {
                         log.debug("{} no es un lugar donde comer ({}), se descarta",
                             place.name(), place.primaryType());
                         descartados++;
@@ -135,16 +141,13 @@ public class PlacesSyncService {
      * No cuesta ninguna llamada: los límites están en el disco y las coordenadas ya
      * estaban guardadas.
      */
-    private LimpiezaResult revisarLoGuardado() {
+    private LimpiezaResult revisarLoGuardado(Set<String> cadenas) {
         int corregidos = 0;
         int borrados = 0;
 
         for (BurgerJoint joint : burgerJointRepository.findAll()) {
             var barrio = barrios.barrioDe(joint.getLatitude(), joint.getLongitude());
-            boolean sobra = barrio.isEmpty()
-                || properties.getSync().getExcludedPlaceIds().contains(joint.getPlaceId())
-                || (joint.getGooglePrimaryType() != null
-                    && properties.getSync().getExcludedPrimaryTypes().contains(joint.getGooglePrimaryType()));
+            boolean sobra = barrio.isEmpty() || noEsUnaHamburgueseria(comoLugar(joint), cadenas);
 
             if (sobra) {
                 // Si alguien lo puntuó o lo tiene anotado para ir, se queda: su opinión
@@ -155,7 +158,7 @@ public class PlacesSyncService {
                     continue;
                 }
                 log.info("Se borra {} ({}): {}", joint.getName(), joint.getAddress(),
-                    barrio.isEmpty() ? "fuera de la Ciudad" : "no es un lugar donde comer");
+                    barrio.isEmpty() ? "fuera de la Ciudad" : "no es una hamburguesería");
                 burgerJointRepository.delete(joint);
                 borrados++;
                 continue;
@@ -172,24 +175,99 @@ public class PlacesSyncService {
     }
 
     private record LimpiezaResult(int corregidos, int borrados) {}
+
     /**
-     * Si lo que devolvió Google no es un lugar donde comerse una hamburguesa.
-     *
-     * Aunque la búsqueda pide el tipo hamburguesería y en modo estricto, Google se lo
-     * cuelga a negocios que no dan de comer: una fábrica de salchichas, un mayorista,
-     * una carnicería, un pelotero y una distribuidora entraron así. El rubro principal
-     * —lo que el local es, según Google— alcanza para dejarlos afuera.
-     *
-     * Y quedan los casos en que la ficha misma está mal: "Myc La dimensión 3d" figura
-     * como gastropub con hamburguesas, pero su sitio es un local de impresión 3D. Para
-     * esos no hay regla posible, así que van anotados uno por uno.
+     * Un local ya guardado, visto como lo que devolvería una búsqueda, para poder
+     * pasarlo por el mismo filtro y que la regla sea una sola.
      */
-    private boolean noEsUnaHamburgueseria(PlacesSearchResult.Place place) {
-        if (properties.getSync().getExcludedPlaceIds().contains(place.placeId())) {
+    private static PlacesSearchResult.Place comoLugar(BurgerJoint joint) {
+        return new PlacesSearchResult.Place(
+            joint.getPlaceId(), joint.getName(), joint.getAddress(),
+            joint.getLatitude(), joint.getLongitude(), null, joint.getGooglePrimaryType());
+    }
+    /**
+     * Si lo que devolvió Google no es una hamburguesería.
+     *
+     * La idea de la app son los locales que se especializan en hamburguesas o que la
+     * tienen como plato destacado. Google no dice cuál es el plato destacado: dice el
+     * rubro. Así que entran los que declara hamburguesería o comida rápida —que son las
+     * cadenas— y los que se llaman a sí mismos así, que es la forma que tiene un local
+     * de decir a qué se dedica. Quedan afuera las pizzerías, las parrillas, las
+     * panaderías y los bares: venden hamburguesas, pero no es lo que uno busca acá.
+     *
+     * Con dos arreglos, porque la clasificación de Google es despareja.
+     *
+     * Uno automático: si otra sucursal de la misma cadena sí figura como hamburguesería,
+     * esta también lo es. De las cuatro sucursales de "La Birra Bar", Google marca tres
+     * como hamburguesería y la de Colegiales como restaurante.
+     *
+     * Y uno a mano, para los que no hay forma de deducir: "Beggars" figura como bar y
+     * "Draken" como cervecería, y son hamburgueserías. Van anotados en la configuración
+     * con el motivo al lado, igual que los que hay que sacar.
+     */
+    private boolean noEsUnaHamburgueseria(PlacesSearchResult.Place place, Set<String> cadenas) {
+        var sync = properties.getSync();
+
+        if (sync.getExcludedPlaceIds().contains(place.placeId())) {
             return true;
         }
-        return place.primaryType() != null
-            && properties.getSync().getExcludedPrimaryTypes().contains(place.primaryType());
+        if (sync.getIncludedPlaceIds().contains(place.placeId())) {
+            return false;
+        }
+        // Rubros que directamente no dan de comer. Va antes que el nombre porque la
+        // fábrica de salchichas y el mayorista de medallones tienen "burger" en el
+        // nombre, y si no entrarían por esa puerta.
+        if (place.primaryType() != null && sync.getExcludedPrimaryTypes().contains(place.primaryType())) {
+            return true;
+        }
+
+        return !esRubroDeHamburguesas(place.primaryType())
+            && !elNombreDiceHamburguesas(place.name())
+            && !esSucursalDeUnaCadena(place.name(), cadenas);
+    }
+
+    /** Lo que Google llama hamburguesería, y la comida rápida, que son McDonald's y Burger King. */
+    private static boolean esRubroDeHamburguesas(String primaryType) {
+        return "hamburger_restaurant".equals(primaryType)
+            || "fast_food_restaurant".equals(primaryType);
+    }
+
+    /** Un local que se llama "algo Burger" u "Hamburguesas algo" está diciendo a qué se dedica. */
+    static boolean elNombreDiceHamburguesas(String name) {
+        String limpio = sinAcentos(name);
+        return limpio.contains("burger") || limpio.contains("hamburgues") || limpio.contains("smash");
+    }
+
+    /**
+     * Si el nombre empieza con el de una cadena que Google sí marca como hamburguesería.
+     *
+     * Se exige que sea el principio y que siga un espacio —"La Birra Bar Colegiales"
+     * empieza con "La Birra Bar"— y que la marca tenga al menos ocho caracteres, para
+     * que un nombre corto no se lleve puesto a cualquiera que empiece parecido.
+     */
+    static boolean esSucursalDeUnaCadena(String name, Set<String> cadenas) {
+        String limpio = sinAcentos(name);
+        return cadenas.stream().anyMatch(cadena -> limpio.startsWith(cadena + " "));
+    }
+
+    /** Las marcas que Google sí reconoce como hamburgueserías, para el arreglo de arriba. */
+    private Set<String> cadenasDeHamburguesas() {
+        Set<String> cadenas = new HashSet<>();
+        for (String nombre : burgerJointRepository.nombresDeRubro("hamburger_restaurant")) {
+            String limpio = sinAcentos(nombre);
+            if (limpio.length() >= 8) {
+                cadenas.add(limpio);
+            }
+        }
+        return cadenas;
+    }
+
+    private static String sinAcentos(String valor) {
+        return Normalizer.normalize(valor == null ? "" : valor, Normalizer.Form.NFD)
+            .replaceAll("\\p{M}", "")
+            .toLowerCase(Locale.ROOT)
+            .replaceAll("\\s+", " ")
+            .trim();
     }
 
     /**

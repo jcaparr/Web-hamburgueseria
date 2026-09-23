@@ -30,4 +30,11 @@ public interface BurgerJointRepository extends JpaRepository<BurgerJoint, Long> 
     List<BurgerJoint> conFotoElegidaConUnaReglaVieja(@Param("regla") int regla);
     Page<BurgerJoint> findByNameContainingIgnoreCase(String name, Pageable pageable);
     Optional<BurgerJoint> findByPlaceId(String placeId);
+
+    /**
+     * Los nombres de los locales de un rubro. Sirve para reconocer las sucursales que
+     * Google clasificó distinto al resto de su cadena.
+     */
+    @Query("select b.name from BurgerJoint b where b.googlePrimaryType = :rubro")
+    List<String> nombresDeRubro(@Param("rubro") String rubro);
 }

@@ -95,6 +95,14 @@ app:
         # "Myc La dimensión 3d": figura como gastropub con hamburguesas, pero el sitio
         # que declara es un local de impresión 3D.
         - ChIJY3FewTLLvJURBCPfAV6IANY
+      # Hamburgueserías que Google clasifica como otra cosa y que ninguna regla rescata.
+      # Entran acá solo si el local es una hamburguesería de hecho, no un bar que además
+      # vende hamburguesas.
+      included-place-ids:
+        # "Beggars Caballito": figura como bar, y es una hamburguesería.
+        - ChIJmbiqDoLLvJURbe0kVxQAdk4
+        # "Draken", en La Boca: figura como cervecería, y es una hamburguesería.
+        - ChIJ8Rg7fKQ1o5URZEvZ9P58vFs
       max-pages-per-area: 3
       delay-between-calls-ms: 500
       # Los 48 barrios de la Ciudad de Buenos Aires. Antes eran 20, así que media

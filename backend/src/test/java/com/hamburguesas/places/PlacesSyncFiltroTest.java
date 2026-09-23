@@ -58,6 +58,7 @@ class PlacesSyncFiltroTest {
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of());
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of());
         when(repository.findByPlaceId(anyString())).thenReturn(Optional.empty());
+        when(repository.nombresDeRubro(anyString())).thenReturn(List.of());
 
         service = new PlacesSyncService(
             properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(),
@@ -106,22 +107,95 @@ class PlacesSyncFiltroTest {
      * Google le cuelga el tipo hamburguesería a negocios que no dan de comer. En la
      * base había una fábrica de salchichas, un mayorista de medallones, una carnicería,
      * un pelotero y una distribuidora.
+     *
+     * Va antes que la regla del nombre a propósito: el mayorista se llama "MARKET UP
+     * BURGER BELGRANO" y si no entraría por ahí.
      */
     @Test
     void noGuardaLosRubrosQueNoSonUnLugarDondeComer() {
-        properties.getSync().setExcludedPrimaryTypes(List.of("butcher_shop", "manufacturer"));
+        properties.getSync().setExcludedPrimaryTypes(List.of("butcher_shop", "wholesaler"));
         googleDevuelve(
             lugar("Tito & Gonza Carnicería", -34.5900, -58.4270, "butcher_shop"),
-            lugar("Salchichas Superpancho", -34.5900, -58.4270, "manufacturer"),
+            lugar("MARKET UP BURGER BELGRANO", -34.5900, -58.4270, "wholesaler"),
             lugar("Voraz", -34.5900, -58.4270, "hamburger_restaurant"));
 
         PlacesSyncReport report = service.sync();
 
-        // Solo entra la hamburguesería; los otros dos ni se guardan.
         ArgumentCaptor<BurgerJoint> guardado = ArgumentCaptor.forClass(BurgerJoint.class);
         verify(repository).save(guardado.capture());
         assertThat(guardado.getValue().getName()).isEqualTo("Voraz");
         assertThat(report.created()).isEqualTo(1);
+    }
+
+    /**
+     * La app es de hamburgueserías, no de lugares donde además hay hamburguesas. Una
+     * pizzería, una parrilla, una panadería o un bar venden hamburguesas y Google se
+     * las marca, pero no es lo que uno viene a buscar acá.
+     */
+    @Test
+    void noGuardaLosLugaresDeOtraEspecialidad() {
+        googleDevuelve(
+            lugar("El Camba", -34.5900, -58.4270, "pizza_restaurant"),
+            lugar("Paso a Paso", -34.5900, -58.4270, "argentinian_restaurant"),
+            lugar("Ninina", -34.5900, -58.4270, "breakfast_restaurant"),
+            lugar("Johnny B Good Casino", -34.5900, -58.4270, "bar_and_grill"));
+
+        PlacesSyncReport report = service.sync();
+
+        verify(repository, never()).save(any());
+        assertThat(report.created()).isZero();
+    }
+
+    /** Las cadenas de comida rápida son hamburgueserías aunque Google las llame así. */
+    @Test
+    void guardaLasCadenasDeComidaRapida() {
+        googleDevuelve(lugar("McDonald's", -34.5900, -58.4270, "fast_food_restaurant"));
+
+        assertThat(service.sync().created()).isEqualTo(1);
+    }
+
+    /** Un local que se llama "algo Burger" está diciendo a qué se dedica. */
+    @Test
+    void guardaLosQueSeLlamanComoLoQueSon() {
+        googleDevuelve(
+            lugar("LUCKY BURGER BAR", -34.5900, -58.4270, "bar"),
+            lugar("Hamburguesas y comidas shelby", -34.5900, -58.4270, "meal_delivery"));
+
+        assertThat(service.sync().created()).isEqualTo(2);
+    }
+
+    /**
+     * Google clasifica desparejo dentro de una misma cadena: de las cuatro sucursales
+     * de "La Birra Bar" marca tres como hamburguesería y la de Colegiales como
+     * restaurante. Si una sucursal es hamburguesería, las otras también.
+     */
+    @Test
+    void guardaLaSucursalQueGoogleClasificoDistintoAlResto() {
+        when(repository.nombresDeRubro("hamburger_restaurant")).thenReturn(List.of("La Birra Bar"));
+        googleDevuelve(lugar("La Birra Bar Colegiales", -34.5900, -58.4270, "restaurant"));
+
+        assertThat(service.sync().created()).isEqualTo(1);
+    }
+
+    /** Pero un nombre parecido no alcanza: tiene que empezar con el de la cadena. */
+    @Test
+    void noConfundeUnNombreParecidoConUnaSucursal() {
+        when(repository.nombresDeRubro("hamburger_restaurant")).thenReturn(List.of("La Birra Bar"));
+        googleDevuelve(lugar("Nueva Roma Birrería", -34.5900, -58.4270, "bar"));
+
+        assertThat(service.sync().created()).isZero();
+    }
+
+    /**
+     * Y para las que no hay forma de deducir —"Beggars" figura como bar y es una
+     * hamburguesería— queda la lista a mano.
+     */
+    @Test
+    void guardaLasHamburgueseriasAnotadasAMano() {
+        properties.getSync().setIncludedPlaceIds(List.of("ChIJ-Beggars Caballito"));
+        googleDevuelve(lugar("Beggars Caballito", -34.5900, -58.4270, "bar"));
+
+        assertThat(service.sync().created()).isEqualTo(1);
     }
 
     /**
@@ -142,19 +216,20 @@ class PlacesSyncFiltroTest {
     /** El rubro se guarda para poder revisar después qué entró sin volver a preguntar. */
     @Test
     void guardaElRubroQueDeclaraGoogle() {
-        googleDevuelve(lugar("Voraz", -34.5900, -58.4270, "bar"));
+        googleDevuelve(lugar("Burger King", -34.5900, -58.4270, "fast_food_restaurant"));
 
         service.sync();
 
         ArgumentCaptor<BurgerJoint> guardado = ArgumentCaptor.forClass(BurgerJoint.class);
         verify(repository).save(guardado.capture());
-        assertThat(guardado.getValue().getGooglePrimaryType()).isEqualTo("bar");
+        assertThat(guardado.getValue().getGooglePrimaryType()).isEqualTo("fast_food_restaurant");
     }
 
     private BurgerJoint guardado(String nombre, Double lat, Double lon, String barrio) {
         BurgerJoint joint = BurgerJoint.builder()
             .id(1L).placeId("ChIJ-" + nombre).name(nombre).address("Una dirección")
             .area(barrio).latitude(lat).longitude(lon)
+            .googlePrimaryType("hamburger_restaurant")
             .build();
         when(repository.findAll()).thenReturn(List.of(joint));
         return joint;
@@ -203,16 +278,15 @@ class PlacesSyncFiltroTest {
         verify(repository, never()).delete(lejos);
     }
 
-    /** Y lo mismo para lo que ya está guardado con un rubro que no da de comer. */
+    /** Y lo mismo para lo que ya está guardado y resulta ser de otra especialidad. */
     @Test
-    void borraLoQueQuedoGuardadoConUnRubroQueNoEsUnLugarDondeComer() {
-        properties.getSync().setExcludedPrimaryTypes(List.of("butcher_shop"));
+    void borraLoQueQuedoGuardadoYEsDeOtraEspecialidad() {
         googleDevuelve();
-        BurgerJoint carniceria = guardado("Tito & Gonza", -34.5900, -58.4270, "Palermo");
-        carniceria.setGooglePrimaryType("butcher_shop");
+        BurgerJoint pizzeria = guardado("El Camba", -34.5900, -58.4270, "Palermo");
+        pizzeria.setGooglePrimaryType("pizza_restaurant");
 
         service.sync();
 
-        verify(repository).delete(carniceria);
+        verify(repository).delete(pizzeria);
     }
 }

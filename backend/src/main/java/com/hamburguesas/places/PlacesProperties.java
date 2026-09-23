@@ -36,6 +36,13 @@ public class PlacesProperties {
          * Se anotan acá por su identificador, con el motivo al lado en la configuración.
          */
         private List<String> excludedPlaceIds = List.of();
+
+        /**
+         * Hamburgueserías que Google clasifica como otra cosa y que ninguna regla
+         * rescata: "Beggars" figura como bar y "Draken" como cervecería. Van con el
+         * motivo anotado al lado en la configuración.
+         */
+        private List<String> includedPlaceIds = List.of();
         private int maxPagesPerArea = 2;
         private long delayBetweenCallsMs = 500;
     }
