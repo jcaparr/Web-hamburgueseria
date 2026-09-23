@@ -12,6 +12,13 @@ public class PlacesProperties {
     /** Read from the GOOGLE_MAPS_API_KEY environment variable. Empty disables every Google call. */
     private String apiKey = "";
 
+    /**
+     * Las cadenas de comida rápida, para poder sacarlas del listado. Se reconocen por
+     * el principio del nombre, sin mayúsculas ni puntuación: "burgerking" abarca a
+     * "Burger King - Sucursal P.Italia".
+     */
+    private List<String> fastFoodBrands = List.of();
+
     private Sync sync = new Sync();
     private Quota quota = new Quota();
     private Photos photos = new Photos();
@@ -23,6 +30,14 @@ public class PlacesProperties {
         /** Shared secret required by the manual trigger endpoint. Empty disables the endpoint. */
         private String triggerToken = "";
         private List<String> areas = List.of();
+
+        /**
+         * Las formas de preguntar por un barrio. Cada una es una búsqueda aparte con su
+         * propio tope de 60 resultados, y Google contesta distinto según cómo se le
+         * pregunte, así que sumarlas es lo que amplía la cobertura. El {barrio} se
+         * reemplaza por cada uno de los de arriba.
+         */
+        private List<String> queryTemplates = List.of("hamburguesería en {barrio}, Buenos Aires");
 
         /**
          * Rubros que no son un lugar donde comer una hamburguesa. Google igual los

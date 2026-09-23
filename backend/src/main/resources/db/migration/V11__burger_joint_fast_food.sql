@@ -1,0 +1,12 @@
+-- Si el local es una sucursal de una cadena de comida rápida.
+--
+-- Se guarda en vez de deducirse en cada consulta por dos razones. Una, que no sale del
+-- rubro que declara Google: de las nueve sucursales de Mostaza, Google marca una como
+-- comida rápida y el resto como hamburguesería, así que el rubro solo se escapa la
+-- mayoría. La otra, que reconocer una marca dentro de un nombre no se escribe bien en
+-- una consulta, y sí en código.
+--
+-- Lo llena al arrancar la aplicación, a partir de la lista de marcas que está en la
+-- configuración. Arranca en falso para que un local recién insertado se vea, que es el
+-- comportamiento que había antes de existir el filtro.
+alter table burger_joints add column if not exists fast_food boolean not null default false;

@@ -37,6 +37,23 @@ class PhotoStorageTest {
         assertThat(dir.resolve("ChIJ123.jpg")).exists();
     }
 
+    /**
+     * Google manda lo que el local subió, no siempre JPEG: una de cada ocho fotos es
+     * PNG. Guardarlas todas como ".jpg" dejó 51 archivos anunciando un formato ajeno.
+     */
+    @Test
+    void guardaCadaFormatoConSuExtension(@TempDir Path dir) {
+        byte[] png = new byte[] {
+            (byte) 0x89, 'P', 'N', 'G', 13, 10, 26, 10, 0, 0, 0, 13, 1, 2, 3
+        };
+
+        String url = storageEn(dir).save("ChIJ456", png);
+
+        assertThat(url).isEqualTo("/api/place-photos/ChIJ456.png");
+        assertThat(dir.resolve("ChIJ456.png")).exists();
+        assertThat(dir.resolve("ChIJ456.jpg")).doesNotExist();
+    }
+
     @Test
     void noGuardaUnJsonDisfrazadoDeFoto(@TempDir Path dir) {
         byte[] loQueDevolvioGoogle = """

@@ -28,7 +28,8 @@ public class PlacePhotoController {
         }
 
         return ResponseEntity.ok()
-            .contentType(MediaType.IMAGE_JPEG)
+            // El tipo sale de la extensión, que al guardar se eligió mirando los bytes.
+            .contentType(MediaType.parseMediaType(ImageFormat.porExtension(fileName).mediaType()))
             .cacheControl(org.springframework.http.CacheControl.maxAge(java.time.Duration.ofDays(30)))
             .body(new FileSystemResource(path));
     }
