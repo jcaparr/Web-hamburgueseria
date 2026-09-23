@@ -12,6 +12,7 @@ import org.springframework.web.client.RestClientResponseException;
 
 import java.text.Normalizer;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -49,6 +50,11 @@ public class PlacesSyncService {
         Set<String> cadenas = cadenasDeHamburguesas();
 
         LimpiezaResult limpieza = revisarLoGuardado(cadenas);
+
+        // Los que ya están, para no volver a crear una ficha repetida. Borrarlas en la
+        // limpieza no alcanzaría: la búsqueda las trae igual, con otro identificador, y
+        // volverían a entrar en la misma pasada.
+        List<BurgerJoint> yaEstan = new ArrayList<>(burgerJointRepository.findAll());
 
         for (String area : properties.getSync().getAreas()) {
             if (!quotaGuard.canCall(PlacesCallType.SEARCH)) {
@@ -99,7 +105,19 @@ public class PlacesSyncService {
                         gotPhoto = refresh(existing.get(), place, barrio.get());
                         updated++;
                     } else {
+                        // Google tiene dos fichas para algunos negocios, con
+                        // identificadores distintos. Sin esto entran las dos.
+                        BurgerJoint nuevo = comoJoint(place, barrio.get());
+                        BurgerJoint repetido = elMismoLocalEntre(yaEstan, nuevo);
+                        if (repetido != null) {
+                            log.debug("{} ya está como {}, se descarta la ficha repetida",
+                                place.name(), repetido.getName());
+                            descartados++;
+                            continue;
+                        }
+
                         gotPhoto = create(place, barrio.get());
+                        yaEstan.add(nuevo);
                         created++;
                     }
                     if (gotPhoto) {
@@ -145,6 +163,11 @@ public class PlacesSyncService {
         int corregidos = 0;
         int borrados = 0;
 
+        // Los que van quedando, para reconocer al que ya vimos dos veces. Se arma acá y
+        // no con una consulta porque comparar nombres y distancias no se escribe bien
+        // en una consulta, y son cuatrocientos.
+        List<BurgerJoint> quedan = new ArrayList<>();
+
         for (BurgerJoint joint : burgerJointRepository.findAll()) {
             var barrio = barrios.barrioDe(joint.getLatitude(), joint.getLongitude());
             boolean sobra = barrio.isEmpty() || noEsUnaHamburgueseria(comoLugar(joint), cadenas);
@@ -164,6 +187,24 @@ public class PlacesSyncService {
                 continue;
             }
 
+            BurgerJoint repetido = elMismoLocalEntre(quedan, joint);
+            if (repetido != null) {
+                BurgerJoint sobrante = cualSobra(repetido, joint);
+                if (sobrante == null) {
+                    log.info("{} está dos veces y las dos tienen reseñas, se dejan", joint.getName());
+                } else {
+                    log.info("Se borra {} ({}): está repetido", sobrante.getName(), sobrante.getAddress());
+                    quedan.remove(sobrante);
+                    burgerJointRepository.delete(sobrante);
+                    borrados++;
+                    if (sobrante == repetido) {
+                        quedan.add(joint);
+                    }
+                    continue;
+                }
+            }
+            quedan.add(joint);
+
             if (!barrio.get().equals(joint.getArea())) {
                 joint.setArea(barrio.get());
                 burgerJointRepository.save(joint);
@@ -175,6 +216,50 @@ public class PlacesSyncService {
     }
 
     private record LimpiezaResult(int corregidos, int borrados) {}
+
+    /**
+     * El local de la lista que es el mismo que este, o null si no está.
+     *
+     * Google a veces tiene dos fichas para un mismo negocio, con identificadores
+     * distintos, y para nosotros son dos locales: lo que evita repetidos es el
+     * identificador, y acá son dos. "24th Street Burger, Av. Triunvirato 4375" aparecía
+     * dos veces seguidas en la lista, una con foto y la otra sin.
+     */
+    private static BurgerJoint elMismoLocalEntre(List<BurgerJoint> locales, BurgerJoint joint) {
+        return locales.stream()
+            .filter(otro -> Duplicados.sonElMismoLocal(otro, joint))
+            .findFirst()
+            .orElse(null);
+    }
+
+    /**
+     * Cuál de las dos fichas repetidas hay que borrar, o null si no se puede borrar
+     * ninguna porque las dos tienen reseñas. Juntar dos conjuntos de reseñas es una
+     * decisión que no corresponde tomar acá, así que en ese caso quedan las dos y se
+     * avisa en el registro.
+     */
+    private BurgerJoint cualSobra(BurgerJoint una, BurgerJoint otra) {
+        boolean tocadaUna = fueTocadaPorAlguien(una);
+        boolean tocadaOtra = fueTocadaPorAlguien(otra);
+
+        if (tocadaUna && tocadaOtra) {
+            return null;
+        }
+        if (tocadaUna) {
+            return otra;
+        }
+        if (tocadaOtra) {
+            return una;
+        }
+        // Ninguna tiene reseñas: se queda la que tiene foto, que es lo que se ve.
+        BurgerJoint mejor = Duplicados.mejorDeLasDos(una, otra);
+        return mejor == una ? otra : una;
+    }
+
+    private boolean fueTocadaPorAlguien(BurgerJoint joint) {
+        return ratingRepository.existsByBurgerJoint_Id(joint.getId())
+            || wishlistRepository.existsByBurgerJoint_Id(joint.getId());
+    }
 
     /**
      * Un local ya guardado, visto como lo que devolvería una búsqueda, para poder
@@ -430,8 +515,9 @@ public class PlacesSyncService {
         return result;
     }
 
-    private boolean create(PlacesSearchResult.Place place, String area) {
-        BurgerJoint joint = BurgerJoint.builder()
+    /** El local tal como quedaría guardado, para poder compararlo antes de guardarlo. */
+    private static BurgerJoint comoJoint(PlacesSearchResult.Place place, String area) {
+        return BurgerJoint.builder()
             .placeId(place.placeId())
             .name(place.name())
             .googlePrimaryType(place.primaryType())
@@ -441,6 +527,10 @@ public class PlacesSyncService {
             .longitude(place.longitude())
             .lastSyncedAt(Instant.now())
             .build();
+    }
+
+    private boolean create(PlacesSearchResult.Place place, String area) {
+        BurgerJoint joint = comoJoint(place, area);
 
         boolean gotPhoto = false;
         if (place.photoName() != null && quotaGuard.canCall(PlacesCallType.PHOTO)) {
