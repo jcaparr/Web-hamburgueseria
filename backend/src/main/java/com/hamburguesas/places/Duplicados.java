@@ -1,5 +1,6 @@
 package com.hamburguesas.places;
 
+import com.hamburguesas.geo.Distancias;
 import com.hamburguesas.model.BurgerJoint;
 
 import java.text.Normalizer;
@@ -30,10 +31,6 @@ final class Duplicados {
      */
     private static final double METROS = 150;
 
-    /** Cuánto mide un grado en metros por acá. Alcanza de sobra para esta distancia. */
-    private static final double METROS_POR_GRADO_DE_LONGITUD = 91_700;
-    private static final double METROS_POR_GRADO_DE_LATITUD = 111_000;
-
     private Duplicados() {}
 
     static boolean sonElMismoLocal(BurgerJoint a, BurgerJoint b) {
@@ -51,9 +48,8 @@ final class Duplicados {
             || b.getLatitude() == null || b.getLongitude() == null) {
             return false;
         }
-        double x = (a.getLongitude() - b.getLongitude()) * METROS_POR_GRADO_DE_LONGITUD;
-        double y = (a.getLatitude() - b.getLatitude()) * METROS_POR_GRADO_DE_LATITUD;
-        return Math.hypot(x, y) <= METROS;
+        return Distancias.metrosEntre(
+            a.getLatitude(), a.getLongitude(), b.getLatitude(), b.getLongitude()) <= METROS;
     }
 
     /**

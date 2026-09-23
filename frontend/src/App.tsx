@@ -11,6 +11,7 @@ import { Profile } from './pages/Profile'
 import { Ranking } from './pages/Ranking'
 import { Register } from './pages/Register'
 import { Reviews } from './pages/Reviews'
+import { Tour } from './pages/Tour'
 import { VerifyEmail } from './pages/VerifyEmail'
 import { Wishlist } from './pages/Wishlist'
 
@@ -25,6 +26,7 @@ export default function App() {
               <Route path="/" element={<Explore />} />
               <Route path="/burger-joints/:id" element={<BurgerJointDetail />} />
               <Route path="/ranking" element={<Ranking />} />
+              <Route path="/tour" element={<Tour />} />
               <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
               <Route path="/reviews" element={<RequireAuth><Reviews /></RequireAuth>} />
               <Route path="/wishlist" element={<RequireAuth><Wishlist /></RequireAuth>} />

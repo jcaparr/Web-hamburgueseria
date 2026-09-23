@@ -4,6 +4,7 @@ import { useHideOnScroll } from '../hooks/useScrollDirection'
 
 const NAV_LINKS = [
   { to: '/', label: 'Explorar' },
+  { to: '/tour', label: 'Tour' },
   { to: '/ranking', label: 'Ranking' },
   { to: '/profile', label: 'Perfil' },
 ]

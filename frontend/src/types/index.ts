@@ -13,6 +13,23 @@ export interface BurgerJoint {
   inWishlist: boolean
 }
 
+/** Una parada de un recorrido, con lo que hay que caminar para llegar. */
+export interface TourStop {
+  orden: number
+  kilometros: number
+  visitada: boolean
+  local: BurgerJoint
+}
+
+export interface Tour {
+  paradas: TourStop[]
+  kilometros: number
+  minutos: number
+  candidatos: number
+  /** Qué no se pudo cumplir del pedido, o nulo si salió entero. */
+  aviso: string | null
+}
+
 export interface Rating {
   id: number
   userId: number

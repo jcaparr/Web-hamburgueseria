@@ -48,6 +48,18 @@ public interface BurgerJointRepository extends JpaRepository<BurgerJoint, Long> 
     Optional<BurgerJoint> findByPlaceId(String placeId);
 
     /**
+     * Los candidatos a un tour, sin las cadenas de comida rápida.
+     *
+     * Sin paginar porque el tour elige entre todos: son cuatrocientos y pico y el
+     * recorrido se arma en memoria, comparando cada uno contra la última parada.
+     */
+    List<BurgerJoint> findByFastFoodFalse();
+
+    /** Los barrios que tienen al menos una hamburguesería, para el selector del tour. */
+    @Query("select distinct b.area from BurgerJoint b where b.area is not null order by b.area")
+    List<String> barriosConLocales();
+
+    /**
      * Los nombres de los locales de un rubro. Sirve para reconocer las sucursales que
      * Google clasificó distinto al resto de su cadena.
      */
