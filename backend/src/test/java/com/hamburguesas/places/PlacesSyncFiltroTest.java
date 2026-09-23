@@ -17,6 +17,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -45,6 +46,7 @@ class PlacesSyncFiltroTest {
         properties.setApiKey("clave-de-prueba");
         properties.getSync().setAreas(List.of("Villa Real"));
         properties.getSync().setMaxPagesPerArea(1);
+        properties.getSync().setQueryTemplates(List.of("hamburguesería en {barrio}, Buenos Aires"));
         properties.getSync().setDelayBetweenCallsMs(0);
 
         placesClient = mock(PlacesClient.class);
@@ -288,5 +290,48 @@ class PlacesSyncFiltroTest {
         service.sync();
 
         verify(repository).delete(pizzeria);
+    }
+
+    /**
+     * Google contesta distinto según cómo se le pregunte, y cada consulta trae como
+     * mucho sesenta resultados. Preguntar de varias formas es lo que amplía la
+     * cobertura: en Palermo pasa de 38 locales a 92, y en Mataderos de 26 a 80.
+     */
+    @Test
+    void preguntaDeTodasLasFormasConfiguradas() {
+        properties.getSync().setQueryTemplates(List.of(
+            "hamburguesería en {barrio}, Buenos Aires",
+            "smash burger en {barrio}, Buenos Aires"));
+        googleDevuelve();
+
+        service.sync();
+
+        ArgumentCaptor<String> consultas = ArgumentCaptor.forClass(String.class);
+        verify(placesClient, times(2)).searchText(consultas.capture(), any());
+        assertThat(consultas.getAllValues()).containsExactly(
+            "hamburguesería en Villa Real, Buenos Aires",
+            "smash burger en Villa Real, Buenos Aires");
+    }
+
+    /** Un local que aparece en dos consultas entra una sola vez. */
+    @Test
+    void noDuplicaElLocalQueAparaceEnVariasConsultas() {
+        properties.getSync().setQueryTemplates(List.of("una", "otra"));
+        var voraz = lugar("Voraz", -34.5900, -58.4270, "hamburger_restaurant");
+        when(placesClient.searchText(anyString(), any()))
+            .thenReturn(new PlacesSearchResult(List.of(voraz), null));
+        // La segunda consulta ya lo encuentra guardado.
+        when(repository.findByPlaceId(voraz.placeId()))
+            .thenReturn(Optional.empty())
+            .thenReturn(Optional.of(BurgerJoint.builder()
+                .id(1L).placeId(voraz.placeId()).name("Voraz").address("Una dirección")
+                .googlePrimaryType("hamburger_restaurant")
+                .latitude(-34.5900).longitude(-58.4270)
+                .build()));
+
+        PlacesSyncReport report = service.sync();
+
+        assertThat(report.created()).isEqualTo(1);
+        assertThat(report.updated()).isEqualTo(1);
     }
 }

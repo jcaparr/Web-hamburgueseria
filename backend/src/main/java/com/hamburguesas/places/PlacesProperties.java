@@ -25,6 +25,14 @@ public class PlacesProperties {
         private List<String> areas = List.of();
 
         /**
+         * Las formas de preguntar por un barrio. Cada una es una búsqueda aparte con su
+         * propio tope de 60 resultados, y Google contesta distinto según cómo se le
+         * pregunte, así que sumarlas es lo que amplía la cobertura. El {barrio} se
+         * reemplaza por cada uno de los de arriba.
+         */
+        private List<String> queryTemplates = List.of("hamburguesería en {barrio}, Buenos Aires");
+
+        /**
          * Rubros que no son un lugar donde comer una hamburguesa. Google igual los
          * devuelve con el tipo hamburguesería encima: una fábrica de medallones, un
          * mayorista, una carnicería y un pelotero estaban en la base como locales.
