@@ -87,21 +87,25 @@ app:
       enabled: ${PLACES_SYNC_ENABLED:false}
       cron: ${PLACES_SYNC_CRON:0 0 4 * * SUN}
       trigger-token: ${PLACES_SYNC_TOKEN:}
-      # 3 es el máximo que devuelve Google por consulta (60 resultados); pedir más
-      # no trae nada nuevo.
-      # Rubros que Google devuelve con el tipo hamburguesería encima pero que no son
-      # un lugar donde sentarse a comer una. Los cinco salieron de la base: una fábrica
-      # de salchichas, un mayorista de medallones, una carnicería, un pelotero con
-      # cantina y una distribuidora.
       # Cada forma de preguntar es una búsqueda aparte, con su propio tope de sesenta
-      # resultados, y Google contesta distinto según cómo se le pregunte. Sumar las
-      # cuatro es lo que amplía la cobertura: en Palermo pasa de 38 locales a 92, y en
-      # Mataderos de 26 a 80.
+      # resultados, y Google contesta distinto según cómo se le pregunte. Sumarlas es lo
+      # que amplía la cobertura: en Palermo las primeras cuatro pasaron de 38 locales a
+      # 92, y en Mataderos de 26 a 80. Repetir la corrida con las mismas preguntas no
+      # trae nada nuevo; las de abajo son las que agregan.
       query-templates:
         - "hamburguesería en {barrio}, Buenos Aires"
         - "hamburguesas en {barrio}, Buenos Aires"
         - "smash burger en {barrio}, Buenos Aires"
         - "burgers en {barrio}, Buenos Aires"
+        - "hamburguesas artesanales en {barrio}, Buenos Aires"
+        - "burger en {barrio}, Buenos Aires"
+        - "cheeseburger en {barrio}, Buenos Aires"
+      # Rubros que no son una hamburguesería, aunque el nombre diga "burger". Los seis
+      # primeros salieron de la base: una fábrica de salchichas, un mayorista de
+      # medallones, una carnicería, un pelotero con cantina y dos distribuidoras. Los
+      # cinco de abajo son de comida, pero de otra cosa: una pizzería que se llama
+      # "Pizza, Birra & Burger" sigue siendo una pizzería. Sin esto entran por el
+      # nombre, que es la puerta más ancha del filtro.
       excluded-primary-types:
         - manufacturer
         - wholesaler
@@ -109,6 +113,11 @@ app:
         - indoor_playground
         - food_store
         - store
+        - pizza_restaurant
+        - bakery
+        - barbecue_restaurant
+        - steak_house
+        - ice_cream_shop
       # Fichas que Google tiene mal cargadas y ninguna regla puede filtrar.
       excluded-place-ids:
         # "Myc La dimensión 3d": figura como gastropub con hamburguesas, pero el sitio
@@ -122,6 +131,13 @@ app:
         - ChIJc1mB_JDJvJURy5X3-xm8TcM
         # "Uff! Que Sabroso": empanadas, arepas, tequeños y hamburguesas, entre otras.
         - ChIJm8NqyRnLvJURnT9V4zyhMXk
+        # Los dos de abajo entraron con la tanda de preguntas nuevas: Google los marca
+        # como hamburguesería y el nombre dice lo que son en realidad.
+        # "Parrilla de Homero", en la Costanera Sur: una parrilla, famosa por los
+        # sándwiches de bondiola.
+        - ChIJ8YuQn6E1o5UR8RZ6EMOE024
+        # "Milanga& Co": cadena de sándwiches de milanesa, no vende hamburguesas.
+        - ChIJpZeFRwDLvJURYfpCURzGISA
       # Hamburgueserías que Google clasifica como otra cosa y que ninguna regla rescata.
       # Entran acá solo si el local es una hamburguesería de hecho, no un bar que además
       # vende hamburguesas.
@@ -130,11 +146,13 @@ app:
         - ChIJmbiqDoLLvJURbe0kVxQAdk4
         # "Draken", en La Boca: figura como cervecería, y es una hamburguesería.
         - ChIJ8Rg7fKQ1o5URZEvZ9P58vFs
+      # 3 es el máximo que devuelve Google por consulta (60 resultados); pedir más
+      # no trae nada nuevo.
       max-pages-per-area: 3
       delay-between-calls-ms: 500
       # Los 48 barrios de la Ciudad de Buenos Aires. Antes eran 20, así que media
-      # ciudad no se buscaba nunca. Cada barrio son hasta 3 llamadas de búsqueda:
-      # 144 en total contra las 5.000 gratis por mes.
+      # ciudad no se buscaba nunca. Cada barrio son 7 preguntas de hasta 3 páginas:
+      # 1.008 búsquedas como mucho, contra las 5.000 gratis por mes.
       areas:
         - Agronomía
         - Almagro
