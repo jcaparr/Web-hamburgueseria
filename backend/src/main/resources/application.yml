@@ -131,6 +131,13 @@ app:
         - ChIJc1mB_JDJvJURy5X3-xm8TcM
         # "Uff! Que Sabroso": empanadas, arepas, tequeños y hamburguesas, entre otras.
         - ChIJm8NqyRnLvJURnT9V4zyhMXk
+        # Los dos de abajo entraron con la tanda de preguntas nuevas: Google los marca
+        # como hamburguesería y el nombre dice lo que son en realidad.
+        # "Parrilla de Homero", en la Costanera Sur: una parrilla, famosa por los
+        # sándwiches de bondiola.
+        - ChIJ8YuQn6E1o5UR8RZ6EMOE024
+        # "Milanga& Co": cadena de sándwiches de milanesa, no vende hamburguesas.
+        - ChIJpZeFRwDLvJURYfpCURzGISA
       # Hamburgueserías que Google clasifica como otra cosa y que ninguna regla rescata.
       # Entran acá solo si el local es una hamburguesería de hecho, no un bar que además
       # vende hamburguesas.
