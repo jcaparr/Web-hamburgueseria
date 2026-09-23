@@ -89,6 +89,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/burger-joints/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/ranking/general").permitAll()
+                // El tour se arma sin sesión. Con sesión lo único que cambia es poder
+                // dejar afuera las que esa persona ya puntuó.
+                .requestMatchers(HttpMethod.GET, "/api/tours/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/place-photos/**").permitAll()
                 // Protected by its own X-Sync-Token header, not by user JWT auth (see PlacesSyncController).
                 .requestMatchers("/api/admin/places-sync/**").permitAll()

@@ -46,6 +46,16 @@ export function IconPin({ size = 14, className }: IconProps) {
   )
 }
 
+export function IconRoute({ size = 18, className }: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.8} className={className}>
+      <circle cx="5" cy="5" r="2.2" />
+      <circle cx="15" cy="15" r="2.2" />
+      <path d="M7.2 5h5.3a2.8 2.8 0 0 1 0 5.6H7.5a2.8 2.8 0 0 0 0 5.6h5.3" strokeDasharray="2.4 2.2" />
+    </svg>
+  )
+}
+
 export function IconUser({ size = 18, className }: IconProps) {
   return (
     <svg viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.7} className={className}>

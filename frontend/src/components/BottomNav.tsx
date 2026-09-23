@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom'
 import { useHideOnScroll } from '../hooks/useScrollDirection'
-import { IconMedal, IconSearch, IconUser } from './icons'
+import { IconMedal, IconRoute, IconSearch, IconUser } from './icons'
 
 const ITEMS = [
   { to: '/', label: 'Explorar', Icon: IconSearch },
+  { to: '/tour', label: 'Tour', Icon: IconRoute },
   { to: '/ranking', label: 'Ranking', Icon: IconMedal },
   { to: '/profile', label: 'Perfil', Icon: IconUser },
 ]

@@ -53,6 +53,19 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
         """)
     Page<RankingItemDto> personalRanking(@Param("userId") Long userId, Pageable pageable);
 
+    /** Los locales que ya puntuó alguien, que para esa persona son los ya visitados. */
+    @Query("select distinct r.burgerJoint.id from Rating r where r.user.id = :userId")
+    List<Long> idsPuntuadosPor(@Param("userId") Long userId);
+
+    /**
+     * El promedio y la cantidad de todos los locales puntuados, de una.
+     *
+     * El tour mira la nota de cada candidato para elegir por dónde empezar, y pedirla
+     * de a uno sería una consulta por local.
+     */
+    @Query("select r.burgerJoint.id, avg(r.score), count(r) from Rating r group by r.burgerJoint.id")
+    List<Object[]> promediosPorLocal();
+
     @Query("select avg(r.score) from Rating r where r.burgerJoint.id = :burgerJointId")
     Double averageScoreByBurgerJoint(@Param("burgerJointId") Long burgerJointId);
 
