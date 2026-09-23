@@ -64,7 +64,8 @@ class PlacesSyncFiltroTest {
 
         service = new PlacesSyncService(
             properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(),
-            ratingRepository, wishlistRepository);
+            ratingRepository, wishlistRepository,
+            new FastFoodMarker(repository, properties));
     }
 
     private void googleDevuelve(PlacesSearchResult.Place... lugares) {
@@ -292,6 +293,108 @@ class PlacesSyncFiltroTest {
         verify(repository).delete(pizzeria);
     }
 
+    private BurgerJoint guardadoEn(long id, String nombre, double lat, double lon, String foto) {
+        return BurgerJoint.builder()
+            .id(id).placeId("ChIJ-" + id).name(nombre).address("Una dirección").area("Villa Urquiza")
+            .latitude(lat).longitude(lon).photoUrl(foto)
+            .googlePrimaryType("hamburger_restaurant")
+            .build();
+    }
+
+    /**
+     * Google tiene dos fichas para algunos negocios, con identificadores distintos, y
+     * para nosotros son dos locales: lo que evita repetidos es el identificador, y ahí
+     * son dos. "24th Street Burger, Av. Triunvirato 4375" aparecía dos veces seguidas
+     * en la lista, una con foto y la otra sin.
+     */
+    @Test
+    void borraLaFichaRepetidaYSeQuedaConLaQueTieneFoto() {
+        googleDevuelve();
+        BurgerJoint conFoto = guardadoEn(469, "24th Street Burger", -34.5765644, -58.4822027,
+            "/api/place-photos/a.jpg");
+        BurgerJoint sinFoto = guardadoEn(970, "24th Street Burger", -34.5765644, -58.4822027, null);
+        when(repository.findAll()).thenReturn(List.of(conFoto, sinFoto));
+
+        service.sync();
+
+        verify(repository).delete(sinFoto);
+        verify(repository, never()).delete(conFoto);
+    }
+
+    /**
+     * Dos locales distintos comparten dirección más seguido de lo que parece: las
+     * cocinas que alquilan el mismo espacio son comunes, y en la base hay tres pares
+     * así. Sin mirar el nombre nos llevaríamos uno de cada par.
+     */
+    @Test
+    void noBorraDosLocalesDistintosQueCompartenDireccion() {
+        googleDevuelve();
+        BurgerJoint uno = guardadoEn(226, "Shark Burgers", -34.5765644, -58.4822027, null);
+        BurgerJoint otro = guardadoEn(216, "Tempo The Burger shop", -34.5765644, -58.4822027, null);
+        when(repository.findAll()).thenReturn(List.of(uno, otro));
+
+        service.sync();
+
+        verify(repository, never()).delete(any());
+    }
+
+    /** Juntar dos conjuntos de reseñas no es una decisión que corresponda tomar acá. */
+    @Test
+    void noBorraUnRepetidoSiLasDosFichasTienenResenias() {
+        googleDevuelve();
+        BurgerJoint una = guardadoEn(469, "24th Street Burger", -34.5765644, -58.4822027, null);
+        BurgerJoint otra = guardadoEn(970, "24th Street Burger", -34.5765644, -58.4822027, null);
+        when(repository.findAll()).thenReturn(List.of(una, otra));
+        when(ratingRepository.existsByBurgerJoint_Id(469L)).thenReturn(true);
+        when(ratingRepository.existsByBurgerJoint_Id(970L)).thenReturn(true);
+
+        service.sync();
+
+        verify(repository, never()).delete(any());
+    }
+
+    /** Y si solo una tiene reseñas, se conserva esa aunque la otra tenga foto. */
+    @Test
+    void anteUnRepetidoConReseniasSeConservaEse() {
+        googleDevuelve();
+        BurgerJoint conResenias = guardadoEn(469, "24th Street Burger", -34.5765644, -58.4822027, null);
+        BurgerJoint conFoto = guardadoEn(970, "24th Street Burger", -34.5765644, -58.4822027,
+            "/api/place-photos/a.jpg");
+        when(repository.findAll()).thenReturn(List.of(conResenias, conFoto));
+        when(ratingRepository.existsByBurgerJoint_Id(469L)).thenReturn(true);
+
+        service.sync();
+
+        verify(repository).delete(conFoto);
+        verify(repository, never()).delete(conResenias);
+    }
+
+    /**
+     * Borrarlo en la limpieza no alcanza: la búsqueda lo trae igual, con el otro
+     * identificador, y volvería a entrar en la misma pasada.
+     */
+    @Test
+    void noVuelveACrearUnaFichaRepetidaQueTraeLaBusqueda() {
+        BurgerJoint yaEsta = guardadoEn(469, "24th Street Burger", -34.5765644, -58.4822027, null);
+        when(repository.findAll()).thenReturn(List.of(yaEsta));
+        googleDevuelve(lugar("24th Street Burger", -34.5765644, -58.4822027, "hamburger_restaurant"));
+
+        PlacesSyncReport report = service.sync();
+
+        assertThat(report.created()).isZero();
+        verify(repository, never()).save(any());
+    }
+
+    /** Pero una sucursal nueva de la misma cadena, en otro barrio, sí entra. */
+    @Test
+    void unaSucursalEnOtroBarrioSiEntra() {
+        BurgerJoint urquiza = guardadoEn(469, "24th Street Burger", -34.5765644, -58.4822027, null);
+        when(repository.findAll()).thenReturn(List.of(urquiza));
+        googleDevuelve(lugar("24th Street Burger", -34.5946734, -58.4290779, "hamburger_restaurant"));
+
+        assertThat(service.sync().created()).isEqualTo(1);
+    }
+
     /**
      * Google contesta distinto según cómo se le pregunte, y cada consulta trae como
      * mucho sesenta resultados. Preguntar de varias formas es lo que amplía la
@@ -333,5 +436,23 @@ class PlacesSyncFiltroTest {
 
         assertThat(report.created()).isEqualTo(1);
         assertThat(report.updated()).isEqualTo(1);
+    }
+
+    /**
+     * El filtro de Explorar mira la marca de cadena, y un local recién creado no la
+     * tiene. Sin marcarlos al terminar, un McDonald's nuevo se vería igual con las
+     * cadenas apagadas hasta el próximo arranque.
+     */
+    @Test
+    void marcaLasCadenasDeLosLocalesQueEntraronRecien() {
+        properties.setFastFoodBrands(List.of("mcdonalds"));
+        BurgerJoint nuevo = guardadoEn(1, "McDonald's Villa Urquiza", -34.5765644, -58.4822027, null);
+        nuevo.setFastFood(false);
+        when(repository.findAll()).thenReturn(List.of()).thenReturn(List.of(nuevo));
+        googleDevuelve();
+
+        service.sync();
+
+        assertThat(nuevo.isFastFood()).isTrue();
     }
 }

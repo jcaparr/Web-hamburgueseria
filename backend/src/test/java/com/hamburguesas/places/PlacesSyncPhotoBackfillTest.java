@@ -63,7 +63,8 @@ class PlacesSyncPhotoBackfillTest {
 
         service = new PlacesSyncService(
             properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(),
-            mock(RatingRepository.class), mock(WishlistRepository.class));
+            mock(RatingRepository.class), mock(WishlistRepository.class),
+            new FastFoodMarker(repository, properties));
     }
 
     private PlacesSearchResult unLugarConFoto() {
