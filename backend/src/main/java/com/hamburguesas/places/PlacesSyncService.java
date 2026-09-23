@@ -3,6 +3,8 @@ package com.hamburguesas.places;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.PlacesCallType;
 import com.hamburguesas.repository.BurgerJointRepository;
+import com.hamburguesas.repository.RatingRepository;
+import com.hamburguesas.repository.WishlistRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,9 @@ public class PlacesSyncService {
     private final PlacesQuotaGuard quotaGuard;
     private final PhotoStorage photoStorage;
     private final BurgerJointRepository burgerJointRepository;
+    private final Barrios barrios;
+    private final RatingRepository ratingRepository;
+    private final WishlistRepository wishlistRepository;
 
     public PlacesSyncReport sync() {
         if (!properties.hasApiKey()) {
@@ -35,6 +40,9 @@ public class PlacesSyncService {
         int created = 0;
         int updated = 0;
         int photosDownloaded = 0;
+        int descartados = 0;
+
+        LimpiezaResult limpieza = revisarLoGuardado();
 
         for (String area : properties.getSync().getAreas()) {
             if (!quotaGuard.canCall(PlacesCallType.SEARCH)) {
@@ -59,13 +67,33 @@ public class PlacesSyncService {
                         continue;
                     }
 
+                    if (noEsUnaHamburgueseria(place)) {
+                        log.debug("{} no es un lugar donde comer ({}), se descarta",
+                            place.name(), place.primaryType());
+                        descartados++;
+                        continue;
+                    }
+
+                    // El barrio sale de las coordenadas, no de la búsqueda que lo trajo:
+                    // Google devuelve lo que le parece cerca y se pasa de largo del barrio
+                    // que se le pidió. Y si el punto no está en la Ciudad, el local no va:
+                    // "hamburguesería en San Nicolás" trae San Nicolás de los Arroyos y
+                    // "Versalles" trae uno de Colombia.
+                    var barrio = barrios.barrioDe(place.latitude(), place.longitude());
+                    if (barrio.isEmpty()) {
+                        log.debug("{} queda fuera de la Ciudad ({}), se descarta",
+                            place.name(), place.address());
+                        descartados++;
+                        continue;
+                    }
+
                     var existing = burgerJointRepository.findByPlaceId(place.placeId());
                     boolean gotPhoto;
                     if (existing.isPresent()) {
-                        gotPhoto = refresh(existing.get(), place, area);
+                        gotPhoto = refresh(existing.get(), place, barrio.get());
                         updated++;
                     } else {
-                        gotPhoto = create(place, area);
+                        gotPhoto = create(place, barrio.get());
                         created++;
                     }
                     if (gotPhoto) {
@@ -87,9 +115,81 @@ public class PlacesSyncService {
         photosDownloaded += missing.downloaded();
         photosDownloaded += repickOldPhotos();
 
-        log.info("Places sync finished: {} created, {} updated, {} photos, {} reused",
-            created, updated, photosDownloaded, missing.reused());
+        log.info("Places sync finished: {} created, {} updated, {} photos, {} reused, {} descartados, "
+            + "{} barrios corregidos, {} borrados",
+            created, updated, photosDownloaded, missing.reused(), descartados,
+            limpieza.corregidos(), limpieza.borrados());
         return new PlacesSyncReport(created, updated, photosDownloaded, missing.reused(), null);
+    }
+
+
+    /**
+     * Revisa lo que ya está guardado: le corrige el barrio y saca lo que no va.
+     *
+     * Hace falta porque los errores viejos no se arreglan solos. El barrio equivocado
+     * sí se corrige al volver a encontrar el local, pero un local que ninguna búsqueda
+     * devuelve —los de otras provincias, justamente— se quedaría para siempre. En la
+     * base había 29 de Mar del Plata, San Nicolás de los Arroyos, Las Flores, el
+     * conurbano, Colombia y México, y 136 con el barrio cambiado.
+     *
+     * No cuesta ninguna llamada: los límites están en el disco y las coordenadas ya
+     * estaban guardadas.
+     */
+    private LimpiezaResult revisarLoGuardado() {
+        int corregidos = 0;
+        int borrados = 0;
+
+        for (BurgerJoint joint : burgerJointRepository.findAll()) {
+            var barrio = barrios.barrioDe(joint.getLatitude(), joint.getLongitude());
+            boolean sobra = barrio.isEmpty()
+                || properties.getSync().getExcludedPlaceIds().contains(joint.getPlaceId())
+                || (joint.getGooglePrimaryType() != null
+                    && properties.getSync().getExcludedPrimaryTypes().contains(joint.getGooglePrimaryType()));
+
+            if (sobra) {
+                // Si alguien lo puntuó o lo tiene anotado para ir, se queda: su opinión
+                // vale más que nuestra idea de qué locales corresponden.
+                if (ratingRepository.existsByBurgerJoint_Id(joint.getId())
+                    || wishlistRepository.existsByBurgerJoint_Id(joint.getId())) {
+                    log.info("{} no corresponde pero tiene reseñas o está en listas, se deja", joint.getName());
+                    continue;
+                }
+                log.info("Se borra {} ({}): {}", joint.getName(), joint.getAddress(),
+                    barrio.isEmpty() ? "fuera de la Ciudad" : "no es un lugar donde comer");
+                burgerJointRepository.delete(joint);
+                borrados++;
+                continue;
+            }
+
+            if (!barrio.get().equals(joint.getArea())) {
+                joint.setArea(barrio.get());
+                burgerJointRepository.save(joint);
+                corregidos++;
+            }
+        }
+
+        return new LimpiezaResult(corregidos, borrados);
+    }
+
+    private record LimpiezaResult(int corregidos, int borrados) {}
+    /**
+     * Si lo que devolvió Google no es un lugar donde comerse una hamburguesa.
+     *
+     * Aunque la búsqueda pide el tipo hamburguesería y en modo estricto, Google se lo
+     * cuelga a negocios que no dan de comer: una fábrica de salchichas, un mayorista,
+     * una carnicería, un pelotero y una distribuidora entraron así. El rubro principal
+     * —lo que el local es, según Google— alcanza para dejarlos afuera.
+     *
+     * Y quedan los casos en que la ficha misma está mal: "Myc La dimensión 3d" figura
+     * como gastropub con hamburguesas, pero su sitio es un local de impresión 3D. Para
+     * esos no hay regla posible, así que van anotados uno por uno.
+     */
+    private boolean noEsUnaHamburgueseria(PlacesSearchResult.Place place) {
+        if (properties.getSync().getExcludedPlaceIds().contains(place.placeId())) {
+            return true;
+        }
+        return place.primaryType() != null
+            && properties.getSync().getExcludedPrimaryTypes().contains(place.primaryType());
     }
 
     /**
@@ -245,6 +345,7 @@ public class PlacesSyncService {
         BurgerJoint joint = BurgerJoint.builder()
             .placeId(place.placeId())
             .name(place.name())
+            .googlePrimaryType(place.primaryType())
             .address(place.address() != null ? place.address() : area)
             .area(area)
             .latitude(place.latitude())
@@ -290,6 +391,7 @@ public class PlacesSyncService {
     /** @return true si en esta pasada se le consiguió la foto que le faltaba. */
     private boolean refresh(BurgerJoint joint, PlacesSearchResult.Place place, String area) {
         joint.setName(place.name());
+        joint.setGooglePrimaryType(place.primaryType());
         if (place.address() != null) {
             joint.setAddress(place.address());
         }

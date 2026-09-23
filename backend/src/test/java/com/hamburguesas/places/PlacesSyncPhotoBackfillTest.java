@@ -3,6 +3,8 @@ package com.hamburguesas.places;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.PlacesCallType;
 import com.hamburguesas.repository.BurgerJointRepository;
+import com.hamburguesas.repository.RatingRepository;
+import com.hamburguesas.repository.WishlistRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -58,14 +60,16 @@ class PlacesSyncPhotoBackfillTest {
         when(placesClient.downloadPhoto(anyString())).thenReturn(IMAGEN);
         when(photoStorage.save(anyString(), any())).thenReturn("/api/place-photos/abc.jpg");
 
-        service = new PlacesSyncService(properties, placesClient, quotaGuard, photoStorage, repository);
+        service = new PlacesSyncService(
+            properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(),
+            mock(RatingRepository.class), mock(WishlistRepository.class));
     }
 
     private PlacesSearchResult unLugarConFoto() {
         return new PlacesSearchResult(
             List.of(new PlacesSearchResult.Place(
                 "ChIJ123", "Thunder Burger", "Costa Rica 5827", -34.58, -58.43,
-                "places/ChIJ123/photos/abc")),
+                "places/ChIJ123/photos/abc", "hamburger_restaurant")),
             null);
     }
 

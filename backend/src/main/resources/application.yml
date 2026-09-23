@@ -80,6 +80,21 @@ app:
       trigger-token: ${PLACES_SYNC_TOKEN:}
       # 3 es el máximo que devuelve Google por consulta (60 resultados); pedir más
       # no trae nada nuevo.
+      # Rubros que Google devuelve con el tipo hamburguesería encima pero que no son
+      # un lugar donde sentarse a comer una. Los cinco salieron de la base: una fábrica
+      # de salchichas, un mayorista de medallones, una carnicería, un pelotero con
+      # cantina y una distribuidora.
+      excluded-primary-types:
+        - manufacturer
+        - wholesaler
+        - butcher_shop
+        - indoor_playground
+        - food_store
+      # Fichas que Google tiene mal cargadas y ninguna regla puede filtrar.
+      excluded-place-ids:
+        # "Myc La dimensión 3d": figura como gastropub con hamburguesas, pero el sitio
+        # que declara es un local de impresión 3D.
+        - ChIJY3FewTLLvJURBCPfAV6IANY
       max-pages-per-area: 3
       delay-between-calls-ms: 500
       # Los 48 barrios de la Ciudad de Buenos Aires. Antes eran 20, así que media

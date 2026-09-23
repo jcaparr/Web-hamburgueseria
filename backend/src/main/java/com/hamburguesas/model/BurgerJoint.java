@@ -42,6 +42,14 @@ public class BurgerJoint {
     @Column(name = "photo_name", length = 500)
     private String photoName;
 
+    /**
+     * El rubro principal del local según Google: "hamburger_restaurant", "bar",
+     * "butcher_shop". Se guarda para poder revisar qué entró y por qué sin volver a
+     * preguntarle a Google.
+     */
+    @Column(name = "google_primary_type", length = 80)
+    private String googlePrimaryType;
+
     private Double latitude;
 
     private Double longitude;

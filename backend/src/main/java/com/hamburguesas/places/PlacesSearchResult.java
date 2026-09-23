@@ -13,6 +13,8 @@ public record PlacesSearchResult(
         String address,
         Double latitude,
         Double longitude,
-        String photoName
+        String photoName,
+        /** El rubro principal según Google: "hamburger_restaurant", "bar", "butcher_shop". */
+        String primaryType
     ) {}
 }

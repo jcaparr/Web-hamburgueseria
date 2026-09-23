@@ -38,7 +38,8 @@ public class PlacesClient {
      */
     private static final String BURGER_TYPE = "hamburger_restaurant";
     private static final String FIELD_MASK =
-        "places.id,places.displayName,places.formattedAddress,places.location,places.photos,nextPageToken";
+        "places.id,places.displayName,places.formattedAddress,places.location,places.photos,"
+        + "places.primaryType,nextPageToken";
 
     private final PlacesProperties properties;
 
@@ -121,7 +122,8 @@ public class PlacesClient {
                     ? null : node.path("location").path("latitude").asDouble(),
                 node.path("location").path("longitude").isMissingNode()
                     ? null : node.path("location").path("longitude").asDouble(),
-                bestPhotoName(node)
+                bestPhotoName(node),
+                node.path("primaryType").asText(null)
             ));
         }
 
@@ -178,6 +180,14 @@ public class PlacesClient {
         double proporcion = proporcionDe(photo);
         if (proporcion >= 1.2) {
             puntaje += 10;
+        } else if (proporcion > 0 && proporcion < CAPTURA_DE_PANTALLA) {
+            // Más alta que el doble de su ancho no es una foto sacada con la cámara:
+            // es una captura de pantalla. "Valentino Burger" tenía de portada una
+            // captura de una historia de Instagram —1080x2400, con el nombre de quien
+            // la publicó arriba y el "Enviar mensaje" abajo—, y como la había subido el
+            // propio local se quedaba con la portada. El castigo alcanza para que
+            // pierda contra cualquier foto apaisada, incluso la de un cliente.
+            puntaje -= 150;
         } else if (proporcion <= 0.85) {
             puntaje -= 10;
         }
@@ -190,6 +200,13 @@ public class PlacesClient {
 
         return puntaje;
     }
+
+    /**
+     * Debajo de esta proporción la imagen es más alta que el doble de su ancho. Ninguna
+     * cámara de celular saca así —las más estiradas dan 9:16, o sea 0,56—, con lo cual
+     * lo que hay ahí es la pantalla entera de un teléfono capturada.
+     */
+    private static final double CAPTURA_DE_PANTALLA = 0.5;
 
     private static double proporcionDe(JsonNode photo) {
         int alto = photo.path("heightPx").asInt(0);

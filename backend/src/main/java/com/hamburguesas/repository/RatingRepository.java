@@ -58,6 +58,9 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
 
     long countByBurgerJoint_Id(Long burgerJointId);
 
+    /** Para no borrar un local que alguien puntuó, aunque la limpieza diga que sobra. */
+    boolean existsByBurgerJoint_Id(Long burgerJointId);
+
     long countByUser_Id(Long userId);
 
     @Query("select avg(r.score) from Rating r where r.user.id = :userId")
