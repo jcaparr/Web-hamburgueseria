@@ -2,6 +2,7 @@ package com.hamburguesas.service;
 
 import com.hamburguesas.dto.TourDto;
 import com.hamburguesas.model.BurgerJoint;
+import com.hamburguesas.model.ModoDeViaje;
 import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.WishlistRepository;
@@ -10,6 +11,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static com.hamburguesas.model.ModoDeViaje.A_PIE;
+import static com.hamburguesas.model.ModoDeViaje.EN_AUTO;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -62,7 +65,7 @@ class TourServiceTest {
     /** Un pedido corriente: cuatro paradas, sin tope de kilómetros, desde el punto de arriba. */
     private TourService.Pedido desdeElPunto(int cantidad, Double kilometrosMaximos) {
         return new TourService.Pedido(cantidad, kilometrosMaximos, List.of(),
-            LAT, LON, true, true, 1L);
+            LAT, LON, true, true, A_PIE, 1L);
     }
 
     @Test
@@ -168,7 +171,7 @@ class TourServiceTest {
             local(2, "Boedo", 2, "Boedo"),
             local(3, "Palermo lejos", 3, "Palermo"));
 
-        var pedido = new TourService.Pedido(3, null, List.of("Palermo"), LAT, LON, true, true, 1L);
+        var pedido = new TourService.Pedido(3, null, List.of("Palermo"), LAT, LON, true, true, A_PIE, 1L);
         TourDto tour = service.armar(pedido, null);
 
         assertThat(tour.paradas()).extracting(p -> p.local().name())
@@ -194,7 +197,7 @@ class TourServiceTest {
         hay(local(1, "Ya fui", 1), local(2, "Nueva", 2));
         when(ratingRepository.idsPuntuadosPor(7L)).thenReturn(List.of(1L));
 
-        var pedido = new TourService.Pedido(2, null, List.of(), LAT, LON, false, true, 1L);
+        var pedido = new TourService.Pedido(2, null, List.of(), LAT, LON, false, true, A_PIE, 1L);
         TourDto tour = service.armar(pedido, 7L);
 
         assertThat(tour.paradas()).extracting(p -> p.local().name()).containsExactly("Nueva");
@@ -229,7 +232,7 @@ class TourServiceTest {
     void sinCadenasPideLosQueNoSonCadena() {
         when(burgerJointRepository.findByFastFoodFalse()).thenReturn(List.of(local(1, "De barrio", 1)));
 
-        var pedido = new TourService.Pedido(1, null, List.of(), LAT, LON, true, false, 1L);
+        var pedido = new TourService.Pedido(1, null, List.of(), LAT, LON, true, false, A_PIE, 1L);
 
         assertThat(service.armar(pedido, null).paradas())
             .extracting(p -> p.local().name()).containsExactly("De barrio");
@@ -302,7 +305,7 @@ class TourServiceTest {
         hayDoceBuenasYOchoMalas();
 
         for (long semilla = 0; semilla < 25; semilla++) {
-            var pedido = new TourService.Pedido(1, null, List.of(), null, null, true, true, semilla);
+            var pedido = new TourService.Pedido(1, null, List.of(), null, null, true, true, A_PIE, semilla);
 
             assertThat(service.armar(pedido, null).paradas().get(0).local().name())
                 .as("semilla %d", semilla)
@@ -322,7 +325,7 @@ class TourServiceTest {
 
         List<String> primeras = new java.util.ArrayList<>();
         for (long semilla = 0; semilla < 25; semilla++) {
-            var pedido = new TourService.Pedido(1, null, List.of(), null, null, true, true, semilla);
+            var pedido = new TourService.Pedido(1, null, List.of(), null, null, true, true, A_PIE, semilla);
             primeras.add(service.armar(pedido, null).paradas().get(0).local().name());
         }
 
@@ -335,7 +338,7 @@ class TourServiceTest {
     @Test
     void laMismaSemillaDaElMismoRecorrido() {
         hayDoceBuenasYOchoMalas();
-        var pedido = new TourService.Pedido(3, null, List.of(), null, null, true, true, 7L);
+        var pedido = new TourService.Pedido(3, null, List.of(), null, null, true, true, A_PIE, 7L);
 
         assertThat(service.armar(pedido, null).paradas())
             .extracting(p -> p.local().name())
@@ -350,7 +353,7 @@ class TourServiceTest {
     @Test
     void sinUbicacionElPrimerTramoNoSuma() {
         hay(local(1, "Una", 1), local(2, "Dos", 2));
-        var pedido = new TourService.Pedido(2, null, List.of(), null, null, true, true, 1L);
+        var pedido = new TourService.Pedido(2, null, List.of(), null, null, true, true, A_PIE, 1L);
 
         TourDto tour = service.armar(pedido, null);
 
@@ -391,5 +394,62 @@ class TourServiceTest {
         hay(local(1, "Una", 1), local(2, "Dos", 2), local(3, "Tres", 3));
 
         assertThat(service.armar(desdeElPunto(1, null), null).candidatos()).isEqualTo(3);
+    }
+
+    private TourService.Pedido enAuto(int cantidad, Double kilometrosMaximos) {
+        return new TourService.Pedido(cantidad, kilometrosMaximos, List.of(),
+            LAT, LON, true, true, EN_AUTO, 1L);
+    }
+
+    /**
+     * En auto se dan más vueltas que a pie.
+     *
+     * Casi todas las calles de la Ciudad son de una sola mano: donde el que camina cruza
+     * y sigue, el auto da la vuelta a la manzana. Los mismos tres tramos de un kilómetro
+     * son 3,9 km caminando y 5,4 manejando.
+     */
+    @Test
+    void enAutoSeRecorrenMasKilometrosQueAPie() {
+        hay(local(1, "Una", 1), local(2, "Dos", 2), local(3, "Tres", 3));
+
+        assertThat(service.armar(enAuto(3, null), null).kilometros()).isEqualTo(5.4);
+        assertThat(service.armar(desdeElPunto(3, null), null).kilometros()).isEqualTo(3.9);
+    }
+
+    /** Y se tarda bastante menos, que es de lo que se trata elegir el auto. */
+    @Test
+    void enAutoSeTardaMenos() {
+        hay(local(1, "Una", 1), local(2, "Dos", 2), local(3, "Tres", 3));
+
+        assertThat(service.armar(enAuto(3, null), null).minutos()).isEqualTo(20);
+        assertThat(service.armar(desdeElPunto(3, null), null).minutos()).isEqualTo(52);
+    }
+
+    /**
+     * El tope de kilómetros se mide con las vueltas del modo elegido.
+     *
+     * Los mismos cuatro kilómetros dan para tres paradas a pie y para dos en auto: los
+     * tramos son más largos, así que el tope corta antes.
+     */
+    @Test
+    void elTopeCuentaLosKilometrosDelModoElegido() {
+        hay(local(1, "Una", 1), local(2, "Dos", 2), local(3, "Tres", 3), local(4, "Cuatro", 4));
+
+        // En auto cada tramo son 1,8 km: dos entran en cuatro y el tercero se pasa.
+        TourDto tour = service.armar(enAuto(4, 4.0), null);
+        assertThat(tour.paradas()).hasSize(2);
+        assertThat(tour.kilometros()).isEqualTo(3.6);
+
+        // A pie son 1,3, y entran tres.
+        assertThat(service.armar(desdeElPunto(4, 4.0), null).paradas()).hasSize(3);
+    }
+
+    /** Y el aviso lo dice como corresponde, que no es "caminando" si se va en auto. */
+    @Test
+    void elAvisoHablaDelModoElegido() {
+        hay(local(1, "Una", 1), local(2, "Dos", 2), local(3, "Tres", 3), local(4, "Cuatro", 4));
+
+        assertThat(service.armar(enAuto(4, 4.0), null).aviso())
+            .isEqualTo("En auto 4 km entran 2 paradas");
     }
 }

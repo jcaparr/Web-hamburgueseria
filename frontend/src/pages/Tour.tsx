@@ -13,8 +13,16 @@ import { routeUrl } from '../utils/maps'
 /** Lo que admite Maps en un enlace de direcciones, que es lo que limita el recorrido. */
 const MAXIMO_DE_PARADAS = 10
 
-const KILOMETROS = [1, 2, 3, 5, 8, 12, 20]
+/**
+ * Los topes que se ofrecen, que no son los mismos a pie que en auto: ocho cuadras es una
+ * caminata y en auto no es nada.
+ */
+const KILOMETROS = {
+  A_PIE: [1, 2, 3, 5, 8, 12],
+  EN_AUTO: [5, 10, 20, 30, 50, 80],
+}
 
+type Modo = 'A_PIE' | 'EN_AUTO'
 type Ubicacion = { lat: number; lon: number }
 
 export function Tour() {
@@ -24,6 +32,7 @@ export function Tour() {
   const [barrios, setBarrios] = useState<string[]>([])
   const [cantidad, setCantidad] = useState(4)
   const [tope, setTope] = useState<number | null>(null)
+  const [modo, setModo] = useState<Modo>('A_PIE')
   const [incluirVisitadas, setIncluirVisitadas] = useState(true)
   const [conCadenas, setConCadenas] = useState(false)
 
@@ -77,6 +86,7 @@ export function Tour() {
           longitud: barrios.length === 0 ? ubicacion?.lon : undefined,
           incluirVisitadas,
           conCadenas,
+          modo,
           // Sin esto, el botón devolvería siempre el mismo recorrido.
           semilla: Math.floor(Math.random() * 1_000_000),
         },
@@ -99,21 +109,39 @@ export function Tour() {
   }
 
   const paradas = tour?.paradas ?? []
-  const enlace = routeUrl(
-    paradas.map((p) => p.local),
-    barrios.length === 0 && ubicacion ? ubicacion : undefined,
-  )
+  const enlace = routeUrl(paradas.map((p) => p.local), {
+    desde: barrios.length === 0 && ubicacion ? ubicacion : undefined,
+    enAuto: modo === 'EN_AUTO',
+  })
 
   return (
     <div className="flex flex-col gap-5 p-4 md:p-0">
       <div>
         <h1 className="font-display text-2xl font-bold">Armar un tour</h1>
         <p className="mt-1 text-sm text-base-content/60">
-          Un recorrido de hamburgueserías para hacer caminando.
+          Un recorrido de hamburgueserías para hacer {modo === 'A_PIE' ? 'caminando' : 'en auto'}.
         </p>
       </div>
 
       <section className="flex flex-col gap-5 rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15">
+        <div className="join w-full">
+          {(['A_PIE', 'EN_AUTO'] as const).map((opcion) => (
+            <button
+              key={opcion}
+              type="button"
+              // Los topes de un modo no significan lo mismo en el otro, así que el que
+              // estaba elegido se suelta en vez de arrastrarse.
+              onClick={() => {
+                setModo(opcion)
+                setTope(null)
+              }}
+              className={`btn join-item flex-1 ${modo === opcion ? 'btn-primary' : ''}`}
+            >
+              {opcion === 'A_PIE' ? 'A pie' : 'En auto'}
+            </button>
+          ))}
+        </div>
+
         <div className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between">
             <span className="text-sm font-semibold">Cuántas parar</span>
@@ -131,13 +159,15 @@ export function Tour() {
 
         <div className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between">
-            <span className="text-sm font-semibold">Cuánto caminar</span>
+            <span className="text-sm font-semibold">
+              {modo === 'A_PIE' ? 'Cuánto caminar' : 'Cuánto manejar'}
+            </span>
             <span className="font-display text-lg font-bold text-primary">
               {tope ? `${tope} km` : 'Sin límite'}
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {KILOMETROS.map((km) => (
+            {KILOMETROS[modo].map((km) => (
               <button
                 key={km}
                 type="button"
@@ -228,13 +258,21 @@ export function Tour() {
       {error ? (
         <LoadError error={error} onRetry={armar} />
       ) : (
-        tour && <Recorrido tour={tour} enlace={enlace} />
+        tour && <Recorrido tour={tour} enlace={enlace} enAuto={modo === 'EN_AUTO'} />
       )}
     </div>
   )
 }
 
-function Recorrido({ tour, enlace }: { tour: TourRecorrido; enlace: string }) {
+function Recorrido({
+  tour,
+  enlace,
+  enAuto,
+}: {
+  tour: TourRecorrido
+  enlace: string
+  enAuto: boolean
+}) {
   if (tour.paradas.length === 0) {
     return (
       <p className="rounded-box bg-base-200 p-4 text-sm text-base-content/70">
@@ -247,8 +285,8 @@ function Recorrido({ tour, enlace }: { tour: TourRecorrido; enlace: string }) {
     <section className="flex flex-col gap-4">
       <div className="flex items-center justify-around rounded-box bg-neutral p-4 text-base-100">
         <Dato valor={String(tour.paradas.length)} etiqueta="paradas" />
-        <Dato valor={`${tour.kilometros}`} etiqueta="km a pie" />
-        <Dato valor={enHoras(tour.minutos)} etiqueta="caminando" />
+        <Dato valor={`${tour.kilometros}`} etiqueta="km" />
+        <Dato valor={enHoras(tour.minutos)} etiqueta={enAuto ? 'manejando' : 'caminando'} />
       </div>
 
       {tour.aviso && (
@@ -311,7 +349,7 @@ function Recorrido({ tour, enlace }: { tour: TourRecorrido; enlace: string }) {
         className="btn btn-neutral btn-block"
       >
         <IconRoute size={18} />
-        Abrir el recorrido en Maps
+        {enAuto ? 'Abrir el recorrido en auto' : 'Abrir el recorrido a pie'}
       </a>
       <p className="-mt-2 flex items-center justify-center gap-1 text-center text-xs text-base-content/50">
         <IconPin />

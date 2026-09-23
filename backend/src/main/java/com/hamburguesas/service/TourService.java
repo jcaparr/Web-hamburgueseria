@@ -5,6 +5,7 @@ import com.hamburguesas.dto.TourDto;
 import com.hamburguesas.dto.TourStopDto;
 import com.hamburguesas.geo.Distancias;
 import com.hamburguesas.model.BurgerJoint;
+import com.hamburguesas.model.ModoDeViaje;
 import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.WishlistRepository;
@@ -38,19 +39,6 @@ import java.util.Set;
 public class TourService {
 
     /**
-     * Cuánto más se camina que lo que mide la línea recta.
-     *
-     * Entre dos puntos no se puede ir en diagonal: hay que hacer las cuadras. En una
-     * ciudad cuadriculada como esta lo caminado termina siendo alrededor de un tercio
-     * más que la recta, y de ahí sale este número. Es una estimación; el recorrido de
-     * verdad lo da Maps cuando se abre.
-     */
-    private static final double FACTOR_DE_CALLE = 1.3;
-
-    /** Caminando tranquilo, que es como se va a comer. */
-    private static final double KILOMETROS_POR_HORA = 4.5;
-
-    /**
      * El tope de paradas.
      *
      * No es una decisión de diseño sino de Maps: un enlace de direcciones admite hasta
@@ -82,6 +70,7 @@ public class TourService {
         Double longitud,
         boolean incluirVisitadas,
         boolean conCadenas,
+        ModoDeViaje modo,
         Long semilla
     ) {
         boolean sabeDondeEsta() {
@@ -158,7 +147,8 @@ public class TourService {
 
             double tramo = esLaPrimeraSinPunto
                 ? 0
-                : kilometrosEntre(latitud, longitud, proxima.getLatitude(), proxima.getLongitude());
+                : kilometrosEntre(pedido.modo(), latitud, longitud,
+                    proxima.getLatitude(), proxima.getLongitude());
 
             // El tope no puede dejar el recorrido vacío: si la primera ya queda lejos, se
             // la acepta igual y lo que se ve es un recorrido de una parada, no uno de
@@ -202,8 +192,11 @@ public class TourService {
             .orElseThrow();
     }
 
-    private static double kilometrosEntre(double latA, double lonA, double latB, double lonB) {
-        return Distancias.metrosEntre(latA, lonA, latB, lonB) / 1000 * FACTOR_DE_CALLE;
+    /** Lo que se recorre de verdad entre dos paradas, que depende de cómo se vaya. */
+    private static double kilometrosEntre(
+        ModoDeViaje modo, double latA, double lonA, double latB, double lonB
+    ) {
+        return modo.kilometrosReales(Distancias.metrosEntre(latA, lonA, latB, lonB) / 1000);
     }
 
     private TourDto comoTour(
@@ -223,7 +216,8 @@ public class TourService {
             BurgerJoint parada = paradas.get(i);
             double tramo = i == 0 && !pedido.sabeDondeEsta()
                 ? 0
-                : kilometrosEntre(latitud, longitud, parada.getLatitude(), parada.getLongitude());
+                : kilometrosEntre(pedido.modo(), latitud, longitud,
+                    parada.getLatitude(), parada.getLongitude());
             total += tramo;
 
             stops.add(new TourStopDto(i + 1, redondear(tramo),
@@ -233,8 +227,7 @@ public class TourService {
             longitud = parada.getLongitude();
         }
 
-        return new TourDto(stops, redondear(total),
-            (int) Math.round(total / KILOMETROS_POR_HORA * 60), candidatos,
+        return new TourDto(stops, redondear(total), pedido.modo().minutos(total), candidatos,
             aviso(paradas.size(), cantidad, candidatos, pedido));
     }
 
@@ -254,8 +247,8 @@ public class TourService {
                 ? "Con esos filtros hay una sola hamburguesería"
                 : "Con esos filtros hay " + candidatos + " hamburgueserías";
         }
-        return "Caminando " + enKilometros(pedido.kilometrosMaximos()) + " km entran "
-            + (paradas == 1 ? "una parada" : paradas + " paradas");
+        return pedido.modo().comoSeDice() + " " + enKilometros(pedido.kilometrosMaximos())
+            + " km entran " + (paradas == 1 ? "una parada" : paradas + " paradas");
     }
 
     private static String enKilometros(Double kilometros) {

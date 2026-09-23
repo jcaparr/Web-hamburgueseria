@@ -1,6 +1,7 @@
 package com.hamburguesas.controller;
 
 import com.hamburguesas.dto.TourDto;
+import com.hamburguesas.model.ModoDeViaje;
 import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.security.CurrentUser;
 import com.hamburguesas.service.TourService;
@@ -29,7 +30,8 @@ public class TourController {
     /**
      * @param barrios           en cuáles buscar. Vacío significa alrededor de quien camina.
      * @param latitud           dónde está quien camina, si lo compartió.
-     * @param kilometrosMaximos cuánto está dispuesto a caminar en todo el recorrido.
+     * @param kilometrosMaximos cuánto está dispuesto a recorrer en total.
+     * @param modo              a pie o en auto, que cambia las vueltas y lo que se tarda.
      * @param semilla           para que volver a pedirlo proponga otro recorrido. La manda
      *                          la pantalla en cada intento; fija, el recorrido se repite.
      */
@@ -42,10 +44,11 @@ public class TourController {
         @RequestParam(required = false) Double longitud,
         @RequestParam(defaultValue = "true") boolean incluirVisitadas,
         @RequestParam(defaultValue = "false") boolean conCadenas,
+        @RequestParam(defaultValue = "A_PIE") ModoDeViaje modo,
         @RequestParam(required = false) Long semilla
     ) {
         var pedido = new TourService.Pedido(cantidad, kilometrosMaximos, barrios,
-            latitud, longitud, incluirVisitadas, conCadenas, semilla);
+            latitud, longitud, incluirVisitadas, conCadenas, modo, semilla);
 
         return tourService.armar(pedido, CurrentUser.idOrNull());
     }

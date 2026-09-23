@@ -15,8 +15,15 @@ interface Parada {
  * Va el identificador de cada local junto con su nombre —Maps exige los dos— para que
  * el recorrido muestre "Burger couple" y no un punto suelto en el mapa. En los que no
  * tienen identificador se cae a las coordenadas, que es lo que había antes.
+ *
+ * El modo viaja en el enlace, así que Maps abre directamente el recorrido a pie o en
+ * auto según lo que se haya elegido acá, sin tener que cambiarlo allá.
  */
-export function routeUrl(paradas: Parada[], desde?: { lat: number; lon: number }): string {
+export function routeUrl(
+  paradas: Parada[],
+  opciones: { desde?: { lat: number; lon: number }; enAuto?: boolean } = {},
+): string {
+  const { desde, enAuto } = opciones
   const puntos = paradas.filter((p) => p.latitude != null && p.longitude != null)
   if (puntos.length === 0) return ''
 
@@ -30,7 +37,7 @@ export function routeUrl(paradas: Parada[], desde?: { lat: number; lon: number }
     api: '1',
     origin: origen,
     destination: donde(destino),
-    travelmode: 'walking',
+    travelmode: enAuto ? 'driving' : 'walking',
   })
   if (!desde && puntos[0].placeId) params.set('origin_place_id', puntos[0].placeId)
   if (destino.placeId) params.set('destination_place_id', destino.placeId)
