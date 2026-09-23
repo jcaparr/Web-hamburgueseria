@@ -12,6 +12,13 @@ public class PlacesProperties {
     /** Read from the GOOGLE_MAPS_API_KEY environment variable. Empty disables every Google call. */
     private String apiKey = "";
 
+    /**
+     * Las cadenas de comida rápida, para poder sacarlas del listado. Se reconocen por
+     * el principio del nombre, sin mayúsculas ni puntuación: "burgerking" abarca a
+     * "Burger King - Sucursal P.Italia".
+     */
+    private List<String> fastFoodBrands = List.of();
+
     private Sync sync = new Sync();
     private Quota quota = new Quota();
     private Photos photos = new Photos();
