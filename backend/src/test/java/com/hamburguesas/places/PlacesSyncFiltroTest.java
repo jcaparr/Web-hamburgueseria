@@ -13,6 +13,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -55,7 +56,7 @@ class PlacesSyncFiltroTest {
 
         when(quotaGuard.canCall(any())).thenReturn(true);
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of());
-        when(repository.findByPhotoUrlIsNotNullAndPhotoNameIsNull()).thenReturn(List.of());
+        when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of());
         when(repository.findByPlaceId(anyString())).thenReturn(Optional.empty());
 
         service = new PlacesSyncService(

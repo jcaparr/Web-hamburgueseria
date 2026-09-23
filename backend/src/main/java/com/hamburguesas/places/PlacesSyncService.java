@@ -234,6 +234,7 @@ public class PlacesSyncService {
                 if (photoUrl != null) {
                     joint.setPhotoUrl(photoUrl);
                     joint.setPhotoName(photoName);
+                    joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
                     burgerJointRepository.save(joint);
                     fotoPorCadena.putIfAbsent(chainKey(joint.getName()), photoUrl);
                     downloaded++;
@@ -273,7 +274,7 @@ public class PlacesSyncService {
      private int repickOldPhotos() {
          int cambiadas = 0;
 
-         for (BurgerJoint joint : burgerJointRepository.findByPhotoUrlIsNotNullAndPhotoNameIsNull()) {
+         for (BurgerJoint joint : burgerJointRepository.conFotoElegidaConUnaReglaVieja(PlacesClient.REGLA_DE_FOTO)) {
              if (!quotaGuard.canCall(PlacesCallType.PHOTO) || !quotaGuard.canCall(PlacesCallType.DETAILS)) {
                  log.info("Cuota mensual alcanzada, quedan fotos por revisar para el mes que viene");
                  break;
@@ -294,10 +295,20 @@ public class PlacesSyncService {
                  continue;
              }
 
+             // La regla nueva eligió la misma foto que ya tenemos: alcanza con anotar
+             // que está revisada. Bajarla de nuevo sería pagarle a Google por el mismo
+             // archivo, y la mayoría de las fotos no cambia de una regla a la otra.
+             if (mejor.equals(joint.getPhotoName())) {
+                 joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
+                 burgerJointRepository.save(joint);
+                 continue;
+             }
+
              String photoUrl = downloadPhoto(joint.getPlaceId(), mejor);
              if (photoUrl != null) {
                  joint.setPhotoUrl(photoUrl);
                  joint.setPhotoName(mejor);
+                 joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
                  burgerJointRepository.save(joint);
                  cambiadas++;
              }
@@ -359,6 +370,7 @@ public class PlacesSyncService {
             if (photoUrl != null) {
                 joint.setPhotoUrl(photoUrl);
                 joint.setPhotoName(place.photoName());
+                joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
                 gotPhoto = true;
             }
         }
@@ -413,6 +425,7 @@ public class PlacesSyncService {
             if (photoUrl != null) {
                 joint.setPhotoUrl(photoUrl);
                 joint.setPhotoName(place.photoName());
+                joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
                 gotPhoto = true;
             }
         }

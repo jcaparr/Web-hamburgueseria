@@ -37,6 +37,18 @@ public class PlacesClient {
      * bares—, y con esto Google filtra por lo que el local es, no por lo que dice.
      */
     private static final String BURGER_TYPE = "hamburger_restaurant";
+
+    /**
+     * Qué versión de la regla de elección de foto es esta. Se guarda junto a cada foto
+     * bajada, y cuando el número sube, las fotos elegidas con la regla anterior se
+     * revisan una vez. Sin esto una mejora en la regla solo alcanzaría a los locales
+     * nuevos, y los 424 que ya tienen foto se quedarían con la elección vieja.
+     *
+     * 1: la primera del local, o la primera de todas.
+     * 2: la del local, prefiriendo apaisadas.
+     * 3: además, descarta las capturas de pantalla.
+     */
+    public static final int REGLA_DE_FOTO = 3;
     private static final String FIELD_MASK =
         "places.id,places.displayName,places.formattedAddress,places.location,places.photos,"
         + "places.primaryType,nextPageToken";
