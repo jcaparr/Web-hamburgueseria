@@ -3,6 +3,8 @@ package com.hamburguesas.places;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.PlacesCallType;
 import com.hamburguesas.repository.BurgerJointRepository;
+import com.hamburguesas.repository.RatingRepository;
+import com.hamburguesas.repository.WishlistRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -11,9 +13,11 @@ import org.springframework.web.client.RestClientResponseException;
 import java.text.Normalizer;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -25,6 +29,9 @@ public class PlacesSyncService {
     private final PlacesQuotaGuard quotaGuard;
     private final PhotoStorage photoStorage;
     private final BurgerJointRepository burgerJointRepository;
+    private final Barrios barrios;
+    private final RatingRepository ratingRepository;
+    private final WishlistRepository wishlistRepository;
 
     public PlacesSyncReport sync() {
         if (!properties.hasApiKey()) {
@@ -35,6 +42,13 @@ public class PlacesSyncService {
         int created = 0;
         int updated = 0;
         int photosDownloaded = 0;
+        int descartados = 0;
+
+        // Se arma una vez: son las marcas que Google reconoce como hamburgueserías, y
+        // sirven para rescatar a las sucursales que clasificó distinto al resto.
+        Set<String> cadenas = cadenasDeHamburguesas();
+
+        LimpiezaResult limpieza = revisarLoGuardado(cadenas);
 
         for (String area : properties.getSync().getAreas()) {
             if (!quotaGuard.canCall(PlacesCallType.SEARCH)) {
@@ -59,13 +73,33 @@ public class PlacesSyncService {
                         continue;
                     }
 
+                    if (noEsUnaHamburgueseria(place, cadenas)) {
+                        log.debug("{} no es un lugar donde comer ({}), se descarta",
+                            place.name(), place.primaryType());
+                        descartados++;
+                        continue;
+                    }
+
+                    // El barrio sale de las coordenadas, no de la búsqueda que lo trajo:
+                    // Google devuelve lo que le parece cerca y se pasa de largo del barrio
+                    // que se le pidió. Y si el punto no está en la Ciudad, el local no va:
+                    // "hamburguesería en San Nicolás" trae San Nicolás de los Arroyos y
+                    // "Versalles" trae uno de Colombia.
+                    var barrio = barrios.barrioDe(place.latitude(), place.longitude());
+                    if (barrio.isEmpty()) {
+                        log.debug("{} queda fuera de la Ciudad ({}), se descarta",
+                            place.name(), place.address());
+                        descartados++;
+                        continue;
+                    }
+
                     var existing = burgerJointRepository.findByPlaceId(place.placeId());
                     boolean gotPhoto;
                     if (existing.isPresent()) {
-                        gotPhoto = refresh(existing.get(), place, area);
+                        gotPhoto = refresh(existing.get(), place, barrio.get());
                         updated++;
                     } else {
-                        gotPhoto = create(place, area);
+                        gotPhoto = create(place, barrio.get());
                         created++;
                     }
                     if (gotPhoto) {
@@ -87,9 +121,153 @@ public class PlacesSyncService {
         photosDownloaded += missing.downloaded();
         photosDownloaded += repickOldPhotos();
 
-        log.info("Places sync finished: {} created, {} updated, {} photos, {} reused",
-            created, updated, photosDownloaded, missing.reused());
+        log.info("Places sync finished: {} created, {} updated, {} photos, {} reused, {} descartados, "
+            + "{} barrios corregidos, {} borrados",
+            created, updated, photosDownloaded, missing.reused(), descartados,
+            limpieza.corregidos(), limpieza.borrados());
         return new PlacesSyncReport(created, updated, photosDownloaded, missing.reused(), null);
+    }
+
+
+    /**
+     * Revisa lo que ya está guardado: le corrige el barrio y saca lo que no va.
+     *
+     * Hace falta porque los errores viejos no se arreglan solos. El barrio equivocado
+     * sí se corrige al volver a encontrar el local, pero un local que ninguna búsqueda
+     * devuelve —los de otras provincias, justamente— se quedaría para siempre. En la
+     * base había 29 de Mar del Plata, San Nicolás de los Arroyos, Las Flores, el
+     * conurbano, Colombia y México, y 136 con el barrio cambiado.
+     *
+     * No cuesta ninguna llamada: los límites están en el disco y las coordenadas ya
+     * estaban guardadas.
+     */
+    private LimpiezaResult revisarLoGuardado(Set<String> cadenas) {
+        int corregidos = 0;
+        int borrados = 0;
+
+        for (BurgerJoint joint : burgerJointRepository.findAll()) {
+            var barrio = barrios.barrioDe(joint.getLatitude(), joint.getLongitude());
+            boolean sobra = barrio.isEmpty() || noEsUnaHamburgueseria(comoLugar(joint), cadenas);
+
+            if (sobra) {
+                // Si alguien lo puntuó o lo tiene anotado para ir, se queda: su opinión
+                // vale más que nuestra idea de qué locales corresponden.
+                if (ratingRepository.existsByBurgerJoint_Id(joint.getId())
+                    || wishlistRepository.existsByBurgerJoint_Id(joint.getId())) {
+                    log.info("{} no corresponde pero tiene reseñas o está en listas, se deja", joint.getName());
+                    continue;
+                }
+                log.info("Se borra {} ({}): {}", joint.getName(), joint.getAddress(),
+                    barrio.isEmpty() ? "fuera de la Ciudad" : "no es una hamburguesería");
+                burgerJointRepository.delete(joint);
+                borrados++;
+                continue;
+            }
+
+            if (!barrio.get().equals(joint.getArea())) {
+                joint.setArea(barrio.get());
+                burgerJointRepository.save(joint);
+                corregidos++;
+            }
+        }
+
+        return new LimpiezaResult(corregidos, borrados);
+    }
+
+    private record LimpiezaResult(int corregidos, int borrados) {}
+
+    /**
+     * Un local ya guardado, visto como lo que devolvería una búsqueda, para poder
+     * pasarlo por el mismo filtro y que la regla sea una sola.
+     */
+    private static PlacesSearchResult.Place comoLugar(BurgerJoint joint) {
+        return new PlacesSearchResult.Place(
+            joint.getPlaceId(), joint.getName(), joint.getAddress(),
+            joint.getLatitude(), joint.getLongitude(), null, joint.getGooglePrimaryType());
+    }
+    /**
+     * Si lo que devolvió Google no es una hamburguesería.
+     *
+     * La idea de la app son los locales que se especializan en hamburguesas o que la
+     * tienen como plato destacado. Google no dice cuál es el plato destacado: dice el
+     * rubro. Así que entran los que declara hamburguesería o comida rápida —que son las
+     * cadenas— y los que se llaman a sí mismos así, que es la forma que tiene un local
+     * de decir a qué se dedica. Quedan afuera las pizzerías, las parrillas, las
+     * panaderías y los bares: venden hamburguesas, pero no es lo que uno busca acá.
+     *
+     * Con dos arreglos, porque la clasificación de Google es despareja.
+     *
+     * Uno automático: si otra sucursal de la misma cadena sí figura como hamburguesería,
+     * esta también lo es. De las cuatro sucursales de "La Birra Bar", Google marca tres
+     * como hamburguesería y la de Colegiales como restaurante.
+     *
+     * Y uno a mano, para los que no hay forma de deducir: "Beggars" figura como bar y
+     * "Draken" como cervecería, y son hamburgueserías. Van anotados en la configuración
+     * con el motivo al lado, igual que los que hay que sacar.
+     */
+    private boolean noEsUnaHamburgueseria(PlacesSearchResult.Place place, Set<String> cadenas) {
+        var sync = properties.getSync();
+
+        if (sync.getExcludedPlaceIds().contains(place.placeId())) {
+            return true;
+        }
+        if (sync.getIncludedPlaceIds().contains(place.placeId())) {
+            return false;
+        }
+        // Rubros que directamente no dan de comer. Va antes que el nombre porque la
+        // fábrica de salchichas y el mayorista de medallones tienen "burger" en el
+        // nombre, y si no entrarían por esa puerta.
+        if (place.primaryType() != null && sync.getExcludedPrimaryTypes().contains(place.primaryType())) {
+            return true;
+        }
+
+        return !esRubroDeHamburguesas(place.primaryType())
+            && !elNombreDiceHamburguesas(place.name())
+            && !esSucursalDeUnaCadena(place.name(), cadenas);
+    }
+
+    /** Lo que Google llama hamburguesería, y la comida rápida, que son McDonald's y Burger King. */
+    private static boolean esRubroDeHamburguesas(String primaryType) {
+        return "hamburger_restaurant".equals(primaryType)
+            || "fast_food_restaurant".equals(primaryType);
+    }
+
+    /** Un local que se llama "algo Burger" u "Hamburguesas algo" está diciendo a qué se dedica. */
+    static boolean elNombreDiceHamburguesas(String name) {
+        String limpio = sinAcentos(name);
+        return limpio.contains("burger") || limpio.contains("hamburgues") || limpio.contains("smash");
+    }
+
+    /**
+     * Si el nombre empieza con el de una cadena que Google sí marca como hamburguesería.
+     *
+     * Se exige que sea el principio y que siga un espacio —"La Birra Bar Colegiales"
+     * empieza con "La Birra Bar"— y que la marca tenga al menos ocho caracteres, para
+     * que un nombre corto no se lleve puesto a cualquiera que empiece parecido.
+     */
+    static boolean esSucursalDeUnaCadena(String name, Set<String> cadenas) {
+        String limpio = sinAcentos(name);
+        return cadenas.stream().anyMatch(cadena -> limpio.startsWith(cadena + " "));
+    }
+
+    /** Las marcas que Google sí reconoce como hamburgueserías, para el arreglo de arriba. */
+    private Set<String> cadenasDeHamburguesas() {
+        Set<String> cadenas = new HashSet<>();
+        for (String nombre : burgerJointRepository.nombresDeRubro("hamburger_restaurant")) {
+            String limpio = sinAcentos(nombre);
+            if (limpio.length() >= 8) {
+                cadenas.add(limpio);
+            }
+        }
+        return cadenas;
+    }
+
+    private static String sinAcentos(String valor) {
+        return Normalizer.normalize(valor == null ? "" : valor, Normalizer.Form.NFD)
+            .replaceAll("\\p{M}", "")
+            .toLowerCase(Locale.ROOT)
+            .replaceAll("\\s+", " ")
+            .trim();
     }
 
     /**
@@ -134,6 +312,7 @@ public class PlacesSyncService {
                 if (photoUrl != null) {
                     joint.setPhotoUrl(photoUrl);
                     joint.setPhotoName(photoName);
+                    joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
                     burgerJointRepository.save(joint);
                     fotoPorCadena.putIfAbsent(chainKey(joint.getName()), photoUrl);
                     downloaded++;
@@ -173,7 +352,7 @@ public class PlacesSyncService {
      private int repickOldPhotos() {
          int cambiadas = 0;
 
-         for (BurgerJoint joint : burgerJointRepository.findByPhotoUrlIsNotNullAndPhotoNameIsNull()) {
+         for (BurgerJoint joint : burgerJointRepository.conFotoElegidaConUnaReglaVieja(PlacesClient.REGLA_DE_FOTO)) {
              if (!quotaGuard.canCall(PlacesCallType.PHOTO) || !quotaGuard.canCall(PlacesCallType.DETAILS)) {
                  log.info("Cuota mensual alcanzada, quedan fotos por revisar para el mes que viene");
                  break;
@@ -194,10 +373,20 @@ public class PlacesSyncService {
                  continue;
              }
 
+             // La regla nueva eligió la misma foto que ya tenemos: alcanza con anotar
+             // que está revisada. Bajarla de nuevo sería pagarle a Google por el mismo
+             // archivo, y la mayoría de las fotos no cambia de una regla a la otra.
+             if (mejor.equals(joint.getPhotoName())) {
+                 joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
+                 burgerJointRepository.save(joint);
+                 continue;
+             }
+
              String photoUrl = downloadPhoto(joint.getPlaceId(), mejor);
              if (photoUrl != null) {
                  joint.setPhotoUrl(photoUrl);
                  joint.setPhotoName(mejor);
+                 joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
                  burgerJointRepository.save(joint);
                  cambiadas++;
              }
@@ -245,6 +434,7 @@ public class PlacesSyncService {
         BurgerJoint joint = BurgerJoint.builder()
             .placeId(place.placeId())
             .name(place.name())
+            .googlePrimaryType(place.primaryType())
             .address(place.address() != null ? place.address() : area)
             .area(area)
             .latitude(place.latitude())
@@ -258,6 +448,7 @@ public class PlacesSyncService {
             if (photoUrl != null) {
                 joint.setPhotoUrl(photoUrl);
                 joint.setPhotoName(place.photoName());
+                joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
                 gotPhoto = true;
             }
         }
@@ -290,6 +481,7 @@ public class PlacesSyncService {
     /** @return true si en esta pasada se le consiguió la foto que le faltaba. */
     private boolean refresh(BurgerJoint joint, PlacesSearchResult.Place place, String area) {
         joint.setName(place.name());
+        joint.setGooglePrimaryType(place.primaryType());
         if (place.address() != null) {
             joint.setAddress(place.address());
         }
@@ -311,6 +503,7 @@ public class PlacesSyncService {
             if (photoUrl != null) {
                 joint.setPhotoUrl(photoUrl);
                 joint.setPhotoName(place.photoName());
+                joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
                 gotPhoto = true;
             }
         }

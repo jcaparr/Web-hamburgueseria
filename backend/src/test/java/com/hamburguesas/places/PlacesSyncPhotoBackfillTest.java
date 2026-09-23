@@ -3,6 +3,8 @@ package com.hamburguesas.places;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.PlacesCallType;
 import com.hamburguesas.repository.BurgerJointRepository;
+import com.hamburguesas.repository.RatingRepository;
+import com.hamburguesas.repository.WishlistRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +13,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -53,19 +56,21 @@ class PlacesSyncPhotoBackfillTest {
 
         when(quotaGuard.canCall(any())).thenReturn(true);
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of());
-        when(repository.findByPhotoUrlIsNotNullAndPhotoNameIsNull()).thenReturn(List.of());
+        when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of());
         when(placesClient.searchText(anyString(), any())).thenReturn(unLugarConFoto());
         when(placesClient.downloadPhoto(anyString())).thenReturn(IMAGEN);
         when(photoStorage.save(anyString(), any())).thenReturn("/api/place-photos/abc.jpg");
 
-        service = new PlacesSyncService(properties, placesClient, quotaGuard, photoStorage, repository);
+        service = new PlacesSyncService(
+            properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(),
+            mock(RatingRepository.class), mock(WishlistRepository.class));
     }
 
     private PlacesSearchResult unLugarConFoto() {
         return new PlacesSearchResult(
             List.of(new PlacesSearchResult.Place(
                 "ChIJ123", "Thunder Burger", "Costa Rica 5827", -34.58, -58.43,
-                "places/ChIJ123/photos/abc")),
+                "places/ChIJ123/photos/abc", "hamburger_restaurant")),
             null);
     }
 
@@ -250,7 +255,7 @@ class PlacesSyncPhotoBackfillTest {
             .id(1L).placeId("ChIJ-V").name("Weiss Burger").address("Rivadavia 1").area(AREA)
             .photoUrl("/api/place-photos/vieja.jpg")
             .build();
-        when(repository.findByPhotoUrlIsNotNullAndPhotoNameIsNull()).thenReturn(List.of(vieja));
+        when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(vieja));
         when(placesClient.photoNameFor("ChIJ-V")).thenReturn("places/ChIJ-V/photos/mejor");
 
         service.sync();
@@ -260,12 +265,38 @@ class PlacesSyncPhotoBackfillTest {
         assertThat(vieja.getPhotoName()).isEqualTo("places/ChIJ-V/photos/mejor");
     }
 
+    /**
+     * Si al revisar con la regla nueva gana la misma foto que ya tenemos, no se baja
+     * de nuevo: sería pagarle a Google por el mismo archivo. Alcanza con anotar que ya
+     * está revisada para no volver a mirarla el mes que viene.
+     */
+    @Test
+    void siLaReglaNuevaEligeLaMismaFotoNoLaVuelveABajar() {
+        when(placesClient.searchText(anyString(), any()))
+            .thenReturn(new PlacesSearchResult(List.of(), null));
+
+        BurgerJoint vieja = BurgerJoint.builder()
+            .id(1L).placeId("ChIJ-V").name("Weiss Burger").address("Rivadavia 1").area(AREA)
+            .photoUrl("/api/place-photos/vieja.jpg")
+            .photoName("places/ChIJ-V/photos/la-misma")
+            .photoRule(2)
+            .build();
+        when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(vieja));
+        when(placesClient.photoNameFor("ChIJ-V")).thenReturn("places/ChIJ-V/photos/la-misma");
+
+        service.sync();
+
+        verify(placesClient, never()).downloadPhoto(anyString());
+        assertThat(vieja.getPhotoUrl()).isEqualTo("/api/place-photos/vieja.jpg");
+        assertThat(vieja.getPhotoRule()).isEqualTo(PlacesClient.REGLA_DE_FOTO);
+    }
+
     /** Una foto con su nombre ya anotado no se vuelve a revisar: sería pagar de nuevo. */
     @Test
     void noRevisaLasQueYaTienenSuNombreAnotado() {
         when(placesClient.searchText(anyString(), any()))
             .thenReturn(new PlacesSearchResult(List.of(), null));
-        when(repository.findByPhotoUrlIsNotNullAndPhotoNameIsNull()).thenReturn(List.of());
+        when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of());
 
         service.sync();
 

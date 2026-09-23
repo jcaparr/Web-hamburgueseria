@@ -190,6 +190,43 @@ class PlacesClientParseTest {
         assertThat(place.photoName()).isEqualTo("places/ChIJ123/photos/local-vertical");
     }
 
+    /**
+     * Una captura de pantalla pierde aunque la haya subido el local.
+     *
+     * "Valentino Burger" tenía de portada una captura de una historia de Instagram
+     * —1080x2400, con el nombre de quien la publicó arriba y el "Enviar mensaje"
+     * abajo—, porque la había subido el local y eso pesaba más que todo lo demás. Una
+     * imagen más alta que el doble de su ancho no la sacó ninguna cámara.
+     */
+    @Test
+    void unaCapturaDePantallaDelLocalPierdeContraLaFotoDeUnCliente() {
+        JsonNode response = json("""
+            {
+              "places": [{
+                "id": "ChIJ123",
+                "displayName": { "text": "Valentino Burger" },
+                "formattedAddress": "Puán 380",
+                "photos": [
+                  {
+                    "name": "places/ChIJ123/photos/captura-del-local",
+                    "widthPx": 1080, "heightPx": 2400,
+                    "authorAttributions": [{ "displayName": "Valentino" }]
+                  },
+                  {
+                    "name": "places/ChIJ123/photos/cliente-apaisada",
+                    "widthPx": 4080, "heightPx": 1836,
+                    "authorAttributions": [{ "displayName": "Lucas Lobo" }]
+                  }
+                ]
+              }]
+            }
+            """);
+
+        PlacesSearchResult.Place place = PlacesClient.parse(response).places().get(0);
+
+        assertThat(place.photoName()).isEqualTo("places/ChIJ123/photos/cliente-apaisada");
+    }
+
     /** Sin foto del local, entre las de clientes gana la apaisada sobre la vertical. */
     @Test
     void sinFotoDelLocalPrefiereLaApaisadaDeUnCliente() {

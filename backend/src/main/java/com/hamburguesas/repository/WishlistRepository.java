@@ -10,4 +10,7 @@ public interface WishlistRepository extends JpaRepository<WishlistItem, Long> {
     List<WishlistItem> findByUser_IdOrderByCreatedAtDesc(Long userId);
     Optional<WishlistItem> findByUser_IdAndBurgerJoint_Id(Long userId, Long burgerJointId);
     boolean existsByUser_IdAndBurgerJoint_Id(Long userId, Long burgerJointId);
+
+    /** Para no borrar un local que alguien tiene anotado para ir. */
+    boolean existsByBurgerJoint_Id(Long burgerJointId);
 }

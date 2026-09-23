@@ -23,6 +23,26 @@ public class PlacesProperties {
         /** Shared secret required by the manual trigger endpoint. Empty disables the endpoint. */
         private String triggerToken = "";
         private List<String> areas = List.of();
+
+        /**
+         * Rubros que no son un lugar donde comer una hamburguesa. Google igual los
+         * devuelve con el tipo hamburguesería encima: una fábrica de medallones, un
+         * mayorista, una carnicería y un pelotero estaban en la base como locales.
+         */
+        private List<String> excludedPrimaryTypes = List.of();
+
+        /**
+         * Locales sueltos que Google clasifica mal y ninguna regla puede filtrar.
+         * Se anotan acá por su identificador, con el motivo al lado en la configuración.
+         */
+        private List<String> excludedPlaceIds = List.of();
+
+        /**
+         * Hamburgueserías que Google clasifica como otra cosa y que ninguna regla
+         * rescata: "Beggars" figura como bar y "Draken" como cervecería. Van con el
+         * motivo anotado al lado en la configuración.
+         */
+        private List<String> includedPlaceIds = List.of();
         private int maxPagesPerArea = 2;
         private long delayBetweenCallsMs = 500;
     }
