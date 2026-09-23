@@ -51,19 +51,21 @@ public class PlacesSyncService {
         LimpiezaResult limpieza = revisarLoGuardado(cadenas);
 
         for (String area : properties.getSync().getAreas()) {
+          for (String plantilla : properties.getSync().getQueryTemplates()) {
             if (!quotaGuard.canCall(PlacesCallType.SEARCH)) {
                 log.warn("Monthly search quota reached ({}), stopping sync", quotaGuard.limitFor(PlacesCallType.SEARCH));
                 break;
             }
 
+            String consulta = plantilla.replace("{barrio}", area);
             String pageToken = null;
             for (int page = 0; page < properties.getSync().getMaxPagesPerArea(); page++) {
                 PlacesSearchResult result;
                 try {
-                    result = search(area, pageToken);
+                    result = search(consulta, pageToken);
                 } catch (RestClientResponseException ex) {
                     log.warn("Places search failed for {} (HTTP {}), stopping sync: {}",
-                        area, ex.getStatusCode().value(), ex.getMessage());
+                        consulta, ex.getStatusCode().value(), ex.getMessage());
                     return new PlacesSyncReport(created, updated, photosDownloaded, 0,
                         "Google respondió " + ex.getStatusCode().value() + ", se frenó la sincronización");
                 }
@@ -115,6 +117,7 @@ public class PlacesSyncService {
                     break;
                 }
             }
+          }
         }
 
         MissingPhotosResult missing = fillMissingPhotos();
@@ -423,9 +426,9 @@ public class PlacesSyncService {
         return sinAcentos.toLowerCase(Locale.ROOT).replaceAll("\\s+", " ").trim();
     }
 
-    private PlacesSearchResult search(String area, String pageToken) {
+    private PlacesSearchResult search(String consulta, String pageToken) {
         pause();
-        PlacesSearchResult result = placesClient.searchText("hamburguesería en " + area + ", Buenos Aires", pageToken);
+        PlacesSearchResult result = placesClient.searchText(consulta, pageToken);
         quotaGuard.record(PlacesCallType.SEARCH);
         return result;
     }

@@ -84,6 +84,15 @@ app:
       # un lugar donde sentarse a comer una. Los cinco salieron de la base: una fábrica
       # de salchichas, un mayorista de medallones, una carnicería, un pelotero con
       # cantina y una distribuidora.
+      # Cada forma de preguntar es una búsqueda aparte, con su propio tope de sesenta
+      # resultados, y Google contesta distinto según cómo se le pregunte. Sumar las
+      # cuatro es lo que amplía la cobertura: en Palermo pasa de 38 locales a 92, y en
+      # Mataderos de 26 a 80.
+      query-templates:
+        - "hamburguesería en {barrio}, Buenos Aires"
+        - "hamburguesas en {barrio}, Buenos Aires"
+        - "smash burger en {barrio}, Buenos Aires"
+        - "burgers en {barrio}, Buenos Aires"
       excluded-primary-types:
         - manufacturer
         - wholesaler
