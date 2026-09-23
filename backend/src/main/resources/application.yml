@@ -90,11 +90,20 @@ app:
         - butcher_shop
         - indoor_playground
         - food_store
+        - store
       # Fichas que Google tiene mal cargadas y ninguna regla puede filtrar.
       excluded-place-ids:
         # "Myc La dimensión 3d": figura como gastropub con hamburguesas, pero el sitio
         # que declara es un local de impresión 3D.
         - ChIJY3FewTLLvJURBCPfAV6IANY
+        # Los tres de abajo entraban porque el nombre menciona hamburguesas, pero el
+        # nombre mismo dice que son otra cosa: un menú mezclado, no una hamburguesería.
+        # "La Estación - Abasto - Pizza, Birra & Burger": pizzería.
+        - ChIJc3k2U4rKvJUR1Xk2NFXPBPI
+        # "La Estación - Flores - Pizza, Birra & Burger": pizzería.
+        - ChIJc1mB_JDJvJURy5X3-xm8TcM
+        # "Uff! Que Sabroso": empanadas, arepas, tequeños y hamburguesas, entre otras.
+        - ChIJm8NqyRnLvJURnT9V4zyhMXk
       # Hamburgueserías que Google clasifica como otra cosa y que ninguna regla rescata.
       # Entran acá solo si el local es una hamburguesería de hecho, no un bar que además
       # vende hamburguesas.
