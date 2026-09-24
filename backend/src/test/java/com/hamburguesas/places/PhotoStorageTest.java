@@ -80,4 +80,40 @@ class PhotoStorageTest {
         assertThat(storage.save("c", new byte[] { (byte) 0xFF, (byte) 0xD8 })).isNull();
         assertThat(Files.exists(dir.resolve("c.jpg"))).isFalse();
     }
+
+    /**
+     * El nombre del archivo lo escribe quien pide la foto —viene de la URL— así que
+     * puede intentar salirse del directorio.
+     *
+     * Con barras no llega a ningún lado: sanitize() las convierte en guión bajo, así que
+     * "../secreto.yml" termina siendo el archivo ".._secreto.yml" del propio directorio.
+     * El punto en cambio tiene que pasar, porque hace falta para la extensión, y por eso
+     * un ".." pelado sobrevive entero y sube un nivel. Eso es lo que corta esta
+     * comprobación; antes lo único que lo frenaba era que Spring rechaza esos segmentos
+     * antes de llegar acá, una protección que no es de este código.
+     */
+    @Test
+    void unNombreQueSaleDelDirectorioNoDevuelveArchivo(@TempDir Path dir) {
+        PhotoStorage storage = storageEn(dir.resolve("fotos"));
+
+        assertThat(storage.resolve("..")).isEmpty();
+    }
+
+    /** Con barras no hace falta cortar nada: quedan tapadas antes de mirar la ruta. */
+    @Test
+    void lasBarrasQuedanTapadasYNoAbrenRutas(@TempDir Path dir) {
+        Path fotos = dir.toAbsolutePath().normalize();
+
+        assertThat(storageEn(dir).resolve("../secreto.yml"))
+            .contains(fotos.resolve(".._secreto.yml"));
+        assertThat(storageEn(dir).resolve("sub/otra.jpg"))
+            .contains(fotos.resolve("sub_otra.jpg"));
+    }
+
+    /** Y lo normal sigue funcionando, que es lo que la comprobación no puede romper. */
+    @Test
+    void devuelveElArchivoDeUnNombreComun(@TempDir Path dir) {
+        assertThat(storageEn(dir).resolve("ChIJ123.jpg"))
+            .contains(dir.toAbsolutePath().normalize().resolve("ChIJ123.jpg"));
+    }
 }

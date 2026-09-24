@@ -2,6 +2,7 @@ package com.hamburguesas.service;
 
 import com.hamburguesas.auth.AuthRateLimits;
 import com.hamburguesas.auth.PwnedPasswordChecker;
+import com.hamburguesas.auth.SessionRevoker;
 import com.hamburguesas.auth.VerificationService;
 import com.hamburguesas.dto.EmailOnlyRequest;
 import com.hamburguesas.dto.LoginRequest;
@@ -50,6 +51,7 @@ public class AuthService {
     private static final String CODE_REJECTED = "El código no es válido o venció";
 
     private final UserRepository userRepository;
+    private final SessionRevoker sessionRevoker;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final VerificationService verificationService;
@@ -151,6 +153,16 @@ public class AuthService {
 
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
+
+        // Cambiar la contraseña es lo que hace alguien que sospecha que le entraron, así
+        // que tiene que echar al que entró. Sin esto no echaba a nadie: el refresh token
+        // dura treinta días y se renueva solo, así que una sesión robada sobrevivía a la
+        // única maniobra que existe para recuperar la cuenta.
+        int cerradas = sessionRevoker.revokeAllFor(user);
+        if (cerradas > 0) {
+            log.info("Se cerraron {} sesiones al cambiar la contraseña del usuario {}",
+                cerradas, user.getId());
+        }
 
         // No token here: whoever reset the password still has to log in with it, so a
         // stolen code on its own does not hand over a live session.

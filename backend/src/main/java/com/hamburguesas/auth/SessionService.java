@@ -110,11 +110,6 @@ public class SessionService {
         });
     }
 
-    @Transactional
-    public void revokeEverySessionOf(Long userId) {
-        userRepository.findById(userId).ifPresent(sessionRevoker::revokeAllFor);
-    }
-
     /**
      * Expired rows cannot authorise anything, so they are only a growing table and a
      * pile of hashes worth stealing.

@@ -22,8 +22,8 @@ public class PlacePhotoController {
 
     @GetMapping("/{fileName}")
     public ResponseEntity<Resource> get(@PathVariable String fileName) {
-        var path = photoStorage.resolve(fileName);
-        if (!Files.isRegularFile(path)) {
+        var path = photoStorage.resolve(fileName).orElse(null);
+        if (path == null || !Files.isRegularFile(path)) {
             return ResponseEntity.notFound().build();
         }
 

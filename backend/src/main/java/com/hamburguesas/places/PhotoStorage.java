@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 /**
  * Stores Google photos on disk once, at sync time. Serving them ourselves keeps the API key
@@ -51,8 +52,29 @@ public class PhotoStorage {
         }
     }
 
-    public Path resolve(String fileName) {
-        return Paths.get(properties.getPhotos().getDirectory()).resolve(sanitize(fileName));
+    /**
+     * El archivo de esa foto, o vacío si el nombre apunta afuera del directorio.
+     *
+     * El nombre viene de la URL —/api/place-photos/{fileName}— así que lo escribe quien
+     * pide. sanitize() tapa las barras, pero deja pasar el punto porque hace falta para
+     * la extensión, y con eso ".." sobrevive entero. Lo único que frenaba un
+     * /api/place-photos/../../application.yml era que Spring rechaza esos segmentos
+     * antes de llegar acá: una protección que no es de este código y que una versión o
+     * una configuración distinta puede aflojar.
+     *
+     * Así que se comprueba acá, que es donde se abre el archivo: se normaliza la ruta y
+     * se exige que siga colgando del directorio de fotos.
+     */
+    public Optional<Path> resolve(String fileName) {
+        Path directorio = Paths.get(properties.getPhotos().getDirectory())
+            .toAbsolutePath().normalize();
+        Path archivo = directorio.resolve(sanitize(fileName)).normalize();
+
+        if (!archivo.startsWith(directorio)) {
+            log.warn("Se pidió una foto con un nombre que apunta afuera del directorio");
+            return Optional.empty();
+        }
+        return Optional.of(archivo);
     }
 
     /** Place ids are opaque Google strings, so strip anything that could escape the directory. */

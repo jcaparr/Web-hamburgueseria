@@ -8,6 +8,7 @@ import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.text.Normalizer;
 import java.util.Locale;
@@ -107,12 +108,26 @@ public class PlacesClient {
          return place == null ? null : bestPhotoName(place);
      }
 
+    /**
+     * La clave va en el header, igual que en las otras dos llamadas.
+     *
+     * Antes viajaba en la query string, y de ahí saltaba al log: el único error que se
+     * atrapa al bajar una foto es el de respuesta HTTP, así que un corte de red tira una
+     * ResourceAccessException que nadie agarra, y su mensaje es
+     * "I/O error on GET request for <URI completa>". Un timeout alcanzaba para dejar la
+     * clave escrita en los logs del servidor.
+     *
+     * El nombre de la foto se arma aparte y no como plantilla de URI: trae barras
+     * adentro —"places/ChIJ.../photos/AXQ..."— y expandirlo las escaparía a %2F,
+     * dejando una ruta que Google no reconoce.
+     */
     public byte[] downloadPhoto(String photoName) {
-        String uri = "https://places.googleapis.com/v1/%s/media?maxWidthPx=%d&key=%s"
-            .formatted(photoName, properties.getPhotos().getMaxWidthPx(), properties.getApiKey());
+        URI uri = URI.create("https://places.googleapis.com/v1/%s/media?maxWidthPx=%d"
+            .formatted(photoName, properties.getPhotos().getMaxWidthPx()));
 
         return restClient.get()
             .uri(uri)
+            .header("X-Goog-Api-Key", properties.getApiKey())
             .retrieve()
             .body(byte[].class);
     }
