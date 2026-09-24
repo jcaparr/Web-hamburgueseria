@@ -5,6 +5,7 @@ import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.ModoDeViaje;
 import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.RatingRepository;
+import com.hamburguesas.repository.SavedTourRepository;
 import com.hamburguesas.repository.WishlistRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,10 @@ import java.util.List;
 import static com.hamburguesas.model.ModoDeViaje.A_PIE;
 import static com.hamburguesas.model.ModoDeViaje.EN_AUTO;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -35,6 +39,7 @@ class TourServiceTest {
     private BurgerJointRepository burgerJointRepository;
     private RatingRepository ratingRepository;
     private WishlistRepository wishlistRepository;
+    private SavedTourRepository savedTourRepository;
     private TourService service;
 
     @BeforeEach
@@ -42,7 +47,9 @@ class TourServiceTest {
         burgerJointRepository = mock(BurgerJointRepository.class);
         ratingRepository = mock(RatingRepository.class);
         wishlistRepository = mock(WishlistRepository.class);
-        service = new TourService(burgerJointRepository, ratingRepository, wishlistRepository);
+        savedTourRepository = mock(SavedTourRepository.class);
+        service = new TourService(
+            burgerJointRepository, ratingRepository, wishlistRepository, savedTourRepository);
     }
 
     /** Un local a tantos kilómetros al sur del punto de partida. */
@@ -65,7 +72,7 @@ class TourServiceTest {
     /** Un pedido corriente: cuatro paradas, sin tope de kilómetros, desde el punto de arriba. */
     private TourService.Pedido desdeElPunto(int cantidad, Double kilometrosMaximos) {
         return new TourService.Pedido(cantidad, kilometrosMaximos, List.of(),
-            LAT, LON, true, true, A_PIE, 1L);
+            LAT, LON, true, true, A_PIE, false, List.of(), 1L);
     }
 
     @Test
@@ -171,7 +178,7 @@ class TourServiceTest {
             local(2, "Boedo", 2, "Boedo"),
             local(3, "Palermo lejos", 3, "Palermo"));
 
-        var pedido = new TourService.Pedido(3, null, List.of("Palermo"), LAT, LON, true, true, A_PIE, 1L);
+        var pedido = new TourService.Pedido(3, null, List.of("Palermo"), LAT, LON, true, true, A_PIE, false, List.of(), 1L);
         TourDto tour = service.armar(pedido, null);
 
         assertThat(tour.paradas()).extracting(p -> p.local().name())
@@ -197,7 +204,7 @@ class TourServiceTest {
         hay(local(1, "Ya fui", 1), local(2, "Nueva", 2));
         when(ratingRepository.idsPuntuadosPor(7L)).thenReturn(List.of(1L));
 
-        var pedido = new TourService.Pedido(2, null, List.of(), LAT, LON, false, true, A_PIE, 1L);
+        var pedido = new TourService.Pedido(2, null, List.of(), LAT, LON, false, true, A_PIE, false, List.of(), 1L);
         TourDto tour = service.armar(pedido, 7L);
 
         assertThat(tour.paradas()).extracting(p -> p.local().name()).containsExactly("Nueva");
@@ -232,7 +239,7 @@ class TourServiceTest {
     void sinCadenasPideLosQueNoSonCadena() {
         when(burgerJointRepository.findByFastFoodFalse()).thenReturn(List.of(local(1, "De barrio", 1)));
 
-        var pedido = new TourService.Pedido(1, null, List.of(), LAT, LON, true, false, A_PIE, 1L);
+        var pedido = new TourService.Pedido(1, null, List.of(), LAT, LON, true, false, A_PIE, false, List.of(), 1L);
 
         assertThat(service.armar(pedido, null).paradas())
             .extracting(p -> p.local().name()).containsExactly("De barrio");
@@ -305,7 +312,7 @@ class TourServiceTest {
         hayDoceBuenasYOchoMalas();
 
         for (long semilla = 0; semilla < 25; semilla++) {
-            var pedido = new TourService.Pedido(1, null, List.of(), null, null, true, true, A_PIE, semilla);
+            var pedido = new TourService.Pedido(1, null, List.of(), null, null, true, true, A_PIE, false, List.of(), semilla);
 
             assertThat(service.armar(pedido, null).paradas().get(0).local().name())
                 .as("semilla %d", semilla)
@@ -325,7 +332,7 @@ class TourServiceTest {
 
         List<String> primeras = new java.util.ArrayList<>();
         for (long semilla = 0; semilla < 25; semilla++) {
-            var pedido = new TourService.Pedido(1, null, List.of(), null, null, true, true, A_PIE, semilla);
+            var pedido = new TourService.Pedido(1, null, List.of(), null, null, true, true, A_PIE, false, List.of(), semilla);
             primeras.add(service.armar(pedido, null).paradas().get(0).local().name());
         }
 
@@ -338,7 +345,7 @@ class TourServiceTest {
     @Test
     void laMismaSemillaDaElMismoRecorrido() {
         hayDoceBuenasYOchoMalas();
-        var pedido = new TourService.Pedido(3, null, List.of(), null, null, true, true, A_PIE, 7L);
+        var pedido = new TourService.Pedido(3, null, List.of(), null, null, true, true, A_PIE, false, List.of(), 7L);
 
         assertThat(service.armar(pedido, null).paradas())
             .extracting(p -> p.local().name())
@@ -353,7 +360,7 @@ class TourServiceTest {
     @Test
     void sinUbicacionElPrimerTramoNoSuma() {
         hay(local(1, "Una", 1), local(2, "Dos", 2));
-        var pedido = new TourService.Pedido(2, null, List.of(), null, null, true, true, A_PIE, 1L);
+        var pedido = new TourService.Pedido(2, null, List.of(), null, null, true, true, A_PIE, false, List.of(), 1L);
 
         TourDto tour = service.armar(pedido, null);
 
@@ -398,7 +405,7 @@ class TourServiceTest {
 
     private TourService.Pedido enAuto(int cantidad, Double kilometrosMaximos) {
         return new TourService.Pedido(cantidad, kilometrosMaximos, List.of(),
-            LAT, LON, true, true, EN_AUTO, 1L);
+            LAT, LON, true, true, EN_AUTO, false, List.of(), 1L);
     }
 
     /**
@@ -451,5 +458,171 @@ class TourServiceTest {
 
         assertThat(service.armar(enAuto(4, 4.0), null).aviso())
             .isEqualTo("En auto 4 km entran 2 paradas");
+    }
+
+    private List<Long> idsDe(TourDto tour) {
+        return tour.paradas().stream().map(p -> p.local().id()).sorted().toList();
+    }
+
+    /** Cinco locales en fila, que dan para varios recorridos distintos de tres paradas. */
+    private void hayCinco() {
+        hay(local(1, "Una", 1), local(2, "Dos", 2), local(3, "Tres", 3),
+            local(4, "Cuatro", 4), local(5, "Cinco", 5));
+    }
+
+    /**
+     * Pedir otro, y otro, tiene que proponer uno nuevo cada vez.
+     *
+     * Con la ubicación puesta antes salía siempre el mismo: la primera parada era la más
+     * cercana, y desde un punto fijo esa no cambia nunca, así que el resto venía detrás
+     * igual. La variedad no sale de sortear —el recorrido que se propone sigue siendo el
+     * mejor posible— sino de descartar lo ya propuesto: la pantalla manda lo que tiene, y
+     * el que sale arranca en otro lado.
+     */
+    @Test
+    void pedirOtroUnaYOtraVezProponeUnoNuevoCadaVez() {
+        hayCinco();
+
+        List<List<Long>> salieron = new java.util.ArrayList<>();
+
+        for (int vuelta = 0; vuelta < 3; vuelta++) {
+            var pedido = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
+                A_PIE, false, List.copyOf(salieron), 1L);
+            salieron.add(idsDe(service.armar(pedido, null)));
+        }
+
+        assertThat(salieron).doesNotHaveDuplicates().hasSize(3);
+    }
+
+    /**
+     * Y el que está en pantalla no puede volver a salir: la pantalla manda sus ids, y con
+     * eso "armar otro" arma otro de verdad y no uno que tal vez sea el mismo.
+     */
+    @Test
+    void noRepiteElRecorridoQueEstaEnPantalla() {
+        hayCinco();
+        var primero = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
+            A_PIE, false, List.of(), 1L);
+        List<Long> enPantalla = idsDe(service.armar(primero, null));
+
+        // La misma semilla: sin la exclusión saldría exactamente el mismo.
+        var otro = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
+            A_PIE, false, List.of(enPantalla), 1L);
+
+        assertThat(idsDe(service.armar(otro, null))).isNotEqualTo(enPantalla);
+    }
+
+    /** Un recorrido guardado tampoco se propone de nuevo, si se pidió no repetirlos. */
+    @Test
+    void noProponeUnRecorridoQueYaEstaGuardado() {
+        hayCinco();
+        var pedido = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
+            A_PIE, false, List.of(), 1L);
+        List<Long> yaGuardado = idsDe(service.armar(pedido, null));
+        guardadoCon(yaGuardado);
+
+        var evitando = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
+            A_PIE, true, List.of(), 1L);
+
+        assertThat(idsDe(service.armar(evitando, 7L))).isNotEqualTo(yaGuardado);
+    }
+
+    /** Sin pedirlo, en cambio, los guardados no molestan: puede repetirse uno a propósito. */
+    @Test
+    void sinPedirloLosGuardadosNoSeMiran() {
+        hayCinco();
+        var pedido = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
+            A_PIE, false, List.of(), 1L);
+        List<Long> yaGuardado = idsDe(service.armar(pedido, null));
+        guardadoCon(yaGuardado);
+
+        assertThat(idsDe(service.armar(pedido, 7L))).isEqualTo(yaGuardado);
+        verify(savedTourRepository, never()).findByUser_IdOrderByCreatedAtDesc(any());
+    }
+
+    /** Sin sesión no hay recorridos guardados que mirar, y no se le pregunta a la base. */
+    @Test
+    void sinSesionNoSeMiranLosGuardados() {
+        hayCinco();
+        var pedido = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
+            A_PIE, true, List.of(), 1L);
+
+        service.armar(pedido, null);
+
+        verify(savedTourRepository, never()).findByUser_IdOrderByCreatedAtDesc(any());
+    }
+
+    /**
+     * Cuando ya no queda ninguno nuevo se devuelve uno repetido, pero diciéndolo: con tres
+     * hamburgueserías y tres paradas hay un solo recorrido posible, y guardarlo agota el
+     * barrio. Devolver vacío sería peor: la pantalla se quedaría sin nada que mostrar.
+     */
+    @Test
+    void cuandoNoQuedaNingunoNuevoLoDice() {
+        hay(local(1, "Una", 1), local(2, "Dos", 2), local(3, "Tres", 3));
+        var pedido = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
+            A_PIE, true, List.of(), 1L);
+        guardadoCon(List.of(1L, 2L, 3L));
+
+        TourDto tour = service.armar(pedido, 7L);
+
+        assertThat(tour.paradas()).hasSize(3);
+        assertThat(tour.aviso())
+            .isEqualTo("Ya recorriste todo lo que entra con estos filtros: este se repite");
+    }
+
+    /**
+     * Dos recorridos son el mismo cuando pasan por los mismos locales, sin importar el
+     * orden: las mismas tres paradas caminadas al revés son la misma salida.
+     */
+    @Test
+    void elMismoRecorridoAlRevesCuentaComoElMismo() {
+        hay(local(1, "Una", 1), local(2, "Dos", 2), local(3, "Tres", 3));
+        guardadoCon(List.of(3L, 2L, 1L));
+
+        var pedido = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
+            A_PIE, true, List.of(), 1L);
+
+        assertThat(service.armar(pedido, 7L).aviso())
+            .isEqualTo("Ya recorriste todo lo que entra con estos filtros: este se repite");
+    }
+
+    /** Un recorrido guardado con esos locales, como lo devolvería la base. */
+    private void guardadoCon(List<Long> ids) {
+        com.hamburguesas.model.SavedTour tour = com.hamburguesas.model.SavedTour.builder()
+            .id(1L)
+            .stops(ids.stream().map(id -> com.hamburguesas.model.SavedTourStop.builder()
+                .burgerJoint(BurgerJoint.builder().id(id).build())
+                .build()).toList())
+            .build();
+
+        when(savedTourRepository.findByUser_IdOrderByCreatedAtDesc(7L)).thenReturn(List.of(tour));
+    }
+
+    /**
+     * Mandando solo el último, pedir otro alternaba entre dos recorridos.
+     *
+     * El nuevo excluía al que estaba en pantalla, y el siguiente volvía al primero porque
+     * ya no estaba prohibido: A, B, A, B. Por eso la exclusión es acumulativa, y este test
+     * afirma justamente lo que antes fallaba.
+     */
+    @Test
+    void mandandoSoloElUltimoVolveriaAAlternarEntreDos() {
+        hayCinco();
+
+        var primera = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
+            A_PIE, false, List.of(), 1L);
+        List<Long> a = idsDe(service.armar(primera, null));
+
+        var segunda = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
+            A_PIE, false, List.of(a), 1L);
+        List<Long> b = idsDe(service.armar(segunda, null));
+
+        // Con los dos, el tercero tiene que ser uno nuevo y no volver a "a".
+        var tercera = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
+            A_PIE, false, List.of(a, b), 1L);
+        List<Long> c = idsDe(service.armar(tercera, null));
+
+        assertThat(c).isNotEqualTo(a).isNotEqualTo(b);
     }
 }

@@ -89,9 +89,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/burger-joints/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/ranking/general").permitAll()
-                // El tour se arma sin sesión. Con sesión lo único que cambia es poder
-                // dejar afuera las que esa persona ya puntuó.
-                .requestMatchers(HttpMethod.GET, "/api/tours/**").permitAll()
+                // Armar un tour y ver los barrios funciona sin sesión. Lo que cuelga del
+                // perfil —los recorridos guardados— no: va por abajo, a authenticated().
+                // Por eso los dos caminos se nombran enteros y no con /**.
+                .requestMatchers(HttpMethod.GET, "/api/tours", "/api/tours/barrios").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/place-photos/**").permitAll()
                 // Protected by its own X-Sync-Token header, not by user JWT auth (see PlacesSyncController).
                 .requestMatchers("/api/admin/places-sync/**").permitAll()

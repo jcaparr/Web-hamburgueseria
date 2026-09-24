@@ -6,7 +6,7 @@ import { JointPhoto } from '../components/JointPhoto'
 import { LoadError } from '../components/LoadError'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { useAuth } from '../context/AuthContext'
-import type { Tour as TourRecorrido } from '../types'
+import type { SavedTour, Tour as TourRecorrido } from '../types'
 import { shortAddress } from '../utils/address'
 import { routeUrl } from '../utils/maps'
 
@@ -21,6 +21,14 @@ const KILOMETROS = {
   A_PIE: [1, 2, 3, 5, 8, 12],
   EN_AUTO: [5, 10, 20, 30, 50, 80],
 }
+
+/**
+ * Cuántos recorridos ya propuestos se le recuerdan al servidor.
+ *
+ * Van todos para que cada vuelta proponga uno nuevo, pero viajan en la URL, así que la
+ * lista no puede crecer sin fin. Veinte son más recorridos de los que nadie pide seguidos.
+ */
+const RECORDAR = 20
 
 type Modo = 'A_PIE' | 'EN_AUTO'
 type Ubicacion = { lat: number; lon: number }
@@ -43,6 +51,13 @@ export function Tour() {
   const [tour, setTour] = useState<TourRecorrido | null>(null)
   const [armando, setArmando] = useState(false)
   const [error, setError] = useState<unknown>(null)
+
+  // Los que ya se propusieron en esta vuelta, cada uno como sus ids separados por coma.
+  // Con solo el último, pedir otro alternaba entre dos.
+  const [propuestos, setPropuestos] = useState<string[]>([])
+  const [evitarGuardados, setEvitarGuardados] = useState(true)
+  const [guardando, setGuardando] = useState(false)
+  const [guardado, setGuardado] = useState<SavedTour | null>(null)
 
   useEffect(() => {
     apiClient
@@ -87,8 +102,8 @@ export function Tour() {
           incluirVisitadas,
           conCadenas,
           modo,
-          // Sin esto, el botón devolvería siempre el mismo recorrido.
-          semilla: Math.floor(Math.random() * 1_000_000),
+          evitarGuardados: user ? evitarGuardados : false,
+          distintoDe: propuestos,
         },
         // Los barrios van repetidos —barrios=Palermo&barrios=Boedo— y no separados por
         // comas, que es como los espera Spring.
@@ -97,9 +112,31 @@ export function Tour() {
       .then(({ data }) => {
         setTour(data)
         setError(null)
+        setGuardado(null)
+        if (data.paradas.length > 0) {
+          const ids = data.paradas.map((p) => p.local.id).join('-')
+          setPropuestos((previos) => [...previos, ids].slice(-RECORDAR))
+        }
       })
       .catch(setError)
       .finally(() => setArmando(false))
+  }
+
+  function guardar() {
+    if (!tour) return
+
+    setGuardando(true)
+    apiClient
+      .post<SavedTour>('/tours', {
+        paradas: tour.paradas.map((p) => p.local.id),
+        modo,
+      })
+      .then(({ data }) => {
+        setGuardado(data)
+        setError(null)
+      })
+      .catch(setError)
+      .finally(() => setGuardando(false))
   }
 
   function alternarBarrio(barrio: string) {
@@ -234,15 +271,27 @@ export function Tour() {
         </label>
 
         {user && (
-          <label className="flex cursor-pointer items-center gap-3 text-sm">
-            <input
-              type="checkbox"
-              className="toggle toggle-sm toggle-secondary shrink-0"
-              checked={incluirVisitadas}
-              onChange={(e) => setIncluirVisitadas(e.target.checked)}
-            />
-            <span>Incluir las que ya puntuaste</span>
-          </label>
+          <>
+            <label className="flex cursor-pointer items-center gap-3 text-sm">
+              <input
+                type="checkbox"
+                className="toggle toggle-sm toggle-secondary shrink-0"
+                checked={incluirVisitadas}
+                onChange={(e) => setIncluirVisitadas(e.target.checked)}
+              />
+              <span>Incluir las que ya puntuaste</span>
+            </label>
+
+            <label className="flex cursor-pointer items-center gap-3 text-sm">
+              <input
+                type="checkbox"
+                className="toggle toggle-sm toggle-secondary shrink-0"
+                checked={evitarGuardados}
+                onChange={(e) => setEvitarGuardados(e.target.checked)}
+              />
+              <span>No repetir un recorrido que ya guardé</span>
+            </label>
+          </>
         )}
 
         <button
@@ -258,7 +307,17 @@ export function Tour() {
       {error ? (
         <LoadError error={error} onRetry={armar} />
       ) : (
-        tour && <Recorrido tour={tour} enlace={enlace} enAuto={modo === 'EN_AUTO'} />
+        tour && (
+          <Recorrido
+            tour={tour}
+            enlace={enlace}
+            enAuto={modo === 'EN_AUTO'}
+            puedeGuardar={Boolean(user)}
+            guardando={guardando}
+            guardado={guardado}
+            onGuardar={guardar}
+          />
+        )
       )}
     </div>
   )
@@ -268,10 +327,18 @@ function Recorrido({
   tour,
   enlace,
   enAuto,
+  puedeGuardar,
+  guardando,
+  guardado,
+  onGuardar,
 }: {
   tour: TourRecorrido
   enlace: string
   enAuto: boolean
+  puedeGuardar: boolean
+  guardando: boolean
+  guardado: SavedTour | null
+  onGuardar: () => void
 }) {
   if (tour.paradas.length === 0) {
     return (
@@ -341,6 +408,17 @@ function Recorrido({
           </li>
         ))}
       </ol>
+
+      {puedeGuardar && (
+        <button
+          type="button"
+          onClick={onGuardar}
+          disabled={guardando || guardado !== null}
+          className="btn btn-outline btn-block"
+        >
+          {guardado ? 'Guardado en tu perfil' : guardando ? 'Guardando...' : 'Guardar este recorrido'}
+        </button>
+      )}
 
       <a
         href={enlace}

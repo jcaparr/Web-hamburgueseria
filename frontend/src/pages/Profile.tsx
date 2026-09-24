@@ -4,9 +4,10 @@ import { apiClient } from '../api/client'
 import { LoadError } from '../components/LoadError'
 import { JointPhoto } from '../components/JointPhoto'
 import { IconChevronRight, IconMedal, IconSettings, IconUser } from '../components/icons'
+import { SavedTourCard } from '../components/SavedTourCard'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { useAuth } from '../context/AuthContext'
-import type { BurgerJoint, MyRating, ProfileStats } from '../types'
+import type { BurgerJoint, MyRating, ProfileStats, SavedTour } from '../types'
 import { isSessionExpired } from '../utils/errors'
 import { relativeDate } from '../utils/relativeDate'
 
@@ -16,6 +17,8 @@ export function Profile() {
   const [stats, setStats] = useState<ProfileStats | null>(null)
   const [ratings, setRatings] = useState<MyRating[]>([])
   const [favorites, setFavorites] = useState<BurgerJoint[]>([])
+  const [tours, setTours] = useState<SavedTour[]>([])
+  const [borrando, setBorrando] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
   const [attempt, setAttempt] = useState(0)
@@ -26,11 +29,13 @@ export function Profile() {
       apiClient.get<ProfileStats>('/profile/stats'),
       apiClient.get<MyRating[]>('/profile/ratings'),
       apiClient.get<BurgerJoint[]>('/wishlist'),
+      apiClient.get<SavedTour[]>('/tours/mios'),
     ])
-      .then(([statsRes, ratingsRes, wishlistRes]) => {
+      .then(([statsRes, ratingsRes, wishlistRes, toursRes]) => {
         setStats(statsRes.data)
         setRatings(ratingsRes.data)
         setFavorites(wishlistRes.data.slice(0, 5))
+        setTours(toursRes.data)
       })
       .catch((err) => {
         if (isSessionExpired(err)) navigate('/login')
@@ -40,6 +45,20 @@ export function Profile() {
   }, [user, navigate, attempt])
 
   const recentRatings = ratings.slice(0, 3)
+
+  function borrarTour(id: number) {
+    setBorrando(id)
+    apiClient
+      .delete(`/tours/${id}`)
+      // Se saca de la lista acá en vez de volver a pedirla: es una fila menos, y pedir
+      // todo el perfil de nuevo haría parpadear lo que no cambió.
+      .then(() => setTours((previos) => previos.filter((tour) => tour.id !== id)))
+      .catch((err) => {
+        if (isSessionExpired(err)) navigate('/login')
+        else setError(err)
+      })
+      .finally(() => setBorrando(null))
+  }
 
   // RequireAuth already guarantees this, but the compiler cannot see through it and
   // the name is read below.
@@ -163,6 +182,31 @@ export function Profile() {
         ) : (
           !loading && !error && <p className="text-sm text-base-content/60">Todavía no guardaste ninguna hamburguesería.</p>
         )}
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-sm font-bold">Mis recorridos</h2>
+          <Link to="/tour" className="flex items-center gap-1 text-xs font-semibold text-primary">
+            Armar otro
+            <IconChevronRight size={14} />
+          </Link>
+        </div>
+        <div className="flex flex-col gap-3">
+          {tours.map((tour) => (
+            <SavedTourCard
+              key={tour.id}
+              tour={tour}
+              onBorrar={borrarTour}
+              borrando={borrando === tour.id}
+            />
+          ))}
+          {!loading && tours.length === 0 && (
+            <p className="text-sm text-base-content/60">
+              Todavía no guardaste ningún recorrido.
+            </p>
+          )}
+        </div>
       </section>
 
       <section className="flex flex-col gap-3">

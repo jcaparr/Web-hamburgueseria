@@ -6,8 +6,10 @@ import com.hamburguesas.dto.TourStopDto;
 import com.hamburguesas.geo.Distancias;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.ModoDeViaje;
+import com.hamburguesas.model.SavedTour;
 import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.RatingRepository;
+import com.hamburguesas.repository.SavedTourRepository;
 import com.hamburguesas.repository.WishlistRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Arma un recorrido para salir a comer hamburguesas.
@@ -33,6 +36,12 @@ import java.util.Set;
  * más corto que existe —encontrar ese es el problema del viajante, que no tiene solución
  * rápida— pero con cuatro o cinco paradas queda a un puñado de cuadras del mejor y se
  * calcula al instante.
+ *
+ * Pedirlo de nuevo tiene que proponer otro, y no cualquiera: ni el que está en pantalla
+ * ni, si así se pidió, uno que esta persona ya haya guardado. Cuando el que sale es uno de
+ * esos, se vuelve a armar sin su primera parada: obligado a arrancar en otro lado, pasa
+ * por otro lado. Así el segundo recorrido sigue siendo el mejor posible de los que
+ * quedan, en vez de uno sorteado.
  */
 @Service
 @RequiredArgsConstructor
@@ -55,12 +64,23 @@ public class TourService {
      */
     private static final int CANDIDATAS_PARA_EMPEZAR = 12;
 
+    /**
+     * Cuántas veces se intenta antes de resignarse a repetir un recorrido.
+     *
+     * Cada intento descarta la primera parada del anterior, así que doce alcanzan para
+     * recorrer bastante del barrio antes de rendirse. El tope existe porque con pocas
+     * hamburgueserías se acaban las combinaciones: con tres locales y tres paradas hay un
+     * solo recorrido posible, y guardado ese, no queda ninguno nuevo que ofrecer.
+     */
+    private static final int INTENTOS = 12;
+
     /** La nota que se le supone a una hamburguesería que todavía nadie puntuó. */
     private static final double SIN_RESENIAS = 3.0;
 
     private final BurgerJointRepository burgerJointRepository;
     private final RatingRepository ratingRepository;
     private final WishlistRepository wishlistRepository;
+    private final SavedTourRepository savedTourRepository;
 
     public record Pedido(
         int cantidad,
@@ -71,6 +91,22 @@ public class TourService {
         boolean incluirVisitadas,
         boolean conCadenas,
         ModoDeViaje modo,
+        /** No proponer un recorrido que esta persona ya tenga guardado. */
+        boolean evitarGuardados,
+        /**
+         * Los recorridos que ya se propusieron en esta vuelta, cada uno por los ids de sus
+         * paradas.
+         *
+         * Es acumulativo y no solo el último a propósito: con uno solo, pedir otro
+         * alternaba entre dos —el nuevo excluía al viejo, y el siguiente volvía al viejo
+         * porque ya no estaba prohibido—. Mandándolos todos, cada vuelta propone uno que
+         * no salió todavía.
+         */
+        List<List<Long>> distintoDe,
+        /**
+         * Fija el sorteo. La pantalla no la manda —quiere algo distinto cada vez— y los
+         * tests sí, que es lo que los hace afirmables.
+         */
         Long semilla
     ) {
         boolean sabeDondeEsta() {
@@ -91,8 +127,90 @@ public class TourService {
                 "No hay hamburgueserías que cumplan con lo que pediste");
         }
 
-        List<BurgerJoint> paradas = elegirParadas(pedido, candidatos, cantidad);
-        return comoTour(pedido, paradas, candidatos.size(), cantidad, userId);
+        Set<Set<Long>> prohibidos = combinacionesProhibidas(pedido, userId);
+
+        // El primer intento es el mejor recorrido posible, sin nada descartado. Si resulta
+        // ser uno de los prohibidos se vuelve a armar sin su primera parada: sacarla
+        // obliga a arrancar en otro lado, y el recorrido que sale ya no puede ser el mismo
+        // conjunto, porque le falta justamente esa.
+        List<BurgerJoint> disponibles = candidatos;
+        List<BurgerJoint> elMejor = null;
+        List<BurgerJoint> paradas = List.of();
+        boolean repetido = false;
+
+        for (int intento = 0; intento < INTENTOS; intento++) {
+            paradas = elegirParadas(pedido, disponibles, cantidad, semillaDe(pedido, intento));
+            if (elMejor == null) {
+                elMejor = paradas;
+            }
+
+            // Descartar paradas puede dejar el recorrido más corto que el primero. Uno más
+            // corto no es una alternativa: quien pidió cuatro paradas quiere cuatro, y
+            // recibir tres sin explicación se ve como una falla. Antes que eso se devuelve
+            // el primero, repetido, que al menos está completo y se puede decir por qué.
+            if (paradas.size() < elMejor.size()) {
+                paradas = elMejor;
+                repetido = true;
+                break;
+            }
+
+            repetido = prohibidos.contains(idsDe(paradas));
+            if (!repetido) {
+                break;
+            }
+
+            Long primera = paradas.get(0).getId();
+            disponibles = disponibles.stream()
+                .filter(b -> !primera.equals(b.getId()))
+                .toList();
+            if (disponibles.isEmpty()) {
+                paradas = elMejor;
+                break;
+            }
+        }
+
+        return comoTour(pedido, paradas, candidatos.size(), cantidad, userId, repetido);
+    }
+
+    /**
+     * La semilla de cada intento.
+     *
+     * Sin semilla en el pedido se sortea de nuevo en cada llamada, que es lo que hace que
+     * la pantalla proponga algo distinto cada vez. Con semilla el recorrido es siempre el
+     * mismo, y los intentos siguen siendo distintos entre sí.
+     */
+    private static long semillaDe(Pedido pedido, int intento) {
+        long base = pedido.semilla() != null ? pedido.semilla() : new Random().nextLong();
+        return base + intento;
+    }
+
+    /** Los recorridos que esta vez no se pueden proponer. */
+    private Set<Set<Long>> combinacionesProhibidas(Pedido pedido, Long userId) {
+        Set<Set<Long>> prohibidos = new HashSet<>();
+
+        if (pedido.distintoDe() != null) {
+            pedido.distintoDe().stream()
+                .filter(combinacion -> combinacion != null && !combinacion.isEmpty())
+                .forEach(combinacion -> prohibidos.add(new HashSet<>(combinacion)));
+        }
+
+        if (pedido.evitarGuardados() && userId != null) {
+            for (SavedTour guardado : savedTourRepository.findByUser_IdOrderByCreatedAtDesc(userId)) {
+                prohibidos.add(guardado.idsDeLasParadas());
+            }
+        }
+
+        return prohibidos;
+    }
+
+    /**
+     * Por dónde pasa un recorrido, sin orden.
+     *
+     * Dos recorridos son el mismo cuando pasan por las mismas hamburgueserías: las mismas
+     * cuatro caminadas en otro orden son la misma salida, no una nueva.
+     */
+    private static Set<Long> idsDe(List<BurgerJoint> paradas) {
+        return paradas.stream().map(BurgerJoint::getId).collect(Collectors.toSet());
     }
 
     /** Lo que se puede visitar: con coordenadas, del barrio pedido y todavía sin probar. */
@@ -122,14 +240,13 @@ public class TourService {
     /**
      * Las paradas, en el orden en que conviene hacerlas.
      *
-     * La primera se elige distinto según se sepa o no dónde está quien camina: si lo
-     * dijo, es la que le queda más cerca; si no, se sortea entre las mejor puntuadas. De
-     * ahí en adelante siempre se va a la más cercana de las que quedan, y se corta al
-     * llegar a la cantidad pedida o cuando la próxima no entra en los kilómetros que se
-     * está dispuesto a caminar.
+     * La primera se sortea —entre las más cercanas si se sabe dónde está quien lo pide,
+     * entre las mejor puntuadas si no—, y de ahí en adelante siempre se va a la más
+     * cercana de las que quedan. Se corta al llegar a la cantidad pedida o cuando la
+     * próxima no entra en los kilómetros que se está dispuesto a hacer.
      */
     private List<BurgerJoint> elegirParadas(
-        Pedido pedido, List<BurgerJoint> candidatos, int cantidad
+        Pedido pedido, List<BurgerJoint> candidatos, int cantidad, long semilla
     ) {
         List<BurgerJoint> quedan = new ArrayList<>(candidatos);
         List<BurgerJoint> paradas = new ArrayList<>();
@@ -142,7 +259,7 @@ public class TourService {
             boolean esLaPrimeraSinPunto = paradas.isEmpty() && !pedido.sabeDondeEsta();
 
             BurgerJoint proxima = esLaPrimeraSinPunto
-                ? primeraPorNota(quedan, pedido.semilla())
+                ? primeraPorNota(quedan, semilla)
                 : masCercana(quedan, latitud, longitud);
 
             double tramo = esLaPrimeraSinPunto
@@ -152,7 +269,7 @@ public class TourService {
 
             // El tope no puede dejar el recorrido vacío: si la primera ya queda lejos, se
             // la acepta igual y lo que se ve es un recorrido de una parada, no uno de
-            // ninguna. Caminar hasta la primera es ir, no recorrer.
+            // ninguna. Llegar hasta la primera es ir, no recorrer.
             boolean seVaDeLargo = pedido.kilometrosMaximos() != null
                 && !paradas.isEmpty()
                 && kilometros + tramo > pedido.kilometrosMaximos();
@@ -170,7 +287,7 @@ public class TourService {
         return paradas;
     }
 
-    private BurgerJoint primeraPorNota(List<BurgerJoint> candidatos, Long semilla) {
+    private BurgerJoint primeraPorNota(List<BurgerJoint> candidatos, long semilla) {
         Map<Long, Double> promedios = promedios();
 
         List<BurgerJoint> mejores = new ArrayList<>(candidatos.stream()
@@ -181,7 +298,7 @@ public class TourService {
             .limit(CANDIDATAS_PARA_EMPEZAR)
             .toList());
 
-        Collections.shuffle(mejores, semilla == null ? new Random() : new Random(semilla));
+        Collections.shuffle(mejores, new Random(semilla));
         return mejores.get(0);
     }
 
@@ -200,7 +317,8 @@ public class TourService {
     }
 
     private TourDto comoTour(
-        Pedido pedido, List<BurgerJoint> paradas, int candidatos, int cantidad, Long userId
+        Pedido pedido, List<BurgerJoint> paradas, int candidatos, int cantidad, Long userId,
+        boolean repetido
     ) {
         Set<Long> puntuadas = userId == null
             ? Set.of()
@@ -228,17 +346,21 @@ public class TourService {
         }
 
         return new TourDto(stops, redondear(total), pedido.modo().minutos(total), candidatos,
-            aviso(paradas.size(), cantidad, candidatos, pedido));
+            aviso(paradas.size(), cantidad, candidatos, pedido, repetido));
     }
 
     /**
-     * Por qué salieron menos paradas de las pedidas.
+     * Qué no se pudo cumplir del pedido.
      *
-     * Sin esto, pedir seis y recibir tres se ve como un error de la app. Las dos razones
-     * posibles son que no haya tantas hamburgueserías entre las que elegir o que no
-     * entren en los kilómetros que se está dispuesto a caminar.
+     * Sin esto, pedir seis paradas y recibir tres —o recibir el mismo recorrido de recién—
+     * se ve como un error de la app en vez de como la respuesta que es.
      */
-    private static String aviso(int paradas, int cantidad, int candidatos, Pedido pedido) {
+    private static String aviso(
+        int paradas, int cantidad, int candidatos, Pedido pedido, boolean repetido
+    ) {
+        if (repetido) {
+            return "Ya recorriste todo lo que entra con estos filtros: este se repite";
+        }
         if (paradas >= cantidad) {
             return null;
         }

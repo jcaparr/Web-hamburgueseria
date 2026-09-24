@@ -30,6 +30,17 @@ export interface Tour {
   aviso: string | null
 }
 
+/** Un recorrido que alguien guardó en su perfil. */
+export interface SavedTour {
+  id: number
+  name: string
+  kilometros: number
+  minutos: number
+  modo: 'A_PIE' | 'EN_AUTO'
+  creadoEl: string
+  paradas: TourStop[]
+}
+
 export interface Rating {
   id: number
   userId: number

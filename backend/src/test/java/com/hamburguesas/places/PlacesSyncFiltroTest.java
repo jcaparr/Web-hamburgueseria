@@ -3,6 +3,7 @@ package com.hamburguesas.places;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.RatingRepository;
+import com.hamburguesas.repository.SavedTourRepository;
 import com.hamburguesas.repository.WishlistRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,7 +65,7 @@ class PlacesSyncFiltroTest {
 
         service = new PlacesSyncService(
             properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(),
-            ratingRepository, wishlistRepository,
+            ratingRepository, wishlistRepository, mock(SavedTourRepository.class),
             new FastFoodMarker(repository, properties));
     }
 
