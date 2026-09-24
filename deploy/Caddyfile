@@ -43,9 +43,12 @@
 		# de línea, y partido en varias Caddy lo descarta en silencio.
 		Content-Security-Policy "default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; frame-src https://accounts.google.com/gsi/; connect-src 'self' https://accounts.google.com/gsi/; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; font-src 'self'; img-src 'self' data: https://lh3.googleusercontent.com; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'"
 
-		# Nothing here uses a camera, a microphone or a location, so none of it is
-		# available to a script that gets in.
-		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		# Nada de esto usa cámara, micrófono ni pagos, así que no están disponibles ni
+		# para un script que logre entrar. La ubicación sí: la pantalla de tour la pide
+		# para armar el recorrido desde donde está quien lo pide. Con los paréntesis
+		# vacíos quedaba apagada para todos los orígenes, el nuestro incluido, y "Cerca
+		# mío" no iba a conseguir ubicación nunca en producción.
+		Permissions-Policy "camera=(), microphone=(), geolocation=(self), payment=(), usb=()"
 	}
 
 	log {

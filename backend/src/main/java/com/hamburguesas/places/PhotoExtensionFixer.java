@@ -52,7 +52,10 @@ public class PhotoExtensionFixer {
 
         for (var entrada : porArchivo().entrySet()) {
             String nombreActual = entrada.getKey();
-            Path archivo = photoStorage.resolve(nombreActual);
+            Path archivo = photoStorage.resolve(nombreActual).orElse(null);
+            if (archivo == null) {
+                continue;
+            }
 
             ImageFormat real = formatoDe(archivo);
             if (real == null || real == ImageFormat.porExtension(nombreActual)) {
@@ -60,8 +63,13 @@ public class PhotoExtensionFixer {
             }
 
             String nombreNuevo = sinExtension(nombreActual) + "." + real.extension();
+            Path destino = photoStorage.resolve(nombreNuevo).orElse(null);
+            if (destino == null) {
+                continue;
+            }
+
             try {
-                Files.move(archivo, photoStorage.resolve(nombreNuevo), StandardCopyOption.REPLACE_EXISTING);
+                Files.move(archivo, destino, StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException ex) {
                 log.warn("No se pudo renombrar {}: {}", nombreActual, ex.getMessage());
                 continue;
