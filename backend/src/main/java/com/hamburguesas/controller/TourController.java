@@ -45,7 +45,8 @@ public class TourController {
      * @param latitud           dónde está quien lo pide, si lo compartió.
      * @param kilometrosMaximos cuánto está dispuesto a recorrer en total.
      * @param modo              a pie o en auto, que cambia las vueltas y lo que se tarda.
-     * @param evitarGuardados   no proponer uno que ya esté guardado en el perfil.
+     * @param excluirLasDeMisTours  dejar afuera las hamburgueserías por las que esta
+     *                          persona ya pasó en sus recorridos guardados.
      * @param distintoDe        los recorridos ya propuestos en esta vuelta, cada uno como
      *                          sus ids unidos por guión: distintoDe=1-2-3&distintoDe=2-3-4.
      *                          Van todos y no solo el último porque con uno solo, pedir
@@ -64,13 +65,13 @@ public class TourController {
         @RequestParam(defaultValue = "true") boolean incluirVisitadas,
         @RequestParam(defaultValue = "false") boolean conCadenas,
         @RequestParam(defaultValue = "A_PIE") ModoDeViaje modo,
-        @RequestParam(defaultValue = "true") boolean evitarGuardados,
+        @RequestParam(defaultValue = "true") boolean excluirLasDeMisTours,
         @RequestParam(required = false) List<String> distintoDe,
         @RequestParam(required = false) Long semilla
     ) {
         var pedido = new TourService.Pedido(cantidad, kilometrosMaximos, barrios,
             latitud, longitud, incluirVisitadas, conCadenas, modo,
-            evitarGuardados, comoCombinaciones(distintoDe), semilla);
+            excluirLasDeMisTours, comoCombinaciones(distintoDe), semilla);
 
         return tourService.armar(pedido, CurrentUser.idOrNull());
     }

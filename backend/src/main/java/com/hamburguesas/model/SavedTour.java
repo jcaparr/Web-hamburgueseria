@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Un recorrido que alguien guardó.
@@ -55,13 +53,6 @@ public class SavedTour {
     @OrderBy("position")
     @Builder.Default
     private List<SavedTourStop> stops = new ArrayList<>();
-
-    /** Por dónde pasa, sin orden: es lo que decide si dos recorridos son el mismo. */
-    public Set<Long> idsDeLasParadas() {
-        return stops.stream()
-            .map(stop -> stop.getBurgerJoint().getId())
-            .collect(Collectors.toSet());
-    }
 
     @PrePersist
     void prePersist() {

@@ -512,32 +512,34 @@ class TourServiceTest {
         assertThat(idsDe(service.armar(otro, null))).isNotEqualTo(enPantalla);
     }
 
-    /** Un recorrido guardado tampoco se propone de nuevo, si se pidió no repetirlos. */
+    /**
+     * Las hamburgueserías por las que ya pasó quedan afuera enteras.
+     *
+     * No alcanza con no repetir el mismo recorrido: otra combinación de las de siempre
+     * sigue siendo volver a los mismos lugares, que es justo lo que no se quiere.
+     */
     @Test
-    void noProponeUnRecorridoQueYaEstaGuardado() {
+    void dejaAfueraLasHamburgueseriasDeSusRecorridosGuardados() {
         hayCinco();
-        var pedido = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
-            A_PIE, false, List.of(), 1L);
-        List<Long> yaGuardado = idsDe(service.armar(pedido, null));
-        guardadoCon(yaGuardado);
+        yaPasoPor(List.of(1L, 2L));
 
-        var evitando = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
+        var pedido = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
             A_PIE, true, List.of(), 1L);
 
-        assertThat(idsDe(service.armar(evitando, 7L))).isNotEqualTo(yaGuardado);
+        assertThat(idsDe(service.armar(pedido, 7L))).containsExactly(3L, 4L, 5L);
     }
 
-    /** Sin pedirlo, en cambio, los guardados no molestan: puede repetirse uno a propósito. */
+    /** Sin pedirlo, los recorridos guardados no cambian nada. */
     @Test
     void sinPedirloLosGuardadosNoSeMiran() {
         hayCinco();
+        yaPasoPor(List.of(1L, 2L));
+
         var pedido = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
             A_PIE, false, List.of(), 1L);
-        List<Long> yaGuardado = idsDe(service.armar(pedido, null));
-        guardadoCon(yaGuardado);
 
-        assertThat(idsDe(service.armar(pedido, 7L))).isEqualTo(yaGuardado);
-        verify(savedTourRepository, never()).findByUser_IdOrderByCreatedAtDesc(any());
+        assertThat(idsDe(service.armar(pedido, 7L))).containsExactly(1L, 2L, 3L);
+        verify(savedTourRepository, never()).idsDeLasParadasGuardadasPor(any());
     }
 
     /** Sin sesión no hay recorridos guardados que mirar, y no se le pregunta a la base. */
@@ -549,22 +551,38 @@ class TourServiceTest {
 
         service.armar(pedido, null);
 
-        verify(savedTourRepository, never()).findByUser_IdOrderByCreatedAtDesc(any());
+        verify(savedTourRepository, never()).idsDeLasParadasGuardadasPor(any());
+    }
+
+    /**
+     * Excluidas las que ya recorrió, puede no quedar para armar uno entero. Se dice
+     * cuántas quedaron, que es lo que explica por qué salieron menos paradas.
+     */
+    @Test
+    void siExcluyendoLasDeSusRecorridosQuedanPocasLoDice() {
+        hayCinco();
+        yaPasoPor(List.of(1L, 2L, 3L, 4L));
+
+        var pedido = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
+            A_PIE, true, List.of(), 1L);
+        TourDto tour = service.armar(pedido, 7L);
+
+        assertThat(tour.paradas()).hasSize(1);
+        assertThat(tour.aviso()).isEqualTo("Con esos filtros hay una sola hamburguesería");
     }
 
     /**
      * Cuando ya no queda ninguno nuevo se devuelve uno repetido, pero diciéndolo: con tres
-     * hamburgueserías y tres paradas hay un solo recorrido posible, y guardarlo agota el
-     * barrio. Devolver vacío sería peor: la pantalla se quedaría sin nada que mostrar.
+     * hamburgueserías y tres paradas hay un solo recorrido posible. Devolver vacío sería
+     * peor: la pantalla se quedaría sin nada que mostrar.
      */
     @Test
     void cuandoNoQuedaNingunoNuevoLoDice() {
         hay(local(1, "Una", 1), local(2, "Dos", 2), local(3, "Tres", 3));
         var pedido = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
-            A_PIE, true, List.of(), 1L);
-        guardadoCon(List.of(1L, 2L, 3L));
+            A_PIE, false, List.of(List.of(1L, 2L, 3L)), 1L);
 
-        TourDto tour = service.armar(pedido, 7L);
+        TourDto tour = service.armar(pedido, null);
 
         assertThat(tour.paradas()).hasSize(3);
         assertThat(tour.aviso())
@@ -578,25 +596,16 @@ class TourServiceTest {
     @Test
     void elMismoRecorridoAlRevesCuentaComoElMismo() {
         hay(local(1, "Una", 1), local(2, "Dos", 2), local(3, "Tres", 3));
-        guardadoCon(List.of(3L, 2L, 1L));
-
         var pedido = new TourService.Pedido(3, null, List.of(), LAT, LON, true, true,
-            A_PIE, true, List.of(), 1L);
+            A_PIE, false, List.of(List.of(3L, 2L, 1L)), 1L);
 
-        assertThat(service.armar(pedido, 7L).aviso())
+        assertThat(service.armar(pedido, null).aviso())
             .isEqualTo("Ya recorriste todo lo que entra con estos filtros: este se repite");
     }
 
-    /** Un recorrido guardado con esos locales, como lo devolvería la base. */
-    private void guardadoCon(List<Long> ids) {
-        com.hamburguesas.model.SavedTour tour = com.hamburguesas.model.SavedTour.builder()
-            .id(1L)
-            .stops(ids.stream().map(id -> com.hamburguesas.model.SavedTourStop.builder()
-                .burgerJoint(BurgerJoint.builder().id(id).build())
-                .build()).toList())
-            .build();
-
-        when(savedTourRepository.findByUser_IdOrderByCreatedAtDesc(7L)).thenReturn(List.of(tour));
+    /** Las hamburgueserías por las que esa persona ya pasó en sus recorridos guardados. */
+    private void yaPasoPor(List<Long> ids) {
+        when(savedTourRepository.idsDeLasParadasGuardadasPor(7L)).thenReturn(ids);
     }
 
     /**

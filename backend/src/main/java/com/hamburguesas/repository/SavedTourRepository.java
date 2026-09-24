@@ -23,13 +23,18 @@ public interface SavedTourRepository extends JpaRepository<SavedTour, Long> {
     /** Por id y dueño a la vez: nadie puede borrar el recorrido de otro. */
     Optional<SavedTour> findByIdAndUser_Id(Long id, Long userId);
 
-    /** Para no proponer de nuevo un recorrido que esa persona ya guardó. */
+    /**
+     * Todas las hamburgueserías por las que esa persona ya pasó en sus recorridos.
+     *
+     * Sirve para no volver a mandarla a las mismas: el recorrido nuevo se arma con las
+     * que le quedan, no con otra combinación de las de siempre.
+     */
     @Query("""
-        select stop.burgerJoint.id
+        select distinct stop.burgerJoint.id
         from SavedTourStop stop
-        where stop.tour.id = :tourId
+        where stop.tour.user.id = :userId
         """)
-    List<Long> idsDeLasParadas(@Param("tourId") Long tourId);
+    List<Long> idsDeLasParadasGuardadasPor(@Param("userId") Long userId);
 
     /** Si este local es parte de algún recorrido guardado, la limpieza no lo borra. */
     @Query("""

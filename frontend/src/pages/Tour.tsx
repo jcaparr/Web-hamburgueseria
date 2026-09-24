@@ -55,7 +55,7 @@ export function Tour() {
   // Los que ya se propusieron en esta vuelta, cada uno como sus ids separados por coma.
   // Con solo el último, pedir otro alternaba entre dos.
   const [propuestos, setPropuestos] = useState<string[]>([])
-  const [evitarGuardados, setEvitarGuardados] = useState(true)
+  const [excluirLasDeMisTours, setExcluirLasDeMisTours] = useState(true)
   const [guardando, setGuardando] = useState(false)
   const [guardado, setGuardado] = useState<SavedTour | null>(null)
 
@@ -102,7 +102,7 @@ export function Tour() {
           incluirVisitadas,
           conCadenas,
           modo,
-          evitarGuardados: user ? evitarGuardados : false,
+          excluirLasDeMisTours: user ? excluirLasDeMisTours : false,
           distintoDe: propuestos,
         },
         // Los barrios van repetidos —barrios=Palermo&barrios=Boedo— y no separados por
@@ -286,10 +286,10 @@ export function Tour() {
               <input
                 type="checkbox"
                 className="toggle toggle-sm toggle-secondary shrink-0"
-                checked={evitarGuardados}
-                onChange={(e) => setEvitarGuardados(e.target.checked)}
+                checked={excluirLasDeMisTours}
+                onChange={(e) => setExcluirLasDeMisTours(e.target.checked)}
               />
-              <span>No repetir un recorrido que ya guardé</span>
+              <span>No repetir hamburgueserías de mis recorridos</span>
             </label>
           </>
         )}

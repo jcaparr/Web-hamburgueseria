@@ -6,7 +6,6 @@ import com.hamburguesas.dto.TourStopDto;
 import com.hamburguesas.geo.Distancias;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.ModoDeViaje;
-import com.hamburguesas.model.SavedTour;
 import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.SavedTourRepository;
@@ -91,8 +90,14 @@ public class TourService {
         boolean incluirVisitadas,
         boolean conCadenas,
         ModoDeViaje modo,
-        /** No proponer un recorrido que esta persona ya tenga guardado. */
-        boolean evitarGuardados,
+        /**
+         * Dejar afuera las hamburgueserías por las que esta persona ya pasó en sus
+         * recorridos guardados.
+         *
+         * No es "no repetir el mismo recorrido" sino "no repetir los mismos locales": otra
+         * combinación de las de siempre sigue siendo volver a los mismos lugares.
+         */
+        boolean excluirLasDeMisTours,
         /**
          * Los recorridos que ya se propusieron en esta vuelta, cada uno por los ids de sus
          * paradas.
@@ -117,17 +122,23 @@ public class TourService {
     public TourDto armar(Pedido pedido, Long userId) {
         int cantidad = Math.max(1, Math.min(MAXIMO_DE_PARADAS, pedido.cantidad()));
 
-        Set<Long> visitadas = userId == null || pedido.incluirVisitadas()
-            ? Set.of()
-            : new HashSet<>(ratingRepository.idsPuntuadosPor(userId));
+        // Las que no pueden entrar: las que ya puntuó, si pidió dejarlas afuera, y las de
+        // sus recorridos guardados, si pidió no volver a las mismas.
+        Set<Long> afuera = new HashSet<>();
+        if (userId != null && !pedido.incluirVisitadas()) {
+            afuera.addAll(ratingRepository.idsPuntuadosPor(userId));
+        }
+        if (userId != null && pedido.excluirLasDeMisTours()) {
+            afuera.addAll(savedTourRepository.idsDeLasParadasGuardadasPor(userId));
+        }
 
-        List<BurgerJoint> candidatos = candidatos(pedido, visitadas);
+        List<BurgerJoint> candidatos = candidatos(pedido, afuera);
         if (candidatos.isEmpty()) {
             return new TourDto(List.of(), 0, 0, 0,
                 "No hay hamburgueserías que cumplan con lo que pediste");
         }
 
-        Set<Set<Long>> prohibidos = combinacionesProhibidas(pedido, userId);
+        Set<Set<Long>> prohibidos = combinacionesProhibidas(pedido);
 
         // El primer intento es el mejor recorrido posible, sin nada descartado. Si resulta
         // ser uno de los prohibidos se vuelve a armar sin su primera parada: sacarla
@@ -184,20 +195,20 @@ public class TourService {
         return base + intento;
     }
 
-    /** Los recorridos que esta vez no se pueden proponer. */
-    private Set<Set<Long>> combinacionesProhibidas(Pedido pedido, Long userId) {
+    /**
+     * Los recorridos que esta vez no se pueden proponer.
+     *
+     * Solo los que ya salieron en esta vuelta. Los guardados no hacen falta acá: si se
+     * pidió excluirlos, sus hamburgueserías ya quedaron afuera de los candidatos, y un
+     * recorrido que no puede usarlas tampoco puede repetirlos.
+     */
+    private Set<Set<Long>> combinacionesProhibidas(Pedido pedido) {
         Set<Set<Long>> prohibidos = new HashSet<>();
 
         if (pedido.distintoDe() != null) {
             pedido.distintoDe().stream()
                 .filter(combinacion -> combinacion != null && !combinacion.isEmpty())
                 .forEach(combinacion -> prohibidos.add(new HashSet<>(combinacion)));
-        }
-
-        if (pedido.evitarGuardados() && userId != null) {
-            for (SavedTour guardado : savedTourRepository.findByUser_IdOrderByCreatedAtDesc(userId)) {
-                prohibidos.add(guardado.idsDeLasParadas());
-            }
         }
 
         return prohibidos;
@@ -213,8 +224,8 @@ public class TourService {
         return paradas.stream().map(BurgerJoint::getId).collect(Collectors.toSet());
     }
 
-    /** Lo que se puede visitar: con coordenadas, del barrio pedido y todavía sin probar. */
-    private List<BurgerJoint> candidatos(Pedido pedido, Set<Long> visitadas) {
+    /** Lo que se puede visitar: con coordenadas, del barrio pedido y no dejado afuera. */
+    private List<BurgerJoint> candidatos(Pedido pedido, Set<Long> afuera) {
         List<BurgerJoint> todos = pedido.conCadenas()
             ? burgerJointRepository.findAll()
             : burgerJointRepository.findByFastFoodFalse();
@@ -224,7 +235,7 @@ public class TourService {
         return todos.stream()
             .filter(b -> b.getLatitude() != null && b.getLongitude() != null)
             .filter(b -> barrios.isEmpty() || barrios.contains(b.getArea()))
-            .filter(b -> !visitadas.contains(b.getId()))
+            .filter(b -> !afuera.contains(b.getId()))
             .toList();
     }
 
