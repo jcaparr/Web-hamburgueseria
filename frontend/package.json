@@ -17,14 +17,14 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
-    "@types/node": "^26.6.1",
+    "@types/node": "^26.6.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
-    "daisyui": "^5.7.40",
-    "oxlint": "^1.81.0",
+    "daisyui": "^5.7.44",
+    "oxlint": "^1.85.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~7.0.2",
-    "vite": "^8.3.0"
+    "vite": "^8.3.1"
   }
 }
