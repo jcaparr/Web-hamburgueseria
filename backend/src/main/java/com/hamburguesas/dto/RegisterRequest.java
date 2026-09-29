@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record RegisterRequest(
-    @NotBlank @Size(max = 120) String name,
     // Se acepta con mayúsculas y el servicio lo baja: rechazar "Juan" por la mayúscula
     // sería incomprensible para quien lo escribió.
     @NotBlank @Pattern(regexp = Usernames.FORMA,

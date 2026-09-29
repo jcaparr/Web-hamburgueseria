@@ -62,7 +62,6 @@ public class GoogleAuthService {
         // Google has already verified the address, so the account works straight away
         // and never has a password.
         User user = userRepository.save(User.builder()
-            .name(account.name())
             .username(username)
             .email(account.email())
             .googleSub(account.subject())

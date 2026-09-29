@@ -47,7 +47,6 @@ class TransactionBoundaryTest {
         userRepository.deleteAll();
 
         user = userRepository.save(User.builder()
-            .name("Probador")
             .username("probador")
             .email("probador@example.com")
             .passwordHash("no-se-usa-en-este-test")

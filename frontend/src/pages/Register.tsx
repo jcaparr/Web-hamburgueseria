@@ -12,7 +12,6 @@ export function Register() {
   const google = useGoogleSignIn()
   const { onCredential, googleError, setGoogleError } = google
   const navigate = useNavigate()
-  const [name, setName] = useState('')
   const username = useNombreDeUsuario()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -24,7 +23,7 @@ export function Register() {
     setSubmitting(true)
     setError(null)
     try {
-      await register(name, username.valor, email, password)
+      await register(username.valor, email, password)
       // No session yet: the account is not usable until the emailed code is entered.
       // The message the server returns is not passed along: the verification screen
       // already says the same thing, with the address filled in.
@@ -49,14 +48,7 @@ export function Register() {
         <div className="card-body gap-3">
           <h1 className="card-title font-display">Crear cuenta</h1>
           <form onSubmit={onSubmit} className="flex flex-col gap-3">
-            <input
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Nombre"
-              className="input input-bordered focus:border-primary"
-            />
-            <CampoNombreDeUsuario campo={username} />
+            <CampoNombreDeUsuario campo={username} autoFocus />
             <input
               type="email"
               required

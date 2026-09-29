@@ -25,7 +25,7 @@ import java.util.Optional;
 public class GoogleTokenVerifier {
 
     /** What we trust from a verified token. */
-    public record GoogleAccount(String subject, String email, String name) {}
+    public record GoogleAccount(String subject, String email) {}
 
     private final GoogleIdTokenVerifier verifier;
     private final boolean configured;
@@ -78,10 +78,8 @@ public class GoogleTokenVerifier {
             return Optional.empty();
         }
 
-        Object name = payload.get("name");
-        return Optional.of(new GoogleAccount(
-            payload.getSubject(),
-            email.trim().toLowerCase(),
-            name != null ? name.toString() : email));
+        // El nombre que Google trae no se usa: acá una cuenta se llama por su nombre de
+        // usuario, y ese lo elige la persona la primera vez que entra.
+        return Optional.of(new GoogleAccount(payload.getSubject(), email.trim().toLowerCase()));
     }
 }

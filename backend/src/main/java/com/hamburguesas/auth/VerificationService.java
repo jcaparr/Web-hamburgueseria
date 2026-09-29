@@ -77,7 +77,7 @@ public class VerificationService {
             .build());
 
         emailService.send(user.getEmail(), subjectFor(purpose),
-            bodyFor(purpose, user.getName(), code, config.getTtlMinutes()));
+            bodyFor(purpose, user.getUsername(), code, config.getTtlMinutes()));
         return true;
     }
 
@@ -130,7 +130,7 @@ public class VerificationService {
         };
     }
 
-    private String bodyFor(VerificationPurpose purpose, String name, String code, int ttlMinutes) {
+    private String bodyFor(VerificationPurpose purpose, String username, String code, int ttlMinutes) {
         String action = switch (purpose) {
             case EMAIL_VERIFICATION -> "activar tu cuenta";
             case PASSWORD_RESET -> "cambiar tu contraseña";
@@ -139,7 +139,7 @@ public class VerificationService {
         // Plain text on purpose: an HTML email from a brand-new sender is likelier
         // to be filtered as spam, and we have no domain to authenticate with yet.
         return """
-            ¡Hola, %s!
+            ¡Hola, @%s!
 
             Tu código para %s es:
 
@@ -151,6 +151,6 @@ public class VerificationService {
             ¿No lo ves? Revisá la carpeta de spam o correo no deseado.
 
             Hamburgueserías BA
-            """.formatted(name, action, code, ttlMinutes);
+            """.formatted(username, action, code, ttlMinutes);
     }
 }

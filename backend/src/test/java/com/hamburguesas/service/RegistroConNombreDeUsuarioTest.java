@@ -1,7 +1,6 @@
 package com.hamburguesas.service;
 
 import com.hamburguesas.auth.AuthRateLimits;
-import com.hamburguesas.auth.PwnedPasswordChecker;
 import com.hamburguesas.auth.SessionRevoker;
 import com.hamburguesas.auth.VerificationService;
 import com.hamburguesas.dto.RegisterRequest;
@@ -29,13 +28,11 @@ import static org.mockito.Mockito.when;
 class RegistroConNombreDeUsuarioTest {
 
     private UserRepository userRepository;
-    private PwnedPasswordChecker pwnedPasswordChecker;
     private AuthService service;
 
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
-        pwnedPasswordChecker = mock(PwnedPasswordChecker.class);
         PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
 
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
@@ -46,12 +43,12 @@ class RegistroConNombreDeUsuarioTest {
         service = new AuthService(
             userRepository, mock(SessionRevoker.class), passwordEncoder,
             mock(AuthenticationManager.class), mock(VerificationService.class),
-            mock(AuthRateLimits.class), pwnedPasswordChecker,
+            mock(AuthRateLimits.class),
             new UsernameService(userRepository));
     }
 
     private RegisterRequest pidiendo(String username) {
-        return new RegisterRequest("Juan", username, "juan@example.com", "unaClaveLarga123");
+        return new RegisterRequest(username, "juan@example.com", "unaClaveLarga123");
     }
 
     /** Lo guardado es siempre en minúsculas, escriba como escriba. */
@@ -68,6 +65,23 @@ class RegistroConNombreDeUsuarioTest {
         assertThat(loGuardado().getUsername()).isEqualTo("juanca");
     }
 
+    /**
+     * Cualquier contraseña sirve, incluso una de las que están en todos los dumps.
+     *
+     * Hubo un chequeo contra Have I Been Pwned que rechazaba las filtradas, y se sacó a
+     * pedido: trababa a gente que no entendía por qué. Lo que se acepta a cambio es el
+     * relleno de credenciales —probar acá una contraseña sacada de otra filtración—,
+     * contra lo que siguen estando el límite de intentos por cuenta y por dirección.
+     */
+    @Test
+    void cualquierContraseniaSirve() {
+        var pedido = new RegisterRequest("juanca", "juan@example.com", "password123");
+
+        service.register(pedido);
+
+        assertThat(loGuardado().getUsername()).isEqualTo("juanca");
+    }
+
     @Test
     void siElNombreEsDeOtroNoSeCreaLaCuenta() {
         when(userRepository.existsByUsername("juanca")).thenReturn(true);
@@ -79,20 +93,6 @@ class RegistroConNombreDeUsuarioTest {
     }
 
     /**
-     * Y se corta antes de preguntar si la contraseña está filtrada, que es una llamada
-     * a un servicio de afuera: no tiene sentido pagarla por un registro que ya falló.
-     */
-    @Test
-    void yNiSiquieraSePreguntaPorLaContrasenia() {
-        when(userRepository.existsByUsername("juanca")).thenReturn(true);
-
-        assertThatThrownBy(() -> service.register(pidiendo("juanca")))
-            .isInstanceOf(UsernameTakenException.class);
-
-        verify(pwnedPasswordChecker, never()).isBreached(anyString());
-    }
-
-    /**
      * Volver a registrarse con una cuenta sin verificar deja cambiar el nombre.
      *
      * Es la misma persona reintentando, y si se ignorara lo que escribió le quedaría el
@@ -101,7 +101,7 @@ class RegistroConNombreDeUsuarioTest {
     @Test
     void reintentarSinVerificarDejaCambiarDeNombre() {
         User aMedioHacer = User.builder()
-            .id(1L).name("Juan").username("juanca").email("juan@example.com")
+            .id(1L).username("juanca").email("juan@example.com")
             .emailVerified(false).build();
         when(userRepository.findByEmail("juan@example.com")).thenReturn(Optional.of(aMedioHacer));
 
@@ -114,7 +114,7 @@ class RegistroConNombreDeUsuarioTest {
     @Test
     void reintentarConElMismoNombreNoChocaConsigoMismo() {
         User aMedioHacer = User.builder()
-            .id(1L).name("Juan").username("juanca").email("juan@example.com")
+            .id(1L).username("juanca").email("juan@example.com")
             .emailVerified(false).build();
         when(userRepository.findByEmail("juan@example.com")).thenReturn(Optional.of(aMedioHacer));
         when(userRepository.existsByUsername("juanca")).thenReturn(true);

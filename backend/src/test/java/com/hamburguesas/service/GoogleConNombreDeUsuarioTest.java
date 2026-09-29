@@ -40,7 +40,7 @@ class GoogleConNombreDeUsuarioTest {
 
         when(verifier.isConfigured()).thenReturn(true);
         when(verifier.verify(TOKEN)).thenReturn(Optional.of(
-            new GoogleTokenVerifier.GoogleAccount("sub-123", "juan.perez@gmail.com", "Juan")));
+            new GoogleTokenVerifier.GoogleAccount("sub-123", "juan.perez@gmail.com")));
         when(userRepository.findByGoogleSub(anyString())).thenReturn(Optional.empty());
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
         when(userRepository.existsByUsername(anyString())).thenReturn(false);
@@ -106,7 +106,7 @@ class GoogleConNombreDeUsuarioTest {
     @Test
     void aQuienYaTieneCuentaNoSeLeVuelveAPedir() {
         User existente = User.builder()
-            .id(3L).name("Juan").username("juanca").email("juan.perez@gmail.com")
+            .id(3L).username("juanca").email("juan.perez@gmail.com")
             .googleSub("sub-123").emailVerified(true).build();
         when(userRepository.findByGoogleSub("sub-123")).thenReturn(Optional.of(existente));
 

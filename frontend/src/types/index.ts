@@ -44,7 +44,7 @@ export interface SavedTour {
 export interface Rating {
   id: number
   userId: number
-  userName: string
+  username: string
   score: number
   comment: string | null
   createdAt: string
@@ -74,8 +74,7 @@ export interface PageResponse<T> {
 
 export interface User {
   userId: number
-  name: string
-  /** Cómo la encuentran los demás. Único y siempre en minúsculas. */
+  /** El único nombre que tiene una cuenta. Único y siempre en minúsculas. */
   username: string
   email: string
 }

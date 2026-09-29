@@ -66,7 +66,7 @@ public class RatingService {
 
     private RatingResponse toResponse(Rating r) {
         return new RatingResponse(
-            r.getId(), r.getUser().getId(), r.getUser().getName(),
+            r.getId(), r.getUser().getId(), r.getUser().getUsername(),
             r.getScore(), r.getComment(), r.getCreatedAt()
         );
     }

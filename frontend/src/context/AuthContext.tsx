@@ -8,7 +8,7 @@ interface AuthContextValue {
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   /** Does not start a session: the account is unusable until the emailed code is entered. */
-  register: (name: string, username: string, email: string, password: string) => Promise<string>
+  register: (username: string, email: string, password: string) => Promise<string>
   verifyEmail: (email: string, code: string) => Promise<void>
   /**
    * Sin nombre de usuario la primera vez el servidor contesta NEEDS_USERNAME y no crea
@@ -29,7 +29,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // is the point: a script injected into the page has nothing to steal.
     setUser({
       userId: data.userId,
-      name: data.name,
       username: data.username,
       email: data.email,
     })
@@ -40,13 +39,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     saveSession(data)
   }
 
-  async function register(
-    name: string,
-    username: string,
-    email: string,
-    password: string,
-  ): Promise<string> {
-    const { data } = await apiClient.post('/auth/register', { name, username, email, password })
+  async function register(username: string, email: string, password: string): Promise<string> {
+    const { data } = await apiClient.post('/auth/register', { username, email, password })
     return data.message as string
   }
 

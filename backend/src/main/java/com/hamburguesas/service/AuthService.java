@@ -1,7 +1,6 @@
 package com.hamburguesas.service;
 
 import com.hamburguesas.auth.AuthRateLimits;
-import com.hamburguesas.auth.PwnedPasswordChecker;
 import com.hamburguesas.auth.SessionRevoker;
 import com.hamburguesas.auth.Usernames;
 import com.hamburguesas.auth.VerificationService;
@@ -14,7 +13,6 @@ import com.hamburguesas.dto.VerifyEmailRequest;
 import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.exception.EmailNotVerifiedException;
 import com.hamburguesas.exception.InvalidCodeException;
-import com.hamburguesas.exception.WeakPasswordException;
 import com.hamburguesas.model.User;
 import com.hamburguesas.model.VerificationPurpose;
 import com.hamburguesas.repository.UserRepository;
@@ -57,7 +55,6 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final VerificationService verificationService;
     private final AuthRateLimits rateLimits;
-    private final PwnedPasswordChecker pwnedPasswordChecker;
     private final UsernameService usernameService;
 
     @Transactional
@@ -94,10 +91,8 @@ public class AuthService {
         // Antes de la contraseña: si el nombre está tomado no hay por qué haber
         // consultado si la contraseña está filtrada, que es una llamada a otro servicio.
         String username = usernameService.reservar(request.username());
-        requireUnbreachedPassword(request.password());
 
         User user = userRepository.save(User.builder()
-            .name(request.name().trim())
             .username(username)
             .email(email)
             .passwordHash(passwordEncoder.encode(request.password()))
@@ -157,7 +152,6 @@ public class AuthService {
 
         // Antes de validar el código, no después: validarlo lo consume, y rechazar
         // después la contraseña obligaría a pedir un código nuevo para reintentar.
-        requireUnbreachedPassword(request.newPassword());
 
         requireValidCode(user, VerificationPurpose.PASSWORD_RESET, request.code());
 
@@ -230,17 +224,6 @@ public class AuthService {
 
     private void requireAttemptAllowance(String email) {
         rateLimits.requireAttemptAllowance(email);
-    }
-
-    /**
-     * No mide fuerza sino reuso: una contraseña larga y con símbolos no sirve de nada
-     * si ya está en una lista publicada, porque es lo primero que se prueba.
-     */
-    private void requireUnbreachedPassword(String password) {
-        if (pwnedPasswordChecker.isBreached(password)) {
-            throw new WeakPasswordException(
-                "Esa contraseña apareció en filtraciones conocidas. Elegí otra.");
-        }
     }
 
     /** Emails are case-insensitive in practice, and the column is unique. */

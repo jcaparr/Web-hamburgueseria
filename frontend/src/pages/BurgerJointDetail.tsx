@@ -186,7 +186,7 @@ export function BurgerJointDetail() {
           <div key={r.id} className="rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15 p-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">
-                {r.userName}
+                @{r.username}
                 {user && r.userId === user.userId && ' (vos)'}
               </span>
               <Stars value={r.score} size={14} />

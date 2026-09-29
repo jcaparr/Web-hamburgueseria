@@ -60,7 +60,7 @@ export function TopBar() {
         <div className="flex flex-none items-center gap-2 text-sm">
           {user ? (
             <>
-              <span className="hidden font-medium sm:inline">{user.name}</span>
+              <span className="hidden font-medium sm:inline">@{user.username}</span>
               <button onClick={handleLogout} className="btn btn-ghost btn-sm">
                 Salir
               </button>

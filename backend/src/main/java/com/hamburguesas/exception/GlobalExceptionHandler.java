@@ -68,12 +68,6 @@ public class GlobalExceptionHandler {
         return respuesta;
     }
 
-    /** 422: los datos son válidos en forma, pero esa contraseña no se puede usar. */
-    @ExceptionHandler(WeakPasswordException.class)
-    public ResponseEntity<Map<String, Object>> handleWeakPassword(WeakPasswordException ex) {
-        return body(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), "PASSWORD_BREACHED");
-    }
-
     @ExceptionHandler(InvalidCodeException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidCode(InvalidCodeException ex) {
         return body(HttpStatus.BAD_REQUEST, ex.getMessage(), "INVALID_CODE");
