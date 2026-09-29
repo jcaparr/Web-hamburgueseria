@@ -75,6 +75,8 @@ export interface PageResponse<T> {
 export interface User {
   userId: number
   name: string
+  /** Cómo la encuentran los demás. Único y siempre en minúsculas. */
+  username: string
   email: string
 }
 

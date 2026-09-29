@@ -23,6 +23,13 @@ public class User {
     @Column(nullable = false, length = 120)
     private String name;
 
+    /**
+     * Cómo la encuentran y la nombran los demás. Siempre en minúsculas: adentro y
+     * afuera "Juan" y "juan" tienen que ser la misma persona.
+     */
+    @Column(nullable = false, length = 20, unique = true)
+    private String username;
+
     @Column(nullable = false, length = 180)
     private String email;
 

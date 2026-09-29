@@ -31,7 +31,7 @@ public class SessionIssuer {
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, cookies.access(accessToken).toString())
             .header(HttpHeaders.SET_COOKIE, cookies.refresh(refreshToken.value()).toString())
-            .body(new AuthResponse(user.getId(), user.getName(), user.getEmail()));
+            .body(quienEs(user));
     }
 
     /** Used by the refresh endpoint, which already has its next refresh token. */
@@ -41,7 +41,12 @@ public class SessionIssuer {
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, cookies.access(accessToken).toString())
             .header(HttpHeaders.SET_COOKIE, cookies.refresh(refreshToken.value()).toString())
-            .body(new AuthResponse(user.getId(), user.getName(), user.getEmail()));
+            .body(quienEs(user));
+    }
+
+    /** Lo único que sale en el cuerpo, en un solo lugar para que no se desarmen entre sí. */
+    public static AuthResponse quienEs(User user) {
+        return new AuthResponse(user.getId(), user.getName(), user.getUsername(), user.getEmail());
     }
 
     public ResponseEntity<Void> end() {

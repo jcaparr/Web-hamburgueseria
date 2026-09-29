@@ -49,6 +49,25 @@ public class GlobalExceptionHandler {
         return body(HttpStatus.CONFLICT, ex.getMessage(), "WRONG_SIGN_IN_METHOD");
     }
 
+    /** 409: el nombre es de otro. El frontend marca el campo, no muestra un cartel. */
+    @ExceptionHandler(UsernameTakenException.class)
+    public ResponseEntity<Map<String, Object>> handleUsernameTaken(UsernameTakenException ex) {
+        return body(HttpStatus.CONFLICT, ex.getMessage(), "USERNAME_TAKEN");
+    }
+
+    /**
+     * 409: entró con Google por primera vez y falta que elija cómo lo van a encontrar.
+     *
+     * Lleva encima una sugerencia libre, así la pantalla que sigue viene con el campo
+     * completo en vez de en blanco.
+     */
+    @ExceptionHandler(NeedsUsernameException.class)
+    public ResponseEntity<Map<String, Object>> handleNeedsUsername(NeedsUsernameException ex) {
+        var respuesta = body(HttpStatus.CONFLICT, ex.getMessage(), "NEEDS_USERNAME");
+        respuesta.getBody().put("suggestion", ex.getSuggestion());
+        return respuesta;
+    }
+
     /** 422: los datos son válidos en forma, pero esa contraseña no se puede usar. */
     @ExceptionHandler(WeakPasswordException.class)
     public ResponseEntity<Map<String, Object>> handleWeakPassword(WeakPasswordException ex) {

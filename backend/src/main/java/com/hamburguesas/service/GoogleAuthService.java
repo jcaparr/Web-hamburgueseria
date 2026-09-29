@@ -1,7 +1,9 @@
 package com.hamburguesas.service;
 
 import com.hamburguesas.auth.GoogleTokenVerifier;
+import com.hamburguesas.auth.Usernames;
 import com.hamburguesas.dto.GoogleLoginRequest;
+import com.hamburguesas.exception.NeedsUsernameException;
 import com.hamburguesas.exception.WrongSignInMethodException;
 import com.hamburguesas.model.User;
 import com.hamburguesas.repository.UserRepository;
@@ -28,6 +30,7 @@ public class GoogleAuthService {
 
     private final GoogleTokenVerifier tokenVerifier;
     private final UserRepository userRepository;
+    private final UsernameService usernameService;
 
     /** @return the user, for the caller to turn into a session. */
     @Transactional
@@ -51,16 +54,31 @@ public class GoogleAuthService {
                 "Ese email ya tiene una cuenta con contraseña. Entrá con tu contraseña.");
         }
 
+        // Google no nos dice cómo quiere que lo llamen acá, así que la cuenta no se crea
+        // hasta que lo elija. Si se fuera creando igual y el nombre se pidiera después,
+        // una pestaña cerrada a destiempo dejaría una cuenta sin nombre para siempre.
+        String username = elegirNombre(request.username(), account.email());
+
         // Google has already verified the address, so the account works straight away
         // and never has a password.
         User user = userRepository.save(User.builder()
             .name(account.name())
+            .username(username)
             .email(account.email())
             .googleSub(account.subject())
             .emailVerified(true)
             .build());
 
         return user;
+    }
+
+    /** @throws NeedsUsernameException en la primera vuelta, cuando todavía no eligió. */
+    private String elegirNombre(String pedido, String email) {
+        if (pedido == null || pedido.isBlank()) {
+            throw new NeedsUsernameException(
+                usernameService.sugerirCerca(Usernames.baseDesdeEmail(email)));
+        }
+        return usernameService.reservar(pedido);
     }
 
     private GoogleTokenVerifier.GoogleAccount verifyOrReject(String credential) {

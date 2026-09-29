@@ -86,8 +86,10 @@ export function Profile() {
         <div className="flex h-16 w-16 flex-none items-center justify-center rounded-full bg-neutral text-secondary">
           <IconUser size={30} />
         </div>
-        <div className="flex flex-col gap-1.5">
-          <span className="font-display text-lg font-bold">{user.name}</span>
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <span className="font-display truncate text-lg font-bold">{user.name}</span>
+          {/* El nombre con el que lo buscan: acá es donde uno se fija cuál le quedó. */}
+          <span className="truncate text-sm text-base-content/60">@{user.username}</span>
           <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-secondary/30 px-3 py-1 text-xs font-semibold text-neutral">
             <IconMedal size={14} />
             Nivel hamburguesero: próximamente

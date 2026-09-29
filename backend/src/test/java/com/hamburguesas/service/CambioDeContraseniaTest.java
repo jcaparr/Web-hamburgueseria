@@ -55,10 +55,11 @@ class CambioDeContraseniaTest {
         service = new AuthService(
             userRepository, sessionRevoker, passwordEncoder,
             mock(AuthenticationManager.class), verificationService,
-            mock(AuthRateLimits.class), pwnedPasswordChecker);
+            mock(AuthRateLimits.class), pwnedPasswordChecker,
+            mock(UsernameService.class));
 
         usuario = User.builder()
-            .id(7L).name("Juan").email("juan@example.com")
+            .id(7L).name("Juan").username("juan").email("juan@example.com")
             .passwordHash("la-vieja").emailVerified(true)
             .build();
 

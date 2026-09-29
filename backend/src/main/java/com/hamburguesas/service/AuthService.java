@@ -3,6 +3,7 @@ package com.hamburguesas.service;
 import com.hamburguesas.auth.AuthRateLimits;
 import com.hamburguesas.auth.PwnedPasswordChecker;
 import com.hamburguesas.auth.SessionRevoker;
+import com.hamburguesas.auth.Usernames;
 import com.hamburguesas.auth.VerificationService;
 import com.hamburguesas.dto.EmailOnlyRequest;
 import com.hamburguesas.dto.LoginRequest;
@@ -57,6 +58,7 @@ public class AuthService {
     private final VerificationService verificationService;
     private final AuthRateLimits rateLimits;
     private final PwnedPasswordChecker pwnedPasswordChecker;
+    private final UsernameService usernameService;
 
     @Transactional
     public MessageResponse register(RegisterRequest request) {
@@ -70,6 +72,10 @@ public class AuthService {
             // Still unverified: almost certainly the same person retrying, so send
             // another code instead of telling them they are in their own way.
             if (!user.isEmailVerified()) {
+                // Puede volver con otro nombre de usuario que el de la primera vuelta.
+                // Es la misma cuenta a medio hacer, así que vale el último que eligió:
+                // de lo contrario escribiría uno y le quedaría otro, sin explicación.
+                renameIfChanged(user, request.username());
                 issueQuietly(user, VerificationPurpose.EMAIL_VERIFICATION);
                 return new MessageResponse(CODE_SENT);
             }
@@ -85,10 +91,14 @@ public class AuthService {
             throw new ConflictException("Ese email ya tiene una cuenta. Probá iniciar sesión.");
         }
 
+        // Antes de la contraseña: si el nombre está tomado no hay por qué haber
+        // consultado si la contraseña está filtrada, que es una llamada a otro servicio.
+        String username = usernameService.reservar(request.username());
         requireUnbreachedPassword(request.password());
 
         User user = userRepository.save(User.builder()
             .name(request.name().trim())
+            .username(username)
             .email(email)
             .passwordHash(passwordEncoder.encode(request.password()))
             .emailVerified(false)
@@ -236,5 +246,13 @@ public class AuthService {
     /** Emails are case-insensitive in practice, and the column is unique. */
     private String normalize(String email) {
         return email.trim().toLowerCase();
+    }
+
+    /** Sobre una cuenta sin verificar, que todavía puede cambiar de idea. */
+    private void renameIfChanged(User user, String pedido) {
+        String nombre = Usernames.normalizar(pedido);
+        if (!nombre.equals(user.getUsername())) {
+            user.setUsername(usernameService.reservar(nombre));
+        }
     }
 }
