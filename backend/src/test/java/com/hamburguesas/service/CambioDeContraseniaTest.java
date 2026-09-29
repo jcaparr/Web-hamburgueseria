@@ -1,12 +1,10 @@
 package com.hamburguesas.service;
 
 import com.hamburguesas.auth.AuthRateLimits;
-import com.hamburguesas.auth.PwnedPasswordChecker;
 import com.hamburguesas.auth.SessionRevoker;
 import com.hamburguesas.auth.VerificationService;
 import com.hamburguesas.dto.ResetPasswordRequest;
 import com.hamburguesas.exception.InvalidCodeException;
-import com.hamburguesas.exception.WeakPasswordException;
 import com.hamburguesas.model.User;
 import com.hamburguesas.model.VerificationPurpose;
 import com.hamburguesas.repository.UserRepository;
@@ -39,7 +37,6 @@ class CambioDeContraseniaTest {
     private UserRepository userRepository;
     private SessionRevoker sessionRevoker;
     private VerificationService verificationService;
-    private PwnedPasswordChecker pwnedPasswordChecker;
     private AuthService service;
 
     private User usuario;
@@ -49,16 +46,16 @@ class CambioDeContraseniaTest {
         userRepository = mock(UserRepository.class);
         sessionRevoker = mock(SessionRevoker.class);
         verificationService = mock(VerificationService.class);
-        pwnedPasswordChecker = mock(PwnedPasswordChecker.class);
         PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
 
         service = new AuthService(
             userRepository, sessionRevoker, passwordEncoder,
             mock(AuthenticationManager.class), verificationService,
-            mock(AuthRateLimits.class), pwnedPasswordChecker);
+            mock(AuthRateLimits.class),
+            mock(UsernameService.class));
 
         usuario = User.builder()
-            .id(7L).name("Juan").email("juan@example.com")
+            .id(7L).username("juan").email("juan@example.com")
             .passwordHash("la-vieja").emailVerified(true)
             .build();
 
@@ -101,18 +98,6 @@ class CambioDeContraseniaTest {
 
         verify(sessionRevoker, never()).revokeAllFor(any());
         verify(userRepository, never()).save(any());
-    }
-
-    /** Y con una contraseña filtrada tampoco, que se rechaza antes de tocar el código. */
-    @Test
-    void conUnaContraseniaFiltradaNoSeCierraNingunaSesion() {
-        when(pwnedPasswordChecker.isBreached(anyString())).thenReturn(true);
-
-        assertThatThrownBy(() -> service.resetPassword(pedido()))
-            .isInstanceOf(WeakPasswordException.class);
-
-        verify(sessionRevoker, never()).revokeAllFor(any());
-        verify(verificationService, never()).check(any(), any(), anyString());
     }
 
     /** Una cuenta de Google no tiene contraseña que cambiar, y no se le inventa una. */

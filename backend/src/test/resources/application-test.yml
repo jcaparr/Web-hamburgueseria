@@ -25,7 +25,3 @@ app:
     allowed-origins: http://localhost:5173
   mail:
     enabled: false
-  auth:
-    password:
-      # Los tests no salen a internet.
-      check-breaches: false

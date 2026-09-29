@@ -20,8 +20,16 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 120)
-    private String name;
+    /**
+     * Cómo la encuentran y la nombran los demás. Siempre en minúsculas: adentro y
+     * afuera "Juan" y "juan" tienen que ser la misma persona.
+     *
+     * Es el único nombre que tiene una cuenta. No hay un "nombre para mostrar" aparte
+     * porque al lado de un @juanca no agregaría nada y sí confundiría: dos personas
+     * con el mismo nombre se verían igual sin serlo.
+     */
+    @Column(nullable = false, length = 20, unique = true)
+    private String username;
 
     @Column(nullable = false, length = 180)
     private String email;

@@ -11,11 +11,13 @@ import com.hamburguesas.dto.LoginRequest;
 import com.hamburguesas.dto.MessageResponse;
 import com.hamburguesas.dto.RegisterRequest;
 import com.hamburguesas.dto.ResetPasswordRequest;
+import com.hamburguesas.dto.UsernameAvailabilityResponse;
 import com.hamburguesas.dto.VerifyEmailRequest;
 import com.hamburguesas.repository.UserRepository;
 import com.hamburguesas.security.CurrentUser;
 import com.hamburguesas.service.AuthService;
 import com.hamburguesas.service.GoogleAuthService;
+import com.hamburguesas.service.UsernameService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -37,6 +40,7 @@ public class AuthController {
     private final SessionService sessionService;
     private final SessionCookies cookies;
     private final UserRepository userRepository;
+    private final UsernameService usernameService;
 
     /**
      * 202, not 201: the account is not usable until the emailed code is entered.
@@ -50,6 +54,20 @@ public class AuthController {
     @PostMapping("/verify-email")
     public ResponseEntity<AuthResponse> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
         return sessionIssuer.start(authService.verifyEmail(request));
+    }
+
+    /**
+     * Si ese nombre se puede usar, para marcar el campo antes de mandar el formulario.
+     *
+     * Cuelga de /api/auth/ a propósito: ahí el filtro ya limita por dirección, y esto
+     * es justo lo que alguien usaría para barrer qué nombres existen. Por eso también
+     * el frontend pregunta al salir del campo y no en cada tecla.
+     */
+    @GetMapping("/username-available")
+    public UsernameAvailabilityResponse usernameAvailable(@RequestParam String username) {
+        boolean libre = usernameService.estaLibre(username);
+        return new UsernameAvailabilityResponse(
+            libre, libre ? "" : usernameService.sugerirCerca(username));
     }
 
     @PostMapping("/resend-code")
@@ -104,8 +122,7 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<AuthResponse> me() {
         return userRepository.findById(CurrentUser.requireId())
-            .map(user -> ResponseEntity.ok(
-                new AuthResponse(user.getId(), user.getName(), user.getEmail())))
+            .map(user -> ResponseEntity.ok(SessionIssuer.quienEs(user)))
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

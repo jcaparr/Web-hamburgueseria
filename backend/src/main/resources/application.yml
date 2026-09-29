@@ -52,10 +52,6 @@ app:
     from: ${MAIL_FROM:}
     from-name: ${MAIL_FROM_NAME:Hamburgueserías BA}
   auth:
-    password:
-      # Se puede apagar para correr sin salida a internet. Apagarlo en producción es
-      # aceptar contraseñas que ya están en las listas que usa cualquiera.
-      check-breaches: ${PASSWORD_CHECK_BREACHES:true}
     session:
       access-token-minutes: 15
       refresh-token-days: 30

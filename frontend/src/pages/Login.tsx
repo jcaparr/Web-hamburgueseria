@@ -1,12 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { GoogleSignInButton } from '../components/GoogleSignInButton'
+import { PasoNombreDeGoogle } from '../components/PasoNombreDeGoogle'
 import { useAuth } from '../context/AuthContext'
 import { useGoogleSignIn } from '../hooks/useGoogleSignIn'
 
 export function Login() {
   const { login } = useAuth()
-  const { onCredential, googleError, setGoogleError } = useGoogleSignIn()
+  const google = useGoogleSignIn()
+  const { onCredential, googleError, setGoogleError } = google
   const navigate = useNavigate()
   const location = useLocation()
   const state = location.state as { notice?: string } | null
@@ -45,6 +47,9 @@ export function Login() {
       setSubmitting(false)
     }
   }
+
+  // Entrar con Google la primera vez crea la cuenta, y para eso falta elegir el nombre.
+  if (google.pendiente) return <PasoNombreDeGoogle google={google} />
 
   return (
     <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-sm md:p-0 md:pt-8">

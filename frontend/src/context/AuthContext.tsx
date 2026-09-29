@@ -8,9 +8,13 @@ interface AuthContextValue {
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   /** Does not start a session: the account is unusable until the emailed code is entered. */
-  register: (name: string, email: string, password: string) => Promise<string>
+  register: (username: string, email: string, password: string) => Promise<string>
   verifyEmail: (email: string, code: string) => Promise<void>
-  loginWithGoogle: (credential: string) => Promise<void>
+  /**
+   * Sin nombre de usuario la primera vez el servidor contesta NEEDS_USERNAME y no crea
+   * nada: quien llama vuelve con el mismo credential y el nombre que la persona eligió.
+   */
+  loginWithGoogle: (credential: string, username?: string) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -20,10 +24,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
-  function saveSession(data: { userId: number; name: string; email: string }) {
+  function saveSession(data: User) {
     // Only who the user is. The tokens are in cookies this code cannot read, which
     // is the point: a script injected into the page has nothing to steal.
-    setUser({ userId: data.userId, name: data.name, email: data.email })
+    setUser({
+      userId: data.userId,
+      username: data.username,
+      email: data.email,
+    })
   }
 
   async function login(email: string, password: string) {
@@ -31,8 +39,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     saveSession(data)
   }
 
-  async function register(name: string, email: string, password: string): Promise<string> {
-    const { data } = await apiClient.post('/auth/register', { name, email, password })
+  async function register(username: string, email: string, password: string): Promise<string> {
+    const { data } = await apiClient.post('/auth/register', { username, email, password })
     return data.message as string
   }
 
@@ -41,8 +49,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     saveSession(data)
   }
 
-  async function loginWithGoogle(credential: string) {
-    const { data } = await apiClient.post('/auth/google', { credential })
+  async function loginWithGoogle(credential: string, username?: string) {
+    const { data } = await apiClient.post('/auth/google', { credential, username })
     saveSession(data)
   }
 

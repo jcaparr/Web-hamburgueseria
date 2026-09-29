@@ -21,7 +21,6 @@ public class UserPrincipal extends org.springframework.security.core.userdetails
         new BCryptPasswordEncoder().encode(UUID.randomUUID().toString());
 
     private final Long userId;
-    private final String name;
 
     public UserPrincipal(com.hamburguesas.model.User user, List<GrantedAuthority> authorities) {
         // Deliberately always enabled. Marking unverified accounts as disabled would be
@@ -32,6 +31,5 @@ public class UserPrincipal extends org.springframework.security.core.userdetails
             user.getPasswordHash() != null ? user.getPasswordHash() : UNUSABLE_PASSWORD,
             authorities);
         this.userId = user.getId();
-        this.name = user.getName();
     }
 }

@@ -1,0 +1,11 @@
+-- Una cuenta se llama de una sola manera.
+--
+-- Hasta la migración anterior el nombre era lo único que se podía mostrar, así que se
+-- pedía al registrarse aunque no sirviera para encontrar a nadie. Con el nombre de
+-- usuario ya no hace falta: es único, se puede mostrar y es con lo que se busca.
+--
+-- Tener los dos sería peor que tener uno. Al lado de un @juanca, un "nombre" que se
+-- repite y que nadie eligió con cuidado no agrega nada, y en un feed dos personas se
+-- verían distintas sin serlo. El día que se quiera un nombre para mostrar aparte del
+-- de usuario, se agrega como lo que es: algo que se completa después, no al entrar.
+alter table users drop column name;
