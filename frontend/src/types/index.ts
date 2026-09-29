@@ -114,3 +114,25 @@ export interface PerfilPublico {
   soyYo: boolean
   ultimasResenias: ReseniaDePerfil[]
 }
+
+/** Una reseña como se lee en el feed, con quién, dónde y qué dijo. */
+export interface ItemDeFeed {
+  ratingId: number
+  autorId: number
+  autorUsername: string
+  burgerJointId: number
+  burgerJointName: string
+  photoUrl: string | null
+  area: string | null
+  score: number
+  comment: string | null
+  /** Cuándo se escribió, no cuándo se editó. */
+  createdAt: string
+  editada: boolean
+}
+
+/** Un tramo del feed. `siguiente` viene en null cuando no hay más. */
+export interface PaginaDeFeed {
+  items: ItemDeFeed[]
+  siguiente: string | null
+}

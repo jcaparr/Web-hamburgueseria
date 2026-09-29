@@ -3,6 +3,16 @@ interface IconProps {
   className?: string
 }
 
+/** El feed: tarjetas apiladas, una atrás de otra. */
+export function IconFeed({ size = 18, className }: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.8} className={className}>
+      <rect x="2.5" y="3" width="15" height="5.5" rx="1.5" />
+      <rect x="2.5" y="11.5" width="15" height="5.5" rx="1.5" />
+    </svg>
+  )
+}
+
 export function IconSearch({ size = 18, className }: IconProps) {
   return (
     <svg viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.8} className={className}>
