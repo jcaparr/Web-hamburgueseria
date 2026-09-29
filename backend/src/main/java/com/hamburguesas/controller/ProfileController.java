@@ -1,7 +1,7 @@
 package com.hamburguesas.controller;
 
-import com.hamburguesas.dto.MyRatingDto;
 import com.hamburguesas.dto.ProfileStatsDto;
+import com.hamburguesas.dto.ReseniaDePerfilDto;
 import com.hamburguesas.security.CurrentUser;
 import com.hamburguesas.service.ProfileService;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class ProfileController {
     }
 
     @GetMapping("/ratings")
-    public List<MyRatingDto> ratings() {
+    public List<ReseniaDePerfilDto> ratings() {
         return profileService.myRatings(CurrentUser.requireId());
     }
 }

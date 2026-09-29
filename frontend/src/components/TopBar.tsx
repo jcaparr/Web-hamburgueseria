@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
+import { IconSearch } from './icons'
 import { useAuth } from '../context/AuthContext'
 import { useHideOnScroll } from '../hooks/useScrollDirection'
 
@@ -60,6 +61,18 @@ export function TopBar() {
         <div className="flex flex-none items-center gap-2 text-sm">
           {user ? (
             <>
+              {/* La lupita vive acá hasta que exista el feed, que es donde va a estar
+                  a mano. Buscar gente no tiene sentido sin sesión: no se puede seguir
+                  a nadie, y el padrón no es para mirar desde afuera. */}
+              <NavLink
+                to="/buscar"
+                aria-label="Buscar gente"
+                className={({ isActive }) =>
+                  `btn btn-ghost btn-sm btn-square ${isActive ? 'text-primary' : ''}`
+                }
+              >
+                <IconSearch size={18} />
+              </NavLink>
               <span className="hidden font-medium sm:inline">@{user.username}</span>
               <button onClick={handleLogout} className="btn btn-ghost btn-sm">
                 Salir

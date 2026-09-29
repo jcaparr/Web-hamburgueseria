@@ -1,7 +1,7 @@
 package com.hamburguesas.service;
 
-import com.hamburguesas.dto.MyRatingDto;
 import com.hamburguesas.dto.ProfileStatsDto;
+import com.hamburguesas.dto.ReseniaDePerfilDto;
 import com.hamburguesas.repository.RatingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ public class ProfileService {
         return new ProfileStatsDto(ratingsCount, averageScore);
     }
 
-    public List<MyRatingDto> myRatings(Long userId) {
+    public List<ReseniaDePerfilDto> myRatings(Long userId) {
         return ratingRepository.findAllByUserOrderByCreatedAtDesc(userId);
     }
 }

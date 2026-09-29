@@ -84,7 +84,7 @@ export interface ProfileStats {
   averageScore: number | null
 }
 
-export interface MyRating {
+export interface ReseniaDePerfil {
   id: number
   burgerJointId: number
   burgerJointName: string
@@ -92,4 +92,25 @@ export interface MyRating {
   score: number
   comment: string | null
   createdAt: string
+}
+
+/** Una persona en los resultados del buscador. */
+export interface UsuarioBuscado {
+  userId: number
+  username: string
+  resenias: number
+  loSigo: boolean
+}
+
+/** El perfil de otra persona. Sin email: de otro solo se ve lo que eligió mostrar. */
+export interface PerfilPublico {
+  userId: number
+  username: string
+  resenias: number
+  promedio: number | null
+  seguidores: number
+  siguiendo: number
+  loSigo: boolean
+  soyYo: boolean
+  ultimasResenias: ReseniaDePerfil[]
 }

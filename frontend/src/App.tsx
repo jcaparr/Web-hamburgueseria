@@ -4,9 +4,11 @@ import { RequireAuth } from './components/RequireAuth'
 import { TopBar } from './components/TopBar'
 import { AuthProvider } from './context/AuthContext'
 import { BurgerJointDetail } from './pages/BurgerJointDetail'
+import { BuscarGente } from './pages/BuscarGente'
 import { Explore } from './pages/Explore'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { Login } from './pages/Login'
+import { PerfilPublico } from './pages/PerfilPublico'
 import { Profile } from './pages/Profile'
 import { Ranking } from './pages/Ranking'
 import { Register } from './pages/Register'
@@ -27,6 +29,10 @@ export default function App() {
               <Route path="/burger-joints/:id" element={<BurgerJointDetail />} />
               <Route path="/ranking" element={<Ranking />} />
               <Route path="/tour" element={<Tour />} />
+              {/* Bajo /u/ para que un nombre de usuario no pueda chocar nunca con una
+                  pantalla de la app: alguien que se llame "tour" no rompe nada. */}
+              <Route path="/u/:username" element={<RequireAuth><PerfilPublico /></RequireAuth>} />
+              <Route path="/buscar" element={<RequireAuth><BuscarGente /></RequireAuth>} />
               <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
               <Route path="/reviews" element={<RequireAuth><Reviews /></RequireAuth>} />
               <Route path="/wishlist" element={<RequireAuth><Wishlist /></RequireAuth>} />
