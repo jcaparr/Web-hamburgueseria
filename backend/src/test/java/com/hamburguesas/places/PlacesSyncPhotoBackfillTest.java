@@ -4,6 +4,7 @@ import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.PlacesCallType;
 import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.RatingRepository;
+import com.hamburguesas.repository.SavedTourRepository;
 import com.hamburguesas.repository.WishlistRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,6 +65,7 @@ class PlacesSyncPhotoBackfillTest {
         service = new PlacesSyncService(
             properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(),
             mock(RatingRepository.class), mock(WishlistRepository.class),
+            mock(SavedTourRepository.class),
             new FastFoodMarker(repository, properties));
     }
 

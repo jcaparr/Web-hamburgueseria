@@ -4,6 +4,7 @@ import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.PlacesCallType;
 import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.RatingRepository;
+import com.hamburguesas.repository.SavedTourRepository;
 import com.hamburguesas.repository.WishlistRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class PlacesSyncService {
     private final Barrios barrios;
     private final RatingRepository ratingRepository;
     private final WishlistRepository wishlistRepository;
+    private final SavedTourRepository savedTourRepository;
     private final FastFoodMarker fastFoodMarker;
 
     public PlacesSyncReport sync() {
@@ -182,11 +184,11 @@ public class PlacesSyncService {
             boolean sobra = barrio.isEmpty() || noEsUnaHamburgueseria(comoLugar(joint), cadenas);
 
             if (sobra) {
-                // Si alguien lo puntuó o lo tiene anotado para ir, se queda: su opinión
-                // vale más que nuestra idea de qué locales corresponden.
-                if (ratingRepository.existsByBurgerJoint_Id(joint.getId())
-                    || wishlistRepository.existsByBurgerJoint_Id(joint.getId())) {
-                    log.info("{} no corresponde pero tiene reseñas o está en listas, se deja", joint.getName());
+                // Si alguien lo puntuó, lo anotó para ir o lo tiene en un recorrido
+                // guardado, se queda: su decisión vale más que nuestra idea de qué
+                // locales corresponden.
+                if (fueTocadaPorAlguien(joint)) {
+                    log.info("{} no corresponde pero alguien lo tiene guardado, se deja", joint.getName());
                     continue;
                 }
                 log.info("Se borra {} ({}): {}", joint.getName(), joint.getAddress(),
@@ -265,9 +267,16 @@ public class PlacesSyncService {
         return mejor == una ? otra : una;
     }
 
+    /**
+     * Si alguien la puntuó, la anotó para ir o la tiene en un recorrido guardado.
+     *
+     * Nada de eso se borra por decisión nuestra. Un tour guardado al que le falta una
+     * parada no se puede rehacer, y quien lo guardó no tiene forma de saber qué le pasó.
+     */
     private boolean fueTocadaPorAlguien(BurgerJoint joint) {
         return ratingRepository.existsByBurgerJoint_Id(joint.getId())
-            || wishlistRepository.existsByBurgerJoint_Id(joint.getId());
+            || wishlistRepository.existsByBurgerJoint_Id(joint.getId())
+            || savedTourRepository.estaEnAlgunTour(joint.getId());
     }
 
     /**
