@@ -1,7 +1,8 @@
 package com.hamburguesas.repository;
 
-import com.hamburguesas.dto.MyRatingDto;
 import com.hamburguesas.dto.RankingItemDto;
+import com.hamburguesas.dto.ReseniaDePerfilDto;
+import com.hamburguesas.dto.ReseniasPorUsuarioDto;
 import com.hamburguesas.model.Rating;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -80,11 +82,40 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
     Double averageScoreByUser(@Param("userId") Long userId);
 
     @Query("""
-        select new com.hamburguesas.dto.MyRatingDto(
+        select new com.hamburguesas.dto.ReseniaDePerfilDto(
             r.id, b.id, b.name, b.photoUrl, r.score, r.comment, r.createdAt)
         from Rating r join r.burgerJoint b
         where r.user.id = :userId
         order by r.createdAt desc
         """)
-    List<MyRatingDto> findAllByUserOrderByCreatedAtDesc(@Param("userId") Long userId);
+    List<ReseniaDePerfilDto> findAllByUserOrderByCreatedAtDesc(@Param("userId") Long userId);
+
+    /**
+     * Las últimas de alguien, para asomarlas en su perfil.
+     *
+     * Es la misma consulta cortada: en el perfil ajeno se muestran unas pocas, las
+     * suficientes para darse una idea de qué le gusta antes de decidir seguirlo.
+     */
+    @Query("""
+        select new com.hamburguesas.dto.ReseniaDePerfilDto(
+            r.id, b.id, b.name, b.photoUrl, r.score, r.comment, r.createdAt)
+        from Rating r join r.burgerJoint b
+        where r.user.id = :userId
+        order by r.createdAt desc
+        """)
+    List<ReseniaDePerfilDto> ultimasDe(@Param("userId") Long userId, Pageable pagina);
+
+    /**
+     * Cuántas reseñas tiene cada uno de estos, en una sola consulta.
+     *
+     * Quien no tiene ninguna no aparece en el resultado: un group by no inventa filas
+     * para los que no tienen nada que agrupar, y quien llama pone el cero.
+     */
+    @Query("""
+        select new com.hamburguesas.dto.ReseniasPorUsuarioDto(r.user.id, count(r))
+        from Rating r
+        where r.user.id in :ids
+        group by r.user.id
+        """)
+    List<ReseniasPorUsuarioDto> contarPorUsuario(@Param("ids") Collection<Long> ids);
 }

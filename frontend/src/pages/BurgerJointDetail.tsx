@@ -185,10 +185,13 @@ export function BurgerJointDetail() {
         {ratings.map((r) => (
           <div key={r.id} className="rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15 p-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">
+              {/* Desde acá se llega a su perfil, que es de donde sale la gente a
+                  seguir: alguien que reseñó lo mismo que vos es mejor candidato que
+                  cualquiera que encuentres buscando a ciegas. */}
+              <Link to={`/u/${r.username}`} className="text-sm font-medium hover:text-primary">
                 @{r.username}
                 {user && r.userId === user.userId && ' (vos)'}
-              </span>
+              </Link>
               <Stars value={r.score} size={14} />
             </div>
             {r.comment && <p className="mt-1 text-sm text-base-content/70">{r.comment}</p>}

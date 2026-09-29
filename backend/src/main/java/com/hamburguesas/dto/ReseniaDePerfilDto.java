@@ -2,7 +2,7 @@ package com.hamburguesas.dto;
 
 import java.time.Instant;
 
-public record MyRatingDto(
+public record ReseniaDePerfilDto(
     Long id,
     Long burgerJointId,
     String burgerJointName,

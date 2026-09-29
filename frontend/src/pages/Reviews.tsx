@@ -5,14 +5,14 @@ import { LoadError } from '../components/LoadError'
 import { JointPhoto } from '../components/JointPhoto'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { useAuth } from '../context/AuthContext'
-import type { MyRating } from '../types'
+import type { ReseniaDePerfil } from '../types'
 import { isSessionExpired } from '../utils/errors'
 import { relativeDate } from '../utils/relativeDate'
 
 export function Reviews() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [ratings, setRatings] = useState<MyRating[]>([])
+  const [ratings, setRatings] = useState<ReseniaDePerfil[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
   const [attempt, setAttempt] = useState(0)
@@ -20,7 +20,7 @@ export function Reviews() {
   useEffect(() => {
     // RequireAuth guarantees there is a session by the time this renders.
     apiClient
-      .get<MyRating[]>('/profile/ratings')
+      .get<ReseniaDePerfil[]>('/profile/ratings')
       .then(({ data }) => setRatings(data))
       .catch((err) => {
         if (isSessionExpired(err)) navigate('/login')

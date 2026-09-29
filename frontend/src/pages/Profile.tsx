@@ -7,7 +7,7 @@ import { IconChevronRight, IconMedal, IconSettings, IconUser } from '../componen
 import { SavedTourCard } from '../components/SavedTourCard'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { useAuth } from '../context/AuthContext'
-import type { BurgerJoint, MyRating, ProfileStats, SavedTour } from '../types'
+import type { BurgerJoint, ReseniaDePerfil, ProfileStats, SavedTour } from '../types'
 import { isSessionExpired } from '../utils/errors'
 import { relativeDate } from '../utils/relativeDate'
 
@@ -15,7 +15,7 @@ export function Profile() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [stats, setStats] = useState<ProfileStats | null>(null)
-  const [ratings, setRatings] = useState<MyRating[]>([])
+  const [ratings, setRatings] = useState<ReseniaDePerfil[]>([])
   const [favorites, setFavorites] = useState<BurgerJoint[]>([])
   const [tours, setTours] = useState<SavedTour[]>([])
   const [borrando, setBorrando] = useState<number | null>(null)
@@ -27,7 +27,7 @@ export function Profile() {
     // RequireAuth guarantees there is a session by the time this renders.
     Promise.all([
       apiClient.get<ProfileStats>('/profile/stats'),
-      apiClient.get<MyRating[]>('/profile/ratings'),
+      apiClient.get<ReseniaDePerfil[]>('/profile/ratings'),
       apiClient.get<BurgerJoint[]>('/wishlist'),
       apiClient.get<SavedTour[]>('/tours/mios'),
     ])
