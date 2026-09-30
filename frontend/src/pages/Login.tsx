@@ -52,14 +52,26 @@ export function Login() {
   if (google.pendiente) return <PasoNombreDeGoogle google={google} />
 
   return (
-    <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-sm md:p-0 md:pt-8">
+    <div className="flex min-h-[70dvh] flex-col justify-center gap-4 p-4 md:mx-auto md:block md:min-h-0 md:max-w-sm md:p-0 md:pt-8">
       <div className="card card-border md:p-2">
         <div className="card-body gap-3">
           <h1 className="card-title font-display">Iniciar sesión</h1>
           <form onSubmit={onSubmit} className="flex flex-col gap-3">
+            {/* En el teléfono estas cuatro cosas son la diferencia entre entrar de una
+                y pelearse con el teclado. Sin autoComplete el gestor de contraseñas no
+                ofrece el mail, y no lo ofrece aunque la contraseña sí esté anotada:
+                necesita el par. Sin autoCapitalize, iOS escribe "Juan@..." con mayúscula
+                y el login falla sin que se vea por qué. Y enterKeyHint cambia la tecla
+                del teclado, que es cómo se avanza en un formulario desde el celular. */}
             <input
               type="email"
               required
+              autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="next"
+              aria-label="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
@@ -69,6 +81,11 @@ export function Login() {
               type="password"
               required
               autoComplete="current-password"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="go"
+              aria-label="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Contraseña"

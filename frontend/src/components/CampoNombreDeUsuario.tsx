@@ -23,10 +23,17 @@ export function CampoNombreDeUsuario({
         }`}
       >
         <span className="text-base-content/50">@</span>
+        {/* El nombre de usuario se guarda en minúsculas, así que dejar que el teclado
+            del teléfono ponga la primera en mayúscula solo consigue que lo escrito no
+            se parezca a lo que va a quedar. */}
         <input
           required
           autoFocus={autoFocus}
           autoComplete="username"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          enterKeyHint="next"
           minLength={3}
           value={campo.valor}
           onChange={(e) => campo.escribir(e.target.value)}
