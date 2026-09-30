@@ -4,13 +4,15 @@ import com.hamburguesas.model.BurgerJoint;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface BurgerJointRepository extends JpaRepository<BurgerJoint, Long> {
+public interface BurgerJointRepository
+    extends JpaRepository<BurgerJoint, Long>, JpaSpecificationExecutor<BurgerJoint> {
 
     /** Los que todavía no tienen foto, para completarlas en la próxima sincronización. */
     List<BurgerJoint> findByPhotoUrlIsNull();
@@ -28,23 +30,20 @@ public interface BurgerJointRepository extends JpaRepository<BurgerJoint, Long> 
           and (b.photoRule is null or b.photoRule < :regla)
         """)
     List<BurgerJoint> conFotoElegidaConUnaReglaVieja(@Param("regla") int regla);
-    Page<BurgerJoint> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
     /**
-     * El listado de Explorar cuando se apagaron las cadenas de comida rápida.
+     * El listado de Explorar, con los filtros que hayan puesto: el nombre, el barrio y
+     * si se muestran las cadenas.
      *
-     * Son 66 de los 417 locales, y entre McDonald's y Burger King ocupan tres páginas
-     * enteras. Quién es cadena lo decide FastFoodMarker al arrancar, así que acá
-     * alcanza con mirar la columna.
-     *
-     * Son dos consultas y no una con el nombre opcional a propósito: con el nombre en
-     * nulo, Postgres no puede deducir de qué tipo es el parámetro y lo toma como
-     * binario, así que falla con "no existe la función lower(bytea)". Los tests corren
-     * sobre H2, que sí lo deduce, y no lo veían.
+     * Eran cuatro consultas derivadas, una por combinación de nombre y cadenas, porque
+     * escribir los filtros como opcionales rompía contra Postgres. Con el barrio serían
+     * ocho. El porqué de armar la condición en vez de escribirla está en FiltroDeLocales.
      */
-    Page<BurgerJoint> findByFastFoodFalse(Pageable pageable);
+    default Page<BurgerJoint> buscar(String nombre, String barrio, boolean conCadenas,
+                                     Pageable pagina) {
+        return findAll(FiltroDeLocales.con(nombre, barrio, conCadenas), pagina);
+    }
 
-    Page<BurgerJoint> findByNameContainingIgnoreCaseAndFastFoodFalse(String name, Pageable pageable);
     Optional<BurgerJoint> findByPlaceId(String placeId);
 
     /**

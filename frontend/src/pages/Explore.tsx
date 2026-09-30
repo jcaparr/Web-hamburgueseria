@@ -32,6 +32,8 @@ function leerPreferencia(): boolean {
 export function Explore() {
   const [query, setQuery] = useState('')
   const [conCadenas, setConCadenas] = useState(leerPreferencia)
+  const [barrio, setBarrio] = useState('')
+  const [barrios, setBarrios] = useState<string[]>([])
   const [page, setPage] = useState(0)
   const [pageData, setPageData] = useState<PageResponse<BurgerJoint> | null>(null)
   const [loading, setLoading] = useState(false)
@@ -39,12 +41,28 @@ export function Explore() {
   // Sube con "Reintentar" para volver a correr la búsqueda con los mismos filtros.
   const [attempt, setAttempt] = useState(0)
 
+  // Los barrios se piden una sola vez: son los que tienen al menos un local, y eso no
+  // cambia mientras alguien mira la pantalla. Si falla, queda el selector en "Todos" y
+  // el resto de Explorar funciona igual.
+  useEffect(() => {
+    apiClient
+      .get<string[]>('/burger-joints/barrios')
+      .then(({ data }) => setBarrios(data))
+      .catch(() => setBarrios([]))
+  }, [])
+
   useEffect(() => {
     const timeout = setTimeout(() => {
       setLoading(true)
       apiClient
         .get<PageResponse<BurgerJoint>>('/burger-joints', {
-          params: { q: query || undefined, conCadenas, page, size: PAGE_SIZE },
+          params: {
+            q: query || undefined,
+            area: barrio || undefined,
+            conCadenas,
+            page,
+            size: PAGE_SIZE,
+          },
         })
         .then(({ data }) => {
           setPageData(data)
@@ -55,7 +73,7 @@ export function Explore() {
     }, 300)
 
     return () => clearTimeout(timeout)
-  }, [query, conCadenas, page, attempt])
+  }, [query, barrio, conCadenas, page, attempt])
 
   // Al cambiar de página la lista se renueva entera, pero el navegador conserva el
   // scroll: quedabas a mitad de la página nueva, empezando a leer por el medio.
@@ -90,6 +108,43 @@ export function Explore() {
         * fuera del medio; quien busca la más cercana, no. Por eso es una decisión de
         * quien mira, y arranca mostrándolas.
         */}
+      {/*
+        * El barrio va al lado del buscador y no adentro: son dos preguntas distintas.
+        * Buscar por nombre es "quiero este local"; elegir barrio es "quiero comer por
+        * acá", que es lo que uno se pregunta cuando todavía no sabe adónde ir.
+        */}
+      <div className="flex flex-wrap items-center gap-3">
+        <select
+          value={barrio}
+          aria-label="Filtrar por barrio"
+          onChange={(e) => {
+            setBarrio(e.target.value)
+            setPage(0)
+          }}
+          className="select select-sm w-full max-w-64 sm:w-auto"
+        >
+          <option value="">Todos los barrios</option>
+          {barrios.map((b) => (
+            <option key={b} value={b}>
+              {b}
+            </option>
+          ))}
+        </select>
+
+        {barrio && (
+          <button
+            type="button"
+            onClick={() => {
+              setBarrio('')
+              setPage(0)
+            }}
+            className="btn btn-ghost btn-sm"
+          >
+            Ver toda la ciudad
+          </button>
+        )}
+      </div>
+
       <label className="flex cursor-pointer items-center gap-3 self-start text-sm">
         <input
           type="checkbox"
@@ -147,8 +202,14 @@ export function Explore() {
             </div>
           </li>
         ))}
+        {/* Decir qué filtro dejó la lista vacía, que es lo que hay que aflojar: con el
+            barrio puesto, "con ese nombre" mandaba a cambiar lo que no era. */}
         {!loading && items.length === 0 && (
-          <p className="text-sm text-base-content/60">No encontramos hamburgueserías con ese nombre.</p>
+          <p className="text-sm text-base-content/60">
+            {barrio
+              ? `No encontramos hamburgueserías en ${barrio}${query ? ' con ese nombre' : ''}.`
+              : 'No encontramos hamburgueserías con ese nombre.'}
+          </p>
         )}
       </ul>
       )}

@@ -61,7 +61,7 @@ export function Tour() {
 
   useEffect(() => {
     apiClient
-      .get<string[]>('/tours/barrios')
+      .get<string[]>('/burger-joints/barrios')
       .then(({ data }) => setBarriosDisponibles(data))
       .catch(() => setBarriosDisponibles([]))
   }, [])
