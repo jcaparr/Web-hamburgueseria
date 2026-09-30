@@ -16,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -36,6 +37,7 @@ class RevisionDeFotosTest {
     private PlacesClient placesClient;
     private BurgerJointRepository repository;
     private PhotoStorage photoStorage;
+    private PlacesQuotaGuard quotaGuard;
     private PlacesSyncService service;
 
     @BeforeEach
@@ -47,7 +49,7 @@ class RevisionDeFotosTest {
         placesClient = mock(PlacesClient.class);
         repository = mock(BurgerJointRepository.class);
         photoStorage = mock(PhotoStorage.class);
-        PlacesQuotaGuard quotaGuard = mock(PlacesQuotaGuard.class);
+        quotaGuard = mock(PlacesQuotaGuard.class);
 
         when(quotaGuard.canCall(any())).thenReturn(true);
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of());
@@ -71,9 +73,16 @@ class RevisionDeFotosTest {
             .build();
     }
 
+    /**
+     * Cómo quedó el local después de la revisión.
+     *
+     * Toma el último guardado y no el único: un local puede guardarse dos veces en la
+     * misma pasada —primero para borrarle la anotación de "sin fotos" y después con la
+     * foto ya bajada— y lo que se afirma es cómo terminó.
+     */
     private BurgerJoint guardado() {
         ArgumentCaptor<BurgerJoint> capturado = ArgumentCaptor.forClass(BurgerJoint.class);
-        verify(repository).save(capturado.capture());
+        verify(repository, atLeastOnce()).save(capturado.capture());
         return capturado.getValue();
     }
 
@@ -133,6 +142,63 @@ class RevisionDeFotosTest {
 
         verify(placesClient, never()).downloadPhoto(anyString());
         assertThat(guardado().getPhotoRule()).isEqualTo(PlacesClient.REGLA_DE_FOTO);
+    }
+
+    /**
+     * Con la cuota de fotos agotada igual se averigua de qué locales no hay ninguna.
+     *
+     * Antes los dos pasos pedían las dos cuotas antes de empezar, así que la de fotos
+     * agotada frenaba también el trabajo que solo necesita la ficha. Y justo eso —saber
+     * de cuáles Google no tiene ni una foto— es lo que decide si se los esconde, y no
+     * cuesta una sola foto.
+     */
+    @Test
+    void sinCuotaDeFotosIgualAveriguaCualesNoTienenNinguna() {
+        when(quotaGuard.canCall(com.hamburguesas.model.PlacesCallType.PHOTO)).thenReturn(false);
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(local("Sin nada", null, null)));
+        when(placesClient.photoNameFor(anyString())).thenReturn(null);
+
+        service.revisarFotos();
+
+        assertThat(guardado().isSinFotosEnGoogle()).isTrue();
+    }
+
+    /**
+     * Y revisa las que no cambian de foto, que son la mayoría.
+     *
+     * Quedan anotadas con la regla nueva sin bajar nada, así el mes que viene la cuota
+     * de fotos se gasta solo en las que de verdad cambian.
+     */
+    @Test
+    void sinCuotaDeFotosIgualRevisaLasQueNoCambian() {
+        when(quotaGuard.canCall(com.hamburguesas.model.PlacesCallType.PHOTO)).thenReturn(false);
+        BurgerJoint local = local("Igual", "/api/place-photos/vieja.jpg", 2);
+        when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(local));
+        when(placesClient.photoNameFor(anyString())).thenReturn("places/x/photos/vieja");
+
+        service.revisarFotos();
+
+        assertThat(guardado().getPhotoRule()).isEqualTo(PlacesClient.REGLA_DE_FOTO);
+    }
+
+    /**
+     * La que sí cambia se deja para cuando haya cuota, sin anotarle la regla nueva.
+     *
+     * Si se la anotara, quedaría fuera de la lista del mes que viene y se habría perdido
+     * la mejora sin haber bajado nunca la foto.
+     */
+    @Test
+    void laQueCambiaSinCuotaQuedaParaElMesQueViene() {
+        when(quotaGuard.canCall(com.hamburguesas.model.PlacesCallType.PHOTO)).thenReturn(false);
+        BurgerJoint local = local("Cambia", "/api/place-photos/vieja.jpg", 2);
+        when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(local));
+        when(placesClient.photoNameFor(anyString())).thenReturn("places/x/photos/mejor");
+
+        service.revisarFotos();
+
+        verify(placesClient, never()).downloadPhoto(anyString());
+        verify(repository, never()).save(any());
+        assertThat(local.getPhotoRule()).isEqualTo(2);
     }
 
     /** Y si elige otra, esa se baja y reemplaza a la anterior. */
