@@ -91,6 +91,13 @@ app:
       - mcdonalds
       - wendys
       - mostaza
+      # Las tres de abajo son cadenas locales, con más sucursales que varias de las de
+      # arriba: Mr Tasty tiene trece en la base, Dean & Dennys ocho y Hamburguesas
+      # Extremas once. Sin esto, apagar las cadenas en Explorar dejaba treinta y dos
+      # sucursales de tres marcas en el listado.
+      - hamburguesasextremas
+      - deandennys
+      - mrtasty
     api-key: ${GOOGLE_MAPS_API_KEY:}
     sync:
       # Off by default even with a key configured: flip to true only when you're ready for it to run.
