@@ -55,10 +55,27 @@ class PlacesConfiguracionTest {
             assertThat(pregunta).contains("{barrio}"));
     }
 
-    /** Los 48 barrios de la Ciudad, que es lo que se recorre. */
+    /**
+     * Dónde se busca: los 48 barrios de la Ciudad más el conurbano y las ciudades del
+     * borde.
+     *
+     * Se afirman los límites que se quisieron cubrir, que es lo que costó decidir. La
+     * lista dice dónde preguntar; que un local entre o no lo decide el radio.
+     */
     @Test
-    void buscaEnLosCuarentaYOchoBarrios() {
-        assertThat(properties.getSync().getAreas()).hasSize(48).doesNotHaveDuplicates();
+    void buscaEnLaCiudadYEnElConurbano() {
+        List<String> donde = properties.getSync().getAreas();
+
+        assertThat(donde).doesNotHaveDuplicates().hasSizeGreaterThan(48);
+        assertThat(donde).contains("Palermo", "Mataderos");
+        assertThat(donde).contains("La Plata", "San Vicente", "Cañuelas", "Luján",
+            "Belén de Escobar");
+    }
+
+    /** El radio es lo que decide qué entra, y tiene que cubrir esos bordes. */
+    @Test
+    void elRadioCubreLosBordes() {
+        assertThat(properties.getSync().getRadioEnKm()).isGreaterThanOrEqualTo(75);
     }
 
     /**

@@ -63,7 +63,7 @@ class PlacesSyncPhotoBackfillTest {
         when(photoStorage.save(anyString(), any())).thenReturn("/api/place-photos/abc.jpg");
 
         service = new PlacesSyncService(
-            properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(),
+            properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(), new Zonas(new Barrios(), properties),
             mock(RatingRepository.class), mock(WishlistRepository.class),
             mock(SavedTourRepository.class),
             new FastFoodMarker(repository, properties));
