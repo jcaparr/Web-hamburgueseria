@@ -69,6 +69,7 @@ class RevisionDeFotosTest {
             .id(1L).placeId("ChIJ" + nombre).name(nombre)
             .address("Una dirección").area("Palermo")
             .photoUrl(photoUrl).photoName(photoUrl == null ? null : "places/x/photos/vieja")
+            .photoFingerprint(photoUrl == null ? null : "huella-de-places/x/photos/vieja")
             .photoRule(regla)
             .build();
     }
@@ -104,7 +105,7 @@ class RevisionDeFotosTest {
     @Test
     void anotaAlLocalDelQueGoogleNoTieneNingunaFoto() {
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(local("Sin nada", null, null)));
-        when(placesClient.photoNameFor(anyString())).thenReturn(null);
+        when(placesClient.fotoDe(anyString())).thenReturn(null);
 
         service.revisarFotos();
 
@@ -117,7 +118,7 @@ class RevisionDeFotosTest {
         BurgerJoint local = local("Ya tiene", null, null);
         local.setSinFotosEnGoogle(true);
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(local));
-        when(placesClient.photoNameFor(anyString())).thenReturn("places/x/photos/nueva");
+        when(placesClient.fotoDe(anyString())).thenReturn(new FotoElegida("places/x/photos/nueva", "huella-de-places/x/photos/nueva"));
         when(placesClient.downloadPhoto(anyString())).thenReturn(new byte[] {1, 2, 3});
         when(photoStorage.save(anyString(), any())).thenReturn("/api/place-photos/x.jpg");
 
@@ -136,7 +137,7 @@ class RevisionDeFotosTest {
     void siLaReglaNuevaEligeLaMismaFotoNoLaVuelveABajar() {
         BurgerJoint local = local("Igual", "/api/place-photos/vieja.jpg", 2);
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(local));
-        when(placesClient.photoNameFor(anyString())).thenReturn("places/x/photos/vieja");
+        when(placesClient.fotoDe(anyString())).thenReturn(new FotoElegida("places/x/photos/vieja", "huella-de-places/x/photos/vieja"));
 
         service.revisarFotos();
 
@@ -156,7 +157,7 @@ class RevisionDeFotosTest {
     void sinCuotaDeFotosIgualAveriguaCualesNoTienenNinguna() {
         when(quotaGuard.canCall(com.hamburguesas.model.PlacesCallType.PHOTO)).thenReturn(false);
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(local("Sin nada", null, null)));
-        when(placesClient.photoNameFor(anyString())).thenReturn(null);
+        when(placesClient.fotoDe(anyString())).thenReturn(null);
 
         service.revisarFotos();
 
@@ -174,7 +175,7 @@ class RevisionDeFotosTest {
         when(quotaGuard.canCall(com.hamburguesas.model.PlacesCallType.PHOTO)).thenReturn(false);
         BurgerJoint local = local("Igual", "/api/place-photos/vieja.jpg", 2);
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(local));
-        when(placesClient.photoNameFor(anyString())).thenReturn("places/x/photos/vieja");
+        when(placesClient.fotoDe(anyString())).thenReturn(new FotoElegida("places/x/photos/vieja", "huella-de-places/x/photos/vieja"));
 
         service.revisarFotos();
 
@@ -192,7 +193,7 @@ class RevisionDeFotosTest {
         when(quotaGuard.canCall(com.hamburguesas.model.PlacesCallType.PHOTO)).thenReturn(false);
         BurgerJoint local = local("Cambia", "/api/place-photos/vieja.jpg", 2);
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(local));
-        when(placesClient.photoNameFor(anyString())).thenReturn("places/x/photos/mejor");
+        when(placesClient.fotoDe(anyString())).thenReturn(new FotoElegida("places/x/photos/mejor", "huella-de-places/x/photos/mejor"));
 
         service.revisarFotos();
 
@@ -206,7 +207,7 @@ class RevisionDeFotosTest {
     void siLaReglaNuevaEligeOtraFotoLaReemplaza() {
         BurgerJoint local = local("Cambia", "/api/place-photos/vieja.jpg", 2);
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(local));
-        when(placesClient.photoNameFor(anyString())).thenReturn("places/x/photos/mejor");
+        when(placesClient.fotoDe(anyString())).thenReturn(new FotoElegida("places/x/photos/mejor", "huella-de-places/x/photos/mejor"));
         when(placesClient.downloadPhoto(anyString())).thenReturn(new byte[] {1, 2, 3});
         when(photoStorage.save(anyString(), any())).thenReturn("/api/place-photos/mejor.jpg");
 

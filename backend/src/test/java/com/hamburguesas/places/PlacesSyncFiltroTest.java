@@ -76,7 +76,7 @@ class PlacesSyncFiltroTest {
 
     private static PlacesSearchResult.Place lugar(String nombre, double lat, double lon, String rubro) {
         return new PlacesSearchResult.Place(
-            "ChIJ-" + nombre, nombre, "Una dirección", lat, lon, null, rubro);
+            "ChIJ-" + nombre, nombre, "Una dirección", lat, lon, null, null, rubro);
     }
 
     /**
