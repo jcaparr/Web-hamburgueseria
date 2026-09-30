@@ -60,4 +60,28 @@ class PlacesConfiguracionTest {
     void buscaEnLosCuarentaYOchoBarrios() {
         assertThat(properties.getSync().getAreas()).hasSize(48).doesNotHaveDuplicates();
     }
+
+    /**
+     * Los locales que se anotaron a mano después de mirar sus fotos en Google.
+     *
+     * Ninguna regla los agarra: Google les pone el rubro hamburguesería igual, y de la
+     * ficha sola no se puede deducir que cocinan otra cosa. Lo único que los frena es
+     * este renglón, y borrarlo los devuelve al listado sin que falle nada más.
+     */
+    @Test
+    void dejaAfueraLasFichasQueSeRevisaronAMano() {
+        assertThat(properties.getSync().getExcludedPlaceIds())
+            // "Las Delicias de O & P": rotisería, ninguna de sus diez fotos es una hamburguesa.
+            .contains("ChIJeUPEbarOvJURhWbGRz-dl6c")
+            // "Pizza Burger": pizzería, entró solo por tener "burger" en el nombre.
+            .contains("ChIJB2UW9My1vJUR4qN1P3ZodXM");
+    }
+
+    /** Un mismo local anotado de los dos lados sería una regla que se contradice. */
+    @Test
+    void ningunLocalEstaAnotadoParaEntrarYParaSalir() {
+        assertThat(properties.getSync().getExcludedPlaceIds())
+            .doesNotHaveDuplicates()
+            .doesNotContainAnyElementsOf(properties.getSync().getIncludedPlaceIds());
+    }
 }
