@@ -36,13 +36,14 @@ spring:
       mail.smtp.timeout: 10000
       mail.smtp.writetimeout: 10000
 
-  # Una foto de celular ronda los 3 MB; 8 deja margen sin que una subida cualquiera
-  # pueda ocupar memoria y disco a voluntad. Lo que se guarda pesa mucho menos: al
-  # entrar se achica y se reescribe.
+  # Una foto de celular ronda los 3 MB, y las de gama alta pasan los 8; 12 entra sin
+  # que nadie tenga que achicarla antes, y sigue lejos de que una subida cualquiera
+  # pueda ocupar memoria a voluntad. Lo que queda en disco pesa mucho menos: al entrar
+  # se achica a 2048 de lado y se reescribe.
   servlet:
     multipart:
-      max-file-size: 8MB
-      max-request-size: 10MB
+      max-file-size: 12MB
+      max-request-size: 14MB
 
 app:
   # Las fotos que sube la gente, aparte de las que bajan de Google: son de otra

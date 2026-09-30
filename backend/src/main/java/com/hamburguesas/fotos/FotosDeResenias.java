@@ -47,10 +47,24 @@ public class FotosDeResenias {
      * El lado más largo que se guarda.
      *
      * Una foto de celular viene con varias veces esto. Achicarla es lo que hace que el
-     * disco no crezca a diez megas por reseña, y en una tarjeta del feed nadie nota la
-     * diferencia.
+     * disco no crezca a diez megas por reseña. A 2048 una foto llena la pantalla de
+     * cualquier teléfono con margen de sobra, y se sigue viendo bien si alguien la
+     * abre en una notebook.
      */
-    private static final int LADO_MAXIMO = 1600;
+    private static final int LADO_MAXIMO = 2048;
+
+    /**
+     * El lado más corto que se acepta.
+     *
+     * La tarjeta muestra la foto en un cuadrado, así que el lado corto es el que decide
+     * cuán nítida se ve: una foto de 400 de alto estirada a 520 se ve borrosa por más
+     * que la otra dimensión sobre. Acá no se agranda nada —eso solo inventa píxeles—
+     * así que lo único que se puede hacer es avisarle a quien la sube.
+     *
+     * Cualquier foto sacada con un teléfono pasa los mil. Las que no llegan suelen ser
+     * capturas de pantalla o imágenes bajadas de algún lado.
+     */
+    private static final int LADO_MINIMO = 600;
 
     /**
      * Cuántos píxeles se aceptan decodificar.
@@ -62,7 +76,7 @@ public class FotosDeResenias {
      */
     private static final long PIXELES_MAXIMOS = 50_000_000L;
 
-    private static final float CALIDAD = 0.85f;
+    private static final float CALIDAD = 0.9f;
 
     @Value("${app.fotos-de-resenias.directorio:./data/rating-photos}")
     private String directorio;
@@ -143,9 +157,16 @@ public class FotosDeResenias {
             ImageReader lector = lectores.next();
             try {
                 lector.setInput(entrada);
-                long pixeles = (long) lector.getWidth(0) * lector.getHeight(0);
-                if (pixeles > PIXELES_MAXIMOS) {
+                int ancho = lector.getWidth(0);
+                int alto = lector.getHeight(0);
+
+                if ((long) ancho * alto > PIXELES_MAXIMOS) {
                     throw new ConflictException("Esa imagen es demasiado grande");
+                }
+                if (Math.min(ancho, alto) < LADO_MINIMO) {
+                    throw new ConflictException(
+                        "Esa foto es muy chica (" + ancho + "×" + alto + ") y se vería"
+                            + " borrosa. Necesita al menos " + LADO_MINIMO + " px de lado.");
                 }
                 return lector.read(0);
             } finally {

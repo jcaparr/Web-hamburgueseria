@@ -29,44 +29,36 @@ public class RatingController {
         return ratingService.list(burgerJointId, pageable);
     }
 
+    /**
+     * Texto y foto viajan juntos, en multipart.
+     *
+     * La foto es parte de la reseña, no un agregado: mandarlos en dos llamadas dejaría
+     * abierta la ventana en que el texto ya está guardado y la foto no, que es
+     * exactamente la reseña sin foto que no queremos que exista.
+     *
+     * Los campos van sueltos y no como un JSON adentro del multipart: un formulario con
+     * un archivo ya manda todo lo demás como campos, y meter JSON en el medio obligaría
+     * a quien llama a armar dos codificaciones distintas en el mismo pedido.
+     */
     @PostMapping
     public ResponseEntity<RatingResponse> rate(
         @PathVariable Long burgerJointId,
-        @Valid @RequestBody RatingRequest request
+        @Valid @ModelAttribute RatingRequest request,
+        @RequestParam(value = "foto", required = false) MultipartFile foto
     ) {
         RatingResponse response = ratingService.rate(
-            CurrentUser.requireId(), burgerJointId, request
+            CurrentUser.requireId(), burgerJointId, request, foto
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    /** La foto solo hace falta si la reseña todavía no tiene: editar no es refotografiar. */
     @PutMapping
     public RatingResponse update(
         @PathVariable Long burgerJointId,
-        @Valid @RequestBody RatingRequest request
+        @Valid @ModelAttribute RatingRequest request,
+        @RequestParam(value = "foto", required = false) MultipartFile foto
     ) {
-        return ratingService.update(CurrentUser.requireId(), burgerJointId, request);
-    }
-
-    /**
-     * La foto va aparte del texto, en su propia llamada.
-     *
-     * Podría viajar todo junto en un multipart, pero entonces un problema con la foto
-     * —que pesa, que tarda, que no se pudo leer— se llevaría puesto lo escrito. Así, si
-     * la foto falla, la reseña ya está guardada y lo único que hay que reintentar es la
-     * foto. Por eso también exige que la reseña exista: primero se opina, después se
-     * ilustra.
-     */
-    @PutMapping("/foto")
-    public RatingResponse subirFoto(
-        @PathVariable Long burgerJointId,
-        @RequestParam("foto") MultipartFile foto
-    ) {
-        return ratingService.guardarFoto(CurrentUser.requireId(), burgerJointId, foto);
-    }
-
-    @DeleteMapping("/foto")
-    public RatingResponse borrarFoto(@PathVariable Long burgerJointId) {
-        return ratingService.borrarFoto(CurrentUser.requireId(), burgerJointId);
+        return ratingService.update(CurrentUser.requireId(), burgerJointId, request, foto);
     }
 }

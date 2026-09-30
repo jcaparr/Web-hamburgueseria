@@ -91,3 +91,13 @@ export function IconChevronRight({ size = 16, className }: IconProps) {
     </svg>
   )
 }
+
+/** La cámara del selector de foto de la reseña. */
+export function IconCamera({ size = 18, className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.6} className={className}>
+      <path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2.2l1.1-2h8.4l1.1 2h2.2A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z" />
+      <circle cx="12" cy="13" r="3.8" />
+    </svg>
+  )
+}

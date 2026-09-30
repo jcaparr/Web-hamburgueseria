@@ -72,7 +72,11 @@ export function Feed() {
   }, [fuente, siguiente, trayendoMas])
 
   return (
-    <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-2xl md:p-0 md:pt-6">
+    // Angosto en pantalla grande, y no todo el ancho disponible: la foto se muestra en
+    // un cuadrado tan ancho como la columna, así que una columna de 900 px pediría
+    // fotos de 900 para verse nítida. A este ancho, el mínimo que se exige al subir
+    // alcanza y sobra.
+    <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-[560px] md:p-0 md:pt-6">
       <div className="flex items-center gap-3">
         <Link
           to="/buscar"
