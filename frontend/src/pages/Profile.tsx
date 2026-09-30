@@ -195,21 +195,29 @@ export function Profile() {
             <IconChevronRight size={14} />
           </Link>
         </div>
-        <div className="flex flex-col gap-3">
-          {tours.map((tour) => (
-            <SavedTourCard
-              key={tour.id}
-              tour={tour}
-              onBorrar={borrarTour}
-              borrando={borrando === tour.id}
-            />
-          ))}
-          {!loading && tours.length === 0 && (
+        {/* De costado y no apilados, igual que favoritos. Cada recorrido ocupa alto
+            —el nombre, la distancia y las paradas en miniatura—, así que con cuatro
+            guardados el perfil se volvía una tira interminable y lo de abajo, los
+            logros y las cuentas bloqueadas, no lo veía nadie. */}
+        {tours.length > 0 ? (
+          <div className="flex gap-3 overflow-x-auto pb-1">
+            {tours.map((tour) => (
+              <div key={tour.id} className="w-72 flex-none">
+                <SavedTourCard
+                  tour={tour}
+                  onBorrar={borrarTour}
+                  borrando={borrando === tour.id}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          !loading && (
             <p className="text-sm text-base-content/60">
               Todavía no guardaste ningún recorrido.
             </p>
-          )}
-        </div>
+          )
+        )}
       </section>
 
       <CuentasBloqueadas />
