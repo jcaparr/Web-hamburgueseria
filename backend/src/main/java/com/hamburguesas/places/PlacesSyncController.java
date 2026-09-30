@@ -51,6 +51,25 @@ public class PlacesSyncController {
         return ResponseEntity.ok(syncService.sync());
     }
 
+    /**
+     * Solo las fotos: completa las que faltan y vuelve a elegir las viejas.
+     *
+     * Aparte del disparador completo porque son dos trabajos de costo muy distinto. La
+     * sincronización entera gasta hasta mil búsquedas recorriendo los 48 barrios; esto
+     * no busca nada, y es lo único que hace falta cuando lo que cambió es la regla de
+     * elección de foto.
+     */
+    @PostMapping("/fotos")
+    public ResponseEntity<?> revisarFotos(
+        @RequestHeader(name = TOKEN_HEADER, required = false) String token
+    ) {
+        if (!authorized(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(syncService.revisarFotos());
+    }
+
     private boolean authorized(String presented) {
         String expected = properties.getSync().getTriggerToken();
         if (expected == null || expected.isBlank() || presented == null) {

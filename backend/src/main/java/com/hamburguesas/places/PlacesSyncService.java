@@ -37,6 +37,34 @@ public class PlacesSyncService {
     private final SavedTourRepository savedTourRepository;
     private final FastFoodMarker fastFoodMarker;
 
+    /**
+     * Revisa solo las fotos: completa las que faltan y vuelve a elegir las que se
+     * eligieron con una regla vieja. No busca locales nuevos.
+     *
+     * Existe porque cambiar la regla de elección no cambia ninguna foto por sí solo: lo
+     * que hay guardado se queda como está hasta que alguien vuelva a mirarlo. Y la
+     * sincronización completa, que es donde vivía esa revisión, gasta además hasta mil
+     * búsquedas por los 48 barrios, que es la parte cara y la que acá no hace falta.
+     *
+     * Cuesta una ficha por local —el tramo gratis es de 5.000 por mes— y una foto solo
+     * por los que efectivamente cambian.
+     */
+    public PlacesSyncReport revisarFotos() {
+        if (!properties.hasApiKey()) {
+            log.warn("Revisión de fotos salteada: falta la clave de Google");
+            return PlacesSyncReport.skipped("Falta configurar GOOGLE_MAPS_API_KEY");
+        }
+
+        MissingPhotosResult faltantes = fillMissingPhotos();
+        int recambiadas = repickOldPhotos();
+
+        log.info("Revisión de fotos: {} bajadas, {} prestadas de otra sucursal, {} recambiadas",
+            faltantes.downloaded(), faltantes.reused(), recambiadas);
+
+        return PlacesSyncReport.soloFotos(
+            faltantes.downloaded() + recambiadas, faltantes.reused());
+    }
+
     public PlacesSyncReport sync() {
         if (!properties.hasApiKey()) {
             log.warn("Places sync skipped: no API key configured");
@@ -411,6 +439,9 @@ public class PlacesSyncService {
             }
 
             if (photoName != null) {
+                // Tenía fotos: si venía anotado como que no, se corrige. Un local que
+                // recién abrió y todavía no tiene ninguna va a tenerlas más adelante.
+                joint.setSinFotosEnGoogle(false);
                 String photoUrl = downloadPhoto(joint.getPlaceId(), photoName);
                 if (photoUrl != null) {
                     joint.setPhotoUrl(photoUrl);
@@ -421,6 +452,12 @@ public class PlacesSyncService {
                     downloaded++;
                     continue;
                 }
+            } else {
+                // Google no tiene ni una foto de este local. Queda anotado porque es lo
+                // único que distingue "no hay nada" de "no fuimos a buscarlo", y la
+                // diferencia decide si se lo esconde o se lo completa.
+                joint.setSinFotosEnGoogle(true);
+                burgerJointRepository.save(joint);
             }
 
             // Google no tiene fotos de esta dirección. Si es una sucursal de una cadena
