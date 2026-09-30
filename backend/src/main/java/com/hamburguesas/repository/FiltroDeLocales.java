@@ -6,7 +6,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+
 
 /**
  * Los filtros de Explorar, armados solo con los que llegaron.
@@ -31,11 +31,15 @@ final class FiltroDeLocales {
             List<Predicate> condiciones = new ArrayList<>();
 
             if (tieneAlgo(nombre)) {
-                // El % y el _ que alguien escriba en el buscador son comodines del LIKE:
-                // sin escaparlos, buscar "%" devuelve el listado entero.
-                String patron = "%" + nombre.toLowerCase(Locale.ROOT)
+                // Se busca contra el nombre sin acentos, y lo que se escribió se le saca
+                // los acentos con la misma regla: nadie los escribe en un buscador, y
+                // "Atiko" tiene que encontrar a "Átiko".
+                //
+                // El % y el _ que alguien escriba son comodines del LIKE: sin escaparlos,
+                // buscar "%" devuelve el listado entero.
+                String patron = "%" + BurgerJoint.sinAcentos(nombre)
                     .replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
-                condiciones.add(cb.like(cb.lower(local.get("name")), patron, '\\'));
+                condiciones.add(cb.like(local.get("nombreParaBuscar"), patron, '\\'));
             }
 
             if (tieneAlgo(barrio)) {

@@ -128,6 +128,42 @@ class FiltrosDeExplorarTest {
         assertThat(nombres("_", null, true)).isEmpty();
     }
 
+    /**
+     * Buscar sin acentos tiene que encontrar lo que los tiene.
+     *
+     * Nadie los escribe en un buscador, y la mitad de los barrios de la Ciudad los
+     * tienen: "Atiko" no encontraba a "Átiko - Agronomia", ni "Nunez" a los de Núñez.
+     */
+    @Test
+    void buscarSinAcentosEncuentraLoQueLosTiene() {
+        guardar("Átiko - Agronomía", "Palermo", false);
+
+        assertThat(nombres("atiko", null, true)).containsExactly("Átiko - Agronomía");
+        assertThat(nombres("Atiko", null, true)).containsExactly("Átiko - Agronomía");
+        assertThat(nombres("agronomia", null, true)).containsExactly("Átiko - Agronomía");
+    }
+
+    /** Y al revés: escribirlos con acento también tiene que encontrar. */
+    @Test
+    void buscarConAcentosTambienEncuentra() {
+        guardar("Átiko - Agronomía", "Palermo", false);
+
+        assertThat(nombres("Átiko", null, true)).containsExactly("Átiko - Agronomía");
+    }
+
+    /** Cambiarle el nombre a un local tiene que dejarlo encontrable por el nuevo. */
+    @Test
+    void alCambiarleElNombreSeLoEncuentraPorElNuevo() {
+        BurgerJoint local = repository.save(BurgerJoint.builder()
+            .name("Menganito").address("Una dirección").area("Palermo").fastFood(false)
+            .build());
+
+        local.setName("Ñandú Burger");
+        repository.saveAndFlush(local);
+
+        assertThat(nombres("nandu", null, true)).containsExactly("Ñandú Burger");
+    }
+
     /** Los barrios que se ofrecen en el selector son los que tienen algún local. */
     @Test
     void elSelectorOfreceLosBarriosQueTienenLocales() {
