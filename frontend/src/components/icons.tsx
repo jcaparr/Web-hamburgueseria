@@ -101,3 +101,13 @@ export function IconCamera({ size = 18, className }: IconProps) {
     </svg>
   )
 }
+
+/** El lápiz de editar la propia reseña. */
+export function IconPencil({ size = 18, className }: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" className={className}>
+      <path d="M13.5 3.5l3 3-9 9H4.5v-3z" />
+      <path d="M11.5 5.5l3 3" />
+    </svg>
+  )
+}

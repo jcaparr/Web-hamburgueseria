@@ -7,6 +7,7 @@ import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.Rating;
 import com.hamburguesas.model.User;
 import com.hamburguesas.repository.BurgerJointRepository;
+import com.hamburguesas.repository.FollowRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,7 +51,8 @@ class ReseniaConFotoTest {
         when(ratingRepository.save(any(Rating.class))).thenAnswer(l -> l.getArgument(0));
         when(fotos.guardar(any())).thenReturn("/api/rating-photos/nueva.jpg");
 
-        service = new RatingService(ratingRepository, burgerJointRepository, userRepository, fotos);
+        service = new RatingService(ratingRepository, burgerJointRepository, userRepository, fotos,
+            mock(FollowRepository.class), mock(Bloqueos.class));
     }
 
     private MultipartFile unaFoto() {

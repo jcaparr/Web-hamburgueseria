@@ -148,6 +148,16 @@ app:
         - ChIJ8YuQn6E1o5UR8RZ6EMOE024
         # "Milanga& Co": cadena de sándwiches de milanesa, no vende hamburguesas.
         - ChIJpZeFRwDLvJURYfpCURzGISA
+        # Los dos de abajo salieron de mirar las fotos que el propio local tiene en
+        # Google, que es el único lugar donde se ve qué cocinan. No hay regla que los
+        # agarre: Google los da como hamburguesería igual.
+        # "Las Delicias de O & P": rotisería. De sus diez fotos ninguna es una
+        # hamburguesa; son fugazzas, una milanesa a caballo y un pollo al horno.
+        - ChIJeUPEbarOvJURhWbGRz-dl6c
+        # "Pizza Burger": pizzería, como las dos "Pizza, Birra & Burger" de arriba.
+        # Es el único de la base al que Google no le pone el rubro hamburguesería:
+        # entró solo por tener "burger" en el nombre.
+        - ChIJB2UW9My1vJUR4qN1P3ZodXM
       # Hamburgueserías que Google clasifica como otra cosa y que ninguna regla rescata.
       # Entran acá solo si el local es una hamburguesería de hecho, no un bar que además
       # vende hamburguesas.

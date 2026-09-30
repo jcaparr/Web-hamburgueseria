@@ -2,6 +2,7 @@ package com.hamburguesas.controller;
 
 import com.hamburguesas.dto.RatingRequest;
 import com.hamburguesas.dto.RatingResponse;
+import com.hamburguesas.dto.ResumenDeReseniasDto;
 import com.hamburguesas.security.CurrentUser;
 import com.hamburguesas.service.RatingService;
 import jakarta.validation.Valid;
@@ -26,7 +27,21 @@ public class RatingController {
         @PathVariable Long burgerJointId,
         @PageableDefault(size = 20) Pageable pageable
     ) {
-        return ratingService.list(burgerJointId, pageable);
+        return ratingService.list(burgerJointId, CurrentUser.idOrNull(), pageable);
+    }
+
+    /**
+     * La distribución de notas y lo que dijeron los que seguís.
+     *
+     * Va aparte de la lista y no dentro de la ficha del local: la ficha se arma también
+     * al listar veinte hamburgueserías en el explorar, y estas dos consultas ahí serían
+     * cuarenta consultas para datos que esa pantalla no muestra.
+     *
+     * Responde sin sesión, con la parte social vacía.
+     */
+    @GetMapping("/resumen")
+    public ResumenDeReseniasDto resumen(@PathVariable Long burgerJointId) {
+        return ratingService.resumen(burgerJointId, CurrentUser.idOrNull());
     }
 
     /**

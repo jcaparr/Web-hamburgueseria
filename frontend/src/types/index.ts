@@ -50,9 +50,22 @@ export interface Rating {
   username: string
   score: number
   comment: string | null
-  fotoDeLaResenia: string | null
   photoUrl: string | null
   createdAt: string
+}
+
+/** Cuántas reseñas tiene una nota. */
+export interface NotaYCuantas {
+  nota: number
+  cuantas: number
+}
+
+/** Lo que va arriba de la lista de reseñas de un local. */
+export interface ResumenDeResenias {
+  /** Las cinco notas, del 1 al 5, con cero incluido. */
+  distribucion: NotaYCuantas[]
+  /** Las reseñas de la gente que seguís. Vacía sin sesión. */
+  deQuienesSigo: Rating[]
 }
 
 export interface RankingItem {

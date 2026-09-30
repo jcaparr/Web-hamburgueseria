@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
+import { IconPencil } from '../components/icons'
 import { LoadError } from '../components/LoadError'
 import { JointPhoto } from '../components/JointPhoto'
 import { ScoreBadge } from '../components/ScoreBadge'
@@ -56,6 +57,15 @@ export function Reviews() {
               <ScoreBadge score={r.score} size="sm" />
             </Link>
             {r.comment && <p className="mt-2 text-sm text-base-content/70">{r.comment}</p>}
+            {/* Lleva a la ficha del local con la ventana de reseñar ya abierta. Editar
+                era: entrar al local y bajar a buscar el formulario. */}
+            <Link
+              to={`/burger-joints/${r.burgerJointId}?opinar=1`}
+              className="btn btn-ghost btn-xs mt-2 gap-1.5 text-base-content/60"
+            >
+              <IconPencil size={14} />
+              Editar
+            </Link>
           </li>
         ))}
         {!loading && !error && ratings.length === 0 && (
