@@ -1,7 +1,9 @@
 package com.hamburguesas.repository;
 
 import com.hamburguesas.dto.ItemDeFeedDto;
+import com.hamburguesas.dto.NotaYCuantasDto;
 import com.hamburguesas.dto.RankingItemDto;
+import com.hamburguesas.dto.RatingResponse;
 import com.hamburguesas.dto.ReseniaDePerfilDto;
 import com.hamburguesas.dto.ReseniasPorUsuarioDto;
 import com.hamburguesas.model.Rating;
@@ -69,6 +71,43 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
      */
     @Query("select r.burgerJoint.id, avg(r.score), count(r) from Rating r group by r.burgerJoint.id")
     List<Object[]> promediosPorLocal();
+
+    /**
+     * Cuántas reseñas tiene cada nota en un local.
+     *
+     * Las notas que nadie puso no salen: un group by no inventa filas para lo que no
+     * existe. Quien llama completa los ceros, porque las cinco barras tienen que estar
+     * aunque tres estén vacías.
+     */
+    @Query("""
+        select new com.hamburguesas.dto.NotaYCuantasDto(r.score, count(r))
+        from Rating r
+        where r.burgerJoint.id = :burgerJointId
+        group by r.score
+        """)
+    List<NotaYCuantasDto> distribucionDeNotas(@Param("burgerJointId") Long burgerJointId);
+
+    /**
+     * Las reseñas de un grupo de personas sobre un local.
+     *
+     * Sirve para asomar arriba lo que dijeron los que seguís: de una lista de veinte
+     * reseñas, la de alguien que te importa puede estar en la página tres, y ahí no la
+     * ve nadie.
+     *
+     * No filtra bloqueados porque quien llama ya los sacó del grupo: bloquear borra el
+     * seguir en las dos direcciones, así que un bloqueado no puede estar entre los
+     * seguidos, y el filtro iría contra una lista que ya está limpia.
+     */
+    @Query("""
+        select new com.hamburguesas.dto.RatingResponse(
+            r.id, u.id, u.username, r.score, r.comment, r.photoUrl, r.createdAt)
+        from Rating r join r.user u
+        where r.burgerJoint.id = :burgerJointId
+          and u.id in :autores
+        order by r.createdAt desc
+        """)
+    List<RatingResponse> deAutoresEn(@Param("burgerJointId") Long burgerJointId,
+                                     @Param("autores") Collection<Long> autores);
 
     @Query("select avg(r.score) from Rating r where r.burgerJoint.id = :burgerJointId")
     Double averageScoreByBurgerJoint(@Param("burgerJointId") Long burgerJointId);

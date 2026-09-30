@@ -1,7 +1,9 @@
 package com.hamburguesas.service;
 
+import com.hamburguesas.dto.NotaYCuantasDto;
 import com.hamburguesas.dto.RatingRequest;
 import com.hamburguesas.dto.RatingResponse;
+import com.hamburguesas.dto.ResumenDeReseniasDto;
 import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.fotos.FotosDeResenias;
 import com.hamburguesas.exception.ResourceNotFoundException;
@@ -9,6 +11,7 @@ import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.Rating;
 import com.hamburguesas.model.User;
 import com.hamburguesas.repository.BurgerJointRepository;
+import com.hamburguesas.repository.FollowRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +36,8 @@ public class RatingService {
     private final BurgerJointRepository burgerJointRepository;
     private final UserRepository userRepository;
     private final FotosDeResenias fotos;
+    private final FollowRepository followRepository;
+    private final Bloqueos bloqueos;
 
     /**
      * La foto es parte de la reseña, no un agregado posterior.
@@ -109,6 +119,44 @@ public class RatingService {
         return ratingRepository
             .findByBurgerJoint_IdOrderByCreatedAtDesc(burgerJointId, pageable)
             .map(this::toResponse);
+    }
+
+    /**
+     * Lo que va arriba de la lista de reseñas: la distribución de notas y lo que
+     * dijeron los que seguís.
+     *
+     * Sin sesión la segunda parte viene vacía en vez de dar error. Un local se puede
+     * mirar sin cuenta, y la distribución es información del local, no de nadie.
+     */
+    @Transactional(readOnly = true)
+    public ResumenDeReseniasDto resumen(Long burgerJointId, Long userId) {
+        Map<Integer, Long> cuantasPorNota = ratingRepository
+            .distribucionDeNotas(burgerJointId).stream()
+            .collect(Collectors.toMap(NotaYCuantasDto::nota, NotaYCuantasDto::cuantas));
+
+        List<NotaYCuantasDto> distribucion = IntStream.rangeClosed(1, 5)
+            .mapToObj(nota -> new NotaYCuantasDto(nota, cuantasPorNota.getOrDefault(nota, 0L)))
+            .toList();
+
+        // El total sale de sumar las barras y no de contar otra vez: son las mismas
+        // filas, y una segunda consulta podría hasta no coincidir con la primera.
+        long total = distribucion.stream().mapToLong(NotaYCuantasDto::cuantas).sum();
+
+        return new ResumenDeReseniasDto(distribucion, total, deQuienesSigo(burgerJointId, userId));
+    }
+
+    private List<RatingResponse> deQuienesSigo(Long burgerJointId, Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+
+        List<Long> seguidos = new ArrayList<>(followRepository.idsQueSigue(userId));
+        seguidos.removeAll(bloqueos.queNoPuedeVer(userId));
+        if (seguidos.isEmpty()) {
+            return List.of();
+        }
+
+        return ratingRepository.deAutoresEn(burgerJointId, seguidos);
     }
 
     private byte[] leer(MultipartFile foto) {
