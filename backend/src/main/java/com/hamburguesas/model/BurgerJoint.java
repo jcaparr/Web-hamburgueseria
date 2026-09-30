@@ -55,6 +55,16 @@ public class BurgerJoint {
     private Integer photoRule;
 
     /**
+     * Cómo reconocer la foto que tenemos bajada.
+     *
+     * El nombre que devuelve Google no sirve: cambia en cada pedido, así que comparar
+     * por nombre daba siempre distinto y cada revisión volvía a bajar todas las fotos.
+     * El porqué de esta huella, y qué la compone, está en FotoElegida.
+     */
+    @Column(name = "photo_fingerprint", length = 200)
+    private String photoFingerprint;
+
+    /**
      * Si es sucursal de una cadena de comida rápida. Lo completa FastFoodMarker al
      * arrancar, a partir de la lista de marcas de la configuración: el rubro que
      * declara Google no alcanza, porque clasifica desparejo dentro de una cadena.

@@ -98,7 +98,7 @@ public class PlacesClient {
       *
       * @return el nombre de la foto elegida, o null si el local no tiene ninguna.
       */
-     public String photoNameFor(String placeId) {
+     public FotoElegida fotoDe(String placeId) {
          JsonNode place = restClient.get()
              .uri("https://places.googleapis.com/v1/places/{placeId}", placeId)
              .header("X-Goog-Api-Key", properties.getApiKey())
@@ -106,7 +106,7 @@ public class PlacesClient {
              .retrieve()
              .body(JsonNode.class);
 
-         return place == null ? null : bestPhotoName(place);
+         return place == null ? null : mejorFoto(place);
      }
 
     /**
@@ -142,6 +142,7 @@ public class PlacesClient {
         }
 
         for (JsonNode node : response.path("places")) {
+            FotoElegida foto = mejorFoto(node);
             places.add(new PlacesSearchResult.Place(
                 node.path("id").asText(null),
                 node.path("displayName").path("text").asText(null),
@@ -150,7 +151,8 @@ public class PlacesClient {
                     ? null : node.path("location").path("latitude").asDouble(),
                 node.path("location").path("longitude").isMissingNode()
                     ? null : node.path("location").path("longitude").asDouble(),
-                bestPhotoName(node),
+                foto == null ? null : foto.name(),
+                foto == null ? null : foto.huella(),
                 node.path("primaryType").asText(null)
             ));
         }
@@ -173,7 +175,7 @@ public class PlacesClient {
      * le importa el plato. Así que ahora la foto del local es un desempate y no una
      * garantía: una apaisada grande de un cliente le gana.
      */
-    private static String bestPhotoName(JsonNode place) {
+    private static FotoElegida mejorFoto(JsonNode place) {
         JsonNode photos = place.path("photos");
         if (!photos.isArray() || photos.isEmpty()) {
             return null;
@@ -191,7 +193,7 @@ public class PlacesClient {
             }
         }
 
-        return elegida == null ? null : elegida.path("name").asText(null);
+        return FotoElegida.de(elegida);
     }
 
     /**

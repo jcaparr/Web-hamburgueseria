@@ -73,7 +73,7 @@ class PlacesSyncPhotoBackfillTest {
         return new PlacesSearchResult(
             List.of(new PlacesSearchResult.Place(
                 "ChIJ123", "Thunder Burger", "Costa Rica 5827", -34.58, -58.43,
-                "places/ChIJ123/photos/abc", "hamburger_restaurant")),
+                "places/ChIJ123/photos/abc", "800x600|Un cliente", "hamburger_restaurant")),
             null);
     }
 
@@ -122,7 +122,7 @@ class PlacesSyncPhotoBackfillTest {
             .id(9L).placeId("ChIJ-BK").name("Burger King").address("Av. Corrientes 1").area(AREA)
             .build();
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(invisible));
-        when(placesClient.photoNameFor("ChIJ-BK")).thenReturn("places/ChIJ-BK/photos/abc");
+        when(placesClient.fotoDe("ChIJ-BK")).thenReturn(new FotoElegida("places/ChIJ-BK/photos/abc", "huella-de-places/ChIJ-BK/photos/abc"));
 
         PlacesSyncReport report = service.sync();
 
@@ -142,7 +142,7 @@ class PlacesSyncPhotoBackfillTest {
             .id(9L).placeId("ChIJ-X").name("Sin Fotos").address("Calle 1").area(AREA)
             .build();
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(sinFotos));
-        when(placesClient.photoNameFor("ChIJ-X")).thenReturn(null);
+        when(placesClient.fotoDe("ChIJ-X")).thenReturn(null);
 
         PlacesSyncReport report = service.sync();
 
@@ -171,7 +171,7 @@ class PlacesSyncPhotoBackfillTest {
 
         when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(conFoto));
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(nueva));
-        when(placesClient.photoNameFor("ChIJ-BK2")).thenReturn(null);
+        when(placesClient.fotoDe("ChIJ-BK2")).thenReturn(null);
 
         PlacesSyncReport report = service.sync();
 
@@ -198,7 +198,7 @@ class PlacesSyncPhotoBackfillTest {
 
         when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(hermana));
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(nueva));
-        when(placesClient.photoNameFor("ChIJ-BK2")).thenReturn("places/ChIJ-BK2/photos/propia");
+        when(placesClient.fotoDe("ChIJ-BK2")).thenReturn(new FotoElegida("places/ChIJ-BK2/photos/propia", "huella-de-places/ChIJ-BK2/photos/propia"));
 
         PlacesSyncReport report = service.sync();
 
@@ -223,7 +223,7 @@ class PlacesSyncPhotoBackfillTest {
 
         when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(otro));
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(solitario));
-        when(placesClient.photoNameFor("ChIJ-B")).thenReturn(null);
+        when(placesClient.fotoDe("ChIJ-B")).thenReturn(null);
 
         PlacesSyncReport report = service.sync();
 
@@ -259,7 +259,7 @@ class PlacesSyncPhotoBackfillTest {
             .photoUrl("/api/place-photos/vieja.jpg")
             .build();
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(vieja));
-        when(placesClient.photoNameFor("ChIJ-V")).thenReturn("places/ChIJ-V/photos/mejor");
+        when(placesClient.fotoDe("ChIJ-V")).thenReturn(new FotoElegida("places/ChIJ-V/photos/mejor", "huella-de-places/ChIJ-V/photos/mejor"));
 
         service.sync();
 
@@ -282,10 +282,11 @@ class PlacesSyncPhotoBackfillTest {
             .id(1L).placeId("ChIJ-V").name("Weiss Burger").address("Rivadavia 1").area(AREA)
             .photoUrl("/api/place-photos/vieja.jpg")
             .photoName("places/ChIJ-V/photos/la-misma")
+            .photoFingerprint("huella-de-places/ChIJ-V/photos/la-misma")
             .photoRule(2)
             .build();
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(vieja));
-        when(placesClient.photoNameFor("ChIJ-V")).thenReturn("places/ChIJ-V/photos/la-misma");
+        when(placesClient.fotoDe("ChIJ-V")).thenReturn(new FotoElegida("places/ChIJ-V/photos/la-misma", "huella-de-places/ChIJ-V/photos/la-misma"));
 
         service.sync();
 
@@ -303,7 +304,7 @@ class PlacesSyncPhotoBackfillTest {
 
         service.sync();
 
-        verify(placesClient, never()).photoNameFor(anyString());
+        verify(placesClient, never()).fotoDe(anyString());
         verify(placesClient, never()).downloadPhoto(anyString());
     }
 

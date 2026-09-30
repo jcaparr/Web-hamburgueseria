@@ -314,7 +314,7 @@ public class PlacesSyncService {
     private static PlacesSearchResult.Place comoLugar(BurgerJoint joint) {
         return new PlacesSearchResult.Place(
             joint.getPlaceId(), joint.getName(), joint.getAddress(),
-            joint.getLatitude(), joint.getLongitude(), null, joint.getGooglePrimaryType());
+            joint.getLatitude(), joint.getLongitude(), null, null, joint.getGooglePrimaryType());
     }
     /**
      * Si lo que devolvió Google no es una hamburguesería.
@@ -432,10 +432,10 @@ public class PlacesSyncService {
                 break;
             }
 
-            String photoName;
+            FotoElegida foto;
             try {
                 pause();
-                photoName = placesClient.photoNameFor(joint.getPlaceId());
+                foto = placesClient.fotoDe(joint.getPlaceId());
                 quotaGuard.record(PlacesCallType.DETAILS);
             } catch (RestClientResponseException ex) {
                 log.warn("No se pudo pedir la ficha de {} (HTTP {})",
@@ -443,7 +443,7 @@ public class PlacesSyncService {
                 continue;
             }
 
-            if (photoName != null) {
+            if (foto != null) {
                 // Tenía fotos: si venía anotado como que no, se corrige. Un local que
                 // recién abrió y todavía no tiene ninguna va a tenerlas más adelante.
                 if (joint.isSinFotosEnGoogle()) {
@@ -457,10 +457,11 @@ public class PlacesSyncService {
                     continue;
                 }
 
-                String photoUrl = downloadPhoto(joint.getPlaceId(), photoName);
+                String photoUrl = downloadPhoto(joint.getPlaceId(), foto.name());
                 if (photoUrl != null) {
                     joint.setPhotoUrl(photoUrl);
-                    joint.setPhotoName(photoName);
+                    joint.setPhotoName(foto.name());
+                    joint.setPhotoFingerprint(foto.huella());
                     joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
                     burgerJointRepository.save(joint);
                     fotoPorCadena.putIfAbsent(chainKey(joint.getName()), photoUrl);
@@ -516,10 +517,10 @@ public class PlacesSyncService {
                  break;
              }
 
-             String mejor;
+             FotoElegida mejor;
              try {
                  pause();
-                 mejor = placesClient.photoNameFor(joint.getPlaceId());
+                 mejor = placesClient.fotoDe(joint.getPlaceId());
                  quotaGuard.record(PlacesCallType.DETAILS);
              } catch (RestClientResponseException ex) {
                  log.warn("No se pudo revisar la foto de {} (HTTP {})",
@@ -534,7 +535,15 @@ public class PlacesSyncService {
              // La regla nueva eligió la misma foto que ya tenemos: alcanza con anotar
              // que está revisada. Bajarla de nuevo sería pagarle a Google por el mismo
              // archivo, y la mayoría de las fotos no cambia de una regla a la otra.
-             if (mejor.equals(joint.getPhotoName())) {
+             //
+             // Se compara por la huella y no por el nombre. El nombre cambia en cada
+             // pedido, así que esta comparación nunca daba verdadero y la revisión se
+             // bajaba las cuatrocientas fotos siempre, gastando el tramo gratuito de un
+             // mes entero en archivos que ya estaban en disco.
+             //
+             // Los locales que no tienen huella guardada son los de antes de esta
+             // columna: caen del lado de bajarla, una única vez, y quedan con huella.
+             if (mejor.huella().equals(joint.getPhotoFingerprint())) {
                  joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
                  burgerJointRepository.save(joint);
                  continue;
@@ -546,10 +555,11 @@ public class PlacesSyncService {
                  continue;
              }
 
-             String photoUrl = downloadPhoto(joint.getPlaceId(), mejor);
+             String photoUrl = downloadPhoto(joint.getPlaceId(), mejor.name());
              if (photoUrl != null) {
                  joint.setPhotoUrl(photoUrl);
-                 joint.setPhotoName(mejor);
+                 joint.setPhotoName(mejor.name());
+                 joint.setPhotoFingerprint(mejor.huella());
                  joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
                  burgerJointRepository.save(joint);
                  cambiadas++;
@@ -617,6 +627,7 @@ public class PlacesSyncService {
             if (photoUrl != null) {
                 joint.setPhotoUrl(photoUrl);
                 joint.setPhotoName(place.photoName());
+                joint.setPhotoFingerprint(place.photoFingerprint());
                 joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
                 gotPhoto = true;
             }
@@ -672,6 +683,7 @@ public class PlacesSyncService {
             if (photoUrl != null) {
                 joint.setPhotoUrl(photoUrl);
                 joint.setPhotoName(place.photoName());
+                joint.setPhotoFingerprint(place.photoFingerprint());
                 joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
                 gotPhoto = true;
             }
