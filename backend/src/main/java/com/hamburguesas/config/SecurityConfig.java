@@ -94,6 +94,7 @@ public class SecurityConfig {
                 // Por eso los dos caminos se nombran enteros y no con /**.
                 .requestMatchers(HttpMethod.GET, "/api/tours", "/api/tours/barrios").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/place-photos/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/rating-photos/**").permitAll()
                 // Protected by its own X-Sync-Token header, not by user JWT auth (see PlacesSyncController).
                 .requestMatchers("/api/admin/places-sync/**").permitAll()
                 .anyRequest().authenticated()

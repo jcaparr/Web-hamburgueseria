@@ -21,6 +21,8 @@ public record ItemDeFeedDto(
     String area,
     Integer score,
     String comment,
+    /** La foto que sacó quien la escribió, o null. */
+    String fotoDeLaResenia,
     Instant createdAt,
     boolean editada
 ) {}

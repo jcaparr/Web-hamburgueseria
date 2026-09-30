@@ -52,7 +52,7 @@ class FeedServiceTest {
 
     private ItemDeFeedDto resenia(long id, Instant cuando) {
         return new ItemDeFeedDto(id, 9L, "juanca", 5L, "Un local", null, "Palermo",
-            4, "buena", cuando, false);
+            4, "buena", null, cuando, false);
     }
 
     /** Tantas como para que sobre una y haya página siguiente. */

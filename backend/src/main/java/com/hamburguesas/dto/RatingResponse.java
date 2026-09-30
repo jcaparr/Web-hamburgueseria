@@ -8,5 +8,7 @@ public record RatingResponse(
     String username,
     Integer score,
     String comment,
+    /** La foto que sacó quien la escribió, o null. */
+    String photoUrl,
     Instant createdAt
 ) {}

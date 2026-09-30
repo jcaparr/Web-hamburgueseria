@@ -47,6 +47,8 @@ export interface Rating {
   username: string
   score: number
   comment: string | null
+  fotoDeLaResenia: string | null
+  photoUrl: string | null
   createdAt: string
 }
 
@@ -126,6 +128,7 @@ export interface ItemDeFeed {
   area: string | null
   score: number
   comment: string | null
+  fotoDeLaResenia: string | null
   /** Cuándo se escribió, no cuándo se editó. */
   createdAt: string
   editada: boolean

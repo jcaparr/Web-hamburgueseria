@@ -140,7 +140,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
     @Query("""
         select new com.hamburguesas.dto.ItemDeFeedDto(
             r.id, u.id, u.username, b.id, b.name, b.photoUrl, b.area,
-            r.score, r.comment, r.createdAt,
+            r.score, r.comment, r.photoUrl, r.createdAt,
             case when r.updatedAt is not null then true else false end)
         from Rating r join r.user u join r.burgerJoint b
         where u.id not in :ocultos
@@ -162,7 +162,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
     @Query("""
         select new com.hamburguesas.dto.ItemDeFeedDto(
             r.id, u.id, u.username, b.id, b.name, b.photoUrl, b.area,
-            r.score, r.comment, r.createdAt,
+            r.score, r.comment, r.photoUrl, r.createdAt,
             case when r.updatedAt is not null then true else false end)
         from Rating r join r.user u join r.burgerJoint b
         where u.id in :autores
