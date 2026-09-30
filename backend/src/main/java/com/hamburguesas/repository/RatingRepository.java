@@ -132,6 +132,10 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
      * todo. Un "(:fecha is null or ...)" sería lo natural, pero Postgres no puede
      * deducir de qué tipo es un parámetro que solo aparece comparado contra null, y la
      * consulta falla entera; además esa forma le tapa el índice al planificador.
+     *
+     * En "ocultos" va la gente con la que hay un bloqueo de por medio. Nunca llega
+     * vacía: un "not in ()" no es SQL válido, así que quien llama pone un id imposible
+     * cuando no hay a nadie que esconder.
      */
     @Query("""
         select new com.hamburguesas.dto.ItemDeFeedDto(
@@ -139,13 +143,22 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
             r.score, r.comment, r.createdAt,
             case when r.updatedAt is not null then true else false end)
         from Rating r join r.user u join r.burgerJoint b
-        where r.createdAt < :fecha or (r.createdAt = :fecha and r.id < :id)
+        where u.id not in :ocultos
+          and (r.createdAt < :fecha or (r.createdAt = :fecha and r.id < :id))
         order by r.createdAt desc, r.id desc
         """)
     List<ItemDeFeedDto> feedDeTodos(@Param("fecha") Instant fecha, @Param("id") Long id,
+                                    @Param("ocultos") Collection<Long> ocultos,
                                     Pageable pagina);
 
-    /** El mismo feed, restringido a un grupo de personas: la pestaña "Siguiendo". */
+    /**
+     * El mismo feed, restringido a un grupo de personas: la pestaña "Siguiendo".
+     *
+     * Excluye a los bloqueados igual que el otro, aunque bloquear ya borre el seguir en
+     * las dos direcciones y por eso hoy no pueda aparecer ninguno. Es una línea que
+     * sobra mientras esa otra regla se cumpla, y el día que alguien la toque sin darse
+     * cuenta no quiero que la consecuencia sea que un bloqueado reaparezca en el feed.
+     */
     @Query("""
         select new com.hamburguesas.dto.ItemDeFeedDto(
             r.id, u.id, u.username, b.id, b.name, b.photoUrl, b.area,
@@ -153,10 +166,12 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
             case when r.updatedAt is not null then true else false end)
         from Rating r join r.user u join r.burgerJoint b
         where u.id in :autores
+          and u.id not in :ocultos
           and (r.createdAt < :fecha or (r.createdAt = :fecha and r.id < :id))
         order by r.createdAt desc, r.id desc
         """)
     List<ItemDeFeedDto> feedDe(@Param("autores") Collection<Long> autores,
                                @Param("fecha") Instant fecha, @Param("id") Long id,
+                               @Param("ocultos") Collection<Long> ocultos,
                                Pageable pagina);
 }

@@ -32,6 +32,9 @@ class FeedQueryTest {
 
     private static final Instant DESDE_ARRIBA = Instant.parse("9999-12-31T23:59:59Z");
 
+    /** Sin nadie bloqueado: la lista no puede ir vacía, así que lleva un id imposible. */
+    private static final List<Long> NADIE = List.of(-1L);
+
     @Autowired private RatingRepository ratingRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private BurgerJointRepository burgerJointRepository;
@@ -81,7 +84,7 @@ class FeedQueryTest {
     }
 
     private List<ItemDeFeedDto> desdeArriba() {
-        return ratingRepository.feedDeTodos(DESDE_ARRIBA, Long.MAX_VALUE, PageRequest.of(0, 10));
+        return ratingRepository.feedDeTodos(DESDE_ARRIBA, Long.MAX_VALUE, NADIE, PageRequest.of(0, 10));
     }
 
     @Test
@@ -138,7 +141,7 @@ class FeedQueryTest {
         resenia(otro, 3, Instant.parse("2026-09-18T10:00:00Z"));
 
         List<ItemDeFeedDto> siguiente = ratingRepository.feedDeTodos(
-            primera.getCreatedAt(), primera.getId(), PageRequest.of(0, 10));
+            primera.getCreatedAt(), primera.getId(), NADIE, PageRequest.of(0, 10));
 
         assertThat(siguiente).extracting(ItemDeFeedDto::autorUsername).containsExactly("otrofeed");
     }
@@ -156,7 +159,7 @@ class FeedQueryTest {
         Rating segunda = resenia(otro, 3, mismoRato);
 
         List<ItemDeFeedDto> siguiente = ratingRepository.feedDeTodos(
-            mismoRato, Math.max(primera.getId(), segunda.getId()), PageRequest.of(0, 10));
+            mismoRato, Math.max(primera.getId(), segunda.getId()), NADIE, PageRequest.of(0, 10));
 
         assertThat(siguiente).extracting(ItemDeFeedDto::ratingId)
             .containsExactly(Math.min(primera.getId(), segunda.getId()));
@@ -168,7 +171,7 @@ class FeedQueryTest {
         resenia(otro, 2, Instant.parse("2026-09-19T10:00:00Z"));
 
         List<ItemDeFeedDto> soloDeOtro = ratingRepository.feedDe(
-            List.of(otro.getId()), DESDE_ARRIBA, Long.MAX_VALUE, PageRequest.of(0, 10));
+            List.of(otro.getId()), DESDE_ARRIBA, Long.MAX_VALUE, NADIE, PageRequest.of(0, 10));
 
         assertThat(soloDeOtro).extracting(ItemDeFeedDto::autorUsername).containsExactly("otrofeed");
     }

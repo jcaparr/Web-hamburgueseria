@@ -136,3 +136,10 @@ export interface PaginaDeFeed {
   items: ItemDeFeed[]
   siguiente: string | null
 }
+
+/** Alguien a quien bloqueaste. Solo aparece en la lista para desbloquearlo. */
+export interface UsuarioBloqueado {
+  userId: number
+  username: string
+  bloqueadoEl: string
+}

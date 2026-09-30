@@ -3,11 +3,14 @@ package com.hamburguesas.service;
 import com.hamburguesas.auth.Usernames;
 import com.hamburguesas.dto.PerfilPublicoDto;
 import com.hamburguesas.dto.ReseniasPorUsuarioDto;
+import com.hamburguesas.dto.UsuarioBloqueadoDto;
 import com.hamburguesas.dto.UsuarioBuscadoDto;
 import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.exception.ResourceNotFoundException;
+import com.hamburguesas.model.Block;
 import com.hamburguesas.model.Follow;
 import com.hamburguesas.model.User;
+import com.hamburguesas.repository.BlockRepository;
 import com.hamburguesas.repository.FollowRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.UserRepository;
@@ -44,6 +47,8 @@ public class SocialService {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
     private final RatingRepository ratingRepository;
+    private final BlockRepository blockRepository;
+    private final Bloqueos bloqueos;
 
     /**
      * Gente cuyo nombre de usuario contiene lo escrito.
@@ -59,7 +64,8 @@ public class SocialService {
 
         String buscado = escapandoLosComodines(limpio);
         List<User> encontrados = userRepository.buscarPorNombreDeUsuario(
-            "%" + buscado + "%", buscado + "%", quienBusca, PageRequest.of(0, RESULTADOS));
+            "%" + buscado + "%", buscado + "%",
+            bloqueos.queNoPuedeVerNiASiMismo(quienBusca), PageRequest.of(0, RESULTADOS));
 
         Set<Long> sigue = aCualesSigue(quienBusca, encontrados.stream().map(User::getId).toList());
         Map<Long, Long> resenias = reseniasDe(encontrados);
@@ -73,6 +79,13 @@ public class SocialService {
     public PerfilPublicoDto perfil(String username, Long quienMira) {
         User persona = porNombre(username);
         boolean soyYo = persona.getId().equals(quienMira);
+
+        // Con un bloqueo de por medio se contesta lo mismo que si no existiera, y no un
+        // "está bloqueado": decirlo le confirmaría al bloqueado que lo bloquearon, que
+        // es justo el tipo de aviso que hace que insista por otro lado.
+        if (!soyYo && hayBloqueo(quienMira, persona.getId())) {
+            throw new ResourceNotFoundException("No encontramos a esa persona");
+        }
 
         return new PerfilPublicoDto(
             persona.getId(),
@@ -95,6 +108,10 @@ public class SocialService {
         if (seguido.getId().equals(quienSigue)) {
             throw new ConflictException("No podés seguirte a vos mismo");
         }
+        // Lo mismo que en el perfil: para quien está bloqueado, esa persona no existe.
+        if (hayBloqueo(quienSigue, seguido.getId())) {
+            throw new ResourceNotFoundException("No encontramos a esa persona");
+        }
         if (followRepository.existsByFollower_IdAndFollowed_Id(quienSigue, seguido.getId())) {
             return;
         }
@@ -109,6 +126,56 @@ public class SocialService {
     @Transactional
     public void dejarDeSeguir(String username, Long quienSigue) {
         followRepository.deleteByFollower_IdAndFollowed_Id(quienSigue, porNombre(username).getId());
+    }
+
+    /**
+     * Bloquear corta el seguir en las dos direcciones, no solo la de quien bloquea.
+     *
+     * Dejar en pie que el bloqueado lo siga sería dejarlo justo donde molestaba: en su
+     * feed, apareciendo cada vez que reseña algo. Y al revés, seguir a alguien a quien
+     * no se quiere ver no tiene sentido.
+     */
+    @Transactional
+    public void bloquear(String username, Long quienBloquea) {
+        User bloqueado = porNombre(username);
+
+        if (bloqueado.getId().equals(quienBloquea)) {
+            throw new ConflictException("No podés bloquearte a vos mismo");
+        }
+        if (blockRepository.existsByBlocker_IdAndBlocked_Id(quienBloquea, bloqueado.getId())) {
+            return;
+        }
+
+        followRepository.deleteByFollower_IdAndFollowed_Id(quienBloquea, bloqueado.getId());
+        followRepository.deleteByFollower_IdAndFollowed_Id(bloqueado.getId(), quienBloquea);
+
+        blockRepository.save(Block.builder()
+            .blocker(userRepository.getReferenceById(quienBloquea))
+            .blocked(bloqueado)
+            .build());
+    }
+
+    /**
+     * Desbloquear no devuelve los seguimientos que el bloqueo cortó.
+     *
+     * Volver a seguir es una decisión, y tomarla de nuevo por alguien porque una vez la
+     * tomó sería raro: puede desbloquear solo para dejar de tenerlo en la lista.
+     */
+    @Transactional
+    public void desbloquear(String username, Long quienBloquea) {
+        blockRepository.deleteByBlocker_IdAndBlocked_Id(quienBloquea, porNombre(username).getId());
+    }
+
+    /** Los que bloqueó: el único lugar donde los vuelve a ver, para poder deshacerlo. */
+    public List<UsuarioBloqueadoDto> bloqueados(Long quienBloquea) {
+        return blockRepository.findByBlocker_IdOrderByCreatedAtDesc(quienBloquea).stream()
+            .map(b -> new UsuarioBloqueadoDto(
+                b.getBlocked().getId(), b.getBlocked().getUsername(), b.getCreatedAt()))
+            .toList();
+    }
+
+    private boolean hayBloqueo(Long quienMira, Long otro) {
+        return bloqueos.hayEntre(quienMira, otro);
     }
 
     private User porNombre(String username) {
