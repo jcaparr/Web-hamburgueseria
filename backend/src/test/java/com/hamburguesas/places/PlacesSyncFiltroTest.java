@@ -1,6 +1,7 @@
 package com.hamburguesas.places;
 
 import com.hamburguesas.model.BurgerJoint;
+import com.hamburguesas.model.PlacesCallType;
 import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.SavedTourRepository;
@@ -39,6 +40,7 @@ class PlacesSyncFiltroTest {
     private BurgerJointRepository repository;
     private RatingRepository ratingRepository;
     private WishlistRepository wishlistRepository;
+    private PlacesQuotaGuard quotaGuard;
     private PlacesSyncService service;
 
     @BeforeEach
@@ -53,7 +55,7 @@ class PlacesSyncFiltroTest {
         placesClient = mock(PlacesClient.class);
         ratingRepository = mock(RatingRepository.class);
         wishlistRepository = mock(WishlistRepository.class);
-        PlacesQuotaGuard quotaGuard = mock(PlacesQuotaGuard.class);
+        quotaGuard = mock(PlacesQuotaGuard.class);
         PhotoStorage photoStorage = mock(PhotoStorage.class);
         repository = mock(BurgerJointRepository.class);
 
@@ -330,6 +332,41 @@ class PlacesSyncFiltroTest {
         service.sync();
 
         verify(repository, never()).delete(any(BurgerJoint.class));
+    }
+
+    /**
+     * Que se acabe la cuota no puede terminar en borrarle el local a alguien.
+     *
+     * El resumen de reseñas es el tramo más caro de la API y tiene mil llamadas gratis
+     * por mes. Cuando se agota no sabemos si el local vende hamburguesas, y no saber no
+     * es lo mismo que saber que no: sin esto, un tope de cuota borraba de la base a
+     * todos los locales que ninguna prueba barata alcanzaba a salvar.
+     */
+    @Test
+    void sinCuotaParaPreguntarNoSeBorraNada() {
+        googleDevuelve();
+        BurgerJoint dudoso = guardado("Restó", -34.5900, -58.4270, "Palermo");
+        dudoso.setGooglePrimaryType("restaurant");
+        when(quotaGuard.canCall(PlacesCallType.RESUMEN)).thenReturn(false);
+
+        service.sync();
+
+        verify(repository, never()).delete(any(BurgerJoint.class));
+        verify(placesClient, never()).resumenDeResenias(anyString());
+    }
+
+    /** Y con cuota, si el resumen habla de otra cosa, sí se borra. */
+    @Test
+    void conCuotaYReseniasQueHablanDeOtraCosaSiSeBorra() {
+        googleDevuelve();
+        BurgerJoint dudoso = guardado("Restó", -34.5900, -58.4270, "Palermo");
+        dudoso.setGooglePrimaryType("restaurant");
+        when(placesClient.resumenDeResenias(anyString()))
+            .thenReturn("Diners praise the generous milanesas and the homemade pasta.");
+
+        service.sync();
+
+        verify(repository).delete(dudoso);
     }
 
     /** Y lo mismo para lo que ya está guardado y resulta ser de otra especialidad. */
