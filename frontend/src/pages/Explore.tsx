@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { IconPin, IconSearch } from '../components/icons'
 import { LoadError } from '../components/LoadError'
@@ -19,6 +19,9 @@ const PAGE_SIZE = 20
  */
 const CLAVE_CADENAS = 'explorar.conCadenas'
 
+/** Dónde estaba mirando la lista, para volver al mismo lugar al apretar atrás. */
+const CLAVE_SCROLL = 'explorar.scroll'
+
 function leerPreferencia(): boolean {
   // En una ventana de incógnito, o con el almacenamiento bloqueado, esto tira error en
   // vez de devolver vacío. Ante la duda se muestran todas, que es lo que había antes.
@@ -30,11 +33,45 @@ function leerPreferencia(): boolean {
 }
 
 export function Explore() {
-  const [query, setQuery] = useState('')
-  const [conCadenas, setConCadenas] = useState(leerPreferencia)
-  const [barrio, setBarrio] = useState('')
+  // Los filtros viven en la dirección y no en memoria.
+  //
+  // Entrar a una hamburguesería y volver atrás perdía todo: la búsqueda escrita, el
+  // barrio elegido y en qué página estabas, y había que rehacerlo para seguir mirando.
+  // En la dirección, volver atrás los restablece solo, porque el navegador vuelve a la
+  // dirección anterior y esa dirección los tiene.
+  //
+  // De paso, un listado filtrado se puede compartir o dejar en favoritos, que antes no
+  // se podía: todas las búsquedas eran la misma dirección.
+  const [parametros, setParametros] = useSearchParams()
+
+  const query = parametros.get('q') ?? ''
+  const barrio = parametros.get('area') ?? ''
+  const page = Number(parametros.get('pagina') ?? '0')
+  // El interruptor de cadenas sigue recordándose en el navegador cuando la dirección no
+  // dice nada: es una preferencia de quien mira, no parte de esta búsqueda.
+  const conCadenas = parametros.has('cadenas')
+    ? parametros.get('cadenas') !== 'no'
+    : leerPreferencia()
+
+  /**
+   * Cambia un filtro y vuelve a la primera página.
+   *
+   * Reemplaza la entrada del historial en vez de agregar una: si cada letra tecleada
+   * dejara una, salir de la pantalla pediría apretar atrás veinte veces.
+   */
+  function cambiar(cambios: Record<string, string | null>) {
+    const nuevos = new URLSearchParams(parametros)
+    for (const [clave, valor] of Object.entries(cambios)) {
+      if (valor === null || valor === '') {
+        nuevos.delete(clave)
+      } else {
+        nuevos.set(clave, valor)
+      }
+    }
+    setParametros(nuevos, { replace: true })
+  }
+
   const [barrios, setBarrios] = useState<string[]>([])
-  const [page, setPage] = useState(0)
   const [pageData, setPageData] = useState<PageResponse<BurgerJoint> | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<unknown>(null)
@@ -77,11 +114,51 @@ export function Explore() {
 
   // Al cambiar de página la lista se renueva entera, pero el navegador conserva el
   // scroll: quedabas a mitad de la página nueva, empezando a leer por el medio.
+  //
+  // Salvo al entrar, que es cuando se vuelve de una hamburguesería: ahí saltar arriba
+  // sería perder el lugar de la lista, que es justamente lo que se quiere conservar.
+  const items = pageData?.content ?? []
+
+  const yaEstuvo = useRef(false)
+  const yaSeVolvio = useRef(false)
   useEffect(() => {
+    if (!yaEstuvo.current) {
+      yaEstuvo.current = true
+      return
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [page])
 
-  const items = pageData?.content ?? []
+  // Dónde estaba mirando, para volver al mismo lugar de la lista.
+  //
+  // El navegador solo no alcanza: los locales llegan después de pedirlos, así que al
+  // volver la página mide cero y no hay a dónde bajar. Se guarda al salir y se
+  // restablece recién cuando la lista está dibujada.
+  useEffect(() => {
+    if (loading || items.length === 0 || yaSeVolvio.current) return
+    yaSeVolvio.current = true
+    try {
+      const guardado = window.sessionStorage.getItem(CLAVE_SCROLL)
+      if (guardado) window.scrollTo({ top: Number(guardado) })
+    } catch {
+      // Sin almacenamiento se vuelve arriba, que es lo que pasaba antes.
+    }
+  }, [loading, items.length])
+
+  /**
+   * Anota dónde estaba la lista justo antes de entrar a una hamburguesería.
+   *
+   * Se anota en el clic y no escuchando el scroll: durante el cambio de pantalla la
+   * posición pasa por valores intermedios, y escuchando se guardaba uno de esos en vez
+   * del lugar donde estaba mirando.
+   */
+  function anotarDondeQuedo() {
+    try {
+      window.sessionStorage.setItem(CLAVE_SCROLL, String(window.scrollY))
+    } catch {
+      // Sin almacenamiento no se recuerda, y se vuelve arriba como antes.
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4 p-4 md:p-0">
@@ -93,8 +170,7 @@ export function Explore() {
           type="search"
           value={query}
           onChange={(e) => {
-            setQuery(e.target.value)
-            setPage(0)
+            cambiar({ q: e.target.value, pagina: null })
           }}
           placeholder="Buscar hamburguesería..."
           className="w-full bg-transparent text-sm outline-none placeholder:text-base-content/50"
@@ -118,8 +194,7 @@ export function Explore() {
           value={barrio}
           aria-label="Filtrar por barrio"
           onChange={(e) => {
-            setBarrio(e.target.value)
-            setPage(0)
+            cambiar({ area: e.target.value, pagina: null })
           }}
           className="select select-sm w-full max-w-64 sm:w-auto"
         >
@@ -134,10 +209,7 @@ export function Explore() {
         {barrio && (
           <button
             type="button"
-            onClick={() => {
-              setBarrio('')
-              setPage(0)
-            }}
+            onClick={() => cambiar({ area: null, pagina: null })}
             className="btn btn-ghost btn-sm"
           >
             Ver toda la ciudad
@@ -152,8 +224,7 @@ export function Explore() {
           checked={conCadenas}
           onChange={(e) => {
             const valor = e.target.checked
-            setConCadenas(valor)
-            setPage(0)
+            cambiar({ cadenas: valor ? null : "no", pagina: null })
             try {
               window.localStorage.setItem(CLAVE_CADENAS, String(valor))
             } catch {
@@ -172,7 +243,7 @@ export function Explore() {
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((b) => (
           <li key={b.id} className="rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15 overflow-hidden">
-            <Link to={`/burger-joints/${b.id}`}>
+            <Link to={`/burger-joints/${b.id}`} onClick={anotarDondeQuedo}>
               <figure className="aspect-[4/3] bg-base-200">
                 <JointPhoto src={b.photoUrl} name={b.name} className="h-full w-full object-cover" />
               </figure>
@@ -220,7 +291,7 @@ export function Explore() {
             <button
               className="btn join-item btn-sm"
               disabled={page === 0}
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              onClick={() => cambiar({ pagina: String(Math.max(0, page - 1)) })}
             >
               «
             </button>
@@ -230,7 +301,7 @@ export function Explore() {
             <button
               className="btn join-item btn-sm"
               disabled={pageData.last}
-              onClick={() => setPage((p) => p + 1)}
+              onClick={() => cambiar({ pagina: String(page + 1) })}
             >
               »
             </button>
