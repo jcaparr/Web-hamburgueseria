@@ -54,6 +54,19 @@ public class FotosDeResenias {
     private static final int LADO_MAXIMO = 2048;
 
     /**
+     * El lado más corto que se acepta.
+     *
+     * La tarjeta muestra la foto en un cuadrado, así que el lado corto es el que decide
+     * cuán nítida se ve: una foto de 400 de alto estirada a 520 se ve borrosa por más
+     * que la otra dimensión sobre. Acá no se agranda nada —eso solo inventa píxeles—
+     * así que lo único que se puede hacer es avisarle a quien la sube.
+     *
+     * Cualquier foto sacada con un teléfono pasa los mil. Las que no llegan suelen ser
+     * capturas de pantalla o imágenes bajadas de algún lado.
+     */
+    private static final int LADO_MINIMO = 600;
+
+    /**
      * Cuántos píxeles se aceptan decodificar.
      *
      * El tamaño del archivo no alcanza como defensa: un PNG de un megabyte puede
@@ -144,9 +157,16 @@ public class FotosDeResenias {
             ImageReader lector = lectores.next();
             try {
                 lector.setInput(entrada);
-                long pixeles = (long) lector.getWidth(0) * lector.getHeight(0);
-                if (pixeles > PIXELES_MAXIMOS) {
+                int ancho = lector.getWidth(0);
+                int alto = lector.getHeight(0);
+
+                if ((long) ancho * alto > PIXELES_MAXIMOS) {
                     throw new ConflictException("Esa imagen es demasiado grande");
+                }
+                if (Math.min(ancho, alto) < LADO_MINIMO) {
+                    throw new ConflictException(
+                        "Esa foto es muy chica (" + ancho + "×" + alto + ") y se vería"
+                            + " borrosa. Necesita al menos " + LADO_MINIMO + " px de lado.");
                 }
                 return lector.read(0);
             } finally {

@@ -8,6 +8,15 @@ const ACEPTADOS = 'image/jpeg,image/png,image/gif'
 const MAXIMO_MB = 12
 
 /**
+ * El mismo mínimo que exige el servidor.
+ *
+ * Se chequea también acá porque el navegador ya sabe las medidas apenas elige el
+ * archivo: enterarse al tocar "publicar", después de escribir toda la reseña, sería
+ * hacerle perder el texto por algo que se sabía desde el principio.
+ */
+const LADO_MINIMO = 600
+
+/**
  * La foto de la reseña, que es obligatoria.
  *
  * Ocupa el lugar que ocupa —un recuadro grande y no un botoncito— porque sacar la foto
@@ -44,11 +53,33 @@ export function SelectorDeFoto({
 
   function elegir(archivo: File | null) {
     setError(null)
-    if (archivo && archivo.size > MAXIMO_MB * 1024 * 1024) {
+    if (!archivo) {
+      onElegir(null)
+      return
+    }
+    if (archivo.size > MAXIMO_MB * 1024 * 1024) {
       setError(`Esa foto pesa más de ${MAXIMO_MB} MB. Probá con otra.`)
       onElegir(null)
       return
     }
+
+    // Las medidas se leen cargándola, así que la respuesta llega después. Mientras
+    // tanto se la toma como buena: el servidor la vuelve a chequear igual.
+    const url = URL.createObjectURL(archivo)
+    const prueba = new Image()
+    prueba.onload = () => {
+      URL.revokeObjectURL(url)
+      if (Math.min(prueba.naturalWidth, prueba.naturalHeight) < LADO_MINIMO) {
+        setError(
+          `Esa foto es muy chica (${prueba.naturalWidth}×${prueba.naturalHeight}) y se ` +
+            `vería borrosa. Necesita al menos ${LADO_MINIMO} px de lado.`,
+        )
+        onElegir(null)
+      }
+    }
+    prueba.onerror = () => URL.revokeObjectURL(url)
+    prueba.src = url
+
     onElegir(archivo)
   }
 

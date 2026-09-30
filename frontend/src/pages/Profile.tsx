@@ -110,8 +110,10 @@ export function Profile() {
             <span className="text-xs text-base-content/60">Puntaje promedio</span>
           </div>
           <div className="flex flex-col items-center gap-1 text-center">
-            <span className="font-display text-xl font-bold text-base-content/40">—</span>
-            <span className="text-xs text-base-content/60">Nivel (próximamente)</span>
+            <span className="font-display text-xl font-bold">{stats?.seguidores ?? '—'}</span>
+            <span className="text-xs text-base-content/60">
+              {stats?.seguidores === 1 ? 'Seguidor' : 'Seguidores'}
+            </span>
           </div>
         </div>
       </section>

@@ -76,7 +76,7 @@ class FotosDeReseniasTest {
      */
     @Test
     void dosFotosIgualesNoSePisan() throws IOException {
-        byte[] misma = unaImagen("jpg", 100, 100);
+        byte[] misma = unaImagen("jpg", 700, 700);
 
         assertThat(fotos.guardar(misma)).isNotEqualTo(fotos.guardar(misma));
         assertThat(carpeta.toFile().list()).hasSize(2);
@@ -129,7 +129,7 @@ class FotosDeReseniasTest {
      */
     @Test
     void unPngSeGuardaComoJpeg() throws IOException {
-        String ruta = fotos.guardar(unaImagen("png", 400, 300));
+        String ruta = fotos.guardar(unaImagen("png", 800, 700));
 
         byte[] guardado = Files.readAllBytes(archivoDe(ruta));
         assertThat(ImageFormat.of(guardado)).isEqualTo(ImageFormat.JPEG);
@@ -148,12 +148,42 @@ class FotosDeReseniasTest {
 
     /** Una que ya entra se deja como está, en vez de agrandarla. */
     @Test
-    void unaFotoChicaNoSeAgranda() throws IOException {
-        String ruta = fotos.guardar(unaImagen("jpg", 300, 200));
+    void unaFotoQueYaEntraNoSeAgranda() throws IOException {
+        String ruta = fotos.guardar(unaImagen("jpg", 900, 700));
 
         BufferedImage guardada = leer(ruta);
-        assertThat(guardada.getWidth()).isEqualTo(300);
-        assertThat(guardada.getHeight()).isEqualTo(200);
+        assertThat(guardada.getWidth()).isEqualTo(900);
+        assertThat(guardada.getHeight()).isEqualTo(700);
+    }
+
+    /**
+     * Una foto muy chica se rechaza en vez de guardarse borrosa.
+     *
+     * La tarjeta la muestra en un cuadrado tan ancho como la columna, y agrandar una
+     * imagen solo inventa píxeles. Lo único que se puede hacer es avisar antes.
+     */
+    @Test
+    void unaFotoDemasiadoChicaSeRechaza() throws IOException {
+        assertThatThrownBy(() -> fotos.guardar(unaImagen("jpg", 400, 500)))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("muy chica");
+
+        assertThat(carpeta.toFile().list()).isEmpty();
+    }
+
+    /** Manda el lado corto: una panorámica ancha pero bajita también se vería estirada. */
+    @Test
+    void loQueDecideEsElLadoCorto() throws IOException {
+        assertThatThrownBy(() -> fotos.guardar(unaImagen("jpg", 3000, 400)))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("muy chica");
+    }
+
+    /** Y el mensaje dice cuánto medía, que es lo que deja entender por qué no sirve. */
+    @Test
+    void yElMensajeDiceCuantoMedia() throws IOException {
+        assertThatThrownBy(() -> fotos.guardar(unaImagen("jpg", 400, 500)))
+            .hasMessageContaining("400×500");
     }
 
     /**
@@ -193,7 +223,7 @@ class FotosDeReseniasTest {
 
     @Test
     void borrarSacaElArchivoDeDisco() throws IOException {
-        String ruta = fotos.guardar(unaImagen("jpg", 100, 100));
+        String ruta = fotos.guardar(unaImagen("jpg", 700, 700));
 
         fotos.borrar(ruta);
 
@@ -203,7 +233,7 @@ class FotosDeReseniasTest {
     /** Borrar algo que ya no está no es un error: el objetivo ya se cumplió. */
     @Test
     void borrarDosVecesNoFalla() throws IOException {
-        String ruta = fotos.guardar(unaImagen("jpg", 100, 100));
+        String ruta = fotos.guardar(unaImagen("jpg", 700, 700));
 
         fotos.borrar(ruta);
         fotos.borrar(ruta);

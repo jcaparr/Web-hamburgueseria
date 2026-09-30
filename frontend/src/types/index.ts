@@ -10,6 +10,7 @@ export interface BurgerJoint {
   longitude: number | null
   averageScore: number | null
   ratingsCount: number
+  seguidores: number
   inWishlist: boolean
 }
 
@@ -63,6 +64,7 @@ export interface RankingItem {
   longitude: number | null
   averageScore: number
   ratingsCount: number
+  seguidores: number
   myScore: number | null
 }
 
@@ -83,6 +85,7 @@ export interface User {
 
 export interface ProfileStats {
   ratingsCount: number
+  seguidores: number
   averageScore: number | null
 }
 

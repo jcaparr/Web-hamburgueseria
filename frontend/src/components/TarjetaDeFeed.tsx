@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
 import { FotoDeResenia } from './FotoDeResenia'
 import { IconPin } from './icons'
-import { ScoreBadge } from './ScoreBadge'
+import { Stars } from './Stars'
 import { relativeDate } from '../utils/relativeDate'
 import type { ItemDeFeed } from '../types'
 
@@ -60,7 +60,10 @@ export function TarjetaDeFeed({ item, esMia }: { item: ItemDeFeed; esMia: boolea
             </span>
           )}
         </div>
-        <ScoreBadge score={item.score} size="sm" />
+        {/* Las estrellas y no el ScoreBadge: acá la nota es la que puso esta persona,
+            y el badge se usa en toda la app para el promedio de la hamburguesería.
+            El mismo dibujo para dos cosas distintas se lee como la equivocada. */}
+        <Stars value={item.score} size={16} />
       </Link>
 
       {item.comment && (
