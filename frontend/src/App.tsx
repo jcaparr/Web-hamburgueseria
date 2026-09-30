@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext'
 import { BurgerJointDetail } from './pages/BurgerJointDetail'
 import { BuscarGente } from './pages/BuscarGente'
 import { Explore } from './pages/Explore'
+import { Feed } from './pages/Feed'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { Login } from './pages/Login'
 import { PerfilPublico } from './pages/PerfilPublico'
@@ -33,6 +34,7 @@ export default function App() {
                   pantalla de la app: alguien que se llame "tour" no rompe nada. */}
               <Route path="/u/:username" element={<RequireAuth><PerfilPublico /></RequireAuth>} />
               <Route path="/buscar" element={<RequireAuth><BuscarGente /></RequireAuth>} />
+              <Route path="/feed" element={<RequireAuth><Feed /></RequireAuth>} />
               <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
               <Route path="/reviews" element={<RequireAuth><Reviews /></RequireAuth>} />
               <Route path="/wishlist" element={<RequireAuth><Wishlist /></RequireAuth>} />

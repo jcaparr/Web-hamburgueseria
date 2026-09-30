@@ -40,10 +40,26 @@ public class Rating {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    /**
+     * Cuándo se editó, o null si nunca.
+     *
+     * No reemplaza a createdAt ni reordena nada: el feed sigue mostrando el día que se
+     * escribió, y esto solo alcanza para poner un "editado" al lado. Que cambiar una
+     * nota de 3 a 5 mande la reseña de nuevo arriba de todo sería tratar una corrección
+     * como si fuera novedad.
+     */
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
     @PrePersist
     void prePersist() {
         if (createdAt == null) {
             createdAt = Instant.now();
         }
+    }
+
+    @PreUpdate
+    void preUpdate() {
+        updatedAt = Instant.now();
     }
 }

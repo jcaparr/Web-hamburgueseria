@@ -1,5 +1,6 @@
 package com.hamburguesas.repository;
 
+import com.hamburguesas.dto.ItemDeFeedDto;
 import com.hamburguesas.dto.RankingItemDto;
 import com.hamburguesas.dto.ReseniaDePerfilDto;
 import com.hamburguesas.dto.ReseniasPorUsuarioDto;
@@ -10,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -118,4 +120,43 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
         group by r.user.id
         """)
     List<ReseniasPorUsuarioDto> contarPorUsuario(@Param("ids") Collection<Long> ids);
+
+    /**
+     * El feed, de la más nueva a la más vieja, desde el corte hacia atrás.
+     *
+     * El corte va por (fecha, id) y no por cantidad de filas salteadas: dos reseñas
+     * pueden compartir el instante, y una nueva entrando arriba correría todo hacia
+     * abajo, con lo que la página siguiente repetiría la última de la anterior.
+     *
+     * La primera pantalla no manda null sino un corte en el futuro, que deja pasar
+     * todo. Un "(:fecha is null or ...)" sería lo natural, pero Postgres no puede
+     * deducir de qué tipo es un parámetro que solo aparece comparado contra null, y la
+     * consulta falla entera; además esa forma le tapa el índice al planificador.
+     */
+    @Query("""
+        select new com.hamburguesas.dto.ItemDeFeedDto(
+            r.id, u.id, u.username, b.id, b.name, b.photoUrl, b.area,
+            r.score, r.comment, r.createdAt,
+            case when r.updatedAt is not null then true else false end)
+        from Rating r join r.user u join r.burgerJoint b
+        where r.createdAt < :fecha or (r.createdAt = :fecha and r.id < :id)
+        order by r.createdAt desc, r.id desc
+        """)
+    List<ItemDeFeedDto> feedDeTodos(@Param("fecha") Instant fecha, @Param("id") Long id,
+                                    Pageable pagina);
+
+    /** El mismo feed, restringido a un grupo de personas: la pestaña "Siguiendo". */
+    @Query("""
+        select new com.hamburguesas.dto.ItemDeFeedDto(
+            r.id, u.id, u.username, b.id, b.name, b.photoUrl, b.area,
+            r.score, r.comment, r.createdAt,
+            case when r.updatedAt is not null then true else false end)
+        from Rating r join r.user u join r.burgerJoint b
+        where u.id in :autores
+          and (r.createdAt < :fecha or (r.createdAt = :fecha and r.id < :id))
+        order by r.createdAt desc, r.id desc
+        """)
+    List<ItemDeFeedDto> feedDe(@Param("autores") Collection<Long> autores,
+                               @Param("fecha") Instant fecha, @Param("id") Long id,
+                               Pageable pagina);
 }

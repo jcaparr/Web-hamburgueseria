@@ -1,10 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { IconSearch } from './icons'
 import { useAuth } from '../context/AuthContext'
 import { useHideOnScroll } from '../hooks/useScrollDirection'
 
 const NAV_LINKS = [
   { to: '/', label: 'Explorar' },
+  // El feed pide sesión: sin ella no hay a quién seguir y la pestaña "Siguiendo" no
+  // significa nada, así que aparece recién cuando hay alguien adentro.
+  { to: '/feed', label: 'Feed', soloConSesion: true },
   { to: '/tour', label: 'Tour' },
   { to: '/ranking', label: 'Ranking' },
   { to: '/profile', label: 'Perfil' },
@@ -12,6 +14,7 @@ const NAV_LINKS = [
 
 export function TopBar() {
   const { user, logout } = useAuth()
+  const links = NAV_LINKS.filter((link) => user || !link.soloConSesion)
   const navigate = useNavigate()
   const hidden = useHideOnScroll()
 
@@ -40,7 +43,7 @@ export function TopBar() {
 
         <div className="hidden flex-1 justify-center md:flex">
           <ul className="flex items-center gap-1 rounded-full border border-base-300/70 bg-base-100/60 p-1">
-            {NAV_LINKS.map((link) => (
+            {links.map((link) => (
               <li key={link.to}>
                 <NavLink
                   to={link.to}
@@ -61,18 +64,6 @@ export function TopBar() {
         <div className="flex flex-none items-center gap-2 text-sm">
           {user ? (
             <>
-              {/* La lupita vive acá hasta que exista el feed, que es donde va a estar
-                  a mano. Buscar gente no tiene sentido sin sesión: no se puede seguir
-                  a nadie, y el padrón no es para mirar desde afuera. */}
-              <NavLink
-                to="/buscar"
-                aria-label="Buscar gente"
-                className={({ isActive }) =>
-                  `btn btn-ghost btn-sm btn-square ${isActive ? 'text-primary' : ''}`
-                }
-              >
-                <IconSearch size={18} />
-              </NavLink>
               <span className="hidden font-medium sm:inline">@{user.username}</span>
               <button onClick={handleLogout} className="btn btn-ghost btn-sm">
                 Salir
