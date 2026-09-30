@@ -26,6 +26,44 @@ public class BurgerJoint {
     @Column(nullable = false, length = 150)
     private String name;
 
+    /**
+     * El nombre listo para buscar: sin acentos y en minúsculas.
+     *
+     * Nadie escribe los acentos en un buscador, y la mitad de los barrios de la Ciudad
+     * los tienen: buscar "Atiko" no encontraba "Átiko" ni "Nunez" a los de Núñez.
+     *
+     * Se guarda en vez de resolverse en la consulta porque hacerlo ahí necesitaría la
+     * extensión unaccent de Postgres, que no está garantizada en todos los hostings y
+     * ataría el arranque de la app a haberla instalado a mano en el servidor.
+     */
+    @Column(name = "nombre_para_buscar", length = 255)
+    private String nombreParaBuscar;
+
+    /**
+     * Mantiene el nombre de búsqueda al día.
+     *
+     * Acá y no en quien guarda: son cinco lugares distintos los que le cambian el nombre
+     * a un local —la búsqueda, la limpieza, el arreglo de duplicados— y alcanzaría con
+     * que uno se olvide para que ese local deje de encontrarse.
+     */
+    @PrePersist
+    @PreUpdate
+    void prepararElNombreParaBuscar() {
+        nombreParaBuscar = sinAcentos(name);
+    }
+
+    /** Las mismas reglas que aplica el buscador a lo que se escribe, para que coincidan. */
+    public static String sinAcentos(String valor) {
+        if (valor == null) {
+            return null;
+        }
+        return java.text.Normalizer.normalize(valor, java.text.Normalizer.Form.NFD)
+            .replaceAll("\\p{M}", "")
+            .toLowerCase(java.util.Locale.ROOT)
+            .replaceAll("\\s+", " ")
+            .trim();
+    }
+
     @Column(nullable = false, length = 250)
     private String address;
 
