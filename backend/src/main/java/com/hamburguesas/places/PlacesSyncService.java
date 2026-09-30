@@ -494,10 +494,10 @@ public class PlacesSyncService {
                 break;
             }
 
-            FotoElegida foto;
+            List<FotoElegida> candidatas;
             try {
                 pause();
-                foto = placesClient.fotoDe(joint.getPlaceId());
+                candidatas = placesClient.fotosDe(joint.getPlaceId());
                 quotaGuard.record(PlacesCallType.DETAILS);
             } catch (RestClientResponseException ex) {
                 log.warn("No se pudo pedir la ficha de {} (HTTP {})",
@@ -505,7 +505,7 @@ public class PlacesSyncService {
                 continue;
             }
 
-            if (foto != null) {
+            if (!candidatas.isEmpty()) {
                 // Tenía fotos: si venía anotado como que no, se corrige. Un local que
                 // recién abrió y todavía no tiene ninguna va a tenerlas más adelante.
                 if (joint.isSinFotosEnGoogle()) {
@@ -519,15 +519,29 @@ public class PlacesSyncService {
                     continue;
                 }
 
-                String photoUrl = downloadPhoto(joint.getPlaceId(), foto.name());
-                if (photoUrl != null) {
-                    joint.setPhotoUrl(photoUrl);
-                    joint.setPhotoName(foto.name());
-                    joint.setPhotoFingerprint(foto.huella());
-                    joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
-                    burgerJointRepository.save(joint);
-                    fotoPorCadena.putIfAbsent(chainKey(joint.getName()), photoUrl);
-                    downloaded++;
+                // Se prueban de la mejor a la peor: si la primera resulta ser el logo, la
+                // siguiente suele ser una foto de producto. Cada intento cuesta una
+                // llamada, así que son pocas y solo se llega a la segunda cuando hace
+                // falta.
+                boolean guardada = false;
+                for (FotoElegida candidata : candidatas) {
+                    if (!quotaGuard.canCall(PlacesCallType.PHOTO)) {
+                        break;
+                    }
+                    String photoUrl = downloadPhoto(joint.getPlaceId(), candidata.name());
+                    if (photoUrl != null) {
+                        joint.setPhotoUrl(photoUrl);
+                        joint.setPhotoName(candidata.name());
+                        joint.setPhotoFingerprint(candidata.huella());
+                        joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
+                        burgerJointRepository.save(joint);
+                        fotoPorCadena.putIfAbsent(chainKey(joint.getName()), photoUrl);
+                        downloaded++;
+                        guardada = true;
+                        break;
+                    }
+                }
+                if (guardada) {
                     continue;
                 }
             } else {
@@ -579,10 +593,10 @@ public class PlacesSyncService {
                  break;
              }
 
-             FotoElegida mejor;
+             List<FotoElegida> candidatas;
              try {
                  pause();
-                 mejor = placesClient.fotoDe(joint.getPlaceId());
+                 candidatas = placesClient.fotosDe(joint.getPlaceId());
                  quotaGuard.record(PlacesCallType.DETAILS);
              } catch (RestClientResponseException ex) {
                  log.warn("No se pudo revisar la foto de {} (HTTP {})",
@@ -590,9 +604,10 @@ public class PlacesSyncService {
                  continue;
              }
 
-             if (mejor == null) {
+             if (candidatas.isEmpty()) {
                  continue;
              }
+             FotoElegida mejor = candidatas.get(0);
 
              // La regla nueva eligió la misma foto que ya tenemos: alcanza con anotar
              // que está revisada. Bajarla de nuevo sería pagarle a Google por el mismo
@@ -617,14 +632,22 @@ public class PlacesSyncService {
                  continue;
              }
 
-             String photoUrl = downloadPhoto(joint.getPlaceId(), mejor.name());
-             if (photoUrl != null) {
-                 joint.setPhotoUrl(photoUrl);
-                 joint.setPhotoName(mejor.name());
-                 joint.setPhotoFingerprint(mejor.huella());
-                 joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
-                 burgerJointRepository.save(joint);
-                 cambiadas++;
+             // De la mejor a la peor, igual que al conseguir la primera foto: si la que
+             // gana por puntaje resulta ser el logo, se prueba la siguiente.
+             for (FotoElegida candidata : candidatas) {
+                 if (!quotaGuard.canCall(PlacesCallType.PHOTO)) {
+                     break;
+                 }
+                 String photoUrl = downloadPhoto(joint.getPlaceId(), candidata.name());
+                 if (photoUrl != null) {
+                     joint.setPhotoUrl(photoUrl);
+                     joint.setPhotoName(candidata.name());
+                     joint.setPhotoFingerprint(candidata.huella());
+                     joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
+                     burgerJointRepository.save(joint);
+                     cambiadas++;
+                     break;
+                 }
              }
          }
 
@@ -708,11 +731,27 @@ public class PlacesSyncService {
         return downloadPhoto(place.placeId(), place.photoName());
     }
 
+    /**
+     * Baja la foto, salvo que resulte ser un logo.
+     *
+     * El logo de un local lo sube el local, tiene buen tamaño y suele ser apaisado, así
+     * que le gana por puntaje a cualquier fotografía: por eficaz que sea la regla de
+     * elección, no hay forma de descartarlo sin mirar los píxeles, y para eso hay que
+     * bajarlo. De las 422 que teníamos, seis eran logos.
+     *
+     * @return la ruta guardada, o null si no se pudo bajar o si es un logo
+     */
     private String downloadPhoto(String placeId, String photoName) {
         try {
             pause();
             byte[] bytes = placesClient.downloadPhoto(photoName);
             quotaGuard.record(PlacesCallType.PHOTO);
+
+            if (EsUnaFotografia.pareceUnLogo(bytes)) {
+                log.info("La foto elegida de {} es un logo, se descarta", placeId);
+                return null;
+            }
+
             return photoStorage.save(placeId, bytes);
         } catch (RestClientResponseException ex) {
             log.warn("Could not download photo for {} (HTTP {})", placeId, ex.getStatusCode().value());

@@ -123,7 +123,7 @@ class PlacesSyncPhotoBackfillTest {
             .id(9L).placeId("ChIJ-BK").name("Burger King").address("Av. Corrientes 1").area(AREA)
             .build();
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(invisible));
-        when(placesClient.fotoDe("ChIJ-BK")).thenReturn(new FotoElegida("places/ChIJ-BK/photos/abc", "huella-de-places/ChIJ-BK/photos/abc"));
+        when(placesClient.fotosDe("ChIJ-BK")).thenReturn(java.util.List.of(new FotoElegida("places/ChIJ-BK/photos/abc", "huella-de-places/ChIJ-BK/photos/abc")));
 
         PlacesSyncReport report = service.sync();
 
@@ -143,7 +143,7 @@ class PlacesSyncPhotoBackfillTest {
             .id(9L).placeId("ChIJ-X").name("Sin Fotos").address("Calle 1").area(AREA)
             .build();
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(sinFotos));
-        when(placesClient.fotoDe("ChIJ-X")).thenReturn(null);
+        when(placesClient.fotosDe("ChIJ-X")).thenReturn(java.util.List.of());
 
         PlacesSyncReport report = service.sync();
 
@@ -172,7 +172,7 @@ class PlacesSyncPhotoBackfillTest {
 
         when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(conFoto));
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(nueva));
-        when(placesClient.fotoDe("ChIJ-BK2")).thenReturn(null);
+        when(placesClient.fotosDe("ChIJ-BK2")).thenReturn(java.util.List.of());
 
         PlacesSyncReport report = service.sync();
 
@@ -199,7 +199,7 @@ class PlacesSyncPhotoBackfillTest {
 
         when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(hermana));
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(nueva));
-        when(placesClient.fotoDe("ChIJ-BK2")).thenReturn(new FotoElegida("places/ChIJ-BK2/photos/propia", "huella-de-places/ChIJ-BK2/photos/propia"));
+        when(placesClient.fotosDe("ChIJ-BK2")).thenReturn(java.util.List.of(new FotoElegida("places/ChIJ-BK2/photos/propia", "huella-de-places/ChIJ-BK2/photos/propia")));
 
         PlacesSyncReport report = service.sync();
 
@@ -224,7 +224,7 @@ class PlacesSyncPhotoBackfillTest {
 
         when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(otro));
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(solitario));
-        when(placesClient.fotoDe("ChIJ-B")).thenReturn(null);
+        when(placesClient.fotosDe("ChIJ-B")).thenReturn(java.util.List.of());
 
         PlacesSyncReport report = service.sync();
 
@@ -260,7 +260,7 @@ class PlacesSyncPhotoBackfillTest {
             .photoUrl("/api/place-photos/vieja.jpg")
             .build();
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(vieja));
-        when(placesClient.fotoDe("ChIJ-V")).thenReturn(new FotoElegida("places/ChIJ-V/photos/mejor", "huella-de-places/ChIJ-V/photos/mejor"));
+        when(placesClient.fotosDe("ChIJ-V")).thenReturn(java.util.List.of(new FotoElegida("places/ChIJ-V/photos/mejor", "huella-de-places/ChIJ-V/photos/mejor")));
 
         service.sync();
 
@@ -287,7 +287,7 @@ class PlacesSyncPhotoBackfillTest {
             .photoRule(2)
             .build();
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(vieja));
-        when(placesClient.fotoDe("ChIJ-V")).thenReturn(new FotoElegida("places/ChIJ-V/photos/la-misma", "huella-de-places/ChIJ-V/photos/la-misma"));
+        when(placesClient.fotosDe("ChIJ-V")).thenReturn(java.util.List.of(new FotoElegida("places/ChIJ-V/photos/la-misma", "huella-de-places/ChIJ-V/photos/la-misma")));
 
         service.sync();
 
@@ -305,7 +305,7 @@ class PlacesSyncPhotoBackfillTest {
 
         service.sync();
 
-        verify(placesClient, never()).fotoDe(anyString());
+        verify(placesClient, never()).fotosDe(anyString());
         verify(placesClient, never()).downloadPhoto(anyString());
     }
 

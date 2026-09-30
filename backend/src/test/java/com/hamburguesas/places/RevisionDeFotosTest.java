@@ -9,7 +9,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import javax.imageio.ImageIO;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.Random;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -105,7 +111,7 @@ class RevisionDeFotosTest {
     @Test
     void anotaAlLocalDelQueGoogleNoTieneNingunaFoto() {
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(local("Sin nada", null, null)));
-        when(placesClient.fotoDe(anyString())).thenReturn(null);
+        when(placesClient.fotosDe(anyString())).thenReturn(java.util.List.of());
 
         service.revisarFotos();
 
@@ -118,7 +124,7 @@ class RevisionDeFotosTest {
         BurgerJoint local = local("Ya tiene", null, null);
         local.setSinFotosEnGoogle(true);
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(local));
-        when(placesClient.fotoDe(anyString())).thenReturn(new FotoElegida("places/x/photos/nueva", "huella-de-places/x/photos/nueva"));
+        when(placesClient.fotosDe(anyString())).thenReturn(java.util.List.of(new FotoElegida("places/x/photos/nueva", "huella-de-places/x/photos/nueva")));
         when(placesClient.downloadPhoto(anyString())).thenReturn(new byte[] {1, 2, 3});
         when(photoStorage.save(anyString(), any())).thenReturn("/api/place-photos/x.jpg");
 
@@ -137,7 +143,7 @@ class RevisionDeFotosTest {
     void siLaReglaNuevaEligeLaMismaFotoNoLaVuelveABajar() {
         BurgerJoint local = local("Igual", "/api/place-photos/vieja.jpg", 2);
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(local));
-        when(placesClient.fotoDe(anyString())).thenReturn(new FotoElegida("places/x/photos/vieja", "huella-de-places/x/photos/vieja"));
+        when(placesClient.fotosDe(anyString())).thenReturn(java.util.List.of(new FotoElegida("places/x/photos/vieja", "huella-de-places/x/photos/vieja")));
 
         service.revisarFotos();
 
@@ -157,7 +163,7 @@ class RevisionDeFotosTest {
     void sinCuotaDeFotosIgualAveriguaCualesNoTienenNinguna() {
         when(quotaGuard.canCall(com.hamburguesas.model.PlacesCallType.PHOTO)).thenReturn(false);
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(local("Sin nada", null, null)));
-        when(placesClient.fotoDe(anyString())).thenReturn(null);
+        when(placesClient.fotosDe(anyString())).thenReturn(java.util.List.of());
 
         service.revisarFotos();
 
@@ -175,7 +181,7 @@ class RevisionDeFotosTest {
         when(quotaGuard.canCall(com.hamburguesas.model.PlacesCallType.PHOTO)).thenReturn(false);
         BurgerJoint local = local("Igual", "/api/place-photos/vieja.jpg", 2);
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(local));
-        when(placesClient.fotoDe(anyString())).thenReturn(new FotoElegida("places/x/photos/vieja", "huella-de-places/x/photos/vieja"));
+        when(placesClient.fotosDe(anyString())).thenReturn(java.util.List.of(new FotoElegida("places/x/photos/vieja", "huella-de-places/x/photos/vieja")));
 
         service.revisarFotos();
 
@@ -193,7 +199,7 @@ class RevisionDeFotosTest {
         when(quotaGuard.canCall(com.hamburguesas.model.PlacesCallType.PHOTO)).thenReturn(false);
         BurgerJoint local = local("Cambia", "/api/place-photos/vieja.jpg", 2);
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(local));
-        when(placesClient.fotoDe(anyString())).thenReturn(new FotoElegida("places/x/photos/mejor", "huella-de-places/x/photos/mejor"));
+        when(placesClient.fotosDe(anyString())).thenReturn(java.util.List.of(new FotoElegida("places/x/photos/mejor", "huella-de-places/x/photos/mejor")));
 
         service.revisarFotos();
 
@@ -202,12 +208,71 @@ class RevisionDeFotosTest {
         assertThat(local.getPhotoRule()).isEqualTo(2);
     }
 
+    /**
+     * Si la mejor por puntaje resulta ser el logo, se prueba la siguiente.
+     *
+     * El logo lo sube el local, tiene buen tamaño y suele ser apaisado, así que le gana
+     * por puntaje a cualquier fotografía. Solo se descubre mirando los píxeles, o sea
+     * después de bajarlo, y para entonces lo único que queda por hacer es seguir.
+     */
+    @Test
+    void siLaPrimeraEsUnLogoSeQuedaConLaSiguiente() throws Exception {
+        BurgerJoint local = local("Con logo", null, null);
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(local));
+        when(placesClient.fotosDe(anyString())).thenReturn(List.of(
+            new FotoElegida("places/x/photos/logo", "600x600|El local"),
+            new FotoElegida("places/x/photos/la-buena", "4800x3600|Un cliente")));
+        when(placesClient.downloadPhoto("places/x/photos/logo")).thenReturn(unLogo());
+        when(placesClient.downloadPhoto("places/x/photos/la-buena")).thenReturn(unaFotografia());
+        when(photoStorage.save(anyString(), any())).thenReturn("/api/place-photos/buena.jpg");
+
+        service.revisarFotos();
+
+        BurgerJoint despues = guardado();
+        assertThat(despues.getPhotoUrl()).isEqualTo("/api/place-photos/buena.jpg");
+        assertThat(despues.getPhotoName()).isEqualTo("places/x/photos/la-buena");
+    }
+
+    /** Un logo de dos colores, que es de lo que están hechos. */
+    private byte[] unLogo() throws Exception {
+        BufferedImage img = new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = img.createGraphics();
+        g.setColor(new Color(220, 50, 40));
+        g.fillRect(0, 0, 400, 400);
+        g.setColor(Color.WHITE);
+        g.fillOval(80, 80, 240, 240);
+        g.dispose();
+        return aBytes(img);
+    }
+
+    /** Una fotografía: miles de tonos, que es lo que deja una cámara. */
+    private byte[] unaFotografia() throws Exception {
+        BufferedImage img = new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB);
+        Random azar = new Random(11);
+        for (int y = 0; y < 400; y++) {
+            for (int x = 0; x < 400; x++) {
+                int base = (x + y) / 4;
+                img.setRGB(x, y, new Color(
+                    Math.min(255, base + azar.nextInt(70)),
+                    Math.min(255, base / 2 + azar.nextInt(70)),
+                    azar.nextInt(140)).getRGB());
+            }
+        }
+        return aBytes(img);
+    }
+
+    private byte[] aBytes(BufferedImage img) throws Exception {
+        ByteArrayOutputStream salida = new ByteArrayOutputStream();
+        ImageIO.write(img, "png", salida);
+        return salida.toByteArray();
+    }
+
     /** Y si elige otra, esa se baja y reemplaza a la anterior. */
     @Test
     void siLaReglaNuevaEligeOtraFotoLaReemplaza() {
         BurgerJoint local = local("Cambia", "/api/place-photos/vieja.jpg", 2);
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(local));
-        when(placesClient.fotoDe(anyString())).thenReturn(new FotoElegida("places/x/photos/mejor", "huella-de-places/x/photos/mejor"));
+        when(placesClient.fotosDe(anyString())).thenReturn(java.util.List.of(new FotoElegida("places/x/photos/mejor", "huella-de-places/x/photos/mejor")));
         when(placesClient.downloadPhoto(anyString())).thenReturn(new byte[] {1, 2, 3});
         when(photoStorage.save(anyString(), any())).thenReturn("/api/place-photos/mejor.jpg");
 
