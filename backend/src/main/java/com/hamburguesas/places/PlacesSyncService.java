@@ -314,7 +314,8 @@ public class PlacesSyncService {
     private static PlacesSearchResult.Place comoLugar(BurgerJoint joint) {
         return new PlacesSearchResult.Place(
             joint.getPlaceId(), joint.getName(), joint.getAddress(),
-            joint.getLatitude(), joint.getLongitude(), null, null, joint.getGooglePrimaryType());
+            joint.getLatitude(), joint.getLongitude(), null, null, joint.getGooglePrimaryType(),
+            joint.getGooglePrimaryType() == null ? java.util.Set.of() : java.util.Set.of(joint.getGooglePrimaryType()));
     }
     /**
      * Si lo que devolvió Google no es una hamburguesería.
@@ -345,28 +346,55 @@ public class PlacesSyncService {
         if (sync.getIncludedPlaceIds().contains(place.placeId())) {
             return false;
         }
-        // Rubros que directamente no dan de comer. Va antes que el nombre porque la
-        // fábrica de salchichas y el mayorista de medallones tienen "burger" en el
-        // nombre, y si no entrarían por esa puerta.
-        if (place.primaryType() != null && sync.getExcludedPrimaryTypes().contains(place.primaryType())) {
-            return true;
+
+        Set<String> rubrosDeOtraCosa = new HashSet<>(sync.getExcludedPrimaryTypes());
+        Set<String> rubros = rubrosDe(place);
+
+        Veredicto veredicto = VendeHamburguesas.evaluar(
+            place.name(), rubros, null, rubrosDeOtraCosa, cadenas);
+
+        // Solo cuando nada barato alcanzó se paga por el resumen de reseñas, que es el
+        // tramo más caro de la API. Es la minoría de los casos, y es donde está la
+        // diferencia: "Austin's Diner & Grill" no tiene el rubro ni lo dice el nombre.
+        if (veredicto.prueba() == Veredicto.Prueba.SIN_PRUEBAS
+            && quotaGuard.canCall(PlacesCallType.RESUMEN)) {
+            String resumen = resumenDeResenias(place.placeId());
+            if (resumen != null) {
+                veredicto = VendeHamburguesas.evaluar(
+                    place.name(), rubros, resumen, rubrosDeOtraCosa, cadenas);
+            }
         }
 
-        return !esRubroDeHamburguesas(place.primaryType())
-            && !elNombreDiceHamburguesas(place.name())
-            && !esSucursalDeUnaCadena(place.name(), cadenas);
+        if (!veredicto.vendeHamburguesas()) {
+            log.debug("{} queda afuera: {}", place.name(), veredicto.prueba());
+        }
+        return !veredicto.vendeHamburguesas();
     }
 
-    /** Lo que Google llama hamburguesería, y la comida rápida, que son McDonald's y Burger King. */
-    private static boolean esRubroDeHamburguesas(String primaryType) {
-        return "hamburger_restaurant".equals(primaryType)
-            || "fast_food_restaurant".equals(primaryType);
+    /**
+     * Los rubros del local, cayendo al principal cuando no vinieron todos.
+     *
+     * Las fichas guardadas de antes solo tienen el principal, y pasan por este mismo
+     * filtro en la limpieza: sin esto quedarían con la lista vacía y las sacaría a todas.
+     */
+    private static Set<String> rubrosDe(PlacesSearchResult.Place place) {
+        if (place.types() != null && !place.types().isEmpty()) {
+            return place.types();
+        }
+        return place.primaryType() == null ? Set.of() : Set.of(place.primaryType());
     }
 
-    /** Un local que se llama "algo Burger" u "Hamburguesas algo" está diciendo a qué se dedica. */
-    static boolean elNombreDiceHamburguesas(String name) {
-        String limpio = sinAcentos(name);
-        return limpio.contains("burger") || limpio.contains("hamburgues") || limpio.contains("smash");
+    private String resumenDeResenias(String placeId) {
+        try {
+            pause();
+            String resumen = placesClient.resumenDeResenias(placeId);
+            quotaGuard.record(PlacesCallType.RESUMEN);
+            return resumen;
+        } catch (RestClientResponseException ex) {
+            log.warn("No se pudo pedir el resumen de {} (HTTP {})",
+                placeId, ex.getStatusCode().value());
+            return null;
+        }
     }
 
     /**
@@ -377,8 +405,7 @@ public class PlacesSyncService {
      * que un nombre corto no se lleve puesto a cualquiera que empiece parecido.
      */
     static boolean esSucursalDeUnaCadena(String name, Set<String> cadenas) {
-        String limpio = sinAcentos(name);
-        return cadenas.stream().anyMatch(cadena -> limpio.startsWith(cadena + " "));
+        return VendeHamburguesas.esSucursalDeUnaCadena(name, cadenas);
     }
 
     /** Las marcas que Google sí reconoce como hamburgueserías, para el arreglo de arriba. */

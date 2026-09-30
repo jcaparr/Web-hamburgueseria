@@ -68,6 +68,11 @@ public class PlacesProperties {
         private int monthlySearchCalls = 4000;
         /** El tramo gratuito de Google es de 1.000 fotos por mes, y acá se frena antes. */
         private int monthlyPhotoCalls = 1000;
+        /**
+         * El resumen de reseñas, que es el tramo más caro: mil gratis por mes y
+         * veinticinco dólares cada mil después. Se frena antes a propósito.
+         */
+        private int monthlyResumenCalls = 900;
         /** Fichas sueltas, para los locales que ninguna búsqueda devuelve. Gratis hasta 5.000. */
         private int monthlyDetailsCalls = 4000;
     }

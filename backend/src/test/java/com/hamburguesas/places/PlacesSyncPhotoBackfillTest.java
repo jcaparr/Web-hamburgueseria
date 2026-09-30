@@ -73,7 +73,8 @@ class PlacesSyncPhotoBackfillTest {
         return new PlacesSearchResult(
             List.of(new PlacesSearchResult.Place(
                 "ChIJ123", "Thunder Burger", "Costa Rica 5827", -34.58, -58.43,
-                "places/ChIJ123/photos/abc", "800x600|Un cliente", "hamburger_restaurant")),
+                "places/ChIJ123/photos/abc", "800x600|Un cliente", "hamburger_restaurant",
+                java.util.Set.of("hamburger_restaurant"))),
             null);
     }
 
