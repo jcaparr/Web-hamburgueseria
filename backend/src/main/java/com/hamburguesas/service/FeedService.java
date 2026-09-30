@@ -29,17 +29,19 @@ public class FeedService {
 
     private final RatingRepository ratingRepository;
     private final FollowRepository followRepository;
+    private final Bloqueos bloqueos;
 
     public PaginaDeFeedDto ver(FuenteDelFeed fuente, String cursor, Long quienMira) {
         Corte corte = Corte.de(cursor);
+        List<Long> ocultos = bloqueos.queNoPuedeVer(quienMira);
 
         // Se pide uno de más para saber si hay página siguiente. La alternativa es
         // contar el total, que con esto cuesta una consulta entera de más para
         // responder algo que este registro sobrante ya contesta.
         var pagina = PageRequest.of(0, POR_PAGINA + 1);
         List<ItemDeFeedDto> traidos = switch (fuente) {
-            case TODOS -> ratingRepository.feedDeTodos(corte.fecha(), corte.id(), pagina);
-            case SIGUIENDO -> deQuienesSigue(corte, pagina, quienMira);
+            case TODOS -> ratingRepository.feedDeTodos(corte.fecha(), corte.id(), ocultos, pagina);
+            case SIGUIENDO -> deQuienesSigue(corte, pagina, ocultos, quienMira);
         };
 
         boolean hayMas = traidos.size() > POR_PAGINA;
@@ -48,14 +50,15 @@ public class FeedService {
         return new PaginaDeFeedDto(items, hayMas ? cursorDe(items.get(items.size() - 1)) : null);
     }
 
-    private List<ItemDeFeedDto> deQuienesSigue(Corte corte, PageRequest pagina, Long quienMira) {
+    private List<ItemDeFeedDto> deQuienesSigue(Corte corte, PageRequest pagina,
+                                               List<Long> ocultos, Long quienMira) {
         List<Long> sigueA = followRepository.idsQueSigue(quienMira);
         if (sigueA.isEmpty()) {
             // Sin esto la consulta llevaría un "in ()" vacío. Además ahorra la ida a la
             // base para contestar algo que ya se sabe: no sigue a nadie, no hay nada.
             return List.of();
         }
-        return ratingRepository.feedDe(sigueA, corte.fecha(), corte.id(), pagina);
+        return ratingRepository.feedDe(sigueA, corte.fecha(), corte.id(), ocultos, pagina);
     }
 
     /**

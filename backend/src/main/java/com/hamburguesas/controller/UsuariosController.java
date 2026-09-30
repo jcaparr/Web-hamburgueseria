@@ -1,6 +1,7 @@
 package com.hamburguesas.controller;
 
 import com.hamburguesas.dto.PerfilPublicoDto;
+import com.hamburguesas.dto.UsuarioBloqueadoDto;
 import com.hamburguesas.dto.UsuarioBuscadoDto;
 import com.hamburguesas.security.CurrentUser;
 import com.hamburguesas.service.SocialService;
@@ -49,6 +50,30 @@ public class UsuariosController {
     @DeleteMapping("/{username}/seguir")
     public ResponseEntity<Void> dejarDeSeguir(@PathVariable String username) {
         socialService.dejarDeSeguir(username, CurrentUser.requireId());
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Con guión, que es lo único que no puede haber en un nombre de usuario.
+     *
+     * Un "/bloqueados" a secas sería un nombre válido, y aunque Spring le daría
+     * prioridad al camino literal, eso significa que quien se llamara así se quedaría
+     * sin perfil accesible. El guión hace que la colisión no pueda existir.
+     */
+    @GetMapping("/mis-bloqueos")
+    public List<UsuarioBloqueadoDto> bloqueados() {
+        return socialService.bloqueados(CurrentUser.requireId());
+    }
+
+    @PostMapping("/{username}/bloquear")
+    public ResponseEntity<Void> bloquear(@PathVariable String username) {
+        socialService.bloquear(username, CurrentUser.requireId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{username}/bloquear")
+    public ResponseEntity<Void> desbloquear(@PathVariable String username) {
+        socialService.desbloquear(username, CurrentUser.requireId());
         return ResponseEntity.noContent().build();
     }
 }

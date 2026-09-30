@@ -30,6 +30,7 @@ class FeedServiceTest {
 
     private RatingRepository ratingRepository;
     private FollowRepository followRepository;
+    private Bloqueos bloqueos;
     private FeedService service;
 
     @BeforeEach
@@ -37,11 +38,16 @@ class FeedServiceTest {
         ratingRepository = mock(RatingRepository.class);
         followRepository = mock(FollowRepository.class);
 
-        when(ratingRepository.feedDeTodos(any(), any(), any())).thenReturn(List.of());
-        when(ratingRepository.feedDe(anyCollection(), any(), any(), any())).thenReturn(List.of());
+        when(ratingRepository.feedDeTodos(any(), any(), anyCollection(), any()))
+            .thenReturn(List.of());
+        when(ratingRepository.feedDe(anyCollection(), any(), any(), anyCollection(), any()))
+            .thenReturn(List.of());
         when(followRepository.idsQueSigue(anyLong())).thenReturn(List.of());
 
-        service = new FeedService(ratingRepository, followRepository);
+        bloqueos = mock(Bloqueos.class);
+        when(bloqueos.queNoPuedeVer(any())).thenReturn(List.of(-1L));
+
+        service = new FeedService(ratingRepository, followRepository, bloqueos);
     }
 
     private ItemDeFeedDto resenia(long id, Instant cuando) {
@@ -58,13 +64,15 @@ class FeedServiceTest {
 
     private Instant fechaPedida() {
         ArgumentCaptor<Instant> fecha = ArgumentCaptor.forClass(Instant.class);
-        verify(ratingRepository).feedDeTodos(fecha.capture(), any(), any(Pageable.class));
+        verify(ratingRepository).feedDeTodos(
+            fecha.capture(), any(), anyCollection(), any(Pageable.class));
         return fecha.getValue();
     }
 
     private Long idPedido() {
         ArgumentCaptor<Long> id = ArgumentCaptor.forClass(Long.class);
-        verify(ratingRepository).feedDeTodos(any(), id.capture(), any(Pageable.class));
+        verify(ratingRepository).feedDeTodos(
+            any(), id.capture(), anyCollection(), any(Pageable.class));
         return id.getValue();
     }
 
@@ -83,7 +91,7 @@ class FeedServiceTest {
      */
     @Test
     void siNoSobraNingunaNoHayCursorParaSeguir() {
-        when(ratingRepository.feedDeTodos(any(), any(), any())).thenReturn(cuantas(20));
+        when(ratingRepository.feedDeTodos(any(), any(), anyCollection(), any())).thenReturn(cuantas(20));
 
         var pagina = service.ver(FuenteDelFeed.TODOS, null, YO);
 
@@ -94,7 +102,7 @@ class FeedServiceTest {
     /** Y la de más no se muestra: sirve para saber que hay, no para llenar la pantalla. */
     @Test
     void laQueSobraNoSeMuestraPeroAvisaQueHayMas() {
-        when(ratingRepository.feedDeTodos(any(), any(), any())).thenReturn(cuantas(21));
+        when(ratingRepository.feedDeTodos(any(), any(), anyCollection(), any())).thenReturn(cuantas(21));
 
         var pagina = service.ver(FuenteDelFeed.TODOS, null, YO);
 
@@ -105,7 +113,7 @@ class FeedServiceTest {
     /** El cursor apunta a la última mostrada, no a la que sobró. */
     @Test
     void elCursorApuntaALaUltimaQueSeMostro() {
-        when(ratingRepository.feedDeTodos(any(), any(), any())).thenReturn(cuantas(21));
+        when(ratingRepository.feedDeTodos(any(), any(), anyCollection(), any())).thenReturn(cuantas(21));
 
         var pagina = service.ver(FuenteDelFeed.TODOS, null, YO);
         ItemDeFeedDto ultima = pagina.items().get(19);
@@ -150,7 +158,8 @@ class FeedServiceTest {
         service.ver(FuenteDelFeed.SIGUIENDO, null, YO);
 
         verify(ratingRepository).feedDe(
-            org.mockito.ArgumentMatchers.eq(List.of(7L, 8L)), any(), any(), any(Pageable.class));
+            org.mockito.ArgumentMatchers.eq(List.of(7L, 8L)), any(), any(), anyCollection(),
+            any(Pageable.class));
     }
 
     /**
@@ -164,7 +173,8 @@ class FeedServiceTest {
 
         assertThat(pagina.items()).isEmpty();
         assertThat(pagina.siguiente()).isNull();
-        verify(ratingRepository, never()).feedDe(anyCollection(), any(), any(), any());
+        verify(ratingRepository, never())
+            .feedDe(anyCollection(), any(), any(), anyCollection(), any());
     }
 
     /** La pestaña de todos no mira a quién seguís. */

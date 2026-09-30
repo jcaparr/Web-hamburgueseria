@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
+import { CuentasBloqueadas } from '../components/CuentasBloqueadas'
 import { LoadError } from '../components/LoadError'
 import { JointPhoto } from '../components/JointPhoto'
 import { IconChevronRight, IconMedal, IconSettings, IconUser } from '../components/icons'
@@ -208,6 +209,8 @@ export function Profile() {
           )}
         </div>
       </section>
+
+      <CuentasBloqueadas />
 
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-sm font-bold">Logros</h2>

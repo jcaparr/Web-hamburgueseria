@@ -5,6 +5,7 @@ import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.exception.ResourceNotFoundException;
 import com.hamburguesas.model.Follow;
 import com.hamburguesas.model.User;
+import com.hamburguesas.repository.BlockRepository;
 import com.hamburguesas.repository.FollowRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.UserRepository;
@@ -37,6 +38,8 @@ class SocialServiceTest {
     private UserRepository userRepository;
     private FollowRepository followRepository;
     private RatingRepository ratingRepository;
+    private BlockRepository blockRepository;
+    private Bloqueos bloqueos;
     private SocialService service;
 
     @BeforeEach
@@ -44,14 +47,19 @@ class SocialServiceTest {
         userRepository = mock(UserRepository.class);
         followRepository = mock(FollowRepository.class);
         ratingRepository = mock(RatingRepository.class);
+        blockRepository = mock(BlockRepository.class);
+        bloqueos = mock(Bloqueos.class);
 
         when(userRepository.buscarPorNombreDeUsuario(anyString(), anyString(), any(), any()))
             .thenReturn(List.of());
         when(followRepository.idsQueSigueDeEntre(anyLong(), anyCollection())).thenReturn(List.of());
         when(ratingRepository.contarPorUsuario(anyCollection())).thenReturn(List.of());
         when(ratingRepository.ultimasDe(anyLong(), any())).thenReturn(List.of());
+        when(bloqueos.queNoPuedeVerNiASiMismo(any())).thenReturn(List.of(-1L));
+        when(bloqueos.hayEntre(any(), any())).thenReturn(false);
 
-        service = new SocialService(userRepository, followRepository, ratingRepository);
+        service = new SocialService(
+            userRepository, followRepository, ratingRepository, blockRepository, bloqueos);
     }
 
     private User persona(Long id, String username) {
@@ -124,12 +132,21 @@ class SocialServiceTest {
             anyString(), anyString(), any(), any());
     }
 
+    /**
+     * Lo que no tiene que salir se pide en un solo lugar y se pasa tal cual.
+     *
+     * Uno mismo y los bloqueados son la misma cosa desde acá —gente que no va en esta
+     * lista— y por eso viajan juntos: que el buscador arme su propia idea de a quién
+     * esconder es como se termina escondiendo a alguien en el feed y no en la búsqueda.
+     */
     @Test
-    void unoMismoNoApareceEntreLosResultados() {
+    void loQueNoTieneQueSalirLoDecideBloqueos() {
+        when(bloqueos.queNoPuedeVerNiASiMismo(YO)).thenReturn(List.of(YO, 44L));
+
         service.buscar("juan", YO);
 
         verify(userRepository).buscarPorNombreDeUsuario(
-            anyString(), anyString(), eq(YO), any(Pageable.class));
+            anyString(), anyString(), eq(List.of(YO, 44L)), any(Pageable.class));
     }
 
     @Test

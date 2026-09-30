@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
+import { BotonBloquear } from '../components/BotonBloquear'
 import { BotonSeguir } from '../components/BotonSeguir'
 import { IconUser } from '../components/icons'
 import { JointPhoto } from '../components/JointPhoto'
@@ -18,6 +19,7 @@ import type { PerfilPublico as Perfil } from '../types'
  */
 export function PerfilPublico() {
   const { username = '' } = useParams()
+  const navigate = useNavigate()
   const [perfil, setPerfil] = useState<Perfil | null>(null)
   const [error, setError] = useState<unknown>(null)
   const [cargando, setCargando] = useState(true)
@@ -93,6 +95,15 @@ export function PerfilPublico() {
           <span className="text-xs text-base-content/60">Puntaje promedio</span>
         </div>
       </div>
+
+      {!perfil.soyYo && (
+        <BotonBloquear
+          username={perfil.username}
+          // Bloqueado, este perfil ya no se puede pedir: quedarse acá mostraría un
+          // error donde hace un segundo había una persona.
+          onBloqueado={() => navigate('/feed')}
+        />
+      )}
 
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-sm font-bold">Últimas reseñas</h2>
