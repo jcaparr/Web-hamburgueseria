@@ -66,7 +66,7 @@ class PlacesSyncFiltroTest {
         when(repository.nombresDeRubro(anyString())).thenReturn(List.of());
 
         service = new PlacesSyncService(
-            properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(),
+            properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(), new Zonas(new Barrios(), properties),
             ratingRepository, wishlistRepository, mock(SavedTourRepository.class),
             new FastFoodMarker(repository, properties));
     }

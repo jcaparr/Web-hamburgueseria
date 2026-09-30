@@ -32,6 +32,14 @@ public class PlacesProperties {
         private List<String> areas = List.of();
 
         /**
+         * Hasta dónde se busca, en kilómetros desde el Obelisco.
+         *
+         * Con 75 entran La Plata, San Vicente, Cañuelas, Luján y Belén de Escobar, que
+         * son los bordes que se quisieron cubrir.
+         */
+        private double radioEnKm = 75;
+
+        /**
          * Las formas de preguntar por un barrio. Cada una es una búsqueda aparte con su
          * propio tope de 60 resultados, y Google contesta distinto según cómo se le
          * pregunte, así que sumarlas es lo que amplía la cobertura. El {barrio} se

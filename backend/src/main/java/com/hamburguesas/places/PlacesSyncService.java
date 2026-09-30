@@ -32,6 +32,7 @@ public class PlacesSyncService {
     private final PhotoStorage photoStorage;
     private final BurgerJointRepository burgerJointRepository;
     private final Barrios barrios;
+    private final Zonas zonas;
     private final RatingRepository ratingRepository;
     private final WishlistRepository wishlistRepository;
     private final SavedTourRepository savedTourRepository;
@@ -124,7 +125,7 @@ public class PlacesSyncService {
                     // que se le pidió. Y si el punto no está en la Ciudad, el local no va:
                     // "hamburguesería en San Nicolás" trae San Nicolás de los Arroyos y
                     // "Versalles" trae uno de Colombia.
-                    var barrio = barrios.barrioDe(place.latitude(), place.longitude());
+                    var barrio = zonas.zonaDe(place.latitude(), place.longitude(), place.address());
                     if (barrio.isEmpty()) {
                         log.debug("{} queda fuera de la Ciudad ({}), se descarta",
                             place.name(), place.address());
@@ -208,7 +209,7 @@ public class PlacesSyncService {
         List<BurgerJoint> quedan = new ArrayList<>();
 
         for (BurgerJoint joint : burgerJointRepository.findAll()) {
-            var barrio = barrios.barrioDe(joint.getLatitude(), joint.getLongitude());
+            var barrio = zonas.zonaDe(joint.getLatitude(), joint.getLongitude(), joint.getAddress());
 
             // De un local del que Google no tiene ni una foto no hay nada que mostrar:
             // la tarjeta queda con un recuadro de iniciales y nadie entra a mirarlo. Se
@@ -236,7 +237,7 @@ public class PlacesSyncService {
                     continue;
                 }
                 log.info("Se borra {} ({}): {}", joint.getName(), joint.getAddress(),
-                    barrio.isEmpty() ? "fuera de la Ciudad"
+                    barrio.isEmpty() ? "fuera del radio de búsqueda"
                         : sinNadaQueMostrar ? "Google no tiene ninguna foto"
                         : "no es una hamburguesería");
                 burgerJointRepository.delete(joint);
