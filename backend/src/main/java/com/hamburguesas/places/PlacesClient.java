@@ -14,6 +14,8 @@ import java.text.Normalizer;
 import java.util.Locale;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +55,7 @@ public class PlacesClient {
     public static final int REGLA_DE_FOTO = 4;
     private static final String FIELD_MASK =
         "places.id,places.displayName,places.formattedAddress,places.location,places.photos,"
-        + "places.primaryType,nextPageToken";
+        + "places.primaryType,places.types,nextPageToken";
 
     private final PlacesProperties properties;
 
@@ -98,6 +100,32 @@ public class PlacesClient {
       *
       * @return el nombre de la foto elegida, o null si el local no tiene ninguna.
       */
+    /**
+     * El resumen de reseñas que arma Google, o null si no tiene.
+     *
+     * Es lo que la gente que fue dice que comió, y resuelve los locales que ninguna otra
+     * señal alcanza: "Austin's Diner & Grill" no tiene el rubro de hamburguesas ni lo
+     * dice en el nombre, y su resumen habla de "delicious grilled and smash burgers".
+     *
+     * Es el tramo más caro de la API —Enterprise + Atmosphere, mil gratis por mes—, así
+     * que se pide de a uno y solo por los locales que las pruebas baratas no resolvieron.
+     *
+     * Solo seis de cada diez locales tienen uno, así que su ausencia no prueba nada.
+     */
+    public String resumenDeResenias(String placeId) {
+        JsonNode place = restClient.get()
+            .uri("https://places.googleapis.com/v1/places/{placeId}", placeId)
+            .header("X-Goog-Api-Key", properties.getApiKey())
+            .header("X-Goog-FieldMask", "reviewSummary")
+            .retrieve()
+            .body(JsonNode.class);
+
+        if (place == null) {
+            return null;
+        }
+        return place.path("reviewSummary").path("text").path("text").asText(null);
+    }
+
      public FotoElegida fotoDe(String placeId) {
          JsonNode place = restClient.get()
              .uri("https://places.googleapis.com/v1/places/{placeId}", placeId)
@@ -153,11 +181,29 @@ public class PlacesClient {
                     ? null : node.path("location").path("longitude").asDouble(),
                 foto == null ? null : foto.name(),
                 foto == null ? null : foto.huella(),
-                node.path("primaryType").asText(null)
+                node.path("primaryType").asText(null),
+                rubrosDe(node)
             ));
         }
 
         return new PlacesSearchResult(places, response.path("nextPageToken").asText(null));
+    }
+
+    /**
+     * Todos los rubros que Google le pone al local.
+     *
+     * Vacío si no vinieron, que no es lo mismo que "ninguno": quien decide después trata
+     * la lista vacía como falta de pruebas y no como prueba en contra.
+     */
+    private static Set<String> rubrosDe(JsonNode place) {
+        Set<String> rubros = new HashSet<>();
+        for (JsonNode rubro : place.path("types")) {
+            String texto = rubro.asText(null);
+            if (texto != null) {
+                rubros.add(texto);
+            }
+        }
+        return rubros;
     }
 
     /**

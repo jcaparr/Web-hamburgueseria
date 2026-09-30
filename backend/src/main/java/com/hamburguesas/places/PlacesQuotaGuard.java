@@ -34,6 +34,7 @@ public class PlacesQuotaGuard {
             case SEARCH -> properties.getQuota().getMonthlySearchCalls();
             case DETAILS -> properties.getQuota().getMonthlyDetailsCalls();
             case PHOTO -> properties.getQuota().getMonthlyPhotoCalls();
+            case RESUMEN -> properties.getQuota().getMonthlyResumenCalls();
         };
     }
 

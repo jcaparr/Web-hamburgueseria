@@ -135,6 +135,17 @@ app:
         - barbecue_restaurant
         - steak_house
         - ice_cream_shop
+        # Los de abajo salieron de revisar la base: kioscos y almacenes que venden
+        # hamburguesas sueltas. Ahora solo descalifican si el local no tiene además el
+        # rubro de hamburguesas: "Panchos Y Hamburguesas" figura como almacén y como
+        # hamburguesería, y es las dos cosas.
+        - convenience_store
+        - grocery_store
+        - supermarket
+        - sandwich_shop
+        - hot_dog_restaurant
+        - coffee_shop
+        - cafe
       # Fichas que Google tiene mal cargadas y ninguna regla puede filtrar.
       excluded-place-ids:
         # "Myc La dimensión 3d": figura como gastropub con hamburguesas, pero el sitio
