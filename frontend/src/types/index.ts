@@ -5,6 +5,8 @@ export interface BurgerJoint {
   name: string
   address: string
   area: string | null
+  /** El promedio de la hamburguesería, distinto de la nota de esta reseña. */
+  promedioDelLocal: number | null
   photoUrl: string | null
   latitude: number | null
   longitude: number | null
@@ -59,6 +61,8 @@ export interface RankingItem {
   name: string
   address: string
   area: string | null
+  /** El promedio de la hamburguesería, distinto de la nota de esta reseña. */
+  promedioDelLocal: number | null
   photoUrl: string | null
   latitude: number | null
   longitude: number | null
@@ -129,6 +133,8 @@ export interface ItemDeFeed {
   burgerJointName: string
   photoUrl: string | null
   area: string | null
+  /** El promedio de la hamburguesería, distinto de la nota de esta reseña. */
+  promedioDelLocal: number | null
   score: number
   comment: string | null
   fotoDeLaResenia: string | null

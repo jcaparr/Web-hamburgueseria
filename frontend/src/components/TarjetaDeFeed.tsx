@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
 import { FotoDeResenia } from './FotoDeResenia'
 import { IconPin } from './icons'
+import { ScoreBadge } from './ScoreBadge'
 import { Stars } from './Stars'
 import { relativeDate } from '../utils/relativeDate'
 import type { ItemDeFeed } from '../types'
@@ -51,8 +52,16 @@ export function TarjetaDeFeed({ item, esMia }: { item: ItemDeFeed; esMia: boolea
         to={`/burger-joints/${item.burgerJointId}`}
         className="flex items-center gap-3 border-b border-base-content/10 bg-base-200/40 px-4 py-3"
       >
-        <div className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate font-display font-bold">{item.burgerJointName}</span>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="truncate font-display font-bold">{item.burgerJointName}</span>
+            {/* El promedio de la hamburguesería, al lado de su nombre. Es otra cosa que
+                las estrellas de la derecha, que son la nota de esta persona: juntas
+                dejan ver si lo que se está leyendo se sale de la norma. */}
+            {item.promedioDelLocal !== null && (
+              <ScoreBadge score={item.promedioDelLocal} size="sm" />
+            )}
+          </span>
           {item.area && (
             <span className="flex items-center gap-1 text-xs text-base-content/50">
               <IconPin size={12} />
