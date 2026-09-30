@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { IconHeart, IconPin } from '../components/icons'
 import { LoadError } from '../components/LoadError'
+import { SelectorDeFoto } from '../components/SelectorDeFoto'
 import { JointPhoto } from '../components/JointPhoto'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { Stars } from '../components/Stars'
@@ -21,6 +22,7 @@ export function BurgerJointDetail() {
   const [ratings, setRatings] = useState<Rating[]>([])
   const [score, setScore] = useState(0)
   const [comment, setComment] = useState('')
+  const [foto, setFoto] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<unknown>(null)
@@ -72,6 +74,16 @@ export function BurgerJointDetail() {
     }
   }
 
+  async function quitarFoto() {
+    try {
+      await apiClient.delete(`/burger-joints/${id}/ratings/foto`)
+      setFoto(null)
+      load()
+    } catch {
+      setError('No pudimos quitar la foto')
+    }
+  }
+
   async function submitRating(e: FormEvent) {
     e.preventDefault()
     if (!user) return navigate('/login')
@@ -87,6 +99,23 @@ export function BurgerJointDetail() {
         await apiClient.put(`/burger-joints/${id}/ratings`, { score, comment })
       } else {
         await apiClient.post(`/burger-joints/${id}/ratings`, { score, comment })
+      }
+
+      // La foto va después y en su propia llamada, así un problema con ella —que pese,
+      // que tarde, que no se pueda leer— no se lleva puesto lo que ya escribió. Si
+      // falla, la reseña quedó guardada y se avisa solo de la foto.
+      if (foto) {
+        const cuerpo = new FormData()
+        cuerpo.append('foto', foto)
+        try {
+          await apiClient.put(`/burger-joints/${id}/ratings/foto`, cuerpo)
+          setFoto(null)
+        } catch (err: any) {
+          setError(err.response?.data?.error ?? 'Guardamos tu reseña, pero no la foto')
+        }
+      }
+
+      if (!myRating) {
         setScore(0)
         setComment('')
       }
@@ -173,6 +202,12 @@ export function BurgerJointDetail() {
             maxLength={1000}
             className="textarea textarea-bordered min-h-20 focus:border-primary"
           />
+          <SelectorDeFoto
+            elegida={foto}
+            yaSubida={myRating?.photoUrl ?? null}
+            onElegir={setFoto}
+            onQuitar={quitarFoto}
+          />
           {error && <p className="text-xs text-error">{error}</p>}
           <button type="submit" disabled={submitting} className="btn btn-primary">
             {submitting ? 'Guardando...' : myRating ? 'Actualizar reseña' : 'Publicar reseña'}
@@ -195,6 +230,14 @@ export function BurgerJointDetail() {
               <Stars value={r.score} size={14} />
             </div>
             {r.comment && <p className="mt-1 text-sm text-base-content/70">{r.comment}</p>}
+            {r.photoUrl && (
+              <img
+                src={r.photoUrl}
+                alt={`La hamburguesa que reseñó @${r.username}`}
+                loading="lazy"
+                className="mt-2 max-h-72 w-full rounded-lg object-cover"
+              />
+            )}
           </div>
         ))}
         {ratings.length === 0 && (

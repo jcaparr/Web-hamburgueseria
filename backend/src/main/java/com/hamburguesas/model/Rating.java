@@ -37,6 +37,15 @@ public class Rating {
     @Column(length = 1000)
     private String comment;
 
+    /**
+     * La foto que sacó, o null si no subió ninguna.
+     *
+     * Guarda la ruta pública y no los bytes: la base no es lugar para archivos, y
+     * servirlos desde disco deja ponerles caché.
+     */
+    @Column(name = "photo_url", length = 500)
+    private String photoUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

@@ -51,6 +51,17 @@ export function TarjetaDeFeed({ item, esMia }: { item: ItemDeFeed; esMia: boolea
       </Link>
 
       {item.comment && <p className="text-sm text-base-content/70">{item.comment}</p>}
+
+      {item.fotoDeLaResenia && (
+        <img
+          src={item.fotoDeLaResenia}
+          alt={`La hamburguesa que reseñó @${item.autorUsername}`}
+          // Perezosa porque el feed baja de a veinte: cargar veinte fotos que nadie
+          // llegó a ver todavía es gastar datos del teléfono de otro.
+          loading="lazy"
+          className="max-h-80 w-full rounded-lg object-cover"
+        />
+      )}
     </article>
   )
 }
