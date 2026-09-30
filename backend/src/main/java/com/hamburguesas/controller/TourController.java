@@ -4,7 +4,6 @@ import com.hamburguesas.dto.GuardarTourRequest;
 import com.hamburguesas.dto.SavedTourDto;
 import com.hamburguesas.dto.TourDto;
 import com.hamburguesas.model.ModoDeViaje;
-import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.security.CurrentUser;
 import com.hamburguesas.service.SavedTourService;
 import com.hamburguesas.service.TourService;
@@ -38,7 +37,6 @@ public class TourController {
 
     private final TourService tourService;
     private final SavedTourService savedTourService;
-    private final BurgerJointRepository burgerJointRepository;
 
     /**
      * @param barrios           en cuáles buscar. Vacío significa alrededor de quien lo pide.
@@ -100,12 +98,6 @@ public class TourController {
             }
         }
         return ids;
-    }
-
-    /** Los barrios que tienen al menos una hamburguesería, para el selector. */
-    @GetMapping("/barrios")
-    public List<String> barrios() {
-        return burgerJointRepository.barriosConLocales();
     }
 
     @PostMapping

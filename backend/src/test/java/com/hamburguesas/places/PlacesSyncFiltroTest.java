@@ -336,7 +336,7 @@ class PlacesSyncFiltroTest {
 
         service.sync();
 
-        verify(repository, never()).delete(any());
+        verify(repository, never()).delete(any(BurgerJoint.class));
     }
 
     /** Juntar dos conjuntos de reseñas no es una decisión que corresponda tomar acá. */
@@ -351,7 +351,7 @@ class PlacesSyncFiltroTest {
 
         service.sync();
 
-        verify(repository, never()).delete(any());
+        verify(repository, never()).delete(any(BurgerJoint.class));
     }
 
     /** Y si solo una tiene reseñas, se conserva esa aunque la otra tenga foto. */

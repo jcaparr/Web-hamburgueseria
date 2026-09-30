@@ -11,6 +11,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class BurgerJointService {
@@ -19,21 +21,21 @@ public class BurgerJointService {
     private final RatingRepository ratingRepository;
     private final WishlistRepository wishlistRepository;
 
-    public Page<BurgerJointDto> search(String query, boolean conCadenas, Long userId, Pageable pageable) {
-        boolean buscaPorNombre = query != null && !query.isBlank();
+    /**
+     * El listado de Explorar.
+     *
+     * Los tres filtros son independientes y se combinan: se puede buscar un nombre
+     * dentro de un barrio, con las cadenas apagadas. El que no viene no filtra.
+     */
+    public Page<BurgerJointDto> search(String query, String area, boolean conCadenas,
+                                       Long userId, Pageable pageable) {
+        return burgerJointRepository.buscar(query, area, conCadenas, pageable)
+            .map(b -> toDto(b, userId));
+    }
 
-        Page<BurgerJoint> page;
-        if (conCadenas) {
-            page = buscaPorNombre
-                ? burgerJointRepository.findByNameContainingIgnoreCase(query, pageable)
-                : burgerJointRepository.findAll(pageable);
-        } else {
-            page = buscaPorNombre
-                ? burgerJointRepository.findByNameContainingIgnoreCaseAndFastFoodFalse(query, pageable)
-                : burgerJointRepository.findByFastFoodFalse(pageable);
-        }
-
-        return page.map(b -> toDto(b, userId));
+    /** Los barrios que tienen al menos una hamburguesería, para el selector. */
+    public List<String> barrios() {
+        return burgerJointRepository.barriosConLocales();
     }
 
     public BurgerJointDto get(Long id, Long userId) {
