@@ -283,6 +283,55 @@ class PlacesSyncFiltroTest {
         verify(repository, never()).delete(lejos);
     }
 
+    /**
+     * De un local sin una sola foto en Google no hay nada que mostrar.
+     *
+     * La tarjeta queda con un recuadro de iniciales, y una lista para elegir dónde comer
+     * se mira con los ojos. Eran 21 de 442.
+     */
+    @Test
+    void borraElLocalDelQueGoogleNoTieneNingunaFoto() {
+        googleDevuelve();
+        BurgerJoint sinFotos = guardado("Sin nada", -34.5900, -58.4270, "Palermo");
+        sinFotos.setSinFotosEnGoogle(true);
+
+        service.sync();
+
+        verify(repository).delete(sinFotos);
+    }
+
+    /**
+     * El que no tiene la foto bajada pero sí las tiene en Google se queda.
+     *
+     * De los 102 sin foto en la base, la mitad las tiene en Google y lo que faltó fue ir
+     * a buscarlas. Esos hay que completarlos, no borrarlos, y confundir las dos cosas
+     * se llevaría medio centenar de hamburgueserías reales.
+     */
+    @Test
+    void noBorraAlQueTieneFotosEnGoogleAunqueNoLasHayamosBajado() {
+        googleDevuelve();
+        BurgerJoint sinBajar = guardado("Falta bajarla", -34.5900, -58.4270, "Palermo");
+        sinBajar.setPhotoUrl(null);
+        sinBajar.setSinFotosEnGoogle(false);
+
+        service.sync();
+
+        verify(repository, never()).delete(any(BurgerJoint.class));
+    }
+
+    /** Y si alguien lo puntuó se queda igual, como con cualquier otro motivo de borrado. */
+    @Test
+    void noBorraPorFaltaDeFotosAlLocalQueAlguienPuntuo() {
+        googleDevuelve();
+        BurgerJoint sinFotos = guardado("Sin nada pero puntuado", -34.5900, -58.4270, "Palermo");
+        sinFotos.setSinFotosEnGoogle(true);
+        when(ratingRepository.existsByBurgerJoint_Id(1L)).thenReturn(true);
+
+        service.sync();
+
+        verify(repository, never()).delete(any(BurgerJoint.class));
+    }
+
     /** Y lo mismo para lo que ya está guardado y resulta ser de otra especialidad. */
     @Test
     void borraLoQueQuedoGuardadoYEsDeOtraEspecialidad() {

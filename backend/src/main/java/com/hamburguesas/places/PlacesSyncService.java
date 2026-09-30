@@ -209,7 +209,15 @@ public class PlacesSyncService {
 
         for (BurgerJoint joint : burgerJointRepository.findAll()) {
             var barrio = barrios.barrioDe(joint.getLatitude(), joint.getLongitude());
-            boolean sobra = barrio.isEmpty() || noEsUnaHamburgueseria(comoLugar(joint), cadenas);
+
+            // De un local del que Google no tiene ni una foto no hay nada que mostrar:
+            // la tarjeta queda con un recuadro de iniciales y nadie entra a mirarlo. Se
+            // anota en la revisión de fotos, y solo cuando Google contestó que no tiene
+            // ninguna: no tener la foto bajada es otra cosa, y es problema nuestro.
+            boolean sinNadaQueMostrar = joint.isSinFotosEnGoogle();
+            boolean sobra = barrio.isEmpty()
+                || sinNadaQueMostrar
+                || noEsUnaHamburgueseria(comoLugar(joint), cadenas);
 
             if (sobra) {
                 // Si alguien lo puntuó, lo anotó para ir o lo tiene en un recorrido
@@ -220,7 +228,9 @@ public class PlacesSyncService {
                     continue;
                 }
                 log.info("Se borra {} ({}): {}", joint.getName(), joint.getAddress(),
-                    barrio.isEmpty() ? "fuera de la Ciudad" : "no es una hamburguesería");
+                    barrio.isEmpty() ? "fuera de la Ciudad"
+                        : sinNadaQueMostrar ? "Google no tiene ninguna foto"
+                        : "no es una hamburguesería");
                 burgerJointRepository.delete(joint);
                 borrados++;
                 continue;
