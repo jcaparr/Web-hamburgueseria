@@ -47,10 +47,11 @@ public class FotosDeResenias {
      * El lado más largo que se guarda.
      *
      * Una foto de celular viene con varias veces esto. Achicarla es lo que hace que el
-     * disco no crezca a diez megas por reseña, y en una tarjeta del feed nadie nota la
-     * diferencia.
+     * disco no crezca a diez megas por reseña. A 2048 una foto llena la pantalla de
+     * cualquier teléfono con margen de sobra, y se sigue viendo bien si alguien la
+     * abre en una notebook.
      */
-    private static final int LADO_MAXIMO = 1600;
+    private static final int LADO_MAXIMO = 2048;
 
     /**
      * Cuántos píxeles se aceptan decodificar.
@@ -62,7 +63,7 @@ public class FotosDeResenias {
      */
     private static final long PIXELES_MAXIMOS = 50_000_000L;
 
-    private static final float CALIDAD = 0.85f;
+    private static final float CALIDAD = 0.9f;
 
     @Value("${app.fotos-de-resenias.directorio:./data/rating-photos}")
     private String directorio;

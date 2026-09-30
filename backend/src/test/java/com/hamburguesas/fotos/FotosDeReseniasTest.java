@@ -141,9 +141,9 @@ class FotosDeReseniasTest {
         String ruta = fotos.guardar(unaImagen("jpg", 4000, 3000));
 
         BufferedImage guardada = leer(ruta);
-        assertThat(Math.max(guardada.getWidth(), guardada.getHeight())).isEqualTo(1600);
+        assertThat(Math.max(guardada.getWidth(), guardada.getHeight())).isEqualTo(2048);
         // Y sin deformarla: 4000x3000 es 4:3, y tiene que seguir siéndolo.
-        assertThat(guardada.getHeight()).isEqualTo(1200);
+        assertThat(guardada.getHeight()).isEqualTo(1536);
     }
 
     /** Una que ya entra se deja como está, en vez de agrandarla. */

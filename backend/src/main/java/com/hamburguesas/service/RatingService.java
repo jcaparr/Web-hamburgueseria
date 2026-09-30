@@ -29,8 +29,17 @@ public class RatingService {
     private final UserRepository userRepository;
     private final FotosDeResenias fotos;
 
+    /**
+     * La foto es parte de la reseña, no un agregado posterior.
+     *
+     * Antes se guardaba el texto primero y la foto después, para que un problema con la
+     * foto no se llevara puesto lo escrito. Con la foto obligatoria ese razonamiento se
+     * da vuelta: una reseña sin foto no es una reseña, así que guardarla igual sería
+     * dejar en la base algo que la app no considera válido. Van juntas o no va ninguna.
+     */
     @Transactional
-    public RatingResponse rate(Long userId, Long burgerJointId, RatingRequest request) {
+    public RatingResponse rate(Long userId, Long burgerJointId, RatingRequest request,
+                               MultipartFile foto) {
         if (ratingRepository.findByUser_IdAndBurgerJoint_Id(userId, burgerJointId).isPresent()) {
             throw new ConflictException("You already rated this burger joint. Update it instead of creating a new one.");
         }
@@ -40,26 +49,59 @@ public class RatingService {
         BurgerJoint burgerJoint = burgerJointRepository.findById(burgerJointId)
             .orElseThrow(() -> new ResourceNotFoundException("Burger joint not found"));
 
+        // Se guarda antes de tocar la base: si la foto no sirve, la transacción no
+        // llegó a escribir nada y no hay archivo que limpiar.
+        String rutaDeLaFoto = fotos.guardar(exigir(foto));
+
         Rating rating = Rating.builder()
             .user(user)
             .burgerJoint(burgerJoint)
             .score(request.score())
             .comment(request.comment())
+            .photoUrl(rutaDeLaFoto)
             .build();
 
         rating = ratingRepository.save(rating);
         return toResponse(rating);
     }
 
+    /**
+     * Al editar, la foto solo hace falta si la reseña todavía no tiene.
+     *
+     * Cambiar una coma no puede obligar a volver a sacar la foto. Pero las reseñas de
+     * antes de esta regla no tienen ninguna, y esas sí la piden: es la forma de que el
+     * "toda reseña tiene foto" termine siendo cierto sin borrarle la reseña a nadie.
+     */
     @Transactional
-    public RatingResponse update(Long userId, Long burgerJointId, RatingRequest request) {
+    public RatingResponse update(Long userId, Long burgerJointId, RatingRequest request,
+                                 MultipartFile foto) {
         Rating rating = ratingRepository
             .findByUser_IdAndBurgerJoint_Id(userId, burgerJointId)
             .orElseThrow(() -> new ResourceNotFoundException("You haven't rated this burger joint yet"));
 
+        boolean mandaFoto = foto != null && !foto.isEmpty();
+        if (!mandaFoto && rating.getPhotoUrl() == null) {
+            throw new ConflictException("Tu reseña necesita una foto");
+        }
+
+        if (mandaFoto) {
+            String anterior = rating.getPhotoUrl();
+            rating.setPhotoUrl(fotos.guardar(leer(foto)));
+            if (anterior != null) {
+                fotos.borrar(anterior);
+            }
+        }
+
         rating.setScore(request.score());
         rating.setComment(request.comment());
         return toResponse(rating);
+    }
+
+    private byte[] exigir(MultipartFile foto) {
+        if (foto == null || foto.isEmpty()) {
+            throw new ConflictException("Toda reseña lleva una foto de lo que comiste");
+        }
+        return leer(foto);
     }
 
     @Transactional(readOnly = true)
@@ -67,45 +109,6 @@ public class RatingService {
         return ratingRepository
             .findByBurgerJoint_IdOrderByCreatedAtDesc(burgerJointId, pageable)
             .map(this::toResponse);
-    }
-
-    /**
-     * Subir una foto nueva reemplaza la anterior, y borra su archivo.
-     *
-     * Sin eso, cambiar de foto tres veces dejaría tres archivos en disco de los que
-     * solo uno se muestra, y nadie volvería a mirar los otros dos.
-     */
-    @Transactional
-    public RatingResponse guardarFoto(Long userId, Long burgerJointId, MultipartFile foto) {
-        Rating rating = miResenia(userId, burgerJointId);
-        String anterior = rating.getPhotoUrl();
-
-        rating.setPhotoUrl(fotos.guardar(leer(foto)));
-
-        if (anterior != null) {
-            fotos.borrar(anterior);
-        }
-        return toResponse(rating);
-    }
-
-    @Transactional
-    public RatingResponse borrarFoto(Long userId, Long burgerJointId) {
-        Rating rating = miResenia(userId, burgerJointId);
-        String anterior = rating.getPhotoUrl();
-
-        rating.setPhotoUrl(null);
-
-        if (anterior != null) {
-            fotos.borrar(anterior);
-        }
-        return toResponse(rating);
-    }
-
-    /** La reseña de esa persona sobre ese local: nadie toca la de otro. */
-    private Rating miResenia(Long userId, Long burgerJointId) {
-        return ratingRepository.findByUser_IdAndBurgerJoint_Id(userId, burgerJointId)
-            .orElseThrow(() -> new ResourceNotFoundException(
-                "Primero escribí tu reseña, después le agregás la foto"));
     }
 
     private byte[] leer(MultipartFile foto) {
