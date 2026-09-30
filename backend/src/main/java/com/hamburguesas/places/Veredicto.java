@@ -29,7 +29,15 @@ public record Veredicto(boolean vendeHamburguesas, Prueba prueba) {
         /** Ninguna de sus fotos muestra una hamburguesa. */
         NINGUNA_FOTO_ES_DE_HAMBURGUESA,
         /** Nada dijo que venda hamburguesas. */
-        SIN_PRUEBAS
+        SIN_PRUEBAS,
+
+        /**
+         * No se pudo preguntar: se acabó la cuota del resumen de reseñas.
+         *
+         * No es lo mismo que no encontrar pruebas. Que no hayamos podido mirar es un
+         * límite nuestro, y nunca puede terminar en borrarle el local a alguien.
+         */
+        NO_SE_PUDO_PREGUNTAR
     }
 
     static Veredicto si(Prueba prueba) {

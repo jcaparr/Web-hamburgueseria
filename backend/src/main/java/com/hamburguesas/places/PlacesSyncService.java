@@ -215,9 +215,17 @@ public class PlacesSyncService {
             // anota en la revisión de fotos, y solo cuando Google contestó que no tiene
             // ninguna: no tener la foto bajada es otra cosa, y es problema nuestro.
             boolean sinNadaQueMostrar = joint.isSinFotosEnGoogle();
+
+            // Borrar es definitivo, así que no alcanza con que el veredicto diga que no:
+            // tiene que decir por qué. Si no se pudo preguntar porque se acabó la cuota,
+            // el local se queda. Un límite nuestro no puede terminar en borrarle la
+            // hamburguesería a alguien, y el mes que viene se vuelve a mirar.
+            Veredicto veredicto = evaluar(comoLugar(joint), cadenas);
+            boolean noSabemos = veredicto.prueba() == Veredicto.Prueba.NO_SE_PUDO_PREGUNTAR;
+
             boolean sobra = barrio.isEmpty()
                 || sinNadaQueMostrar
-                || noEsUnaHamburgueseria(comoLugar(joint), cadenas);
+                || (!veredicto.vendeHamburguesas() && !noSabemos);
 
             if (sobra) {
                 // Si alguien lo puntuó, lo anotó para ir o lo tiene en un recorrido
@@ -348,13 +356,23 @@ public class PlacesSyncService {
      * con el motivo al lado, igual que los que hay que sacar.
      */
     private boolean noEsUnaHamburgueseria(PlacesSearchResult.Place place, Set<String> cadenas) {
+        return !evaluar(place, cadenas).vendeHamburguesas();
+    }
+
+    /**
+     * Qué se decidió sobre un local y con qué prueba.
+     *
+     * Devuelve el veredicto entero y no un sí o un no porque la limpieza necesita
+     * distinguir por qué: borrar es definitivo y no todas las razones alcanzan.
+     */
+    private Veredicto evaluar(PlacesSearchResult.Place place, Set<String> cadenas) {
         var sync = properties.getSync();
 
         if (sync.getExcludedPlaceIds().contains(place.placeId())) {
-            return true;
+            return Veredicto.no(Veredicto.Prueba.A_MANO);
         }
         if (sync.getIncludedPlaceIds().contains(place.placeId())) {
-            return false;
+            return Veredicto.si(Veredicto.Prueba.A_MANO);
         }
 
         Set<String> rubrosDeOtraCosa = new HashSet<>(sync.getExcludedPrimaryTypes());
@@ -363,22 +381,29 @@ public class PlacesSyncService {
         Veredicto veredicto = VendeHamburguesas.evaluar(
             place.name(), rubros, null, rubrosDeOtraCosa, cadenas);
 
-        // Solo cuando nada barato alcanzó se paga por el resumen de reseñas, que es el
-        // tramo más caro de la API. Es la minoría de los casos, y es donde está la
+        // Solo cuando nada barato alcanzó se pregunta por el resumen de reseñas, que es
+        // el tramo más caro de la API. Es la minoría de los casos, y es donde está la
         // diferencia: "Austin's Diner & Grill" no tiene el rubro ni lo dice el nombre.
-        if (veredicto.prueba() == Veredicto.Prueba.SIN_PRUEBAS
-            && quotaGuard.canCall(PlacesCallType.RESUMEN)) {
-            String resumen = resumenDeResenias(place.placeId());
-            if (resumen != null) {
-                veredicto = VendeHamburguesas.evaluar(
-                    place.name(), rubros, resumen, rubrosDeOtraCosa, cadenas);
+        if (veredicto.prueba() == Veredicto.Prueba.SIN_PRUEBAS) {
+            if (!quotaGuard.canCall(PlacesCallType.RESUMEN)) {
+                // Se acabó la cuota. No sabemos, y no saber no es lo mismo que saber que
+                // no: queda anotado para que la limpieza no lo borre por un límite
+                // nuestro.
+                return Veredicto.no(Veredicto.Prueba.NO_SE_PUDO_PREGUNTAR);
             }
+
+            String resumen = resumenDeResenias(place.placeId());
+            if (resumen == null) {
+                return veredicto;
+            }
+            veredicto = VendeHamburguesas.evaluar(
+                place.name(), rubros, resumen, rubrosDeOtraCosa, cadenas);
         }
 
         if (!veredicto.vendeHamburguesas()) {
             log.debug("{} queda afuera: {}", place.name(), veredicto.prueba());
         }
-        return !veredicto.vendeHamburguesas();
+        return veredicto;
     }
 
     /**
