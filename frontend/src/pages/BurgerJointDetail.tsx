@@ -29,6 +29,10 @@ export function BurgerJointDetail() {
   const [parametros, setParametros] = useSearchParams()
   const [burgerJoint, setBurgerJoint] = useState<BurgerJoint | null>(null)
   const [ratings, setRatings] = useState<Rating[]>([])
+  // Cuántas hay en total, que no es lo mismo que cuántas se trajeron: la lista viene
+  // paginada. Sale de la página y no del resumen para que el número del título cuente
+  // lo que se puede ver, y no las que el servidor escondió por un bloqueo.
+  const [cuantasResenias, setCuantasResenias] = useState<number | null>(null)
   const [resumen, setResumen] = useState<ResumenDeResenias | null>(null)
   const [opinando, setOpinando] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -48,6 +52,7 @@ export function BurgerJointDetail() {
       .then(([jointRes, ratingsRes, resumenRes]) => {
         setBurgerJoint(jointRes.data)
         setRatings(ratingsRes.data.content)
+        setCuantasResenias(ratingsRes.data.totalElements)
         setResumen(resumenRes.data)
         setLoadError(null)
       })
@@ -214,7 +219,7 @@ export function BurgerJointDetail() {
 
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-sm font-bold">
-          {resumen ? `Reseñas (${resumen.total})` : 'Reseñas'}
+          {cuantasResenias !== null ? `Reseñas (${cuantasResenias})` : 'Reseñas'}
         </h2>
         {ratings.map((r) => {
           const esMia = r.userId === user?.userId

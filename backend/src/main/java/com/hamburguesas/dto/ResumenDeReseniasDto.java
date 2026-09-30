@@ -16,7 +16,6 @@ public record ResumenDeReseniasDto(
      * necesita las cinco para que la escala no se mueva de local en local.
      */
     List<NotaYCuantasDto> distribucion,
-    long total,
     /**
      * Las reseñas de la gente que seguís sobre este local, de la más nueva a la más
      * vieja. Vacía si no seguís a nadie que haya venido, o si no hay sesión.

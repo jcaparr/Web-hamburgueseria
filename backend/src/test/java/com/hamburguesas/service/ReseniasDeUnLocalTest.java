@@ -4,6 +4,9 @@ import com.hamburguesas.dto.NotaYCuantasDto;
 import com.hamburguesas.dto.RatingResponse;
 import com.hamburguesas.dto.ResumenDeReseniasDto;
 import com.hamburguesas.fotos.FotosDeResenias;
+import com.hamburguesas.model.BurgerJoint;
+import com.hamburguesas.model.Rating;
+import com.hamburguesas.model.User;
 import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.FollowRepository;
 import com.hamburguesas.repository.RatingRepository;
@@ -11,6 +14,10 @@ import com.hamburguesas.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
 import java.util.List;
@@ -18,22 +25,27 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Lo que se muestra arriba de la lista de reseñas de un local.
+ * Las reseñas de una hamburguesería: la lista y lo que va arriba de la lista.
  *
- * Las dos cosas que se prueban acá son las que no se ven mirando la consulta: que las
- * cinco barras estén aunque la base devuelva dos, y que seguir a alguien no alcance
- * para verlo si hay un bloqueo de por medio.
+ * Lo que se prueba acá es lo que no se ve mirando las consultas: que las cinco barras
+ * estén aunque la base devuelva dos, y que un bloqueo valga tanto en esta pantalla como
+ * en el feed y en el buscador.
  */
-class ResumenDeReseniasTest {
+class ReseniasDeUnLocalTest {
 
     private static final Long YO = 1L;
     private static final Long LOCAL = 5L;
+    private static final Pageable PRIMERA_PAGINA = PageRequest.of(0, 20);
+
+    /** Lo que devuelve Bloqueos cuando no hay a nadie que esconder. */
+    private static final List<Long> NADIE = List.of(-1L);
 
     private RatingRepository ratingRepository;
     private FollowRepository followRepository;
@@ -47,14 +59,49 @@ class ResumenDeReseniasTest {
         bloqueos = mock(Bloqueos.class);
 
         when(ratingRepository.distribucionDeNotas(LOCAL)).thenReturn(List.of());
+        when(ratingRepository.deUnLocalSalvo(any(), any(), any())).thenReturn(Page.empty());
         when(followRepository.idsQueSigue(anyLong())).thenReturn(List.of());
-        when(bloqueos.queNoPuedeVer(anyLong())).thenReturn(List.of(-1L));
+        when(bloqueos.queNoPuedeVer(any())).thenReturn(NADIE);
 
         service = new RatingService(
             ratingRepository, mock(BurgerJointRepository.class), mock(UserRepository.class),
             mock(FotosDeResenias.class), followRepository, bloqueos
         );
     }
+
+    // ---- la lista ----
+
+    /**
+     * La tercera pantalla donde aparece gente, después del feed y del buscador.
+     *
+     * Antes era la única que no miraba los bloqueos: para volver a cruzarte con alguien
+     * que bloqueaste alcanzaba con abrir una hamburguesería que los dos hubieran
+     * visitado.
+     */
+    @Test
+    void laListaNoTraeAQuienBloqueaste() {
+        when(bloqueos.queNoPuedeVer(YO)).thenReturn(List.of(8L));
+
+        service.list(LOCAL, YO, PRIMERA_PAGINA);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Long>> ocultos = ArgumentCaptor.forClass(List.class);
+        verify(ratingRepository).deUnLocalSalvo(eq(LOCAL), ocultos.capture(), eq(PRIMERA_PAGINA));
+        assertThat(ocultos.getValue()).containsExactly(8L);
+    }
+
+    /** Sin sesión no hay bloqueos, pero la lista tiene que salir igual. */
+    @Test
+    void sinSesionSeVenTodas() {
+        Page<Rating> unaPagina = new PageImpl<>(List.of(unaResenia(3L, "otro", 4)));
+        when(ratingRepository.deUnLocalSalvo(LOCAL, NADIE, PRIMERA_PAGINA)).thenReturn(unaPagina);
+
+        Page<RatingResponse> lista = service.list(LOCAL, null, PRIMERA_PAGINA);
+
+        assertThat(lista.getContent()).extracting(RatingResponse::username).containsExactly("otro");
+    }
+
+    // ---- el resumen de arriba ----
 
     @Test
     void lasCincoNotasEstanAunqueLaBaseDevuelvaDos() {
@@ -70,7 +117,6 @@ class ResumenDeReseniasTest {
             .containsExactly(1, 2, 3, 4, 5);
         assertThat(resumen.distribucion()).extracting(NotaYCuantasDto::cuantas)
             .containsExactly(0L, 0L, 1L, 0L, 2L);
-        assertThat(resumen.total()).isEqualTo(3);
     }
 
     @Test
@@ -78,9 +124,24 @@ class ResumenDeReseniasTest {
         ResumenDeReseniasDto resumen = service.resumen(LOCAL, null);
 
         assertThat(resumen.distribucion()).hasSize(5);
-        assertThat(resumen.distribucion()).extracting(NotaYCuantasDto::cuantas)
-            .containsOnly(0L);
-        assertThat(resumen.total()).isZero();
+        assertThat(resumen.distribucion()).extracting(NotaYCuantasDto::cuantas).containsOnly(0L);
+    }
+
+    /**
+     * La distribución cuenta a todos, también a quien bloqueaste.
+     *
+     * El puntaje de una hamburguesería es un hecho del lugar y no de quién lo mira: si
+     * dependiera de a quién bloqueaste, dos personas verían promedios distintos del
+     * mismo local y ninguna sabría por qué. Se esconde a la persona, no se reescribe la
+     * nota.
+     */
+    @Test
+    void laDistribucionNoMiraLosBloqueos() {
+        when(bloqueos.queNoPuedeVer(YO)).thenReturn(List.of(8L));
+
+        service.resumen(LOCAL, YO);
+
+        verify(ratingRepository).distribucionDeNotas(LOCAL);
     }
 
     /** Un local se puede mirar sin cuenta: la parte social viene vacía, no falla. */
@@ -131,5 +192,15 @@ class ResumenDeReseniasTest {
         ResumenDeReseniasDto resumen = service.resumen(LOCAL, YO);
 
         assertThat(resumen.deQuienesSigo()).containsExactly(deUnAmigo);
+    }
+
+    private Rating unaResenia(Long id, String username, int nota) {
+        return Rating.builder()
+            .id(id)
+            .user(User.builder().id(id).username(username).email(username + "@example.com").build())
+            .burgerJoint(BurgerJoint.builder().id(LOCAL).name("Un local").build())
+            .score(nota)
+            .createdAt(Instant.now())
+            .build();
     }
 }

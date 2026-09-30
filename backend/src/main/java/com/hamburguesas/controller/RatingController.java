@@ -27,7 +27,7 @@ public class RatingController {
         @PathVariable Long burgerJointId,
         @PageableDefault(size = 20) Pageable pageable
     ) {
-        return ratingService.list(burgerJointId, pageable);
+        return ratingService.list(burgerJointId, CurrentUser.idOrNull(), pageable);
     }
 
     /**

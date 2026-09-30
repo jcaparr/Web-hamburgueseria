@@ -64,7 +64,6 @@ export interface NotaYCuantas {
 export interface ResumenDeResenias {
   /** Las cinco notas, del 1 al 5, con cero incluido. */
   distribucion: NotaYCuantas[]
-  total: number
   /** Las reseñas de la gente que seguís. Vacía sin sesión. */
   deQuienesSigo: Rating[]
 }

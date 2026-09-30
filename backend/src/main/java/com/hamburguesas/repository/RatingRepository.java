@@ -20,9 +20,29 @@ import java.util.Optional;
 
 public interface RatingRepository extends JpaRepository<Rating, Long> {
 
-    Page<Rating> findByBurgerJoint_IdOrderByCreatedAtDesc(Long burgerJointId, Pageable pageable);
-
     Optional<Rating> findByUser_IdAndBurgerJoint_Id(Long userId, Long burgerJointId);
+
+    /**
+     * Las reseñas de un local, salteando a la gente con la que hay un bloqueo.
+     *
+     * Es la misma regla que ya aplican el feed y el buscador. Sin esto, bloquear a
+     * alguien lo escondía de esas dos pantallas pero lo dejaba entrar por la tercera:
+     * alcanzaba con abrir una hamburguesería que los dos hubieran visitado.
+     *
+     * "ocultos" nunca llega vacía, por lo mismo que en el feed: "not in ()" no es SQL
+     * válido, así que quien llama pone un id imposible cuando no hay a nadie que
+     * esconder.
+     */
+    @Query("""
+        select r from Rating r
+        where r.burgerJoint.id = :burgerJointId
+          and r.user.id not in :ocultos
+        order by r.createdAt desc
+        """)
+    Page<Rating> deUnLocalSalvo(@Param("burgerJointId") Long burgerJointId,
+                                @Param("ocultos") Collection<Long> ocultos,
+                                Pageable pagina);
+
 
     @Query("""
         select new com.hamburguesas.dto.RankingItemDto(

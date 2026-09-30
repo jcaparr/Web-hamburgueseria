@@ -114,10 +114,23 @@ public class RatingService {
         return leer(foto);
     }
 
+    /**
+     * Las reseñas de un local, sin las de la gente con la que hay un bloqueo.
+     *
+     * Es la tercera pantalla donde aparece gente, después del feed y del buscador, y
+     * hasta ahora era la única que no miraba los bloqueos: para volver a cruzarte con
+     * alguien que bloqueaste alcanzaba con abrir una hamburguesería que los dos
+     * hubieran visitado.
+     *
+     * Lo que no cambia es el promedio del local ni la distribución de notas. El puntaje
+     * de una hamburguesería es un hecho del lugar, no de quién lo mira: si dependiera de
+     * a quién bloqueaste, dos personas verían promedios distintos del mismo local y
+     * ninguna sabría por qué. Se esconde a la persona, no se reescribe la nota.
+     */
     @Transactional(readOnly = true)
-    public Page<RatingResponse> list(Long burgerJointId, Pageable pageable) {
+    public Page<RatingResponse> list(Long burgerJointId, Long userId, Pageable pageable) {
         return ratingRepository
-            .findByBurgerJoint_IdOrderByCreatedAtDesc(burgerJointId, pageable)
+            .deUnLocalSalvo(burgerJointId, bloqueos.queNoPuedeVer(userId), pageable)
             .map(this::toResponse);
     }
 
@@ -138,11 +151,7 @@ public class RatingService {
             .mapToObj(nota -> new NotaYCuantasDto(nota, cuantasPorNota.getOrDefault(nota, 0L)))
             .toList();
 
-        // El total sale de sumar las barras y no de contar otra vez: son las mismas
-        // filas, y una segunda consulta podría hasta no coincidir con la primera.
-        long total = distribucion.stream().mapToLong(NotaYCuantasDto::cuantas).sum();
-
-        return new ResumenDeReseniasDto(distribucion, total, deQuienesSigo(burgerJointId, userId));
+        return new ResumenDeReseniasDto(distribucion, deQuienesSigo(burgerJointId, userId));
     }
 
     private List<RatingResponse> deQuienesSigo(Long burgerJointId, Long userId) {
