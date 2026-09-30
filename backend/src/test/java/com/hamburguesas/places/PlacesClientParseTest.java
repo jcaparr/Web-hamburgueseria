@@ -160,9 +160,18 @@ class PlacesClientParseTest {
         assertThat(place.photoName()).isEqualTo("places/ChIJ123/photos/apaisada");
     }
 
-    /** Una foto del local, aunque sea vertical, vale más que una apaisada de un cliente. */
+    /**
+     * Una apaisada de un cliente le gana a una vertical del local.
+     *
+     * Era al revés, y de ahí salía el problema: "Keke & Larry" tiene diez fotos, y las
+     * dos que subió el local son el logo y una promoción de empanadas. La hamburguesa
+     * con papas —apaisada, de 4800x3976— la sacó un cliente, y perdía.
+     *
+     * Tiene sentido que sea así: al dueño le importa la identidad del local y al que
+     * fue a comer le importa el plato. Quién la subió pasa a ser un desempate.
+     */
     @Test
-    void laDelLocalGanaAunqueSeaVerticalYLaDelClienteApaisada() {
+    void laApaisadaDeUnClienteLeGanaALaVerticalDelLocal() {
         JsonNode response = json("""
             {
               "places": [{
@@ -187,7 +196,45 @@ class PlacesClientParseTest {
 
         PlacesSearchResult.Place place = PlacesClient.parse(response).places().get(0);
 
-        assertThat(place.photoName()).isEqualTo("places/ChIJ123/photos/local-vertical");
+        assertThat(place.photoName()).isEqualTo("places/ChIJ123/photos/cliente-apaisada");
+    }
+
+    /**
+     * Las diez fotos de "Keke & Larry", con los tamaños y los autores que devuelve
+     * Google. Es el caso que hizo cambiar la regla, así que va entero.
+     *
+     * Las dos del local son verticales —el logo y la promoción de empanadas— y la
+     * hamburguesa con papas la subió un cliente, apaisada y de 4800 de ancho.
+     */
+    @Test
+    void enKekeYLarryEligeLaHamburguesaYNoLaPromocionDeEmpanadas() {
+        JsonNode response = json("""
+            {
+              "places": [{
+                "id": "ChIJkeke",
+                "displayName": { "text": "Keke & Larry" },
+                "formattedAddress": "Cabildo 1",
+                "photos": [
+                  { "name": "places/ChIJkeke/photos/mostrador-de-un-cliente",
+                    "widthPx": 3600, "heightPx": 4800,
+                    "authorAttributions": [{ "displayName": "Gisella Akaro" }] },
+                  { "name": "places/ChIJkeke/photos/promo-de-empanadas",
+                    "widthPx": 900, "heightPx": 1600,
+                    "authorAttributions": [{ "displayName": "Keke & Larry" }] },
+                  { "name": "places/ChIJkeke/photos/hamburguesa-con-papas",
+                    "widthPx": 4800, "heightPx": 3976,
+                    "authorAttributions": [{ "displayName": "Dan T" }] },
+                  { "name": "places/ChIJkeke/photos/logo",
+                    "widthPx": 1078, "heightPx": 1280,
+                    "authorAttributions": [{ "displayName": "Keke & Larry" }] }
+                ]
+              }]
+            }
+            """);
+
+        PlacesSearchResult.Place place = PlacesClient.parse(response).places().get(0);
+
+        assertThat(place.photoName()).isEqualTo("places/ChIJkeke/photos/hamburguesa-con-papas");
     }
 
     /**

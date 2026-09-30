@@ -62,6 +62,17 @@ public class BurgerJoint {
     @Column(name = "fast_food", nullable = false)
     private boolean fastFood;
 
+    /**
+     * Si Google contestó que no tiene ninguna foto de este local.
+     *
+     * Es distinto de no tener foto guardada: de los locales sin foto en la base, la
+     * mitad sí las tiene en Google y lo que faltó fue ir a buscarlas. Un local del que
+     * no hay una sola foto en ningún lado es otra cosa, y esa diferencia decide si se
+     * lo esconde o se lo completa.
+     */
+    @Column(name = "sin_fotos_en_google", nullable = false)
+    private boolean sinFotosEnGoogle;
+
     @Column(name = "google_primary_type", length = 80)
     private String googlePrimaryType;
 

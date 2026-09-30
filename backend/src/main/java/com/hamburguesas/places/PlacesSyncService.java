@@ -37,6 +37,34 @@ public class PlacesSyncService {
     private final SavedTourRepository savedTourRepository;
     private final FastFoodMarker fastFoodMarker;
 
+    /**
+     * Revisa solo las fotos: completa las que faltan y vuelve a elegir las que se
+     * eligieron con una regla vieja. No busca locales nuevos.
+     *
+     * Existe porque cambiar la regla de elección no cambia ninguna foto por sí solo: lo
+     * que hay guardado se queda como está hasta que alguien vuelva a mirarlo. Y la
+     * sincronización completa, que es donde vivía esa revisión, gasta además hasta mil
+     * búsquedas por los 48 barrios, que es la parte cara y la que acá no hace falta.
+     *
+     * Cuesta una ficha por local —el tramo gratis es de 5.000 por mes— y una foto solo
+     * por los que efectivamente cambian.
+     */
+    public PlacesSyncReport revisarFotos() {
+        if (!properties.hasApiKey()) {
+            log.warn("Revisión de fotos salteada: falta la clave de Google");
+            return PlacesSyncReport.skipped("Falta configurar GOOGLE_MAPS_API_KEY");
+        }
+
+        MissingPhotosResult faltantes = fillMissingPhotos();
+        int recambiadas = repickOldPhotos();
+
+        log.info("Revisión de fotos: {} bajadas, {} prestadas de otra sucursal, {} recambiadas",
+            faltantes.downloaded(), faltantes.reused(), recambiadas);
+
+        return PlacesSyncReport.soloFotos(
+            faltantes.downloaded() + recambiadas, faltantes.reused());
+    }
+
     public PlacesSyncReport sync() {
         if (!properties.hasApiKey()) {
             log.warn("Places sync skipped: no API key configured");
@@ -394,8 +422,13 @@ public class PlacesSyncService {
         Map<String, String> fotoPorCadena = photosByChain();
 
         for (BurgerJoint joint : burgerJointRepository.findByPhotoUrlIsNull()) {
-            if (!quotaGuard.canCall(PlacesCallType.PHOTO) || !quotaGuard.canCall(PlacesCallType.DETAILS)) {
-                log.warn("Cuota mensual alcanzada, quedan locales sin foto para el mes que viene");
+            // Solo la ficha, que es lo que hace falta siempre. La foto se pide más
+            // abajo y únicamente si Google tiene alguna: son dos cuotas distintas, y
+            // pedir las dos acá arriba frenaba todo el trabajo cuando se agotaba la de
+            // fotos, incluso averiguar de qué locales no hay ninguna, que no cuesta una
+            // sola foto y es lo que decide si se los esconde.
+            if (!quotaGuard.canCall(PlacesCallType.DETAILS)) {
+                log.warn("Cuota mensual de fichas alcanzada, quedan locales sin revisar");
                 break;
             }
 
@@ -411,6 +444,19 @@ public class PlacesSyncService {
             }
 
             if (photoName != null) {
+                // Tenía fotos: si venía anotado como que no, se corrige. Un local que
+                // recién abrió y todavía no tiene ninguna va a tenerlas más adelante.
+                if (joint.isSinFotosEnGoogle()) {
+                    joint.setSinFotosEnGoogle(false);
+                    burgerJointRepository.save(joint);
+                }
+
+                // Tiene fotos pero no hay cuota para bajarlas. No se le presta la de
+                // otra sucursal: tener la propia es mejor, y va a estar el mes que viene.
+                if (!quotaGuard.canCall(PlacesCallType.PHOTO)) {
+                    continue;
+                }
+
                 String photoUrl = downloadPhoto(joint.getPlaceId(), photoName);
                 if (photoUrl != null) {
                     joint.setPhotoUrl(photoUrl);
@@ -421,6 +467,12 @@ public class PlacesSyncService {
                     downloaded++;
                     continue;
                 }
+            } else {
+                // Google no tiene ni una foto de este local. Queda anotado porque es lo
+                // único que distingue "no hay nada" de "no fuimos a buscarlo", y la
+                // diferencia decide si se lo esconde o se lo completa.
+                joint.setSinFotosEnGoogle(true);
+                burgerJointRepository.save(joint);
             }
 
             // Google no tiene fotos de esta dirección. Si es una sucursal de una cadena
@@ -456,8 +508,11 @@ public class PlacesSyncService {
          int cambiadas = 0;
 
          for (BurgerJoint joint : burgerJointRepository.conFotoElegidaConUnaReglaVieja(PlacesClient.REGLA_DE_FOTO)) {
-             if (!quotaGuard.canCall(PlacesCallType.PHOTO) || !quotaGuard.canCall(PlacesCallType.DETAILS)) {
-                 log.info("Cuota mensual alcanzada, quedan fotos por revisar para el mes que viene");
+             // Igual que arriba: acá solo hace falta la ficha. La mayoría de las fotos
+             // no cambia de una regla a la otra, y esas se revisan sin bajar nada; pedir
+             // también la cuota de fotos frenaba a todas por las pocas que sí cambian.
+             if (!quotaGuard.canCall(PlacesCallType.DETAILS)) {
+                 log.info("Cuota mensual de fichas alcanzada, quedan fotos por revisar");
                  break;
              }
 
@@ -482,6 +537,12 @@ public class PlacesSyncService {
              if (mejor.equals(joint.getPhotoName())) {
                  joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
                  burgerJointRepository.save(joint);
+                 continue;
+             }
+
+             // La regla nueva eligió otra, pero no hay cuota para bajarla. Se deja sin
+             // anotar la regla, así vuelve a caer en esta lista el mes que viene.
+             if (!quotaGuard.canCall(PlacesCallType.PHOTO)) {
                  continue;
              }
 

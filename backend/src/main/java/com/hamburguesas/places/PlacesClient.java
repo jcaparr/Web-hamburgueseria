@@ -48,8 +48,9 @@ public class PlacesClient {
      * 1: la primera del local, o la primera de todas.
      * 2: la del local, prefiriendo apaisadas.
      * 3: además, descarta las capturas de pantalla.
+     * 4: manda la forma sobre quién la subió, porque el local sube su marca.
      */
-    public static final int REGLA_DE_FOTO = 3;
+    public static final int REGLA_DE_FOTO = 4;
     private static final String FIELD_MASK =
         "places.id,places.displayName,places.formattedAddress,places.location,places.photos,"
         + "places.primaryType,nextPageToken";
@@ -161,10 +162,16 @@ public class PlacesClient {
      * Elige una foto entre las que devuelve Google, que llegan sin ninguna etiqueta
      * de qué muestran: no hay forma de pedirle "el logo" o "la fachada".
      *
-     * Lo que sí viene es quién subió cada una. Las del propio local —las que carga el
-     * dueño en su ficha— son casi siempre el logo o el frente, mientras que las de los
-     * clientes suelen ser platos y mesas. Así que se prefiere la del local y, si no
-     * subió ninguna, queda la primera, que es la que Google muestra como principal.
+     * Lo que se busca es una hamburguesa que se vea bien, y si no, el local bien
+     * fotografiado. Nada de eso viene dicho, así que se deduce de lo único que Google
+     * cuenta de cada foto: quién la subió y qué tamaño tiene.
+     *
+     * Quién la subió pesaba más que todo lo demás, y resultó ser la señal equivocada.
+     * El local sube su marca: de las diez fotos de "Keke & Larry", las dos suyas son el
+     * logo y una promoción de empanadas, y la hamburguesa con papas la sacó un cliente.
+     * Es lo razonable: al dueño le importa la identidad del local, y al que fue a comer
+     * le importa el plato. Así que ahora la foto del local es un desempate y no una
+     * garantía: una apaisada grande de un cliente le gana.
      */
     private static String bestPhotoName(JsonNode place) {
         JsonNode photos = place.path("photos");
@@ -191,14 +198,17 @@ public class PlacesClient {
      * Qué tan buena es una foto como portada del local. Mayor es mejor, y ante empate
      * gana la primera, que es la que Google muestra como principal.
      *
-     * Pesa mucho más quién la subió que cómo es: una foto del local, aunque sea
-     * vertical, es preferible a una apaisada de un cliente.
+     * Manda la forma de la foto por sobre quién la subió. Una apaisada grande de un
+     * cliente le gana a una vertical del local, porque lo que el local sube suele ser
+     * su marca y lo que sube el cliente suele ser lo que comió.
      */
     private static int puntajeDe(JsonNode photo, String placeName) {
         int puntaje = 0;
 
+        // Alcanza para desempatar entre dos fotos de la misma forma, y no para que una
+        // vertical del local le gane a una apaisada de un cliente.
         if (laSubioElLocal(photo, placeName)) {
-            puntaje += 100;
+            puntaje += 15;
         }
 
         // Las tarjetas recortan la imagen a 4:3, así que una foto vertical —el plato
@@ -206,7 +216,7 @@ public class PlacesClient {
         // local. Las fachadas y las portadas que sube el dueño suelen ser apaisadas.
         double proporcion = proporcionDe(photo);
         if (proporcion >= 1.2) {
-            puntaje += 10;
+            puntaje += 20;
         } else if (proporcion > 0 && proporcion < CAPTURA_DE_PANTALLA) {
             // Más alta que el doble de su ancho no es una foto sacada con la cámara:
             // es una captura de pantalla. "Valentino Burger" tenía de portada una
@@ -216,13 +226,17 @@ public class PlacesClient {
             // pierda contra cualquier foto apaisada, incluso la de un cliente.
             puntaje -= 150;
         } else if (proporcion <= 0.85) {
-            puntaje -= 10;
+            puntaje -= 20;
         }
 
         // Entre dos parecidas, la más grande: las chicas suelen ser logos recortados o
-        // capturas, y encima se ven mal estiradas en la portada del detalle.
-        if (photo.path("widthPx").asInt(0) >= 1000) {
-            puntaje += 1;
+        // capturas, y encima se ven mal estiradas en la portada del detalle. Los dos
+        // escalones son para que el tamaño desempate sin dar vuelta la forma.
+        int ancho = photo.path("widthPx").asInt(0);
+        if (ancho >= 2000) {
+            puntaje += 6;
+        } else if (ancho >= 1000) {
+            puntaje += 3;
         }
 
         return puntaje;

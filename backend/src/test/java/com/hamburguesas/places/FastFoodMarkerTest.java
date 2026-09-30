@@ -15,7 +15,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class FastFoodMarkerTest {
 
-    private static final List<String> MARCAS = List.of("burgerking", "mcdonalds", "wendys", "mostaza");
+    private static final List<String> MARCAS = List.of(
+        "burgerking", "mcdonalds", "wendys", "mostaza",
+        "hamburguesasextremas", "deandennys", "mrtasty");
 
     private boolean esCadena(String nombre) {
         return FastFoodMarker.esDeUnaCadena(nombre, MARCAS);
@@ -27,6 +29,33 @@ class FastFoodMarkerTest {
         assertThat(esCadena("Burger King")).isTrue();
         assertThat(esCadena("Mostaza")).isTrue();
         assertThat(esCadena("Wendy's")).isTrue();
+    }
+
+    /**
+     * Las tres cadenas locales, con los nombres tal como están escritos en la base.
+     *
+     * Cada una aparece escrita de varias formas —"Mr Tasty", "Mr. Tasty" y "Mr tasty"—
+     * y son treinta y dos sucursales entre las tres, más que varias de las cadenas
+     * internacionales. Sin esto quedaban todas en el listado al apagar las cadenas.
+     */
+    @Test
+    void reconoceLasCadenasLocales() {
+        assertThat(esCadena("Hamburguesas Extremas")).isTrue();
+        assertThat(esCadena("Dean & Dennys")).isTrue();
+        assertThat(esCadena("Dean & Dennys - Palermo Soho")).isTrue();
+        assertThat(esCadena("Mr Tasty Villa del Parque")).isTrue();
+        assertThat(esCadena("Mr. Tasty Almagro")).isTrue();
+        assertThat(esCadena("Mr tasty Paternal")).isTrue();
+    }
+
+    /**
+     * "Mr Tasty" es la marca más corta de la lista, y "tasty" es una palabra que
+     * cualquier hamburguesería puede usar. Tiene que pedir el principio del nombre.
+     */
+    @Test
+    void unaMarcaCortaNoSeLlevaPuestoAOtros() {
+        assertThat(esCadena("The Tasty Burger")).isFalse();
+        assertThat(esCadena("Tasty Grill")).isFalse();
     }
 
     /** Las sucursales llevan el lugar pegado al nombre de la marca. */

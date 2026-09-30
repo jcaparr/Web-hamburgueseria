@@ -77,6 +77,21 @@ class PlacesConfiguracionTest {
             .contains("ChIJB2UW9My1vJUR4qN1P3ZodXM");
     }
 
+    /**
+     * Las cadenas que se pueden apagar en Explorar.
+     *
+     * Las tres locales pesan más que las internacionales: entre Mr Tasty, Dean & Dennys
+     * y Hamburguesas Extremas hay treinta y dos sucursales en la base. Van normalizadas,
+     * sin mayúsculas ni puntuación, porque es como se compara el nombre.
+     */
+    @Test
+    void conoceLasCadenasQueSePuedenApagar() {
+        assertThat(properties.getFastFoodBrands())
+            .contains("burgerking", "mcdonalds", "wendys", "mostaza",
+                "hamburguesasextremas", "deandennys", "mrtasty")
+            .allSatisfy(marca -> assertThat(marca).matches("[a-z0-9]+"));
+    }
+
     /** Un mismo local anotado de los dos lados sería una regla que se contradice. */
     @Test
     void ningunLocalEstaAnotadoParaEntrarYParaSalir() {

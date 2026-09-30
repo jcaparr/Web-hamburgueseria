@@ -11,4 +11,9 @@ public record PlacesSyncReport(
     public static PlacesSyncReport skipped(String warning) {
         return new PlacesSyncReport(0, 0, 0, 0, warning);
     }
+
+    /** La revisión de fotos no crea ni actualiza locales: solo les cambia la foto. */
+    public static PlacesSyncReport soloFotos(int bajadas, int prestadas) {
+        return new PlacesSyncReport(0, 0, bajadas, prestadas, null);
+    }
 }
