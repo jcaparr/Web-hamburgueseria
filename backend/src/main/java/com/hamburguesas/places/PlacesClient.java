@@ -14,6 +14,7 @@ import java.text.Normalizer;
 import java.util.Locale;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.HashMap;
@@ -51,8 +52,9 @@ public class PlacesClient {
      * 2: la del local, prefiriendo apaisadas.
      * 3: además, descarta las capturas de pantalla.
      * 4: manda la forma sobre quién la subió, porque el local sube su marca.
+     * 5: descarta el logo mirando los píxeles, y prueba la siguiente.
      */
-    public static final int REGLA_DE_FOTO = 4;
+    public static final int REGLA_DE_FOTO = 5;
     private static final String FIELD_MASK =
         "places.id,places.displayName,places.formattedAddress,places.location,places.photos,"
         + "places.primaryType,places.types,nextPageToken";
@@ -126,7 +128,7 @@ public class PlacesClient {
         return place.path("reviewSummary").path("text").path("text").asText(null);
     }
 
-     public FotoElegida fotoDe(String placeId) {
+     public List<FotoElegida> fotosDe(String placeId) {
          JsonNode place = restClient.get()
              .uri("https://places.googleapis.com/v1/places/{placeId}", placeId)
              .header("X-Goog-Api-Key", properties.getApiKey())
@@ -134,7 +136,7 @@ public class PlacesClient {
              .retrieve()
              .body(JsonNode.class);
 
-         return place == null ? null : mejorFoto(place);
+         return place == null ? List.of() : mejoresFotos(place);
      }
 
     /**
@@ -222,25 +224,57 @@ public class PlacesClient {
      * garantía: una apaisada grande de un cliente le gana.
      */
     private static FotoElegida mejorFoto(JsonNode place) {
+        List<FotoElegida> candidatas = mejoresFotos(place);
+        return candidatas.isEmpty() ? null : candidatas.get(0);
+    }
+
+    /**
+     * Las mejores fotos del local, de la más prometedora a la menos.
+     *
+     * Son varias y no una porque la elección no se termina de decidir acá: si la mejor
+     * resulta ser un logo —cosa que solo se sabe mirando los píxeles, o sea después de
+     * bajarla— hay que poder pasar a la siguiente en vez de dejar al local sin portada.
+     *
+     * Se devuelven pocas a propósito: cada una que se prueba cuesta una llamada de foto,
+     * que es el tramo gratuito más chico de la API.
+     */
+    static List<FotoElegida> mejoresFotos(JsonNode place) {
         JsonNode photos = place.path("photos");
         if (!photos.isArray() || photos.isEmpty()) {
-            return null;
+            return List.of();
         }
 
         String placeName = place.path("displayName").path("text").asText("");
 
-        JsonNode elegida = null;
-        int mejorPuntaje = Integer.MIN_VALUE;
+        List<JsonNode> ordenadas = new ArrayList<>();
         for (JsonNode photo : photos) {
-            int puntaje = puntajeDe(photo, placeName);
-            if (puntaje > mejorPuntaje) {
-                mejorPuntaje = puntaje;
-                elegida = photo;
+            ordenadas.add(photo);
+        }
+        // Estable: ante igual puntaje queda primera la que Google muestra como principal.
+        ordenadas.sort(Comparator.comparingInt((JsonNode photo) -> puntajeDe(photo, placeName))
+            .reversed());
+
+        List<FotoElegida> candidatas = new ArrayList<>();
+        for (JsonNode photo : ordenadas) {
+            FotoElegida candidata = FotoElegida.de(photo);
+            if (candidata != null) {
+                candidatas.add(candidata);
+            }
+            if (candidatas.size() == CANDIDATAS_A_PROBAR) {
+                break;
             }
         }
-
-        return FotoElegida.de(elegida);
+        return candidatas;
     }
+
+    /**
+     * Cuántas fotos se prueban antes de darse por vencido.
+     *
+     * Tres: los locales con logo de portada suelen tener una o dos fotos de producto
+     * atrás, y probar más sería gastar llamadas en un local que evidentemente no tiene
+     * una foto buena.
+     */
+    private static final int CANDIDATAS_A_PROBAR = 3;
 
     /**
      * Qué tan buena es una foto como portada del local. Mayor es mejor, y ante empate
