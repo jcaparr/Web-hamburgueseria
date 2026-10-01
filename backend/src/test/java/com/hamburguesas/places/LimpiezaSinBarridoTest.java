@@ -14,7 +14,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -62,9 +61,9 @@ class LimpiezaSinBarridoTest {
         when(wishlistRepository.existsByBurgerJoint_Id(anyLong())).thenReturn(false);
         when(savedTourRepository.estaEnAlgunTour(anyLong())).thenReturn(false);
 
-        service = new PlacesSyncService(
+        service = ServicioArmado.armar(
             properties, placesClient, quotaGuard, mock(PhotoStorage.class), repository,
-            new Barrios(), new Zonas(new Barrios(), properties), ratingRepository,
+            new Zonas(new Barrios(), properties), ratingRepository,
             wishlistRepository, savedTourRepository,
             new FastFoodMarker(repository, properties));
     }
@@ -86,7 +85,7 @@ class LimpiezaSinBarridoTest {
     void borraLosQueGoogleNoTieneFotografiados() {
         when(repository.findAll()).thenReturn(List.of(sinFotosEnGoogle()));
 
-        PlacesSyncService.LimpiezaResult resultado = service.limpiar();
+        LimpiezaResult resultado = service.limpiar();
 
         verify(repository).delete(any(BurgerJoint.class));
         assertThat(resultado.borrados()).isEqualTo(1);
@@ -128,7 +127,7 @@ class LimpiezaSinBarridoTest {
         when(repository.findAll()).thenReturn(List.of(sinFotosEnGoogle()));
         when(wishlistRepository.existsByBurgerJoint_Id(anyLong())).thenReturn(true);
 
-        PlacesSyncService.LimpiezaResult resultado = service.limpiar();
+        LimpiezaResult resultado = service.limpiar();
 
         verify(repository, never()).delete(any(BurgerJoint.class));
         assertThat(resultado.borrados()).isZero();
@@ -141,7 +140,7 @@ class LimpiezaSinBarridoTest {
         conFotos.setSinFotosEnGoogle(false);
         when(repository.findAll()).thenReturn(List.of(conFotos));
 
-        PlacesSyncService.LimpiezaResult resultado = service.limpiar();
+        LimpiezaResult resultado = service.limpiar();
 
         verify(repository, never()).delete(any(BurgerJoint.class));
         assertThat(resultado.borrados()).isZero();
@@ -150,7 +149,7 @@ class LimpiezaSinBarridoTest {
     /** Sin nada guardado no hace nada y no falla. */
     @Test
     void conLaBaseVaciaNoHaceNada() {
-        PlacesSyncService.LimpiezaResult resultado = service.limpiar();
+        LimpiezaResult resultado = service.limpiar();
 
         assertThat(resultado.borrados()).isZero();
         assertThat(resultado.corregidos()).isZero();

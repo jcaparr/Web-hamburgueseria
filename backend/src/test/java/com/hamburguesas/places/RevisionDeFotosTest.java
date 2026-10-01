@@ -64,8 +64,8 @@ class RevisionDeFotosTest {
         when(repository.findByPlaceId(anyString())).thenReturn(Optional.empty());
         when(repository.nombresDeRubro(anyString())).thenReturn(List.of());
 
-        service = new PlacesSyncService(
-            properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(), new Zonas(new Barrios(), properties),
+        service = ServicioArmado.armar(
+            properties, placesClient, quotaGuard, photoStorage, repository, new Zonas(new Barrios(), properties),
             mock(RatingRepository.class), mock(WishlistRepository.class),
             mock(SavedTourRepository.class), new FastFoodMarker(repository, properties));
     }

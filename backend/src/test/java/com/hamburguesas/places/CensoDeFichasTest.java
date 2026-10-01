@@ -56,8 +56,8 @@ class CensoDeFichasTest {
         when(repository.findByPlaceId(anyString())).thenReturn(Optional.empty());
         when(repository.nombresDeRubro(anyString())).thenReturn(List.of());
 
-        service = new PlacesSyncService(
-            properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(),
+        service = ServicioArmado.armar(
+            properties, placesClient, quotaGuard, photoStorage, repository,
             new Zonas(new Barrios(), properties), mock(RatingRepository.class),
             mock(WishlistRepository.class), mock(SavedTourRepository.class),
             new FastFoodMarker(repository, properties));
@@ -209,8 +209,8 @@ class CensoDeFichasTest {
     @Test
     void sinClaveNoHaceNada() {
         PlacesProperties sinClave = new PlacesProperties();
-        PlacesSyncService servicio = new PlacesSyncService(
-            sinClave, placesClient, quotaGuard, photoStorage, repository, new Barrios(),
+        PlacesSyncService servicio = ServicioArmado.armar(
+            sinClave, placesClient, quotaGuard, photoStorage, repository,
             new Zonas(new Barrios(), sinClave), mock(RatingRepository.class),
             mock(WishlistRepository.class), mock(SavedTourRepository.class),
             new FastFoodMarker(repository, sinClave));

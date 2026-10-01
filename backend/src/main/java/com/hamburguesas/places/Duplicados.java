@@ -4,6 +4,8 @@ import com.hamburguesas.geo.Distancias;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.texto.Texto;
 
+import java.util.List;
+
 /**
  * Cuándo dos fichas de Google son el mismo local.
  *
@@ -30,6 +32,19 @@ final class Duplicados {
     private static final double METROS = 150;
 
     private Duplicados() {}
+
+    /**
+     * El local de la lista que es el mismo que este, o null si no está.
+     *
+     * Lo usan el barrido, antes de crear una ficha nueva, y la limpieza, para sacar las
+     * que ya entraron repetidas.
+     */
+    static BurgerJoint elMismoLocalEntre(List<BurgerJoint> locales, BurgerJoint joint) {
+        return locales.stream()
+            .filter(otro -> sonElMismoLocal(otro, joint))
+            .findFirst()
+            .orElse(null);
+    }
 
     static boolean sonElMismoLocal(BurgerJoint a, BurgerJoint b) {
         return mismoNombre(a.getName(), b.getName()) && estanEnElMismoLugar(a, b);

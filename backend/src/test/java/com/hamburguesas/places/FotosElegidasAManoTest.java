@@ -154,8 +154,8 @@ class FotosElegidasAManoTest {
         when(repository.nombresDeRubro(anyString())).thenReturn(List.of());
         when(photoStorage.save(anyString(), any())).thenReturn("/api/place-photos/elegida.jpg");
 
-        service = new PlacesSyncService(
-            properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(),
+        service = ServicioArmado.armar(
+            properties, placesClient, quotaGuard, photoStorage, repository,
             new Zonas(new Barrios(), properties), mock(RatingRepository.class),
             mock(WishlistRepository.class), mock(SavedTourRepository.class),
             new FastFoodMarker(repository, properties));
