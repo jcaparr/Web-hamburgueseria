@@ -121,6 +121,20 @@ public class BurgerJoint {
     @Column(name = "sin_fotos_en_google", nullable = false)
     private boolean sinFotosEnGoogle;
 
+    /**
+     * Cuántas fotos tiene el local en Google.
+     *
+     * Hasta ahora se preguntaba y se tiraba: la respuesta trae el array entero —hasta
+     * diez, que es el tope de Google— y nos quedábamos con las tres mejores. De un local
+     * solo sabíamos si tenía alguna o ninguna, y tres no es lo mismo que diez: diez es un
+     * local que la gente fotografía, tres es uno por el que nadie pasó.
+     *
+     * Nulo es "todavía no se preguntó", que no es cero. Cero es motivo para borrarlo;
+     * nulo no es motivo de nada.
+     */
+    @Column(name = "fotos_en_google")
+    private Integer fotosEnGoogle;
+
     @Column(name = "google_primary_type", length = 80)
     private String googlePrimaryType;
 

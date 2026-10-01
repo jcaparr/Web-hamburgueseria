@@ -154,12 +154,41 @@ class CensoDeFichasTest {
     /** Sin cambios no se guarda: son mil doscientas escrituras que no hacen nada. */
     @Test
     void noGuardaAlQueYaEstabaBienAnotado() {
-        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(sinFoto(1, "Tiene")));
+        BurgerJoint alDia = sinFoto(1, "Tiene");
+        alDia.setFotosEnGoogle(TIENE_FOTOS.size());
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(alDia));
         when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
 
         service.revisarFichas();
 
         verify(repository, never()).save(any(BurgerJoint.class));
+    }
+
+    /**
+     * Pero si cambió cuántas fotos tiene, sí: es el dato que decide si el local vale la
+     * pena, y uno que pasó de tres a diez dejó de ser el mismo caso.
+     */
+    @Test
+    void guardaCuandoCambioLaCantidadDeFotos() {
+        BurgerJoint conOtraCuenta = sinFoto(1, "Tiene más");
+        conOtraCuenta.setFotosEnGoogle(99);
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(conOtraCuenta));
+        when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
+
+        service.revisarFichas();
+
+        assertThat(guardado().getFotosEnGoogle()).isEqualTo(TIENE_FOTOS.size());
+    }
+
+    /** Y el que nunca se preguntó queda con el número, que antes no existía. */
+    @Test
+    void anotaCuantasFotosTiene() {
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(sinFoto(1, "Nuevo")));
+        when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
+
+        service.revisarFichas();
+
+        assertThat(guardado().getFotosEnGoogle()).isEqualTo(TIENE_FOTOS.size());
     }
 
     /** Si la cuota de fichas se termina, se dice cuántos quedaron sin preguntar. */
