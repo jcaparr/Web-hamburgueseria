@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * En qué zona cae un local: el barrio si está en la Ciudad, la localidad si está afuera.
@@ -140,16 +141,19 @@ public class Zonas {
      * maneras de escribirla. Son las que aparecieron de verdad en la base; la lista crece
      * cuando aparece otra.
      */
-    private static final Map<String, String> COMO_SE_ESCRIBE = Map.of(
-        "almte. brown", "Almirante Brown",
-        "gral. rodriguez", "General Rodríguez",
-        "gral. pacheco", "General Pacheco",
-        "gral. las heras", "General Las Heras",
-        "3 de febrero", "Tres de Febrero",
-        "gdor. costa", "Gobernador Costa",
-        "cdad. evita", "Ciudad Evita",
-        "gran buenos aires", SIN_LOCALIDAD,
-        "buenos aires", SIN_LOCALIDAD
+    private static final Map<String, String> COMO_SE_ESCRIBE = Map.ofEntries(
+        Map.entry("almte. brown", "Almirante Brown"),
+        Map.entry("gral. rodriguez", "General Rodríguez"),
+        Map.entry("gral. pacheco", "General Pacheco"),
+        Map.entry("gral. las heras", "General Las Heras"),
+        Map.entry("3 de febrero", "Tres de Febrero"),
+        Map.entry("gdor. costa", "Gobernador Costa"),
+        Map.entry("cdad. evita", "Ciudad Evita"),
+        Map.entry("i.casanova", "Isidro Casanova"),
+        Map.entry("pres. derqui", "Presidente Derqui"),
+        Map.entry("san jose", "San José"),
+        Map.entry("gran buenos aires", SIN_LOCALIDAD),
+        Map.entry("buenos aires", SIN_LOCALIDAD)
     );
 
     /** "Lomas de Zamora - GBA Sur" y "Lomas de Zamora" son el mismo lugar. */
@@ -205,10 +209,34 @@ public class Zonas {
     private static String sinCodigoPostal(String tramo) {
         String[] palabras = tramo.split(" ", 2);
         if (palabras.length == 2 && pareceCodigoPostal(palabras[0])) {
-            return palabras[1].trim();
+            return sinLoQueQuedoPegado(palabras[1].trim());
         }
-        return tramo;
+        return sinLoQueQuedoPegado(tramo);
     }
+
+    /**
+     * Lo que queda pegado al nombre cuando el tramo trae dos códigos postales.
+     *
+     * "Av. Pte. J. D. Perón, B1663EDH 1390San Miguel": el código largo y el viejo de
+     * cuatro números, y el viejo sin un espacio que lo separe de la localidad. Sacar el
+     * primero dejaba "1390San Miguel", que es como esa zona aparecía en el selector.
+     *
+     * Es distinto del caso que ya cubría {@link #esLoQueQuedaDeUnCodigoPostal}: ahí el
+     * resto queda solo y se lo reconoce entero, acá viene pegado al nombre y hay que
+     * encontrar dónde termina.
+     *
+     * El corte pide dos cosas para no partir una localidad al medio: que lo pegado sea
+     * código —números, o hasta tres mayúsculas, que es la cola del código argentino— y
+     * que lo que sigue arranque un nombre, con mayúscula y después minúscula. Que esté
+     * pegado es lo que salva a las localidades que empiezan con una palabra corta: en
+     * "GBA Sur" o "La Plata" el nombre no está pegado, está al lado.
+     */
+    private static String sinLoQueQuedoPegado(String localidad) {
+        return RESTO_PEGADO_AL_NOMBRE.matcher(localidad).replaceFirst("");
+    }
+
+    private static final Pattern RESTO_PEGADO_AL_NOMBRE =
+        Pattern.compile("^(?:[A-Z0-9]*[0-9][A-Z0-9]*|[A-Z]{1,3})(?=\\p{Lu}\\p{Ll})");
 
     private static boolean pareceCodigoPostal(String palabra) {
         return palabra.matches("[A-Za-z][0-9]{4}[A-Za-z]{0,3}")

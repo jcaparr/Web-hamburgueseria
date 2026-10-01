@@ -166,4 +166,110 @@ class ZonasTest {
             "John F. Kennedy 50, B1626 Belén de Escobar, Provincia de Buenos Aires, Argentina"))
             .contains("Belén de Escobar");
     }
+// ---- el código postal pegado al nombre ----
+
+    /**
+     * Cuando Google manda dos códigos postales, el segundo queda pegado a la localidad.
+     *
+     * Es la dirección real de un local de San Miguel: el código largo, el viejo de cuatro
+     * números y el nombre, sin un espacio que los separe. Sacar el primero dejaba
+     * "1390San Miguel", y así aparecía en el selector de Explorar, al lado de San Miguel.
+     */
+    @Test
+    void elCodigoPostalPegadoAlNombreNoEsParteDeLaZona() {
+        assertThat(Zonas.localidadDe("Av. Pte. J. D. Perón, B1663EDH 1390San Miguel, "
+            + "Provincia de Buenos Aires, Argentina"))
+            .contains("San Miguel");
+    }
+
+    /** La otra forma del mismo problema: lo pegado son las tres letras del final. */
+    @Test
+    void laColaDelCodigoPegadaAlNombreTampoco() {
+        assertThat(Zonas.localidadDe(
+            "Calle 1, B1663 GRGSan Miguel, Provincia de Buenos Aires, Argentina"))
+            .contains("San Miguel");
+    }
+
+    /** Y el código entero pegado, sin ningún espacio en el tramo. */
+    @Test
+    void elCodigoEnteroPegadoAlNombreTampoco() {
+        assertThat(Zonas.localidadDe(
+            "Calle 1, B1663EDH1390San Miguel, Provincia de Buenos Aires, Argentina"))
+            .contains("San Miguel");
+    }
+
+    /**
+     * Que es lo que importa: termina en la misma zona que el local de al lado.
+     *
+     * Dos nombres distintos para el mismo lugar son dos opciones en el selector, y el que
+     * elige una no ve los locales de la otra.
+     */
+    @Test
+    void elLocalConElCodigoPegadoCaeEnLaMismaZonaQueElVecino() {
+        assertThat(Zonas.localidadDe("Av. Pte. J. D. Perón, B1663EDH 1390San Miguel, "
+            + "Provincia de Buenos Aires, Argentina"))
+            .isEqualTo(Zonas.localidadDe(
+                "Av. Mitre 100, B1663 San Miguel, Provincia de Buenos Aires, Argentina"));
+    }
+
+    /**
+     * Y no parte al medio a las que empiezan con una palabra corta.
+     *
+     * Es el riesgo de la regla: "La Plata" también arranca con mayúsculas seguidas de un
+     * nombre. Lo que las salva es el espacio, así que estas son las que lo prueban.
+     */
+    @Test
+    void noLeCortaElPrincipioALasLocalidadesDeVerdad() {
+        assertThat(Zonas.localidadDe(
+            "Calle 1, B1900 La Plata, Provincia de Buenos Aires, Argentina"))
+            .contains("La Plata");
+
+        assertThat(Zonas.localidadDe(
+            "Calle 1, B1684 El Palomar, Provincia de Buenos Aires, Argentina"))
+            .contains("El Palomar");
+
+        assertThat(Zonas.localidadDe(
+            "Calle 1, B1663 San Miguel, Provincia de Buenos Aires, Argentina"))
+            .contains("San Miguel");
+
+        assertThat(Zonas.localidadDe(
+            "Calle 1, B1611 Don Torcuato, Provincia de Buenos Aires, Argentina"))
+            .contains("Don Torcuato");
+    }
+
+    /** Lo que ya se reconocía entero sigue yendo a la zona genérica, no a un nombre raro. */
+    @Test
+    void elRestoDelCodigoSoloSigueSinInventarUnNombre() {
+        assertThat(Zonas.localidadDe(
+            "Calle 1, B1870 AAT, Provincia de Buenos Aires, Argentina"))
+            .contains(Zonas.SIN_LOCALIDAD);
+    }
+
+    // ---- las abreviadas que aparecieron después ----
+
+    /**
+     * "I.casanova" e "Isidro Casanova" son el mismo lugar, y estaban las dos en la base.
+     *
+     * Era una zona de un local sola, al lado de la de seis: quien la elige ve uno y se
+     * pierde los otros seis.
+     */
+    @Test
+    void isidroCasanovaAbreviadaEsLaMisma() {
+        assertThat(Zonas.localidadDe(
+            "Voissin 106, B1765 I.casanova, Provincia de Buenos Aires, Argentina"))
+            .isEqualTo(Zonas.localidadDe(
+                "Calle 1, B1765 Isidro Casanova, Provincia de Buenos Aires, Argentina"));
+    }
+
+    /** Las otras dos que aparecieron con la misma forma. */
+    @Test
+    void lasOtrasAbreviadasTambienSeEscribenCompletas() {
+        assertThat(Zonas.localidadDe(
+            "San Martín 556, B1635 Pres. Derqui, Provincia de Buenos Aires, Argentina"))
+            .contains("Presidente Derqui");
+
+        assertThat(Zonas.localidadDe("Temperley Buenos Aires AR, Av pasco 3957, B1834 San Jose, "
+            + "Provincia de Buenos Aires, Argentina"))
+            .contains("San José");
+    }
 }
