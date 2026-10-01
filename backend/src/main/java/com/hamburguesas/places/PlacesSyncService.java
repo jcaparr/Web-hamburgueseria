@@ -67,6 +67,74 @@ public class PlacesSyncService {
             faltantes.downloaded() + recambiadas, faltantes.reused());
     }
 
+    /**
+     * Pregunta, sin bajar nada, de qué locales Google no tiene ninguna foto.
+     *
+     * Las dos cuotas son muy desparejas: preguntar sale una ficha —cuatro mil gratis por
+     * mes— y bajar sale una foto, de las que hay mil. Con mil doscientos locales sin
+     * portada, bajar mientras se pregunta gasta la cuota chica entera en el orden en que
+     * los locales aparecen en la base, y parte de esa cuota se va en locales que la
+     * limpieza va a borrar igual porque Google no tiene ni una foto de ellos.
+     *
+     * Así que esto es la mitad barata de la revisión de fotos: deja a cada local anotado
+     * con lo que Google contestó y dice cuántos quedan realmente en pie. Con ese número
+     * se decide si las mil fotos del mes alcanzan.
+     *
+     * Tampoco presta la foto de otra sucursal de la cadena, por más que no cueste
+     * llamadas: eso le pone portada a un local y lo saca de la lista de los que no
+     * tienen, que es justo lo que se está tratando de contar.
+     */
+    public CensoDeFichas revisarFichas() {
+        if (!properties.hasApiKey()) {
+            log.warn("Censo de fichas salteado: falta la clave de Google");
+            return CensoDeFichas.skipped("Falta configurar GOOGLE_MAPS_API_KEY");
+        }
+
+        int preguntados = 0;
+        int sinNingunaFoto = 0;
+        int sinPreguntar = 0;
+
+        List<BurgerJoint> sinFoto = burgerJointRepository.findByPhotoUrlIsNull();
+        for (BurgerJoint joint : sinFoto) {
+            if (!quotaGuard.canCall(PlacesCallType.DETAILS)) {
+                sinPreguntar = sinFoto.size() - preguntados;
+                log.warn("Cuota mensual de fichas alcanzada, quedan {} locales sin preguntar",
+                    sinPreguntar);
+                break;
+            }
+
+            List<FotoElegida> candidatas;
+            try {
+                pause();
+                candidatas = placesClient.fotosDe(joint.getPlaceId());
+                quotaGuard.record(PlacesCallType.DETAILS);
+            } catch (RestClientResponseException ex) {
+                log.warn("No se pudo pedir la ficha de {} (HTTP {})",
+                    joint.getPlaceId(), ex.getStatusCode().value());
+                continue;
+            }
+
+            preguntados++;
+            boolean sinNada = candidatas.isEmpty();
+            if (sinNada) {
+                sinNingunaFoto++;
+            }
+
+            // Se guarda en los dos sentidos: un local que recién abrió puede no tener
+            // ninguna hoy y tener diez el mes que viene, y la anotación vieja lo borraría.
+            if (joint.isSinFotosEnGoogle() != sinNada) {
+                joint.setSinFotosEnGoogle(sinNada);
+                burgerJointRepository.save(joint);
+            }
+        }
+
+        log.info("Censo de fichas: {} preguntados, {} sin ninguna foto, {} con fotos, {} sin preguntar",
+            preguntados, sinNingunaFoto, preguntados - sinNingunaFoto, sinPreguntar);
+
+        return new CensoDeFichas(
+            preguntados, sinNingunaFoto, preguntados - sinNingunaFoto, sinPreguntar, null);
+    }
+
     public PlacesSyncReport sync() {
         if (!properties.hasApiKey()) {
             log.warn("Places sync skipped: no API key configured");
