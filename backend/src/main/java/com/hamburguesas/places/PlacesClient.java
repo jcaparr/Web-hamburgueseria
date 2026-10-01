@@ -73,12 +73,34 @@ public class PlacesClient {
         .build();
 
     public PlacesSearchResult searchText(String query, String pageToken) {
+        return searchText(query, pageToken, true);
+    }
+
+    /**
+     * Busca por texto, con la opción de no exigir el rubro de hamburguesería.
+     *
+     * El barrido lo exige siempre: recorre barrios con consultas genéricas y sin el
+     * filtro estricto Google devuelve pizzerías, bares y cualquier cosa que le parezca
+     * cerca. Ahí el filtro es lo que hace que la lista sirva.
+     *
+     * Pero para buscar un local puntual por su nombre, el mismo filtro lo vuelve
+     * inservible: los locales que hay que agregar a mano son justamente los que Google
+     * no clasifica como hamburguesería. Buscando "Austin's Diner & Grill" con el filtro
+     * puesto, Google contesta con otro restaurante de Palermo, y el agujero que esto
+     * viene a tapar se tapa a sí mismo.
+     *
+     * @param soloHamburgueserias false para buscar por nombre sin exigir el rubro
+     */
+    public PlacesSearchResult searchText(String query, String pageToken,
+                                         boolean soloHamburgueserias) {
         Map<String, Object> body = new HashMap<>();
         body.put("textQuery", query);
         body.put("languageCode", "es");
-        body.put("includedType", BURGER_TYPE);
-        // Sin esto el tipo es apenas una preferencia y Google igual devuelve otros rubros.
-        body.put("strictTypeFiltering", true);
+        if (soloHamburgueserias) {
+            body.put("includedType", BURGER_TYPE);
+            // Sin esto el tipo es apenas una preferencia y Google igual devuelve otros rubros.
+            body.put("strictTypeFiltering", true);
+        }
         if (pageToken != null && !pageToken.isBlank()) {
             body.put("pageToken", pageToken);
         }

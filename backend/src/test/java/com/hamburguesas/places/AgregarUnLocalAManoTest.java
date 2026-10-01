@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -62,7 +63,7 @@ class AgregarUnLocalAManoTest {
 
     /** Un local de Palermo con un rubro que el clasificador rechazaría. */
     private void googleDevuelve(String nombre, double lat, double lon, String rubro) {
-        when(placesClient.searchText(anyString(), any())).thenReturn(new PlacesSearchResult(
+        when(placesClient.searchText(anyString(), any(), eq(false))).thenReturn(new PlacesSearchResult(
             List.of(new PlacesSearchResult.Place(
                 "ChIJ-austin", nombre, "Costa Rica 5827, CABA", lat, lon,
                 "places/x/photos/una", "1200x900|Alguien", rubro, Set.of(rubro))),
@@ -144,7 +145,7 @@ class AgregarUnLocalAManoTest {
     /** Si Google no encuentra nada, lo dice en vez de fallar. */
     @Test
     void siGoogleNoEncuentraNadaLoDice() {
-        when(placesClient.searchText(anyString(), any()))
+        when(placesClient.searchText(anyString(), any(), eq(false)))
             .thenReturn(new PlacesSearchResult(List.of(), null));
 
         assertThat(service.agregar("algo que no existe").resultado())
@@ -157,6 +158,24 @@ class AgregarUnLocalAManoTest {
         when(quotaGuard.canCall(PlacesCallType.SEARCH)).thenReturn(false);
 
         assertThat(service.agregar("Austin's").resultado()).contains("cuota");
-        verify(placesClient, never()).searchText(anyString(), any());
+        verify(placesClient, never()).searchText(anyString(), any(), eq(false));
+    }
+
+    /**
+     * Y busca SIN exigir el rubro de hamburguesería.
+     *
+     * Es la razón de ser del endpoint y me lo comí en la primera versión: reusaba la
+     * búsqueda del barrido, que filtra estricto por rubro. Buscando "Austin's Diner &
+     * Grill" con ese filtro, Google contestó con otro restaurante de Palermo — el
+     * agujero que esto viene a tapar se tapaba a sí mismo.
+     */
+    @Test
+    void buscaSinExigirElRubroDeHamburgueseria() {
+        googleDevuelve("Austin's Diner & Grill", -34.5900, -58.4270, "restaurant");
+
+        service.agregar("Austin's");
+
+        verify(placesClient).searchText(anyString(), any(), eq(false));
+        verify(placesClient, never()).searchText(anyString(), any(), eq(true));
     }
 }

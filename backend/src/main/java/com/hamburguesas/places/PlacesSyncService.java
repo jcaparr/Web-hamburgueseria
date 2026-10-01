@@ -187,7 +187,10 @@ public class PlacesSyncService {
 
         PlacesSearchResult resultado;
         try {
-            resultado = search(texto, null);
+            // Sin exigir el rubro de hamburguesería. El barrido sí lo exige, y por eso
+            // mismo no encuentra estos locales: buscando "Austin's Diner & Grill" con el
+            // filtro puesto, Google contesta con otro restaurante de Palermo.
+            resultado = buscarPorNombre(texto);
         } catch (RestClientResponseException ex) {
             return new LocalAgregado(null, texto, null, null,
                 "Google respondió " + ex.getStatusCode().value());
@@ -1031,6 +1034,14 @@ public class PlacesSyncService {
     private PlacesSearchResult search(String consulta, String pageToken) {
         pause();
         PlacesSearchResult result = placesClient.searchText(consulta, pageToken);
+        quotaGuard.record(PlacesCallType.SEARCH);
+        return result;
+    }
+
+    /** Lo mismo pero sin exigir el rubro, para encontrar un local puntual por su nombre. */
+    private PlacesSearchResult buscarPorNombre(String texto) {
+        pause();
+        PlacesSearchResult result = placesClient.searchText(texto, null, false);
         quotaGuard.record(PlacesCallType.SEARCH);
         return result;
     }
