@@ -377,6 +377,7 @@ public class PlacesSyncService {
 
             boolean sobra = barrio.isEmpty()
                 || sinNadaQueMostrar
+                || casiSinFotosYNoEsHamburgueseria(joint)
                 || (!veredicto.vendeHamburguesas() && !noSabemos);
 
             if (sobra) {
@@ -422,6 +423,34 @@ public class PlacesSyncService {
         }
 
         return new LimpiezaResult(corregidos, borrados);
+    }
+
+    /**
+     * Pocas fotos en Google y encima Google no lo llama hamburguesería.
+     *
+     * Las dos condiciones juntas, nunca sueltas, y el motivo es que por separado las dos
+     * se equivocan. Que Google lo llame "restaurant" o "bar" no alcanza: La Birra Bar
+     * figura como bar y es de las mejores de la ciudad. Y tener pocas fotos tampoco: de
+     * los 228 locales con menos de diez, 221 son hamburgueserías de barrio de Quilmes,
+     * Florencio Varela y Berazategui a las que simplemente nadie les sacó fotos. Borrar
+     * por eso sería castigar al conurbano por ser menos fotografiado.
+     *
+     * Cruzadas sí dicen algo: un lugar que Google clasifica como kiosco, bar o casa de
+     * artículos para el hogar, y que además nadie fotografió, casi nunca es una
+     * hamburguesería. Los primeros que salieron así fueron un maxikiosco de Florencio
+     * Varela y "Market up burger", que Google tiene como home_goods_store.
+     *
+     * Las cadenas quedan afuera: una sucursal de Mostaza con siete fotos sigue siendo un
+     * Mostaza. Y los locales a los que todavía no se les preguntó cuántas fotos tienen
+     * también: nulo no es cero, y no saber no es motivo para borrar.
+     */
+    private boolean casiSinFotosYNoEsHamburgueseria(BurgerJoint joint) {
+        int minimas = properties.getSync().getFotosMinimasSiNoEsHamburgueseria();
+        return minimas > 0
+            && !joint.isFastFood()
+            && joint.getFotosEnGoogle() != null
+            && joint.getFotosEnGoogle() < minimas
+            && !"hamburger_restaurant".equals(joint.getGooglePrimaryType());
     }
 
     public record LimpiezaResult(int corregidos, int borrados) {}
