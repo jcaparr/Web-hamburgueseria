@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { IconPin, IconSearch } from '../components/icons'
+import { Interruptor } from '../components/Interruptor'
 import { LoadError } from '../components/LoadError'
 import { JointPhoto } from '../components/JointPhoto'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { SelectorDeBarrios } from '../components/SelectorDeBarrios'
+import { useBarrios } from '../hooks/useBarrios'
 import type { BurgerJoint, PageResponse } from '../types'
 import { shortAddress } from '../utils/address'
 import { mapsUrl } from '../utils/maps'
@@ -53,7 +55,7 @@ export function Explore() {
   // Un arreglo cambia de identidad en cada render, así que como dependencia del efecto
   // que pide la lista dispararía un pedido tras otro, sin parar. Lo que no cambia
   // mientras los barrios sean los mismos es este texto.
-  const claveDeBarrios = barriosElegidos.join('|')
+  const claveDeBarrios = JSON.stringify(barriosElegidos)
   const page = Number(parametros.get('pagina') ?? '0')
   // El interruptor de cadenas sigue recordándose en el navegador cuando la dirección no
   // dice nada: es una preferencia de quien mira, no parte de esta búsqueda.
@@ -85,22 +87,17 @@ export function Explore() {
    * No puede pasar por `cambiar`, que escribe un valor por clave: acá hay que borrar
    * todos los "area" que había y volver a ponerlos uno por uno.
    *
-   * Y la lista nueva se calcula sobre los parámetros que llegan al setter, no sobre los
-   * que se leyeron al dibujar. Con la lectura de afuera, dos clics seguidos antes de que
-   * React propague el primero hacen que el segundo pise al primero: marcabas Quilmes y
-   * después Quilmes Oeste, y quedaba solo Quilmes Oeste.
+   * Lo que hay puesto se lee de la dirección del navegador y no del estado de React.
+   * Dos clics seguidos, antes de que React vuelva a dibujar, leen los dos el mismo valor
+   * viejo y el segundo pisa al primero: marcabas Quilmes y después Quilmes Oeste, y
+   * quedaba solo Quilmes Oeste. Pasa igual con la forma funcional del setter, porque lo
+   * que recibe también viene del último dibujo.
+   *
+   * La barra de direcciones, en cambio, ya quedó cambiada por el clic anterior. Acá es la
+   * fuente de verdad: el filtro vive en la dirección justamente para que se pueda
+   * compartir y para que volver atrás lo restablezca.
    */
   function alternarBarrio(barrio: string) {
-    // Lo que hay puesto se lee de la dirección del navegador y no del estado de React.
-    //
-    // Dos clics seguidos, antes de que React vuelva a dibujar, leen los dos el mismo
-    // valor viejo y el segundo pisa al primero: marcabas Quilmes y después Quilmes
-    // Oeste, y quedaba solo Quilmes Oeste. Pasa igual con la forma funcional del setter,
-    // porque lo que recibe también viene del último dibujo.
-    //
-    // La barra de direcciones, en cambio, ya quedó cambiada por el clic anterior. Acá es
-    // la fuente de verdad: el filtro vive en la dirección justamente para que se pueda
-    // compartir y para que volver atrás lo restablezca.
     const actuales = new URLSearchParams(window.location.search).getAll('area').filter(Boolean)
     const proximos = actuales.includes(barrio)
       ? actuales.filter((b) => b !== barrio)
@@ -115,24 +112,29 @@ export function Explore() {
       { replace: true })
   }
 
-  const [barrios, setBarrios] = useState<string[]>([])
+  /** Prende o apaga las cadenas, y se acuerda de la elección para la próxima visita. */
+  function cambiarCadenas(valor: boolean) {
+    cambiar({ cadenas: valor ? null : 'no', pagina: null })
+    try {
+      window.localStorage.setItem(CLAVE_CADENAS, String(valor))
+    } catch {
+      // Sin almacenamiento la preferencia dura lo que dure la visita, nada más.
+    }
+  }
+
+  const barrios = useBarrios()
   const [pageData, setPageData] = useState<PageResponse<BurgerJoint> | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<unknown>(null)
   // Sube con "Reintentar" para volver a correr la búsqueda con los mismos filtros.
   const [attempt, setAttempt] = useState(0)
 
-  // Los barrios se piden una sola vez: son los que tienen al menos un local, y eso no
-  // cambia mientras alguien mira la pantalla. Si falla, queda el selector en "Todos" y
-  // el resto de Explorar funciona igual.
   useEffect(() => {
-    apiClient
-      .get<string[]>('/burger-joints/barrios')
-      .then(({ data }) => setBarrios(data))
-      .catch(() => setBarrios([]))
-  }, [])
+    // Se rearma desde el texto y no se usa el arreglo de afuera: el efecto depende del
+    // texto, que no cambia mientras los barrios sean los mismos, y usar el arreglo
+    // obligaría a depender de él, que cambia en cada dibujo.
+    const elegidos: string[] = JSON.parse(claveDeBarrios)
 
-  useEffect(() => {
     const timeout = setTimeout(() => {
       setLoading(true)
       apiClient
@@ -141,7 +143,7 @@ export function Explore() {
             q: query || undefined,
             // Axios repite el parámetro por cada elemento del arreglo, que es lo que
             // espera el servidor. Vacío se omite, y eso quiere decir "todos".
-            area: barriosElegidos.length > 0 ? barriosElegidos : undefined,
+            area: elegidos.length > 0 ? elegidos : undefined,
             conCadenas,
             page,
             size: PAGE_SIZE,
@@ -224,13 +226,6 @@ export function Explore() {
       </div>
 
       {/*
-        * Las cadenas son 74 de los 417 locales, y 64 de esas son sucursales de
-        * McDonald's, Burger King y Hamburguesas Extremas: entre las tres ocupan tres
-        * páginas enteras de la lista. Quien busca dónde comer algo distinto las quiere
-        * fuera del medio; quien busca la más cercana, no. Por eso es una decisión de
-        * quien mira, y arranca mostrándolas.
-        */}
-      {/*
         * El barrio va al lado del buscador y no adentro: son dos preguntas distintas.
         * Buscar por nombre es "quiero este local"; elegir barrio es "quiero comer por
         * acá", que es lo que uno se pregunta cuando todavía no sabe adónde ir.
@@ -254,23 +249,15 @@ export function Explore() {
         )}
       </div>
 
-      <label className="flex cursor-pointer items-center gap-3 self-start text-sm">
-        <input
-          type="checkbox"
-          className="toggle toggle-sm toggle-secondary shrink-0"
-          checked={conCadenas}
-          onChange={(e) => {
-            const valor = e.target.checked
-            cambiar({ cadenas: valor ? null : "no", pagina: null })
-            try {
-              window.localStorage.setItem(CLAVE_CADENAS, String(valor))
-            } catch {
-              // Sin almacenamiento la preferencia dura lo que dure la visita, nada más.
-            }
-          }}
-        />
-        <span>Mostrar cadenas de comida rápida</span>
-      </label>
+      {/*
+        * Las sucursales de cadenas son cientos, y entre McDonald's, Burger King y
+        * Hamburguesas Extremas ocupan páginas enteras de la lista. Quien busca dónde comer
+        * algo distinto las quiere fuera del medio; quien busca la más cercana, no. Por eso
+        * es una decisión de quien mira, y arranca mostrándolas.
+        */}
+      <Interruptor activo={conCadenas} onCambiar={cambiarCadenas} className="self-start">
+        Mostrar cadenas de comida rápida
+      </Interruptor>
 
       {loading && <p className="text-sm text-base-content/60">Buscando...</p>}
 

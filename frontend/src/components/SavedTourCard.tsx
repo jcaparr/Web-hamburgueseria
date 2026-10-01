@@ -3,6 +3,7 @@ import { IconRoute } from './icons'
 import { JointPhoto } from './JointPhoto'
 import type { SavedTour } from '../types'
 import { routeUrl } from '../utils/maps'
+import { enHoras } from '../utils/tiempo'
 
 /**
  * Un recorrido guardado, como se ve en el perfil.
@@ -72,12 +73,4 @@ export function SavedTourCard({
       </a>
     </article>
   )
-}
-
-/** 95 minutos se leen peor que "1 h 35". */
-function enHoras(minutos: number): string {
-  if (minutos < 60) return `${minutos} min`
-  const horas = Math.floor(minutos / 60)
-  const resto = minutos % 60
-  return resto === 0 ? `${horas} h` : `${horas} h ${resto}`
 }
