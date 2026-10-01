@@ -361,6 +361,14 @@ app:
         - ChIJmbiqDoLLvJURbe0kVxQAdk4
         # "Draken", en La Boca: figura como cervecería, y es una hamburguesería.
         - ChIJ8Rg7fKQ1o5URZEvZ9P58vFs
+        # Los dos de abajo se agregaron a mano, por nombre y dirección, porque ninguna
+        # búsqueda por barrio los devuelve: Google no les pone el rubro de hamburguesería
+        # y el barrido filtra por ese rubro. Sin este renglón la limpieza los borra en la
+        # corrida siguiente, que es la misma razón por la que nunca habían entrado.
+        # "Lucky Louis", Av. Olazábal 1615: figura como restaurant.
+        - ChIJH7tAfQC1vJURnF0yXSHnV74
+        # "Austin's Diner & Grill", Darwin 1111: figura como american_restaurant.
+        - ChIJm1VdjT-1vJUR-QBpgx3eg0I
       # La foto de portada elegida a mano, para los locales donde la regla no acierta.
       #
       # La regla sabe elegir una foto bien sacada —apaisada, grande, no una captura de
