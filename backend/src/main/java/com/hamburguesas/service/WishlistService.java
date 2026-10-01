@@ -7,7 +7,6 @@ import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.User;
 import com.hamburguesas.model.WishlistItem;
 import com.hamburguesas.repository.BurgerJointRepository;
-import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.UserRepository;
 import com.hamburguesas.repository.WishlistRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,12 +22,12 @@ public class WishlistService {
     private final WishlistRepository wishlistRepository;
     private final BurgerJointRepository burgerJointRepository;
     private final UserRepository userRepository;
-    private final RatingRepository ratingRepository;
+    private final FichaDeLocal fichaDeLocal;
 
     @Transactional(readOnly = true)
     public List<BurgerJointDto> list(Long userId) {
         return wishlistRepository.findByUser_IdOrderByCreatedAtDesc(userId).stream()
-            .map(item -> toDto(item.getBurgerJoint()))
+            .map(item -> fichaDeLocal.conDeseo(item.getBurgerJoint(), true))
             .toList();
     }
 
@@ -54,14 +53,5 @@ public class WishlistService {
             .findByUser_IdAndBurgerJoint_Id(userId, burgerJointId)
             .orElseThrow(() -> new ResourceNotFoundException("It wasn't in your wishlist"));
         wishlistRepository.delete(item);
-    }
-
-    private BurgerJointDto toDto(BurgerJoint b) {
-        Double averageScore = ratingRepository.averageScoreByBurgerJoint(b.getId());
-        long ratingsCount = ratingRepository.countByBurgerJoint_Id(b.getId());
-        return new BurgerJointDto(
-            b.getId(), b.getPlaceId(), b.getName(), b.getAddress(), b.getArea(), b.getPhotoUrl(),
-            b.getLatitude(), b.getLongitude(), averageScore, ratingsCount, true
-        );
     }
 }

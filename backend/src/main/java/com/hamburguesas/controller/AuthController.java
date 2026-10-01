@@ -13,7 +13,6 @@ import com.hamburguesas.dto.RegisterRequest;
 import com.hamburguesas.dto.ResetPasswordRequest;
 import com.hamburguesas.dto.UsernameAvailabilityResponse;
 import com.hamburguesas.dto.VerifyEmailRequest;
-import com.hamburguesas.repository.UserRepository;
 import com.hamburguesas.security.CurrentUser;
 import com.hamburguesas.service.AuthService;
 import com.hamburguesas.service.GoogleAuthService;
@@ -39,7 +38,6 @@ public class AuthController {
     private final SessionIssuer sessionIssuer;
     private final SessionService sessionService;
     private final SessionCookies cookies;
-    private final UserRepository userRepository;
     private final UsernameService usernameService;
 
     /**
@@ -121,7 +119,7 @@ public class AuthController {
      */
     @GetMapping("/me")
     public ResponseEntity<AuthResponse> me() {
-        return userRepository.findById(CurrentUser.requireId())
+        return authService.quienEs(CurrentUser.requireId())
             .map(user -> ResponseEntity.ok(SessionIssuer.quienEs(user)))
             .orElseGet(() -> ResponseEntity.notFound().build());
     }

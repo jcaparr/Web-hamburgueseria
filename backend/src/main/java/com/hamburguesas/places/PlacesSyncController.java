@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.function.Supplier;
 
 /**
  * Manual trigger for the Places sync, guarded by a shared-secret header instead of user auth
@@ -26,14 +27,10 @@ public class PlacesSyncController {
 
     /** Behind the token as well: our quota and configuration are nobody else's business. */
     @GetMapping("/status")
-    public ResponseEntity<PlacesSyncStatus> status(
+    public ResponseEntity<?> status(
         @RequestHeader(name = TOKEN_HEADER, required = false) String token
     ) {
-        if (!authorized(token)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        return ResponseEntity.ok(new PlacesSyncStatus(
+        return siEstaAutorizado(token, () -> new PlacesSyncStatus(
             properties.hasApiKey(),
             quotaGuard.used(PlacesCallType.SEARCH),
             quotaGuard.limitFor(PlacesCallType.SEARCH),
@@ -53,11 +50,7 @@ public class PlacesSyncController {
         @RequestHeader(name = TOKEN_HEADER, required = false) String token,
         @RequestParam(name = "conFotos", defaultValue = "true") boolean conFotos
     ) {
-        if (!authorized(token)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        return ResponseEntity.ok(syncService.sync(conFotos));
+        return siEstaAutorizado(token, () -> syncService.sync(conFotos));
     }
 
     /**
@@ -72,11 +65,7 @@ public class PlacesSyncController {
     public ResponseEntity<?> revisarFotos(
         @RequestHeader(name = TOKEN_HEADER, required = false) String token
     ) {
-        if (!authorized(token)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        return ResponseEntity.ok(syncService.revisarFotos());
+        return siEstaAutorizado(token, syncService::revisarFotos);
     }
 
     /**
@@ -87,31 +76,11 @@ public class PlacesSyncController {
      * locales sin portada entra holgado en las fichas del mes y dice cuántos quedan en
      * pie una vez que la limpieza borre los que Google no tiene fotografiados.
      */
-    /**
-     * Solo la limpieza: borra lo que ya no corresponde y recalcula las zonas.
-     *
-     * Aparte del barrido porque esta mitad no cuesta ninguna búsqueda y la otra cuesta
-     * mil novecientas. Cuando lo que hace falta es aplicar lo que un censo de fichas ya
-     * averiguó, correr el barrido entero es pagar la parte cara para ejecutar la gratis.
-     */
-    /**
-     * Agrega un local puntual buscándolo por su nombre.
-     *
-     * Para las hamburgueserías que el barrido no encuentra nunca: Google no les pone el
-     * rubro, así que la búsqueda estricta por barrio no las devuelve por más veces que
-     * se corra. Devuelve el identificador, que es lo que después hay que anotar en
-     * included-place-ids para que la limpieza no lo borre.
-     */
-    @PostMapping("/agregar")
-    public ResponseEntity<?> agregar(
-        @RequestHeader(name = TOKEN_HEADER, required = false) String token,
-        @RequestParam("texto") String texto
+    @PostMapping("/fichas")
+    public ResponseEntity<?> revisarFichas(
+        @RequestHeader(name = TOKEN_HEADER, required = false) String token
     ) {
-        if (!authorized(token)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        return ResponseEntity.ok(syncService.agregar(texto));
+        return siEstaAutorizado(token, syncService::revisarFichas);
     }
 
     /**
@@ -127,33 +96,50 @@ public class PlacesSyncController {
     public ResponseEntity<?> prestarFotos(
         @RequestHeader(name = TOKEN_HEADER, required = false) String token
     ) {
-        if (!authorized(token)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        return ResponseEntity.ok(syncService.prestarFotos());
+        return siEstaAutorizado(token, syncService::prestarFotos);
     }
 
+    /**
+     * Solo la limpieza: borra lo que ya no corresponde y recalcula las zonas.
+     *
+     * Aparte del barrido porque esta mitad no cuesta ninguna búsqueda y la otra cuesta
+     * mil novecientas. Cuando lo que hace falta es aplicar lo que un censo de fichas ya
+     * averiguó, correr el barrido entero es pagar la parte cara para ejecutar la gratis.
+     */
     @PostMapping("/limpieza")
     public ResponseEntity<?> limpiar(
         @RequestHeader(name = TOKEN_HEADER, required = false) String token
     ) {
-        if (!authorized(token)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        return ResponseEntity.ok(syncService.limpiar());
+        return siEstaAutorizado(token, syncService::limpiar);
     }
 
-    @PostMapping("/fichas")
-    public ResponseEntity<?> revisarFichas(
-        @RequestHeader(name = TOKEN_HEADER, required = false) String token
+    /**
+     * Agrega un local puntual buscándolo por su nombre.
+     *
+     * Para las hamburgueserías que el barrido no encuentra nunca: Google no les pone el
+     * rubro, así que la búsqueda estricta por barrio no las devuelve por más veces que
+     * se corra. Devuelve el identificador, que es lo que después hay que anotar en
+     * included-place-ids para que la limpieza no lo borre.
+     */
+    @PostMapping("/agregar")
+    public ResponseEntity<?> agregar(
+        @RequestHeader(name = TOKEN_HEADER, required = false) String token,
+        @RequestParam("texto") String texto
     ) {
+        return siEstaAutorizado(token, () -> syncService.agregar(texto));
+    }
+
+    /**
+     * Corre el trabajo solo si el token es el que corresponde.
+     *
+     * El trabajo se pasa sin correr y se ejecuta recién después de mirar el token: con un
+     * token equivocado no se gasta ni una llamada de la cuota.
+     */
+    private ResponseEntity<?> siEstaAutorizado(String token, Supplier<?> trabajo) {
         if (!authorized(token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
-        return ResponseEntity.ok(syncService.revisarFichas());
+        return ResponseEntity.ok(trabajo.get());
     }
 
     private boolean authorized(String presented) {

@@ -1,5 +1,6 @@
 package com.hamburguesas.places;
 
+import com.hamburguesas.texto.Texto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -130,7 +131,7 @@ public class Zonas {
      */
     private static String comoSeLlamaDeVerdad(String localidad) {
         String limpia = sinSufijoDeRegion(localidad);
-        String conocida = COMO_SE_ESCRIBE.get(sinAcentosNiMayusculas(limpia));
+        String conocida = COMO_SE_ESCRIBE.get(Texto.sinAcentosEnMinuscula(limpia));
         return conocida != null ? conocida : conMayusculaInicial(limpia);
     }
 
@@ -180,8 +181,8 @@ public class Zonas {
             if (!armada.isEmpty()) {
                 armada.append(' ');
             }
-            if (i > 0 && PARTICULAS.contains(sinAcentosNiMayusculas(palabra))) {
-                armada.append(sinAcentosNiMayusculas(palabra).equals(palabra)
+            if (i > 0 && PARTICULAS.contains(Texto.sinAcentosEnMinuscula(palabra))) {
+                armada.append(Texto.sinAcentosEnMinuscula(palabra).equals(palabra)
                     ? palabra : palabra.toLowerCase(Locale.ROOT));
                 continue;
             }
@@ -192,12 +193,6 @@ public class Zonas {
     }
 
     private static final Set<String> PARTICULAS = Set.of("de", "del", "la", "las", "los", "y");
-
-    private static String sinAcentosNiMayusculas(String valor) {
-        return java.text.Normalizer.normalize(valor, java.text.Normalizer.Form.NFD)
-            .replaceAll("\\p{M}", "")
-            .toLowerCase(Locale.ROOT);
-    }
 
     /**
      * Saca el código postal del principio: "B1814 Cañuelas" queda en "Cañuelas".

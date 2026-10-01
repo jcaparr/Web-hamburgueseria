@@ -1,6 +1,5 @@
 package com.hamburguesas.service;
 
-import com.hamburguesas.dto.BurgerJointDto;
 import com.hamburguesas.dto.TourDto;
 import com.hamburguesas.dto.TourStopDto;
 import com.hamburguesas.geo.Distancias;
@@ -9,7 +8,6 @@ import com.hamburguesas.model.ModoDeViaje;
 import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.SavedTourRepository;
-import com.hamburguesas.repository.WishlistRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -78,8 +76,8 @@ public class TourService {
 
     private final BurgerJointRepository burgerJointRepository;
     private final RatingRepository ratingRepository;
-    private final WishlistRepository wishlistRepository;
     private final SavedTourRepository savedTourRepository;
+    private final FichaDeLocal fichaDeLocal;
 
     public record Pedido(
         int cantidad,
@@ -349,14 +347,14 @@ public class TourService {
                     parada.getLatitude(), parada.getLongitude());
             total += tramo;
 
-            stops.add(new TourStopDto(i + 1, redondear(tramo),
-                puntuadas.contains(parada.getId()), comoDto(parada, userId)));
+            stops.add(new TourStopDto(i + 1, Distancias.aUnDecimal(tramo),
+                puntuadas.contains(parada.getId()), fichaDeLocal.para(parada, userId)));
 
             latitud = parada.getLatitude();
             longitud = parada.getLongitude();
         }
 
-        return new TourDto(stops, redondear(total), pedido.modo().minutos(total), candidatos,
+        return new TourDto(stops, Distancias.aUnDecimal(total), pedido.modo().minutos(total), candidatos,
             aviso(paradas.size(), cantidad, candidatos, pedido, repetido));
     }
 
@@ -391,20 +389,5 @@ public class TourService {
         return kilometros == Math.floor(kilometros)
             ? String.valueOf((long) (double) kilometros)
             : String.valueOf(kilometros);
-    }
-
-    private BurgerJointDto comoDto(BurgerJoint b, Long userId) {
-        Double promedio = ratingRepository.averageScoreByBurgerJoint(b.getId());
-        long resenias = ratingRepository.countByBurgerJoint_Id(b.getId());
-        boolean enDeseos = userId != null
-            && wishlistRepository.existsByUser_IdAndBurgerJoint_Id(userId, b.getId());
-
-        return new BurgerJointDto(
-            b.getId(), b.getPlaceId(), b.getName(), b.getAddress(), b.getArea(), b.getPhotoUrl(),
-            b.getLatitude(), b.getLongitude(), promedio, resenias, enDeseos);
-    }
-
-    private static double redondear(double kilometros) {
-        return Math.round(kilometros * 10) / 10.0;
     }
 }

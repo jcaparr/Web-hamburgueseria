@@ -2,6 +2,7 @@ package com.hamburguesas.places;
 
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.repository.BurgerJointRepository;
+import com.hamburguesas.texto.Texto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationRunner;
@@ -9,10 +10,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.Normalizer;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Marca qué locales son sucursales de una cadena de comida rápida.
@@ -46,7 +45,7 @@ public class FastFoodMarker {
     @Transactional
     void marcar() {
         List<String> marcas = properties.getFastFoodBrands().stream()
-            .map(FastFoodMarker::sinAdornos)
+            .map(Texto::soloLetrasYNumeros)
             .filter(marca -> !marca.isBlank())
             .toList();
 
@@ -83,21 +82,10 @@ public class FastFoodMarker {
      * la otra.
      */
     static String marcaDe(String nombre, List<String> marcas) {
-        String limpio = sinAdornos(nombre);
+        String limpio = Texto.soloLetrasYNumeros(nombre);
         return marcas.stream()
             .filter(limpio::startsWith)
             .max(Comparator.comparingInt(String::length))
             .orElse(null);
-    }
-
-    /**
-     * El nombre sin mayúsculas, acentos ni puntuación. Es lo que hace que "Wendys" y
-     * "Wendy's" sean la misma cadena: en Google están escritas de las dos formas.
-     */
-    private static String sinAdornos(String valor) {
-        return Normalizer.normalize(valor == null ? "" : valor, Normalizer.Form.NFD)
-            .replaceAll("\\p{M}", "")
-            .toLowerCase(Locale.ROOT)
-            .replaceAll("[^a-z0-9]", "");
     }
 }

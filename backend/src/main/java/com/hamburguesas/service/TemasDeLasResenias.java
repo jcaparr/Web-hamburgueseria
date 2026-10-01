@@ -1,11 +1,10 @@
 package com.hamburguesas.service;
 
-import java.text.Normalizer;
+import com.hamburguesas.texto.Texto;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -104,7 +103,10 @@ public final class TemasDeLasResenias {
 
         Map<String, int[]> cuenta = new LinkedHashMap<>();
         for (Mencion mencion : escritas) {
-            String texto = paraBuscar(mencion.comentario());
+            // Sin acentos porque la mitad escribe "atencion", y en minúsculas porque la otra
+            // mitad escribe gritando. Los signos quedan: buscar la palabra entera ya trata
+            // "¡las papas!" igual que "las papas".
+            String texto = Texto.sinAcentosEnMinuscula(mencion.comentario());
             for (String tema : PATRONES.keySet()) {
                 // Una vez por reseña y no una por palabra: quien escribe "la carne, qué
                 // carne" habló de la carne una sola vez, no dos.
@@ -133,21 +135,5 @@ public final class TemasDeLasResenias {
 
     private static boolean nombra(String tema, String texto) {
         return PATRONES.get(tema).stream().anyMatch(patron -> patron.matcher(texto).find());
-    }
-
-    /**
-     * El comentario en minúsculas, sin acentos y sin signos.
-     *
-     * Sin acentos porque la mitad escribe "atencion", y en minúsculas porque la otra
-     * mitad escribe gritando. Es lo mismo que se le hace al nombre de un local para
-     * poder buscarlo.
-     *
-     * Los signos quedan donde están: de eso se encarga buscar la palabra entera, que
-     * ya trata "¡las papas!" igual que "las papas".
-     */
-    private static String paraBuscar(String comentario) {
-        return Normalizer.normalize(comentario, Normalizer.Form.NFD)
-            .replaceAll("\\p{M}", "")
-            .toLowerCase(Locale.ROOT);
     }
 }

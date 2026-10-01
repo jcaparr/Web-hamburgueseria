@@ -2,9 +2,9 @@ package com.hamburguesas.places;
 
 import com.hamburguesas.geo.Distancias;
 import com.hamburguesas.model.BurgerJoint;
+import com.hamburguesas.texto.Texto;
 
-import java.text.Normalizer;
-import java.util.Locale;
+import java.util.List;
 
 /**
  * Cuándo dos fichas de Google son el mismo local.
@@ -33,14 +33,27 @@ final class Duplicados {
 
     private Duplicados() {}
 
+    /**
+     * El local de la lista que es el mismo que este, o null si no está.
+     *
+     * Lo usan el barrido, antes de crear una ficha nueva, y la limpieza, para sacar las
+     * que ya entraron repetidas.
+     */
+    static BurgerJoint elMismoLocalEntre(List<BurgerJoint> locales, BurgerJoint joint) {
+        return locales.stream()
+            .filter(otro -> sonElMismoLocal(otro, joint))
+            .findFirst()
+            .orElse(null);
+    }
+
     static boolean sonElMismoLocal(BurgerJoint a, BurgerJoint b) {
         return mismoNombre(a.getName(), b.getName()) && estanEnElMismoLugar(a, b);
     }
 
     /** Ignora mayúsculas, acentos y puntuación: "Voraz" y "VORAZ!" son el mismo. */
     static boolean mismoNombre(String uno, String otro) {
-        String a = sinAdornos(uno);
-        return !a.isEmpty() && a.equals(sinAdornos(otro));
+        String a = Texto.soloLetrasYNumeros(uno);
+        return !a.isEmpty() && a.equals(Texto.soloLetrasYNumeros(otro));
     }
 
     static boolean estanEnElMismoLugar(BurgerJoint a, BurgerJoint b) {
@@ -66,12 +79,5 @@ final class Duplicados {
             return fotoA ? a : b;
         }
         return a.getId() <= b.getId() ? a : b;
-    }
-
-    private static String sinAdornos(String valor) {
-        return Normalizer.normalize(valor == null ? "" : valor, Normalizer.Form.NFD)
-            .replaceAll("\\p{M}", "")
-            .toLowerCase(Locale.ROOT)
-            .replaceAll("[^a-z0-9]", "");
     }
 }

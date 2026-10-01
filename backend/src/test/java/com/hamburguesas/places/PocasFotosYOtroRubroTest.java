@@ -16,7 +16,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -57,9 +56,9 @@ class PocasFotosYOtroRubroTest {
         when(wishlistRepository.existsByBurgerJoint_Id(anyLong())).thenReturn(false);
         when(savedTourRepository.estaEnAlgunTour(anyLong())).thenReturn(false);
 
-        service = new PlacesSyncService(
+        service = ServicioArmado.armar(
             properties, mock(PlacesClient.class), quotaGuard, mock(PhotoStorage.class),
-            repository, new Barrios(), new Zonas(new Barrios(), properties), ratingRepository,
+            repository, new Zonas(new Barrios(), properties), ratingRepository,
             wishlistRepository, savedTourRepository,
             new FastFoodMarker(repository, properties));
     }
@@ -157,7 +156,7 @@ class PocasFotosYOtroRubroTest {
             .thenReturn(List.of(local("Market up burger", 2, "home_goods_store", false)));
         when(repository.findByPlaceId(anyString())).thenReturn(Optional.empty());
 
-        PlacesSyncService.LimpiezaResult sinGuardar = service.limpiar();
+        LimpiezaResult sinGuardar = service.limpiar();
         assertThat(sinGuardar.borrados()).isEqualTo(1);
 
         verify(repository).delete(any(BurgerJoint.class));

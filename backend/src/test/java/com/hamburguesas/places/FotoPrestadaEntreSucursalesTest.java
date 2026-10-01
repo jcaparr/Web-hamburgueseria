@@ -70,8 +70,8 @@ class FotoPrestadaEntreSucursalesTest {
                 .address("Otra dirección").area("Lanús").fastFood(true)
                 .photoUrl(FOTO_DE_LA_HERMANA).build()));
 
-        service = new PlacesSyncService(
-            properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(),
+        service = ServicioArmado.armar(
+            properties, placesClient, quotaGuard, photoStorage, repository,
             new Zonas(new Barrios(), properties), mock(RatingRepository.class),
             mock(WishlistRepository.class), mock(SavedTourRepository.class),
             new FastFoodMarker(repository, properties));
@@ -163,9 +163,9 @@ class FotoPrestadaEntreSucursalesTest {
         when(repository.findByPhotoUrlIsNull())
             .thenReturn(List.of(sinFoto("Mostaza - Quilmes", true)));
 
-        PlacesSyncService servicio = new PlacesSyncService(
+        PlacesSyncService servicio = ServicioArmado.armar(
             properties, placesClient, quotaGuard, mock(PhotoStorage.class), repository,
-            new Barrios(), new Zonas(new Barrios(), properties), mock(RatingRepository.class),
+            new Zonas(new Barrios(), properties), mock(RatingRepository.class),
             mock(WishlistRepository.class), mock(SavedTourRepository.class),
             new FastFoodMarker(repository, properties));
 
@@ -288,7 +288,7 @@ class FotoPrestadaEntreSucursalesTest {
             BurgerJoint.builder().id(2L).placeId("ChIJ2").name("Una de barrio")
                 .address("Una dirección").area("Quilmes").fastFood(false).build()));
 
-        PlacesSyncService.FotosPrestadas resultado = service.prestarFotos();
+        FotosPrestadas resultado = service.prestarFotos();
 
         assertThat(resultado.prestadas()).isEqualTo(1);
         assertThat(resultado.siguenSinPortada()).isEqualTo(1);

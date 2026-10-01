@@ -54,9 +54,9 @@ class AgregarUnLocalAManoTest {
         when(repository.nombresDeRubro(anyString())).thenReturn(List.of());
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of());
 
-        service = new PlacesSyncService(
+        service = ServicioArmado.armar(
             properties, placesClient, quotaGuard, mock(PhotoStorage.class), repository,
-            new Barrios(), new Zonas(new Barrios(), properties), mock(RatingRepository.class),
+            new Zonas(new Barrios(), properties), mock(RatingRepository.class),
             mock(WishlistRepository.class), mock(SavedTourRepository.class),
             new FastFoodMarker(repository, properties));
     }
@@ -86,7 +86,7 @@ class AgregarUnLocalAManoTest {
     void entraAunqueGoogleNoLoLlameHamburgueseria() {
         googleDevuelve("Austin's Diner & Grill", -34.5900, -58.4270, "restaurant");
 
-        PlacesSyncService.LocalAgregado resultado = service.agregar("Austin's Diner & Grill");
+        LocalAgregado resultado = service.agregar("Austin's Diner & Grill");
 
         assertThat(resultado.resultado()).isEqualTo("Agregado");
         assertThat(guardado().getName()).isEqualTo("Austin's Diner & Grill");
@@ -122,7 +122,7 @@ class AgregarUnLocalAManoTest {
     void noEntraSiEstaFueraDelRadio() {
         googleDevuelve("Burger de Mar del Plata", -37.9619, -57.5602, "hamburger_restaurant");
 
-        PlacesSyncService.LocalAgregado resultado = service.agregar("Burger de Mar del Plata");
+        LocalAgregado resultado = service.agregar("Burger de Mar del Plata");
 
         assertThat(resultado.resultado()).contains("fuera del radio");
         verify(repository, never()).save(any(BurgerJoint.class));
@@ -136,7 +136,7 @@ class AgregarUnLocalAManoTest {
             BurgerJoint.builder().id(1L).placeId("ChIJ-austin").name("Austin's Diner & Grill")
                 .address("Costa Rica 5827").area("Palermo").build()));
 
-        PlacesSyncService.LocalAgregado resultado = service.agregar("Austin's");
+        LocalAgregado resultado = service.agregar("Austin's");
 
         assertThat(resultado.resultado()).isEqualTo("Ya estaba");
         verify(repository, never()).save(any(BurgerJoint.class));

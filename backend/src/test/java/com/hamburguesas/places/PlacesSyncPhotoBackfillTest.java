@@ -62,8 +62,8 @@ class PlacesSyncPhotoBackfillTest {
         when(placesClient.downloadPhoto(anyString())).thenReturn(IMAGEN);
         when(photoStorage.save(anyString(), any())).thenReturn("/api/place-photos/abc.jpg");
 
-        service = new PlacesSyncService(
-            properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(), new Zonas(new Barrios(), properties),
+        service = ServicioArmado.armar(
+            properties, placesClient, quotaGuard, photoStorage, repository, new Zonas(new Barrios(), properties),
             mock(RatingRepository.class), mock(WishlistRepository.class),
             mock(SavedTourRepository.class),
             new FastFoodMarker(repository, properties));
@@ -234,15 +234,15 @@ class PlacesSyncPhotoBackfillTest {
 
     @Test
     void reconoceLaCadenaAunqueElNombreTraigaElBarrioOAcentos() {
-        assertThat(PlacesSyncService.chainKey("Dean & Dennys - Palermo Soho"))
-            .isEqualTo(PlacesSyncService.chainKey("Dean & Dennys - Barrio Norte"));
-        assertThat(PlacesSyncService.chainKey("Chopi's Burger"))
-            .isEqualTo(PlacesSyncService.chainKey("CHOPI'S  BURGER"));
-        assertThat(PlacesSyncService.chainKey("Ché Burgers"))
-            .isEqualTo(PlacesSyncService.chainKey("che burgers"));
+        assertThat(FotosDeLocales.chainKey("Dean & Dennys - Palermo Soho"))
+            .isEqualTo(FotosDeLocales.chainKey("Dean & Dennys - Barrio Norte"));
+        assertThat(FotosDeLocales.chainKey("Chopi's Burger"))
+            .isEqualTo(FotosDeLocales.chainKey("CHOPI'S  BURGER"));
+        assertThat(FotosDeLocales.chainKey("Ché Burgers"))
+            .isEqualTo(FotosDeLocales.chainKey("che burgers"));
         // Parecerse no alcanza: si alcanzara, un "Heaven" cualquiera heredaría fotos ajenas.
-        assertThat(PlacesSyncService.chainKey("Burger King"))
-            .isNotEqualTo(PlacesSyncService.chainKey("Burger King Express"));
+        assertThat(FotosDeLocales.chainKey("Burger King"))
+            .isNotEqualTo(FotosDeLocales.chainKey("Burger King Express"));
     }
 
     /**
@@ -293,7 +293,7 @@ class PlacesSyncPhotoBackfillTest {
 
         verify(placesClient, never()).downloadPhoto(anyString());
         assertThat(vieja.getPhotoUrl()).isEqualTo("/api/place-photos/vieja.jpg");
-        assertThat(vieja.getPhotoRule()).isEqualTo(PlacesClient.REGLA_DE_FOTO);
+        assertThat(vieja.getPhotoRule()).isEqualTo(EleccionDeFoto.REGLA_DE_FOTO);
     }
 
     /** Una foto con su nombre ya anotado no se vuelve a revisar: sería pagar de nuevo. */

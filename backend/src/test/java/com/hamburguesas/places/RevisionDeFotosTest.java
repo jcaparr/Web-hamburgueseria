@@ -64,8 +64,8 @@ class RevisionDeFotosTest {
         when(repository.findByPlaceId(anyString())).thenReturn(Optional.empty());
         when(repository.nombresDeRubro(anyString())).thenReturn(List.of());
 
-        service = new PlacesSyncService(
-            properties, placesClient, quotaGuard, photoStorage, repository, new Barrios(), new Zonas(new Barrios(), properties),
+        service = ServicioArmado.armar(
+            properties, placesClient, quotaGuard, photoStorage, repository, new Zonas(new Barrios(), properties),
             mock(RatingRepository.class), mock(WishlistRepository.class),
             mock(SavedTourRepository.class), new FastFoodMarker(repository, properties));
     }
@@ -148,7 +148,7 @@ class RevisionDeFotosTest {
         service.revisarFotos();
 
         verify(placesClient, never()).downloadPhoto(anyString());
-        assertThat(guardado().getPhotoRule()).isEqualTo(PlacesClient.REGLA_DE_FOTO);
+        assertThat(guardado().getPhotoRule()).isEqualTo(EleccionDeFoto.REGLA_DE_FOTO);
     }
 
     /**
@@ -185,7 +185,7 @@ class RevisionDeFotosTest {
 
         service.revisarFotos();
 
-        assertThat(guardado().getPhotoRule()).isEqualTo(PlacesClient.REGLA_DE_FOTO);
+        assertThat(guardado().getPhotoRule()).isEqualTo(EleccionDeFoto.REGLA_DE_FOTO);
     }
 
     /**
@@ -281,6 +281,6 @@ class RevisionDeFotosTest {
         BurgerJoint despues = guardado();
         assertThat(despues.getPhotoUrl()).isEqualTo("/api/place-photos/mejor.jpg");
         assertThat(despues.getPhotoName()).isEqualTo("places/x/photos/mejor");
-        assertThat(despues.getPhotoRule()).isEqualTo(PlacesClient.REGLA_DE_FOTO);
+        assertThat(despues.getPhotoRule()).isEqualTo(EleccionDeFoto.REGLA_DE_FOTO);
     }
 }

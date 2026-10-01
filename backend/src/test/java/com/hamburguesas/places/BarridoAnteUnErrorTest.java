@@ -62,9 +62,9 @@ class BarridoAnteUnErrorTest {
         when(repository.findByPlaceId(anyString())).thenReturn(Optional.empty());
         when(repository.nombresDeRubro(anyString())).thenReturn(List.of());
 
-        service = new PlacesSyncService(
+        service = ServicioArmado.armar(
             properties, placesClient, quotaGuard, mock(PhotoStorage.class), repository,
-            new Barrios(), new Zonas(new Barrios(), properties), mock(RatingRepository.class),
+            new Zonas(new Barrios(), properties), mock(RatingRepository.class),
             mock(WishlistRepository.class), mock(SavedTourRepository.class),
             new FastFoodMarker(repository, properties));
     }
@@ -151,9 +151,9 @@ class BarridoAnteUnErrorTest {
         PlacesQuotaGuard quotaGuard = mock(PlacesQuotaGuard.class);
         when(quotaGuard.canCall(any())).thenReturn(true);
 
-        PlacesSyncService servicio = new PlacesSyncService(
+        PlacesSyncService servicio = ServicioArmado.armar(
             properties, placesClient, quotaGuard, mock(PhotoStorage.class), repository,
-            new Barrios(), new Zonas(new Barrios(), properties), mock(RatingRepository.class),
+            new Zonas(new Barrios(), properties), mock(RatingRepository.class),
             mock(WishlistRepository.class), mock(SavedTourRepository.class),
             new FastFoodMarker(repository, properties));
 

@@ -173,6 +173,11 @@ public class AuthService {
         return new MessageResponse("Listo, ya podés entrar con tu nueva contraseña.");
     }
 
+    /** Quién es el dueño de la sesión, o vacío si la cuenta ya no existe. */
+    public Optional<User> quienEs(Long userId) {
+        return userRepository.findById(userId);
+    }
+
     public User login(LoginRequest request) {
         String email = normalize(request.email());
         requireAttemptAllowance(email);
