@@ -92,7 +92,7 @@ public class PlacesClient {
             .retrieve()
             .body(JsonNode.class);
 
-        return parse(response);
+        return parse(response, properties.getSync().getFotosElegidas());
     }
 
     /**
@@ -136,7 +136,8 @@ public class PlacesClient {
              .retrieve()
              .body(JsonNode.class);
 
-         return place == null ? List.of() : mejoresFotos(place);
+         return place == null ? List.of()
+             : mejoresFotos(place, properties.getSync().getFotosElegidas().get(placeId));
      }
 
     /**
@@ -166,13 +167,27 @@ public class PlacesClient {
     // Package-private y estático para poder probarlo sin salir a la red: es la
     // parte de este archivo que la migración a Jackson 3 podía romper en silencio.
     static PlacesSearchResult parse(JsonNode response) {
+        return parse(response, Map.of());
+    }
+
+    /**
+     * Lo mismo, respetando las fotos elegidas a mano.
+     *
+     * También acá y no solo al revisar fotos: un local que entra por primera vez baja su
+     * portada en este momento, y sin esto bajaría la de la regla para que después alguien
+     * la cambie. Son dos descargas en lugar de una, y la cuota de fotos es el tramo
+     * gratuito más chico que tenemos.
+     */
+    static PlacesSearchResult parse(JsonNode response, Map<String, String> fotosElegidas) {
         List<PlacesSearchResult.Place> places = new ArrayList<>();
         if (response == null) {
             return new PlacesSearchResult(places, null);
         }
 
         for (JsonNode node : response.path("places")) {
-            FotoElegida foto = mejorFoto(node);
+            List<FotoElegida> mejores =
+                mejoresFotos(node, fotosElegidas.get(node.path("id").asText(null)));
+            FotoElegida foto = mejores.isEmpty() ? null : mejores.get(0);
             places.add(new PlacesSearchResult.Place(
                 node.path("id").asText(null),
                 node.path("displayName").path("text").asText(null),
@@ -209,12 +224,12 @@ public class PlacesClient {
     }
 
     /**
-     * Elige una foto entre las que devuelve Google, que llegan sin ninguna etiqueta
-     * de qué muestran: no hay forma de pedirle "el logo" o "la fachada".
+     * Las mejores fotos del local, de la más prometedora a la menos.
      *
-     * Lo que se busca es una hamburguesa que se vea bien, y si no, el local bien
-     * fotografiado. Nada de eso viene dicho, así que se deduce de lo único que Google
-     * cuenta de cada foto: quién la subió y qué tamaño tiene.
+     * Las fotos llegan sin ninguna etiqueta de qué muestran: no hay forma de pedirle a
+     * Google "el logo" o "la fachada". Lo que se busca es una hamburguesa que se vea
+     * bien, y si no, el local bien fotografiado, y nada de eso viene dicho: se deduce de
+     * lo único que Google cuenta de cada foto, que es quién la subió y qué tamaño tiene.
      *
      * Quién la subió pesaba más que todo lo demás, y resultó ser la señal equivocada.
      * El local sube su marca: de las diez fotos de "Keke & Larry", las dos suyas son el
@@ -222,14 +237,9 @@ public class PlacesClient {
      * Es lo razonable: al dueño le importa la identidad del local, y al que fue a comer
      * le importa el plato. Así que ahora la foto del local es un desempate y no una
      * garantía: una apaisada grande de un cliente le gana.
-     */
-    private static FotoElegida mejorFoto(JsonNode place) {
-        List<FotoElegida> candidatas = mejoresFotos(place);
-        return candidatas.isEmpty() ? null : candidatas.get(0);
-    }
-
-    /**
-     * Las mejores fotos del local, de la más prometedora a la menos.
+     *
+     * Lo que ninguna de esas señales alcanza a distinguir es qué hay adentro de la foto,
+     * y para eso está la elección a mano del otro método.
      *
      * Son varias y no una porque la elección no se termina de decidir acá: si la mejor
      * resulta ser un logo —cosa que solo se sabe mirando los píxeles, o sea después de
@@ -239,6 +249,23 @@ public class PlacesClient {
      * que es el tramo gratuito más chico de la API.
      */
     static List<FotoElegida> mejoresFotos(JsonNode place) {
+        return mejoresFotos(place, null);
+    }
+
+    /**
+     * Lo mismo, pero con una foto elegida a mano que va primera si está.
+     *
+     * Elegida a mano gana siempre, porque la regla puede ordenar por cómo está sacada la
+     * foto y no por qué muestra: entre la fachada del local y una bandeja de empanadas no
+     * hay nada en los datos que las distinga. Cuando alguien ya miró, lo que miró vale
+     * más que cualquier puntaje.
+     *
+     * Las demás quedan atrás en el orden de siempre, que es lo que hace falta si la
+     * elegida no se puede bajar.
+     *
+     * @param huellaElegida la huella anotada en la configuración, o null si no hay
+     */
+    static List<FotoElegida> mejoresFotos(JsonNode place, String huellaElegida) {
         JsonNode photos = place.path("photos");
         if (!photos.isArray() || photos.isEmpty()) {
             return List.of();
@@ -264,6 +291,39 @@ public class PlacesClient {
                 break;
             }
         }
+
+        return conLaElegidaAdelante(candidatas, ordenadas, huellaElegida);
+    }
+
+    /**
+     * Pone adelante la foto anotada a mano.
+     *
+     * Se la busca entre todas y no entre las candidatas: justamente se anota a mano
+     * cuando la regla la dejó atrás, así que lo más probable es que no esté entre las
+     * tres que la regla eligió. Si no aparece entre ninguna —la borraron, o la huella
+     * está mal copiada— se devuelve la lista tal cual, y manda la regla.
+     */
+    private static List<FotoElegida> conLaElegidaAdelante(
+        List<FotoElegida> candidatas, List<JsonNode> todas, String huellaElegida
+    ) {
+        if (huellaElegida == null || huellaElegida.isBlank()) {
+            return candidatas;
+        }
+
+        for (JsonNode photo : todas) {
+            FotoElegida foto = FotoElegida.de(photo);
+            if (foto == null || !huellaElegida.equals(foto.huella())) {
+                continue;
+            }
+
+            List<FotoElegida> conLaElegida = new ArrayList<>();
+            conLaElegida.add(foto);
+            candidatas.stream()
+                .filter(otra -> !huellaElegida.equals(otra.huella()))
+                .forEach(conLaElegida::add);
+            return conLaElegida;
+        }
+
         return candidatas;
     }
 

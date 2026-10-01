@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -529,7 +530,7 @@ public class PlacesSyncService {
                     if (!quotaGuard.canCall(PlacesCallType.PHOTO)) {
                         break;
                     }
-                    String photoUrl = downloadPhoto(joint.getPlaceId(), candidata.name());
+                    String photoUrl = downloadPhoto(joint.getPlaceId(), candidata);
                     if (photoUrl != null) {
                         joint.setPhotoUrl(photoUrl);
                         joint.setPhotoName(candidata.name());
@@ -585,7 +586,7 @@ public class PlacesSyncService {
      private int repickOldPhotos() {
          int cambiadas = 0;
 
-         for (BurgerJoint joint : burgerJointRepository.conFotoElegidaConUnaReglaVieja(PlacesClient.REGLA_DE_FOTO)) {
+         for (BurgerJoint joint : aRevisar()) {
              // Igual que arriba: acá solo hace falta la ficha. La mayoría de las fotos
              // no cambia de una regla a la otra, y esas se revisan sin bajar nada; pedir
              // también la cuota de fotos frenaba a todas por las pocas que sí cambian.
@@ -639,7 +640,7 @@ public class PlacesSyncService {
                  if (!quotaGuard.canCall(PlacesCallType.PHOTO)) {
                      break;
                  }
-                 String photoUrl = downloadPhoto(joint.getPlaceId(), candidata.name());
+                 String photoUrl = downloadPhoto(joint.getPlaceId(), candidata);
                  if (photoUrl != null) {
                      joint.setPhotoUrl(photoUrl);
                      joint.setPhotoName(candidata.name());
@@ -654,6 +655,37 @@ public class PlacesSyncService {
 
          return cambiadas;
      }
+
+    /**
+     * Qué locales hay que volver a mirar: los elegidos con una regla vieja, más los que
+     * tienen una foto anotada a mano que todavía no es la que está puesta.
+     *
+     * Los segundos hacen falta porque anotar una foto en la configuración no cambia nada
+     * por sí solo, y el local ya está marcado con la regla al día: sin esto, la elección
+     * quedaría escrita y sin efecto hasta la próxima vez que cambie la regla.
+     *
+     * Se comparan las huellas para no volver a pedir la ficha de un local que ya tiene
+     * puesta la foto elegida, que si no sería una llamada por local y por sincronización,
+     * para siempre.
+     */
+    private List<BurgerJoint> aRevisar() {
+        Map<Long, BurgerJoint> locales = new LinkedHashMap<>();
+        for (BurgerJoint joint
+            : burgerJointRepository.conFotoElegidaConUnaReglaVieja(PlacesClient.REGLA_DE_FOTO)) {
+            locales.put(joint.getId(), joint);
+        }
+
+        Map<String, String> elegidas = properties.getSync().getFotosElegidas();
+        if (!elegidas.isEmpty()) {
+            for (BurgerJoint joint : burgerJointRepository.findByPlaceIdIn(elegidas.keySet())) {
+                if (!elegidas.get(joint.getPlaceId()).equals(joint.getPhotoFingerprint())) {
+                    locales.putIfAbsent(joint.getId(), joint);
+                }
+            }
+        }
+
+        return new ArrayList<>(locales.values());
+    }
 
     /** Una foto por cadena, para prestársela a las sucursales que no tengan. */
     private Map<String, String> photosByChain() {
@@ -729,7 +761,8 @@ public class PlacesSyncService {
      * vez de una por visita.
      */
     private String downloadPhoto(PlacesSearchResult.Place place) {
-        return downloadPhoto(place.placeId(), place.photoName());
+        return downloadPhoto(place.placeId(), place.photoName(),
+            laEligieronAMano(place.placeId(), place.photoFingerprint()));
     }
 
     /**
@@ -742,13 +775,21 @@ public class PlacesSyncService {
      *
      * @return la ruta guardada, o null si no se pudo bajar o si es un logo
      */
-    private String downloadPhoto(String placeId, String photoName) {
+    private String downloadPhoto(String placeId, FotoElegida foto) {
+        return downloadPhoto(placeId, foto.name(), laEligieronAMano(placeId, foto.huella()));
+    }
+
+    private String downloadPhoto(String placeId, String photoName, boolean elegidaAMano) {
         try {
             pause();
             byte[] bytes = placesClient.downloadPhoto(photoName);
             quotaGuard.record(PlacesCallType.PHOTO);
 
-            if (EsUnaFotografia.pareceUnLogo(bytes)) {
+            // Salvo que la haya elegido una persona. La detección de logos mira los
+            // píxeles y acierta sobre lo que es, pero no sobre lo que se quiso: si
+            // alguien eligió esa foto a mano, descartarla deshace la elección en
+            // silencio y vuelve a poner la que la regla prefería.
+            if (!elegidaAMano && EsUnaFotografia.pareceUnLogo(bytes)) {
                 log.info("La foto elegida de {} es un logo, se descarta", placeId);
                 return null;
             }
@@ -758,6 +799,12 @@ public class PlacesSyncService {
             log.warn("Could not download photo for {} (HTTP {})", placeId, ex.getStatusCode().value());
             return null;
         }
+    }
+
+    /** Si esta foto es la que está anotada a mano en la configuración para este local. */
+    private boolean laEligieronAMano(String placeId, String huella) {
+        return huella != null
+            && huella.equals(properties.getSync().getFotosElegidas().get(placeId));
     }
 
     /** @return true si en esta pasada se le consiguió la foto que le faltaba. */
