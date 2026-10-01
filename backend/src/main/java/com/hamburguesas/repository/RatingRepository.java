@@ -1,6 +1,7 @@
 package com.hamburguesas.repository;
 
 import com.hamburguesas.dto.ItemDeFeedDto;
+import com.hamburguesas.dto.NotaYComentarioDto;
 import com.hamburguesas.dto.NotaYCuantasDto;
 import com.hamburguesas.dto.RankingItemDto;
 import com.hamburguesas.dto.RatingResponse;
@@ -106,6 +107,25 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
         group by r.score
         """)
     List<NotaYCuantasDto> distribucionDeNotas(@Param("burgerJointId") Long burgerJointId);
+
+    /**
+     * La nota y el texto de cada reseña escrita de un local, para resumir de qué hablan.
+     *
+     * Las que no tienen texto no salen: el resumen se arma leyendo, y además es lo que
+     * decide si hay suficientes como para mostrarlo. Contarlas acá sería inflar ese
+     * número con reseñas mudas.
+     *
+     * No mira los bloqueos, igual que la distribución y por lo mismo: de qué hablan las
+     * reseñas de una hamburguesería es un hecho del lugar, y si dependiera de a quién
+     * bloqueaste, dos personas verían resúmenes distintos del mismo local.
+     */
+    @Query("""
+        select new com.hamburguesas.dto.NotaYComentarioDto(r.score, r.comment)
+        from Rating r
+        where r.burgerJoint.id = :burgerJointId
+          and r.comment is not null and length(trim(r.comment)) > 0
+        """)
+    List<NotaYComentarioDto> notasYComentarios(@Param("burgerJointId") Long burgerJointId);
 
     /**
      * Las reseñas de un grupo de personas sobre un local.

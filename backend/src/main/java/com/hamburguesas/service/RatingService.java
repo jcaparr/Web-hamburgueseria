@@ -4,6 +4,7 @@ import com.hamburguesas.dto.NotaYCuantasDto;
 import com.hamburguesas.dto.RatingRequest;
 import com.hamburguesas.dto.RatingResponse;
 import com.hamburguesas.dto.ResumenDeReseniasDto;
+import com.hamburguesas.dto.TemaDeReseniasDto;
 import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.fotos.FotosDeResenias;
 import com.hamburguesas.exception.ResourceNotFoundException;
@@ -151,7 +152,26 @@ public class RatingService {
             .mapToObj(nota -> new NotaYCuantasDto(nota, cuantasPorNota.getOrDefault(nota, 0L)))
             .toList();
 
-        return new ResumenDeReseniasDto(distribucion, deQuienesSigo(burgerJointId, userId));
+        return new ResumenDeReseniasDto(distribucion, temas(burgerJointId),
+            deQuienesSigo(burgerJointId, userId));
+    }
+
+    /**
+     * De qué hablan las reseñas escritas de este local.
+     *
+     * El cálculo vive aparte, sin Spring ni base de datos, porque lo que hay que poder
+     * probar es qué cuenta como mención y qué no: acá adentro solo se traen las reseñas
+     * y se traduce el resultado.
+     */
+    private List<TemaDeReseniasDto> temas(Long burgerJointId) {
+        List<TemasDeLasResenias.Mencion> menciones = ratingRepository
+            .notasYComentarios(burgerJointId).stream()
+            .map(fila -> new TemasDeLasResenias.Mencion(fila.nota(), fila.comentario()))
+            .toList();
+
+        return TemasDeLasResenias.de(menciones).stream()
+            .map(tema -> new TemaDeReseniasDto(tema.nombre(), tema.menciones(), tema.aFavor()))
+            .toList();
     }
 
     private List<RatingResponse> deQuienesSigo(Long burgerJointId, Long userId) {
