@@ -18,6 +18,27 @@ public interface BurgerJointRepository
     /** Los que todavía no tienen foto, para completarlas en la próxima sincronización. */
     List<BurgerJoint> findByPhotoUrlIsNull();
 
+    /**
+     * Los locales a los que todavía no les preguntamos cuántas fotos tiene Google.
+     *
+     * Primero los que Google no clasifica como hamburguesería, que son los sospechosos:
+     * un lugar anotado como "restaurant" que además tiene tres fotos probablemente no
+     * sea una hamburguesería. Preguntar cuesta una ficha por local y el tramo del mes es
+     * finito, así que el orden decide qué se alcanza a saber antes de que se termine.
+     *
+     * Las cadenas van al final: son las que menos dudas generan.
+     */
+    @Query("""
+        select b from BurgerJoint b
+        where b.fotosEnGoogle is null
+        order by
+          case when b.fastFood then 2
+               when b.googlePrimaryType = 'hamburger_restaurant' then 1
+               else 0 end,
+          b.id
+        """)
+    List<BurgerJoint> sinSaberCuantasFotosTiene();
+
     /** Los que ya tienen foto, para prestársela a otras sucursales de la misma cadena. */
     List<BurgerJoint> findByPhotoUrlIsNotNull();
 

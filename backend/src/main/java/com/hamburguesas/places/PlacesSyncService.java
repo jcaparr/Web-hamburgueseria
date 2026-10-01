@@ -94,7 +94,17 @@ public class PlacesSyncService {
         int sinNingunaFoto = 0;
         int sinPreguntar = 0;
 
-        List<BurgerJoint> sinFoto = burgerJointRepository.findByPhotoUrlIsNull();
+        // Los que nunca preguntamos, y no solo los que no tienen portada. Un local puede
+        // tener una foto puesta y tener apenas tres en Google, que es justamente lo que
+        // hay que poder ver para decidir si corresponde que esté en la lista.
+        //
+        // Vienen ordenados por sospecha: primero los que Google no clasifica como
+        // hamburguesería, al final las cadenas. Preguntar cuesta una ficha por local y el
+        // tramo del mes es finito, así que el orden decide qué se alcanza a saber.
+        //
+        // Y como se eligen por no tener el número anotado, cada corrida sigue donde quedó
+        // la anterior sin volver a preguntar por los mismos.
+        List<BurgerJoint> sinFoto = burgerJointRepository.sinSaberCuantasFotosTiene();
         for (BurgerJoint joint : sinFoto) {
             if (!quotaGuard.canCall(PlacesCallType.DETAILS)) {
                 sinPreguntar = sinFoto.size() - preguntados;
