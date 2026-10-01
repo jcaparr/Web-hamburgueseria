@@ -418,6 +418,14 @@ app:
         - ChIJZaLpzvexvJURKGSNXpBUs4A  # El permitido Hamburguesas (Gran Buenos Aires)
         - ChIJ89DkeQ7XvJURgLywIAN-E1g  # Romana Burger&Beer (Esteban Echeverría)
         - ChIJUe8spdnRvJURdTtl_zE1hcE  # Edelweiss Monte Grande - RestoBar (Monte Grande)
+      # Los cinco de abajo tienen nombre repetido en barrios distintos, así que se
+      # confirmaron uno por uno antes de sacarlos. Los tres "Hamburguesería" no son la
+      # misma marca: son tres locales sin nombre propio.
+        - ChIJT9ClX8ovo5URF65fTNmUHek  # Hamburgueseria (Quilmes)
+        - ChIJg0xKdgCVvJUR0S5XXeXFZrQ  # Hamburguesería (Merlo)
+        - ChIJN6dPjS6VvJURnnncAT6bcqg  # Hamburguesería (Moreno)
+        - ChIJAQORYgAno5UR96fDTHz_9s0  # BUNKER HAMBURGUESERIA (Plátanos)
+        - ChIJwSpiZ30tvZUR9o8LZ3kU_aE  # Búnker hamburguesería (San Vicente)
       # Hamburgueserías que Google clasifica como otra cosa y que ninguna regla rescata.
       # Entran acá solo si el local es una hamburguesería de hecho, no un bar que además
       # vende hamburguesas.
