@@ -621,6 +621,26 @@ public class PlacesSyncService {
         Map<String, String> fotoPorCadena = photosByChain();
 
         for (BurgerJoint joint : burgerJointRepository.findByPhotoUrlIsNull()) {
+            // Una sucursal de cadena se queda con la foto de una hermana y no se le pide
+            // nada a Google: ni ficha ni foto.
+            //
+            // Antes era al revés —se intentaba la propia y se prestaba solo si Google no
+            // tenía ninguna—, con el argumento de que la foto propia de la sucursal es
+            // mejor que la prestada. Sigue siendo cierto y ya no alcanza: hay 1.688
+            // locales esperando portada y 911 fotos hasta fin de mes, así que cada foto
+            // que se gasta en un McDonald's es una hamburguesería de barrio que se queda
+            // con el recuadro de iniciales. Y entre dos sucursales de la misma cadena, la
+            // foto es prácticamente la misma.
+            //
+            // Cuesta cero llamadas, así que no mira ninguna cuota.
+            String deLaHermana = fotoPorCadena.get(chainKey(joint.getName()));
+            if (joint.isFastFood() && deLaHermana != null) {
+                joint.setPhotoUrl(deLaHermana);
+                burgerJointRepository.save(joint);
+                reused++;
+                continue;
+            }
+
             // Solo la ficha, que es lo que hace falta siempre. La foto se pide más
             // abajo y únicamente si Google tiene alguna: son dos cuotas distintas, y
             // pedir las dos acá arriba frenaba todo el trabajo cuando se agotaba la de
@@ -689,14 +709,11 @@ public class PlacesSyncService {
                 burgerJointRepository.save(joint);
             }
 
-            // Google no tiene fotos de esta dirección. Si es una sucursal de una cadena
-            // que sí tiene, se usa la de la hermana: preferimos el frente de otro local
-            // de la misma marca antes que un recuadro con iniciales. Se intenta recién
-            // acá, después de Google, porque la foto propia de la sucursal siempre es
-            // mejor que la prestada. No cuesta ninguna llamada.
-            String prestada = fotoPorCadena.get(chainKey(joint.getName()));
-            if (prestada != null) {
-                joint.setPhotoUrl(prestada);
+            // Y acá caen los que no son de cadena pero igual tienen una hermana: un local
+            // que se llama igual que otro sin ser una marca reconocida. Los de cadena ya
+            // se resolvieron arriba, antes de gastarle una llamada a Google.
+            if (deLaHermana != null) {
+                joint.setPhotoUrl(deLaHermana);
                 burgerJointRepository.save(joint);
                 reused++;
             }
