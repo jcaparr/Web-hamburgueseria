@@ -199,6 +199,31 @@ app:
         - ChIJmbiqDoLLvJURbe0kVxQAdk4
         # "Draken", en La Boca: figura como cervecería, y es una hamburguesería.
         - ChIJ8Rg7fKQ1o5URZEvZ9P58vFs
+      # La foto de portada elegida a mano, para los locales donde la regla no acierta.
+      #
+      # La regla sabe elegir una foto bien sacada —apaisada, grande, no una captura de
+      # pantalla— pero no sabe qué muestra. Entre la fachada del local y una bandeja de
+      # empanadas no hay nada en los datos que las distinga: las dos son fotografías del
+      # mismo tamaño subidas por el local. Eso solo se arregla mirando, y lo que se mira
+      # una vez conviene que quede escrito.
+      #
+      # La clave es el place_id y el valor la huella de la foto, que es "anchoxalto|quién
+      # la subió". Se usa la huella y no el nombre porque el nombre que devuelve Google es
+      # un vale de descarga que cambia en cada pedido; la huella vuelve siempre igual.
+      #
+      # Para sacar la huella de un local:
+      #   curl -H "X-Goog-Api-Key: $GOOGLE_MAPS_API_KEY" \
+      #        -H "X-Goog-FieldMask: photos" \
+      #        "https://places.googleapis.com/v1/places/<place_id>"
+      # y armarla con widthPx, heightPx y el displayName del primer authorAttributions.
+      #
+      # Si la huella anotada no aparece entre las fotos del local —la borraron, o está mal
+      # copiada— manda la regla, como si no estuviera anotada. El local no se queda sin
+      # portada por un error de acá.
+      #
+      # Ejemplo:
+      #   ChIJ1wMsjJe1vJURjHbgtBrHg6A: "1200x900|Un cliente"
+      fotos-elegidas: {}
       # 3 es el máximo que devuelve Google por consulta (60 resultados); pedir más
       # no trae nada nuevo.
       max-pages-per-area: 3

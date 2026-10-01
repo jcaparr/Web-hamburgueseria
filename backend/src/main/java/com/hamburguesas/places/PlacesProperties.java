@@ -4,6 +4,7 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @ConfigurationProperties(prefix = "app.places")
@@ -66,6 +67,26 @@ public class PlacesProperties {
          * motivo anotado al lado en la configuración.
          */
         private List<String> includedPlaceIds = List.of();
+
+        /**
+         * La foto de portada elegida a mano, para los locales donde la regla no acierta.
+         *
+         * La regla sabe elegir una foto bien sacada —apaisada, grande, no una captura de
+         * pantalla—, pero no sabe qué hay adentro: entre la fachada del local y una
+         * bandeja de empanadas no puede distinguir, porque las dos son fotografías. Eso
+         * solo se arregla mirando, y lo que se mira una vez conviene que quede escrito.
+         *
+         * La clave es el place_id y el valor la huella de la foto: "1600x1200|Quien la
+         * subió". Se usa la huella y no el nombre porque el nombre que devuelve Google es
+         * un vale de descarga que cambia en cada pedido; la huella es lo único que vuelve
+         * igual.
+         *
+         * Si la huella anotada no aparece entre las fotos del local —porque la borraron,
+         * o porque se copió mal— no pasa nada: manda la regla, como si no estuviera
+         * anotada. Vale la pena saberlo al revisar por qué un local no cambió la foto.
+         */
+        private Map<String, String> fotosElegidas = Map.of();
+
         private int maxPagesPerArea = 2;
         private long delayBetweenCallsMs = 500;
     }
