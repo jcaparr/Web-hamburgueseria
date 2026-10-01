@@ -48,10 +48,13 @@ export function SelectorDeBarrios({
   }, [abierto])
 
   // Al abrir se limpia lo buscado: lo que se tipeó la vez pasada no tiene nada que ver
-  // con lo que se viene a buscar ahora, y dejarlo esconde media lista sin avisar.
-  useEffect(() => {
-    if (abierto) setBuscado('')
-  }, [abierto])
+  // con lo que se viene a buscar ahora, y dejarlo esconde media lista sin avisar. Va en
+  // el clic que abre y no en un efecto que mire si se abrió: es la misma cosa, sin un
+  // dibujo de más.
+  function abrir() {
+    setBuscado('')
+    setAbierto(true)
+  }
 
   const visibles = useMemo(() => {
     const busca = sinAcentos(buscado)
@@ -69,7 +72,7 @@ export function SelectorDeBarrios({
     <>
       <button
         type="button"
-        onClick={() => setAbierto(true)}
+        onClick={abrir}
         className={`btn btn-sm ${elegidos.length > 0 ? 'btn-primary' : 'btn-outline'}`}
       >
         {comoSeLee(elegidos)}
