@@ -281,14 +281,15 @@ public class PlacesClient {
         ordenadas.sort(Comparator.comparingInt((JsonNode photo) -> puntajeDe(photo, placeName))
             .reversed());
 
+        // Todas y no solo las mejores tres. Cuántas tiene el local es un dato en sí
+        // —diez es un lugar que la gente fotografía, tres es uno por el que nadie pasó—
+        // y viene gratis en la misma respuesta. El tope de cuántas se prueban lo pone
+        // quien las baja, que es donde se gasta la cuota.
         List<FotoElegida> candidatas = new ArrayList<>();
         for (JsonNode photo : ordenadas) {
             FotoElegida candidata = FotoElegida.de(photo);
             if (candidata != null) {
                 candidatas.add(candidata);
-            }
-            if (candidatas.size() == CANDIDATAS_A_PROBAR) {
-                break;
             }
         }
 
@@ -333,8 +334,11 @@ public class PlacesClient {
      * Tres: los locales con logo de portada suelen tener una o dos fotos de producto
      * atrás, y probar más sería gastar llamadas en un local que evidentemente no tiene
      * una foto buena.
+     *
+     * Vive acá y lo aplica quien baja. La lista viene entera porque su largo es un dato
+     * que no cuesta nada; el tope es sobre lo que se gasta, no sobre lo que se sabe.
      */
-    private static final int CANDIDATAS_A_PROBAR = 3;
+    public static final int CANDIDATAS_A_PROBAR = 3;
 
     /**
      * Qué tan buena es una foto como portada del local. Mayor es mejor, y ante empate

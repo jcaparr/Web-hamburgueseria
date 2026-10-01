@@ -120,10 +120,15 @@ public class PlacesSyncService {
                 sinNingunaFoto++;
             }
 
+            // Cuántas tiene, que es lo que distingue un local que la gente fotografía de
+            // uno por el que nadie pasó. Viene gratis en la misma respuesta.
+            boolean cambioLaCuenta = !Integer.valueOf(candidatas.size()).equals(joint.getFotosEnGoogle());
+
             // Se guarda en los dos sentidos: un local que recién abrió puede no tener
             // ninguna hoy y tener diez el mes que viene, y la anotación vieja lo borraría.
-            if (joint.isSinFotosEnGoogle() != sinNada) {
+            if (joint.isSinFotosEnGoogle() != sinNada || cambioLaCuenta) {
                 joint.setSinFotosEnGoogle(sinNada);
+                joint.setFotosEnGoogle(candidatas.size());
                 burgerJointRepository.save(joint);
             }
         }
@@ -688,6 +693,10 @@ public class PlacesSyncService {
                 continue;
             }
 
+            // Ya que se preguntó, se anota cuántas tiene: es el mismo dato que acaba de
+            // llegar y guardarlo no cuesta ninguna llamada más.
+            joint.setFotosEnGoogle(candidatas.size());
+
             if (!candidatas.isEmpty()) {
                 // Tenía fotos: si venía anotado como que no, se corrige. Un local que
                 // recién abrió y todavía no tiene ninguna va a tenerlas más adelante.
@@ -707,7 +716,7 @@ public class PlacesSyncService {
                 // llamada, así que son pocas y solo se llega a la segunda cuando hace
                 // falta.
                 boolean guardada = false;
-                for (FotoElegida candidata : candidatas) {
+                for (FotoElegida candidata : aProbar(candidatas)) {
                     if (!quotaGuard.canCall(PlacesCallType.PHOTO)) {
                         break;
                     }
@@ -814,7 +823,7 @@ public class PlacesSyncService {
 
              // De la mejor a la peor, igual que al conseguir la primera foto: si la que
              // gana por puntaje resulta ser el logo, se prueba la siguiente.
-             for (FotoElegida candidata : candidatas) {
+             for (FotoElegida candidata : aProbar(candidatas)) {
                  if (!quotaGuard.canCall(PlacesCallType.PHOTO)) {
                      break;
                  }
@@ -863,6 +872,20 @@ public class PlacesSyncService {
         }
 
         return new ArrayList<>(locales.values());
+    }
+
+    /**
+     * Las primeras que vale la pena probar de la lista entera.
+     *
+     * La lista viene completa porque su largo dice cuántas fotos tiene el local, y eso
+     * no cuesta nada. Pero cada una que se prueba cuesta una llamada de foto, así que el
+     * tope se aplica recién acá: si las tres mejores resultaron logos, el local
+     * evidentemente no tiene una portada buena y seguir es gastar.
+     */
+    private static List<FotoElegida> aProbar(List<FotoElegida> candidatas) {
+        return candidatas.size() <= PlacesClient.CANDIDATAS_A_PROBAR
+            ? candidatas
+            : candidatas.subList(0, PlacesClient.CANDIDATAS_A_PROBAR);
     }
 
     /** Una foto por cadena, para prestársela a las sucursales que no tengan. */
