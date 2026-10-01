@@ -6,19 +6,18 @@ import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.SavedTourRepository;
 import com.hamburguesas.repository.WishlistRepository;
+import com.hamburguesas.texto.Texto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
 
-import java.text.Normalizer;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -731,20 +730,12 @@ public class PlacesSyncService {
     private Set<String> cadenasDeHamburguesas() {
         Set<String> cadenas = new HashSet<>();
         for (String nombre : burgerJointRepository.nombresDeRubro("hamburger_restaurant")) {
-            String limpio = sinAcentos(nombre);
+            String limpio = Texto.paraComparar(nombre);
             if (limpio.length() >= 8) {
                 cadenas.add(limpio);
             }
         }
         return cadenas;
-    }
-
-    private static String sinAcentos(String valor) {
-        return Normalizer.normalize(valor == null ? "" : valor, Normalizer.Form.NFD)
-            .replaceAll("\\p{M}", "")
-            .toLowerCase(Locale.ROOT)
-            .replaceAll("\\s+", " ")
-            .trim();
     }
 
     /**
@@ -1103,10 +1094,7 @@ public class PlacesSyncService {
      * que no tiene nada que ver.
      */
     static String chainKey(String name) {
-        String sinSucursal = name.split(" - ")[0];
-        String sinAcentos = Normalizer.normalize(sinSucursal, Normalizer.Form.NFD)
-            .replaceAll("\\p{M}", "");
-        return sinAcentos.toLowerCase(Locale.ROOT).replaceAll("\\s+", " ").trim();
+        return Texto.paraComparar(name.split(" - ")[0]);
     }
 
     private PlacesSearchResult search(String consulta, String pageToken) {

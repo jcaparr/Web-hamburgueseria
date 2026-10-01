@@ -2,9 +2,7 @@ package com.hamburguesas.places;
 
 import com.hamburguesas.geo.Distancias;
 import com.hamburguesas.model.BurgerJoint;
-
-import java.text.Normalizer;
-import java.util.Locale;
+import com.hamburguesas.texto.Texto;
 
 /**
  * Cuándo dos fichas de Google son el mismo local.
@@ -39,8 +37,8 @@ final class Duplicados {
 
     /** Ignora mayúsculas, acentos y puntuación: "Voraz" y "VORAZ!" son el mismo. */
     static boolean mismoNombre(String uno, String otro) {
-        String a = sinAdornos(uno);
-        return !a.isEmpty() && a.equals(sinAdornos(otro));
+        String a = Texto.soloLetrasYNumeros(uno);
+        return !a.isEmpty() && a.equals(Texto.soloLetrasYNumeros(otro));
     }
 
     static boolean estanEnElMismoLugar(BurgerJoint a, BurgerJoint b) {
@@ -66,12 +64,5 @@ final class Duplicados {
             return fotoA ? a : b;
         }
         return a.getId() <= b.getId() ? a : b;
-    }
-
-    private static String sinAdornos(String valor) {
-        return Normalizer.normalize(valor == null ? "" : valor, Normalizer.Form.NFD)
-            .replaceAll("\\p{M}", "")
-            .toLowerCase(Locale.ROOT)
-            .replaceAll("[^a-z0-9]", "");
     }
 }

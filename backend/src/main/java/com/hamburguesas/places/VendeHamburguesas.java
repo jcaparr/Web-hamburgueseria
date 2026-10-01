@@ -1,8 +1,7 @@
 package com.hamburguesas.places;
 
-import java.text.Normalizer;
+import com.hamburguesas.texto.Texto;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 import static com.hamburguesas.places.Veredicto.Prueba;
@@ -115,12 +114,12 @@ public final class VendeHamburguesas {
     }
 
     static boolean elNombreLoDice(String nombre) {
-        String limpio = sinAdornos(nombre);
+        String limpio = Texto.paraComparar(nombre);
         return EL_NOMBRE_DICE_HAMBURGUESAS.stream().anyMatch(limpio::contains);
     }
 
     private static boolean hablaDeHamburguesas(String resumen) {
-        String limpio = sinAdornos(resumen);
+        String limpio = Texto.paraComparar(resumen);
         return LAS_RESENIAS_DICEN_HAMBURGUESAS.stream().anyMatch(limpio::contains);
     }
 
@@ -132,19 +131,7 @@ public final class VendeHamburguesas {
      * cualquiera que empiece parecido.
      */
     static boolean esSucursalDeUnaCadena(String nombre, Set<String> cadenas) {
-        String limpio = sinEspaciosDeMas(nombre);
+        String limpio = Texto.paraComparar(nombre);
         return cadenas.stream().anyMatch(cadena -> limpio.startsWith(cadena + " "));
-    }
-
-    private static String sinAdornos(String valor) {
-        return sinEspaciosDeMas(valor);
-    }
-
-    private static String sinEspaciosDeMas(String valor) {
-        return Normalizer.normalize(valor == null ? "" : valor, Normalizer.Form.NFD)
-            .replaceAll("\\p{M}", "")
-            .toLowerCase(Locale.ROOT)
-            .replaceAll("\\s+", " ")
-            .trim();
     }
 }

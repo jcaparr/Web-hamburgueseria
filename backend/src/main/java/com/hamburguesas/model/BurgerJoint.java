@@ -1,5 +1,6 @@
 package com.hamburguesas.model;
 
+import com.hamburguesas.texto.Texto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -54,14 +55,7 @@ public class BurgerJoint {
 
     /** Las mismas reglas que aplica el buscador a lo que se escribe, para que coincidan. */
     public static String sinAcentos(String valor) {
-        if (valor == null) {
-            return null;
-        }
-        return java.text.Normalizer.normalize(valor, java.text.Normalizer.Form.NFD)
-            .replaceAll("\\p{M}", "")
-            .toLowerCase(java.util.Locale.ROOT)
-            .replaceAll("\\s+", " ")
-            .trim();
+        return valor == null ? null : Texto.paraComparar(valor);
     }
 
     @Column(nullable = false, length = 250)

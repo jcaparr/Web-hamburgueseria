@@ -1,5 +1,6 @@
 package com.hamburguesas.places;
 
+import com.hamburguesas.texto.Texto;
 import tools.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,8 +11,6 @@ import org.springframework.web.client.RestClient;
 
 import java.net.URI;
 import java.net.http.HttpClient;
-import java.text.Normalizer;
-import java.util.Locale;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -435,24 +434,17 @@ public class PlacesClient {
      * corto no se quede con la foto de cualquier persona que se llame parecido.
      */
     private static boolean laSubioElLocal(JsonNode photo, String placeName) {
-        String local = soloLetrasYNumeros(placeName);
+        String local = Texto.soloLetrasYNumeros(placeName);
         if (local.length() < 4) {
             return false;
         }
 
         for (JsonNode author : photo.path("authorAttributions")) {
-            String autor = soloLetrasYNumeros(author.path("displayName").asText(""));
+            String autor = Texto.soloLetrasYNumeros(author.path("displayName").asText(""));
             if (autor.length() >= 4 && (autor.contains(local) || local.contains(autor))) {
                 return true;
             }
         }
         return false;
-    }
-
-    private static String soloLetrasYNumeros(String valor) {
-        return Normalizer.normalize(valor, Normalizer.Form.NFD)
-            .replaceAll("\\p{M}", "")
-            .toLowerCase(Locale.ROOT)
-            .replaceAll("[^a-z0-9]", "");
     }
 }
