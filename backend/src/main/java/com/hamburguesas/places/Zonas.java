@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * En qué zona cae un local: el barrio si está en la Ciudad, la localidad si está afuera.
@@ -80,7 +82,117 @@ public class Zonas {
 
         String tramo = tramos[tramos.length - 3].trim();
         String localidad = sinCodigoPostal(tramo);
-        return localidad.isBlank() ? Optional.empty() : Optional.of(localidad);
+
+        // A veces Google no manda localidad y ese tramo es el código postal solo:
+        // "Av. Bartolomé Mitre 666, B1870 AAT, Cdad. Autónoma de Buenos Aires, Argentina".
+        // Sacarle el código postal dejaba "AAT" de nombre de zona, y eso terminaba en el
+        // selector de Explorar como si fuera un lugar.
+        //
+        // No se devuelve vacío: el local existe y está dentro del radio, y vacío lo
+        // borraría. Va a una zona genérica, que es lo poco cierto que se puede decir.
+        if (localidad.isBlank() || esLoQueQuedaDeUnCodigoPostal(localidad)) {
+            return Optional.of(SIN_LOCALIDAD);
+        }
+
+        return Optional.of(comoSeLlamaDeVerdad(localidad));
+    }
+
+    /**
+     * Para los locales cuya dirección no dice en qué localidad están.
+     *
+     * Son pocos y no se pueden ubicar mejor sin pedirle otra cosa a Google. Juntarlos acá
+     * es más honesto que inventarles una localidad, y los deja encontrables.
+     */
+    static final String SIN_LOCALIDAD = "Gran Buenos Aires";
+
+    /**
+     * Si lo que quedó después de sacar el código postal es el resto del mismo código.
+     *
+     * El código argentino largo es "B1870AAT": una letra, cuatro números y tres letras.
+     * Google a veces lo escribe partido —"B1870 AAT"— y entonces sacarle la primera mitad
+     * deja la segunda, que no es el nombre de ningún lugar.
+     *
+     * Se pide que sean todas mayúsculas para no confundirlo con una localidad corta de
+     * verdad: ninguna se escribe gritando.
+     */
+    private static boolean esLoQueQuedaDeUnCodigoPostal(String localidad) {
+        return localidad.matches("[A-Z]{1,3}") || localidad.matches("[0-9]{4}");
+    }
+
+    /**
+     * El nombre con el que la localidad va a aparecer en el selector.
+     *
+     * Google escribe la misma localidad de varias maneras y cada variante se convertía en
+     * una opción distinta: "ezeiza" y "Ezeiza", "Almte. Brown" y "Almirante Brown",
+     * "3 de Febrero" y "Tres de Febrero". Con doscientas zonas en la lista, los
+     * duplicados son lo que la vuelve inservible.
+     */
+    private static String comoSeLlamaDeVerdad(String localidad) {
+        String limpia = sinSufijoDeRegion(localidad);
+        String conocida = COMO_SE_ESCRIBE.get(sinAcentosNiMayusculas(limpia));
+        return conocida != null ? conocida : conMayusculaInicial(limpia);
+    }
+
+    /**
+     * Las formas abreviadas que Google mezcla con las completas.
+     *
+     * Se buscan sin acentos ni mayúsculas, así que una sola entrada cubre todas las
+     * maneras de escribirla. Son las que aparecieron de verdad en la base; la lista crece
+     * cuando aparece otra.
+     */
+    private static final Map<String, String> COMO_SE_ESCRIBE = Map.of(
+        "almte. brown", "Almirante Brown",
+        "gral. rodriguez", "General Rodríguez",
+        "gral. pacheco", "General Pacheco",
+        "gral. las heras", "General Las Heras",
+        "3 de febrero", "Tres de Febrero",
+        "gdor. costa", "Gobernador Costa",
+        "cdad. evita", "Ciudad Evita",
+        "gran buenos aires", SIN_LOCALIDAD,
+        "buenos aires", SIN_LOCALIDAD
+    );
+
+    /** "Lomas de Zamora - GBA Sur" y "Lomas de Zamora" son el mismo lugar. */
+    private static String sinSufijoDeRegion(String localidad) {
+        int guion = localidad.indexOf(" - ");
+        return guion > 0 ? localidad.substring(0, guion).trim() : localidad;
+    }
+
+    /**
+     * Mayúscula al principio de cada palabra, salvo las que nunca la llevan.
+     *
+     * Es lo que junta "ezeiza" con "Ezeiza" sin tener que anotar cada localidad a mano:
+     * las dos terminan escritas igual. Las partículas quedan en minúscula para no
+     * escribir "Lomas De Zamora".
+     */
+    private static String conMayusculaInicial(String localidad) {
+        String[] palabras = localidad.trim().split("\\s+");
+        StringBuilder armada = new StringBuilder();
+        for (int i = 0; i < palabras.length; i++) {
+            String palabra = palabras[i];
+            if (palabra.isEmpty()) {
+                continue;
+            }
+            if (!armada.isEmpty()) {
+                armada.append(' ');
+            }
+            if (i > 0 && PARTICULAS.contains(sinAcentosNiMayusculas(palabra))) {
+                armada.append(sinAcentosNiMayusculas(palabra).equals(palabra)
+                    ? palabra : palabra.toLowerCase(Locale.ROOT));
+                continue;
+            }
+            armada.append(Character.toUpperCase(palabra.charAt(0)))
+                .append(palabra.substring(1));
+        }
+        return armada.toString();
+    }
+
+    private static final Set<String> PARTICULAS = Set.of("de", "del", "la", "las", "los", "y");
+
+    private static String sinAcentosNiMayusculas(String valor) {
+        return java.text.Normalizer.normalize(valor, java.text.Normalizer.Form.NFD)
+            .replaceAll("\\p{M}", "")
+            .toLowerCase(Locale.ROOT);
     }
 
     /**

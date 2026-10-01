@@ -84,4 +84,86 @@ class ZonasTest {
     void elObeliscoEstaACeroKilometrosDeSiMismo() {
         assertThat(Zonas.kilometrosDesdeElCentro(-34.6037, -58.3816)).isCloseTo(0, within(0.01));
     }
+
+    // ---- cómo queda escrita la zona ----
+
+    /**
+     * Cuando Google no manda localidad, el tramo que se lee es el código postal solo.
+     *
+     * Son direcciones reales, tal como vinieron. Sacarle el código postal dejaba "AAT"
+     * de nombre de zona, y eso aparecía en el selector de Explorar como si fuera un
+     * lugar al que se puede ir.
+     */
+    @Test
+    void unaDireccionSinLocalidadNoInventaUnNombre() {
+        assertThat(Zonas.localidadDe(
+            "Av. Bartolomé Mitre 666, B1870 AAT, Cdad. Autónoma de Buenos Aires, Argentina"))
+            .contains(Zonas.SIN_LOCALIDAD);
+
+        assertThat(Zonas.localidadDe(
+            "Julián Álvarez, B1744 1343, Provincia de Buenos Aires, Argentina"))
+            .contains(Zonas.SIN_LOCALIDAD);
+    }
+
+    /**
+     * Y no queda vacía, que es lo que la borraría.
+     *
+     * La limpieza borra los locales sin zona porque los lee como que están fuera del
+     * radio. Un local que existe y está adentro no se puede perder porque Google escribió
+     * la dirección corta.
+     */
+    @Test
+    void unaDireccionSinLocalidadNoDejaAlLocalSinZona() {
+        assertThat(Zonas.localidadDe(
+            "Nicolás Avellaneda 54, B1804 EOB, Provincia de Buenos Aires, Argentina"))
+            .isNotEmpty();
+    }
+
+    /** La misma localidad escrita de dos maneras tiene que dar una sola opción. */
+    @Test
+    void laMismaLocalidadSeEscribeSiempreIgual() {
+        assertThat(Zonas.localidadDe("Calle 1, B1804 ezeiza, Provincia de Buenos Aires, Argentina"))
+            .isEqualTo(Zonas.localidadDe(
+                "Calle 2, B1804 Ezeiza, Provincia de Buenos Aires, Argentina"));
+    }
+
+    /** Las abreviadas también: son las que aparecieron de verdad en la base. */
+    @Test
+    void lasAbreviadasSeEscribenCompletas() {
+        assertThat(Zonas.localidadDe(
+            "Calle 1, B1846 Almte. Brown, Provincia de Buenos Aires, Argentina"))
+            .contains("Almirante Brown");
+
+        assertThat(Zonas.localidadDe(
+            "Calle 1, B1748 3 de Febrero, Provincia de Buenos Aires, Argentina"))
+            .contains("Tres de Febrero");
+    }
+
+    /** "Lomas de Zamora - GBA Sur" es Lomas de Zamora. */
+    @Test
+    void sacaElSufijoDeRegion() {
+        assertThat(Zonas.localidadDe(
+            "Calle 1, B1832 Lomas de Zamora - GBA Sur, Provincia de Buenos Aires, Argentina"))
+            .contains("Lomas de Zamora");
+    }
+
+    /** Las partículas quedan en minúscula: "Lomas De Zamora" no lo escribe nadie. */
+    @Test
+    void lasParticulasNoLlevanMayuscula() {
+        assertThat(Zonas.localidadDe(
+            "Calle 1, B1832 lomas de zamora, Provincia de Buenos Aires, Argentina"))
+            .contains("Lomas de Zamora");
+    }
+
+    /** Y lo que ya venía bien escrito no se toca. */
+    @Test
+    void loQueYaEstabaBienQuedaIgual() {
+        assertThat(Zonas.localidadDe(
+            "Diag. 74 2017, B1900 La Plata, Provincia de Buenos Aires, Argentina"))
+            .contains("La Plata");
+
+        assertThat(Zonas.localidadDe(
+            "John F. Kennedy 50, B1626 Belén de Escobar, Provincia de Buenos Aires, Argentina"))
+            .contains("Belén de Escobar");
+    }
 }
