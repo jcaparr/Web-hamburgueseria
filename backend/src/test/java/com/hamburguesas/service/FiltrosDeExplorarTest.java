@@ -50,8 +50,8 @@ class FiltrosDeExplorarTest {
             .build());
     }
 
-    private List<String> nombres(String query, String barrio, boolean conCadenas) {
-        return service.search(query, barrio, conCadenas, null, PageRequest.of(0, 20))
+    private List<String> nombres(String query, List<String> barrios, boolean conCadenas) {
+        return service.search(query, barrios, conCadenas, null, PageRequest.of(0, 20))
             .map(BurgerJointDto::name)
             .toList();
     }
@@ -60,24 +60,24 @@ class FiltrosDeExplorarTest {
 
     @Test
     void conLasCadenasPrendidasEstanTodos() {
-        assertThat(nombres(null, null, true)).containsExactlyInAnyOrder(
+        assertThat(nombres(null, (List<String>) null, true)).containsExactlyInAnyOrder(
             "McDonald's", "Burger King", "The Burger Company", "Voraz", "Burger de Boedo");
     }
 
     @Test
     void apagadasQuedanSoloLasQueNoSonCadena() {
-        assertThat(nombres(null, null, false))
+        assertThat(nombres(null, (List<String>) null, false))
             .containsExactlyInAnyOrder("The Burger Company", "Voraz", "Burger de Boedo");
     }
 
     /** El total de la paginación también tiene que bajar, o la lista queda con huecos. */
     @Test
     void elTotalReflejaElFiltro() {
-        assertThat(service.search(null, null, true, null, PageRequest.of(0, 20)).getTotalElements())
+        assertThat(service.search(null, (List<String>) null, true, null, PageRequest.of(0, 20)).getTotalElements())
             .isEqualTo(5);
-        assertThat(service.search(null, null, false, null, PageRequest.of(0, 20)).getTotalElements())
+        assertThat(service.search(null, (List<String>) null, false, null, PageRequest.of(0, 20)).getTotalElements())
             .isEqualTo(3);
-        assertThat(service.search(null, "Boedo", true, null, PageRequest.of(0, 20)).getTotalElements())
+        assertThat(service.search(null, List.of("Boedo"), true, null, PageRequest.of(0, 20)).getTotalElements())
             .isEqualTo(2);
     }
 
@@ -85,19 +85,19 @@ class FiltrosDeExplorarTest {
 
     @Test
     void elBarrioDejaSoloLosDeEseBarrio() {
-        assertThat(nombres(null, "Boedo", true))
+        assertThat(nombres(null, List.of("Boedo"), true))
             .containsExactlyInAnyOrder("Voraz", "Burger de Boedo");
     }
 
     @Test
     void sinBarrioSeVeLaCiudadEntera() {
-        assertThat(nombres(null, null, true)).hasSize(5);
-        assertThat(nombres(null, "", true)).hasSize(5);
+        assertThat(nombres(null, (List<String>) null, true)).hasSize(5);
+        assertThat(nombres(null, List.of(""), true)).hasSize(5);
     }
 
     @Test
     void unBarrioSinLocalesNoDevuelveNada() {
-        assertThat(nombres(null, "Mataderos", true)).isEmpty();
+        assertThat(nombres(null, List.of("Mataderos"), true)).isEmpty();
     }
 
     // ---- los tres juntos ----
@@ -108,11 +108,11 @@ class FiltrosDeExplorarTest {
      */
     @Test
     void losTresFiltrosSeCombinan() {
-        assertThat(nombres("burger", null, true))
+        assertThat(nombres("burger", (List<String>) null, true))
             .containsExactlyInAnyOrder("Burger King", "The Burger Company", "Burger de Boedo");
-        assertThat(nombres("burger", "Boedo", true))
+        assertThat(nombres("burger", List.of("Boedo"), true))
             .containsExactly("Burger de Boedo");
-        assertThat(nombres("burger", "Palermo", false))
+        assertThat(nombres("burger", List.of("Palermo"), false))
             .containsExactly("The Burger Company");
     }
 
@@ -124,8 +124,8 @@ class FiltrosDeExplorarTest {
      */
     @Test
     void losComodinesDelBuscadorSonTextoYNoComodines() {
-        assertThat(nombres("%", null, true)).isEmpty();
-        assertThat(nombres("_", null, true)).isEmpty();
+        assertThat(nombres("%", (List<String>) null, true)).isEmpty();
+        assertThat(nombres("_", (List<String>) null, true)).isEmpty();
     }
 
     /**
@@ -138,9 +138,9 @@ class FiltrosDeExplorarTest {
     void buscarSinAcentosEncuentraLoQueLosTiene() {
         guardar("Átiko - Agronomía", "Palermo", false);
 
-        assertThat(nombres("atiko", null, true)).containsExactly("Átiko - Agronomía");
-        assertThat(nombres("Atiko", null, true)).containsExactly("Átiko - Agronomía");
-        assertThat(nombres("agronomia", null, true)).containsExactly("Átiko - Agronomía");
+        assertThat(nombres("atiko", (List<String>) null, true)).containsExactly("Átiko - Agronomía");
+        assertThat(nombres("Atiko", (List<String>) null, true)).containsExactly("Átiko - Agronomía");
+        assertThat(nombres("agronomia", (List<String>) null, true)).containsExactly("Átiko - Agronomía");
     }
 
     /** Y al revés: escribirlos con acento también tiene que encontrar. */
@@ -148,7 +148,7 @@ class FiltrosDeExplorarTest {
     void buscarConAcentosTambienEncuentra() {
         guardar("Átiko - Agronomía", "Palermo", false);
 
-        assertThat(nombres("Átiko", null, true)).containsExactly("Átiko - Agronomía");
+        assertThat(nombres("Átiko", (List<String>) null, true)).containsExactly("Átiko - Agronomía");
     }
 
     /** Cambiarle el nombre a un local tiene que dejarlo encontrable por el nuevo. */
@@ -161,12 +161,76 @@ class FiltrosDeExplorarTest {
         local.setName("Ñandú Burger");
         repository.saveAndFlush(local);
 
-        assertThat(nombres("nandu", null, true)).containsExactly("Ñandú Burger");
+        assertThat(nombres("nandu", (List<String>) null, true)).containsExactly("Ñandú Burger");
     }
 
     /** Los barrios que se ofrecen en el selector son los que tienen algún local. */
     @Test
     void elSelectorOfreceLosBarriosQueTienenLocales() {
         assertThat(service.barrios()).containsExactly("Boedo", "Palermo");
+    }
+
+    // ---- varios barrios a la vez ----
+
+    /** Dos barrios traen los de los dos, que es lo que quiere quien marca dos. */
+    @Test
+    void dosBarriosTraenLosDeLosDos() {
+        assertThat(nombres(null, List.of("Boedo", "Palermo"), true))
+            .containsExactlyInAnyOrder("McDonald's", "Burger King", "The Burger Company",
+                "Voraz", "Burger de Boedo");
+    }
+
+    /**
+     * Se leen como "o", no como "y".
+     *
+     * Un local está en un solo barrio, así que pedir los que estén en dos a la vez no
+     * devolvería nunca nada. Es el error que haría que la pantalla saliera vacía con dos
+     * barrios marcados.
+     */
+    @Test
+    void variosBarriosSeLeenComoO() {
+        assertThat(nombres(null, List.of("Boedo", "Palermo"), false))
+            .containsExactlyInAnyOrder("The Burger Company", "Voraz", "Burger de Boedo");
+    }
+
+    /**
+     * Y el total de la paginación acompaña, o la lista queda con huecos.
+     *
+     * Se compara contra el de un solo barrio: lo que hay que ver es que sumar un barrio
+     * suma sus locales al total, no solo que el número sea alguno.
+     */
+    @Test
+    void elTotalCreceAlSumarUnBarrio() {
+        long soloBoedo = service.search(null, List.of("Boedo"), true, null,
+            PageRequest.of(0, 20)).getTotalElements();
+        long boedoYPalermo = service.search(null, List.of("Boedo", "Palermo"), true, null,
+            PageRequest.of(0, 20)).getTotalElements();
+
+        assertThat(soloBoedo).isEqualTo(2);
+        assertThat(boedoYPalermo).isEqualTo(5);
+    }
+
+    /** Los filtros se siguen cruzando: barrios y nombre a la vez. */
+    @Test
+    void losBarriosSeCruzanConElNombre() {
+        assertThat(nombres("burger", List.of("Boedo", "Palermo"), true))
+            .containsExactlyInAnyOrder("Burger King", "The Burger Company", "Burger de Boedo");
+    }
+
+    /** Un barrio que no existe no trae nada, y no rompe. */
+    @Test
+    void unBarrioQueNoExisteNoTraeNada() {
+        assertThat(nombres(null, List.of("Marte"), true)).isEmpty();
+    }
+
+    /**
+     * Una lista con un barrio vacío muestra todo, no nada.
+     *
+     * Es lo que llega de un "?area=" suelto en la dirección. Si pasara al filtro, la
+     * pantalla saldría vacía sin que se vea por qué.
+     */
+    @Test
+    void unBarrioVacioMuestraTodo() {
+        assertThat(nombres(null, List.of(""), true)).hasSize(5);
     }
 }

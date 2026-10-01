@@ -27,9 +27,9 @@ public class BurgerJointService {
      * Los tres filtros son independientes y se combinan: se puede buscar un nombre
      * dentro de un barrio, con las cadenas apagadas. El que no viene no filtra.
      */
-    public Page<BurgerJointDto> search(String query, String area, boolean conCadenas,
+    public Page<BurgerJointDto> search(String query, List<String> areas, boolean conCadenas,
                                        Long userId, Pageable pageable) {
-        return burgerJointRepository.buscar(query, area, conCadenas, pageable)
+        return burgerJointRepository.buscar(query, areas, conCadenas, pageable)
             .map(b -> toDto(b, userId));
     }
 

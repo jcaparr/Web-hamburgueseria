@@ -9,6 +9,12 @@ export const SESSION_EXPIRED_EVENT = 'auth:session-expired'
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api',
   withCredentials: true,
+  // Un parámetro con varios valores se repite tal cual: "?area=Palermo&area=Boedo".
+  //
+  // Axios por omisión le agrega corchetes —"area[]=Palermo&area[]=Boedo"— y Spring no
+  // lo reconoce: busca "area" y no encuentra nada, así que el filtro se ignora en
+  // silencio. No falla, no avisa; simplemente no filtra.
+  paramsSerializer: { indexes: null },
 })
 
 /** Endpoints where a 401 is the answer, not a sign the session ended. */

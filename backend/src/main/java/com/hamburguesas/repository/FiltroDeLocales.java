@@ -26,7 +26,7 @@ final class FiltroDeLocales {
     private FiltroDeLocales() {
     }
 
-    static Specification<BurgerJoint> con(String nombre, String barrio, boolean conCadenas) {
+    static Specification<BurgerJoint> con(String nombre, List<String> barrios, boolean conCadenas) {
         return (local, consulta, cb) -> {
             List<Predicate> condiciones = new ArrayList<>();
 
@@ -42,8 +42,15 @@ final class FiltroDeLocales {
                 condiciones.add(cb.like(local.get("nombreParaBuscar"), patron, '\\'));
             }
 
-            if (tieneAlgo(barrio)) {
-                condiciones.add(cb.equal(local.get("area"), barrio));
+            // Varios barrios se leen como "o": quien marca Palermo y Villa Crespo quiere
+            // ver los dos, no los locales que estén en los dos a la vez, que no existen.
+            //
+            // Los vacíos se descartan antes de armar el IN: una lista de un solo elemento
+            // vacío —que es lo que llega de un "?area=" suelto en la dirección— daría un
+            // IN ('') y la pantalla saldría vacía sin que se vea por qué.
+            List<String> conNombre = losQueDicenAlgo(barrios);
+            if (!conNombre.isEmpty()) {
+                condiciones.add(local.get("area").in(conNombre));
             }
 
             // Quién es cadena lo decide FastFoodMarker al arrancar, así que acá alcanza
@@ -59,5 +66,21 @@ final class FiltroDeLocales {
 
     private static boolean tieneAlgo(String valor) {
         return valor != null && !valor.isBlank();
+    }
+
+    /**
+     * Los barrios que de verdad dicen algo, para no armar un IN con basura adentro.
+     *
+     * Una dirección puede traer "?area=" suelto —el navegador la deja así al borrar la
+     * selección, y también sale de armarla a mano—. Eso llega como una lista con un
+     * elemento vacío, que no es lo mismo que una lista vacía: daría un IN ('') y la
+     * pantalla saldría sin resultados sin que se vea por qué.
+     *
+     * Devuelve lista vacía cuando no quedó ninguno, que es lo que quien llama lee como
+     * "no filtrar por barrio".
+     */
+    static List<String> losQueDicenAlgo(List<String> barrios) {
+        return barrios == null ? List.of()
+            : barrios.stream().filter(FiltroDeLocales::tieneAlgo).toList();
     }
 }
