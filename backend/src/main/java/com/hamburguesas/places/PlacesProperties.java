@@ -87,6 +87,20 @@ public class PlacesProperties {
          */
         private Map<String, String> fotosElegidas = Map.of();
 
+        /**
+         * Cuántas fotos tiene que tener en Google un local que Google NO clasifica como
+         * hamburguesería para que lo dejemos en la lista.
+         *
+         * Las dos condiciones juntas, nunca sueltas. Que Google lo llame "restaurant" no
+         * alcanza —La Birra Bar figura como bar y es de las mejores— y tener pocas fotos
+         * tampoco: una hamburguesería de barrio recién abierta puede tener una sola, y
+         * sacarla sería castigar al conurbano por ser menos fotografiado. Es el cruce lo
+         * que señala al kiosco que vende hamburguesas sueltas.
+         *
+         * Cero apaga la regla.
+         */
+        private int fotosMinimasSiNoEsHamburgueseria = 10;
+
         private int maxPagesPerArea = 2;
         private long delayBetweenCallsMs = 500;
     }
