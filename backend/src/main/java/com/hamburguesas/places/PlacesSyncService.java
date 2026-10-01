@@ -409,7 +409,33 @@ public class PlacesSyncService {
         return new LimpiezaResult(corregidos, borrados);
     }
 
-    private record LimpiezaResult(int corregidos, int borrados) {}
+    public record LimpiezaResult(int corregidos, int borrados) {}
+
+    /**
+     * Revisa lo guardado sin salir a buscar nada nuevo.
+     *
+     * Es la primera mitad del barrido, suelta. Borra los locales que ya no corresponden
+     * —los que quedaron fuera del radio, los repetidos y los que Google no tiene
+     * fotografiados— y les recalcula la zona a los demás.
+     *
+     * Existe porque esa mitad no cuesta ninguna búsqueda y la otra cuesta mil novecientas.
+     * Cuando lo que hace falta es aplicar lo que un censo de fichas ya averiguó, correr
+     * el barrido entero es pagar la parte cara para ejecutar la gratis.
+     *
+     * Lo único que puede gastar es algún resumen de reseñas, y solo por los locales que
+     * ninguna prueba barata alcanza a resolver.
+     */
+    public LimpiezaResult limpiar() {
+        LimpiezaResult resultado = revisarLoGuardado(cadenasDeHamburguesas());
+
+        // Igual que al final del barrido: los que quedan tienen que estar bien marcados
+        // como cadena o no, que es lo que mira el filtro de Explorar.
+        fastFoodMarker.marcar();
+
+        log.info("Limpieza: {} borrados, {} zonas corregidas",
+            resultado.borrados(), resultado.corregidos());
+        return resultado;
+    }
 
     /**
      * El local de la lista que es el mismo que este, o null si no está.
