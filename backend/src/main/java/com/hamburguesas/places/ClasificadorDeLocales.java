@@ -7,6 +7,7 @@ import com.hamburguesas.texto.Texto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -81,7 +82,24 @@ public class ClasificadorDeLocales {
                 return Veredicto.no(Veredicto.Prueba.NO_SE_PUDO_PREGUNTAR);
             }
 
-            String resumen = google.resumenDe(place.placeId());
+            String resumen;
+            try {
+                resumen = google.resumenDe(place.placeId());
+            } catch (RestClientException ex) {
+                // Google no contestó: un error, un corte de red, un timeout. Es lo mismo
+                // que la cuota agotada —no pudimos mirar— y tiene que terminar igual. Se
+                // leía como "no tiene resumen", que es "sin pruebas" y borra: un 503 de
+                // un rato durante una limpieza alcanzaba para perder hamburgueserías de
+                // verdad (#96). Y un corte de red se escapaba y frenaba el barrido entero.
+                //
+                // Atrapa cualquier falla del cliente y no solo las respuestas con código,
+                // porque acá equivocarse es borrar.
+                log.warn("No se pudo pedir el resumen de {}: {}", place.placeId(), ex.getMessage());
+                return Veredicto.no(Veredicto.Prueba.NO_SE_PUDO_PREGUNTAR);
+            }
+
+            // Google contestó que no tiene: eso sí es una respuesta, y sin resumen no
+            // quedan pruebas de que venda hamburguesas.
             if (resumen == null) {
                 return veredicto;
             }

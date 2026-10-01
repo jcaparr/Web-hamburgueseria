@@ -77,18 +77,18 @@ public class LlamadasAGoogle {
         }
     }
 
-    /** El resumen de reseñas, o null si no tiene o si Google no contestó. */
+    /**
+     * El resumen de reseñas, o null si el local no tiene.
+     *
+     * Deja pasar el error en vez de devolver null. Antes los dos casos salían iguales, y
+     * no son lo mismo: "no tiene resumen" es una respuesta de Google, y "Google no
+     * contestó" es no saber. Quien pregunta decide qué hacer con cada uno.
+     */
     String resumenDe(String placeId) {
-        try {
-            pausa();
-            String resumen = placesClient.resumenDeResenias(placeId);
-            quotaGuard.record(PlacesCallType.RESUMEN);
-            return resumen;
-        } catch (RestClientResponseException ex) {
-            log.warn("No se pudo pedir el resumen de {} (HTTP {})",
-                placeId, ex.getStatusCode().value());
-            return null;
-        }
+        pausa();
+        String resumen = placesClient.resumenDeResenias(placeId);
+        quotaGuard.record(PlacesCallType.RESUMEN);
+        return resumen;
     }
 
     /**
