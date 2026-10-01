@@ -94,6 +94,26 @@ public class PlacesSyncController {
      * mil novecientas. Cuando lo que hace falta es aplicar lo que un censo de fichas ya
      * averiguó, correr el barrido entero es pagar la parte cara para ejecutar la gratis.
      */
+    /**
+     * Agrega un local puntual buscándolo por su nombre.
+     *
+     * Para las hamburgueserías que el barrido no encuentra nunca: Google no les pone el
+     * rubro, así que la búsqueda estricta por barrio no las devuelve por más veces que
+     * se corra. Devuelve el identificador, que es lo que después hay que anotar en
+     * included-place-ids para que la limpieza no lo borre.
+     */
+    @PostMapping("/agregar")
+    public ResponseEntity<?> agregar(
+        @RequestHeader(name = TOKEN_HEADER, required = false) String token,
+        @RequestParam("texto") String texto
+    ) {
+        if (!authorized(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(syncService.agregar(texto));
+    }
+
     @PostMapping("/limpieza")
     public ResponseEntity<?> limpiar(
         @RequestHeader(name = TOKEN_HEADER, required = false) String token
