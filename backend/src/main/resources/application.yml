@@ -176,6 +176,21 @@ app:
         # Es el único de la base al que Google no le pone el rubro hamburguesería:
         # entró solo por tener "burger" en el nombre.
         - ChIJB2UW9My1vJUR4qN1P3ZodXM
+        # Los cinco de abajo salieron de mirar, una por una, las fotos que cada local
+        # tiene en Google. Es el único lugar donde se ve qué cocinan, y en los cinco lo
+        # que se ve es otra cosa. Ninguna regla los agarra: Google les pone el rubro
+        # hamburguesería igual.
+        # "Labarden hamburguesas y pizzas": de pizzas, que es lo que muestra.
+        - ChIJfY3jagDLvJURbkncyQMEuSw
+        # "Colombres esq San Juan": un bar de desayunos. Huevos, tostadas y café.
+        - ChIJXyCeMFLLvJURaclMz2Im9zM
+        # "Sanguchazo": una fiambrería. El cartel de la puerta lo dice —"Fiambrería MJ,
+        # quesos, dulces, encurtidos"— y ahí adentro funciona el mostrador de sánguches.
+        - ChIJ44LnQwDJvJURSTzNIX6BjLk
+        # "Xardo": una parrilla. Chorizos, morcillas y provoleta sobre la parrilla.
+        - ChIJWa8GmgbJvJURxVwfjI7FwF8
+        # "La Rubia": un almacén. La foto es la góndola de galletitas.
+        - ChIJSS4CeaHJvJURc7wYnWHVzuY
       # Hamburgueserías que Google clasifica como otra cosa y que ninguna regla rescata.
       # Entran acá solo si el local es una hamburguesería de hecho, no un bar que además
       # vende hamburguesas.

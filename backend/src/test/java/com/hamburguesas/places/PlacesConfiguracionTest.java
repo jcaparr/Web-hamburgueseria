@@ -91,7 +91,15 @@ class PlacesConfiguracionTest {
             // "Las Delicias de O & P": rotisería, ninguna de sus diez fotos es una hamburguesa.
             .contains("ChIJeUPEbarOvJURhWbGRz-dl6c")
             // "Pizza Burger": pizzería, entró solo por tener "burger" en el nombre.
-            .contains("ChIJB2UW9My1vJUR4qN1P3ZodXM");
+            .contains("ChIJB2UW9My1vJUR4qN1P3ZodXM")
+            // Los cinco de abajo son los que quedaron de la revisión de los dudosos:
+            // Labarden muestra pizzas, Colombres desayunos, Sanguchazo es una
+            // fiambrería, Xardo una parrilla y La Rubia un almacén.
+            .contains("ChIJfY3jagDLvJURbkncyQMEuSw")
+            .contains("ChIJXyCeMFLLvJURaclMz2Im9zM")
+            .contains("ChIJ44LnQwDJvJURSTzNIX6BjLk")
+            .contains("ChIJWa8GmgbJvJURxVwfjI7FwF8")
+            .contains("ChIJSS4CeaHJvJURc7wYnWHVzuY");
     }
 
     /**
