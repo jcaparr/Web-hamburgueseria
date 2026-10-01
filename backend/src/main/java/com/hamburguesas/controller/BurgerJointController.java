@@ -21,17 +21,22 @@ public class BurgerJointController {
     /**
      * @param conCadenas si incluir las cadenas de comida rápida. Por omisión sí, que es
      *                   lo que se veía antes: apagarlas es una decisión de quien mira.
-     * @param area el barrio, tal como lo devuelve /barrios. Sin barrio se ve la Ciudad
-     *             entera, que es como estaba.
+     * @param area uno o varios barrios, tal como los devuelve /barrios, repitiendo el
+     *             parámetro: "?area=Palermo&area=Belgrano". Varios se leen como "o".
+     *             Sin ninguno se ve todo, que es como estaba.
+     *             <p>
+     *             Sigue llamándose "area" en singular aunque ahora acepte varios: es lo
+     *             que hay escrito en las direcciones que la gente dejó en favoritos y en
+     *             el historial del navegador, y uno solo sigue funcionando igual.
      */
     @GetMapping
     public Page<BurgerJointDto> search(
         @RequestParam(required = false) String q,
-        @RequestParam(required = false) String area,
+        @RequestParam(name = "area", required = false) List<String> areas,
         @RequestParam(required = false, defaultValue = "true") boolean conCadenas,
         @PageableDefault(size = 20) Pageable pageable
     ) {
-        return burgerJointService.search(q, area, conCadenas, CurrentUser.idOrNull(), pageable);
+        return burgerJointService.search(q, areas, conCadenas, CurrentUser.idOrNull(), pageable);
     }
 
     /**

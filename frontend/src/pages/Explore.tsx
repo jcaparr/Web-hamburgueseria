@@ -5,6 +5,7 @@ import { IconPin, IconSearch } from '../components/icons'
 import { LoadError } from '../components/LoadError'
 import { JointPhoto } from '../components/JointPhoto'
 import { ScoreBadge } from '../components/ScoreBadge'
+import { SelectorDeBarrios } from '../components/SelectorDeBarrios'
 import type { BurgerJoint, PageResponse } from '../types'
 import { shortAddress } from '../utils/address'
 import { mapsUrl } from '../utils/maps'
@@ -45,7 +46,14 @@ export function Explore() {
   const [parametros, setParametros] = useSearchParams()
 
   const query = parametros.get('q') ?? ''
-  const barrio = parametros.get('area') ?? ''
+  // Varios: el parámetro se repite, "?area=Palermo&area=Belgrano". Sigue llamándose
+  // "area" en singular porque es lo que está escrito en las direcciones que la gente
+  // dejó en favoritos, y una sola sigue andando igual.
+  const barriosElegidos = parametros.getAll('area').filter(Boolean)
+  // Un arreglo cambia de identidad en cada render, así que como dependencia del efecto
+  // que pide la lista dispararía un pedido tras otro, sin parar. Lo que no cambia
+  // mientras los barrios sean los mismos es este texto.
+  const claveDeBarrios = barriosElegidos.join('|')
   const page = Number(parametros.get('pagina') ?? '0')
   // El interruptor de cadenas sigue recordándose en el navegador cuando la dirección no
   // dice nada: es una preferencia de quien mira, no parte de esta búsqueda.
@@ -69,6 +77,42 @@ export function Explore() {
       }
     }
     setParametros(nuevos, { replace: true })
+  }
+
+  /**
+   * Marca o desmarca un barrio, que son varios y van repetidos en la dirección.
+   *
+   * No puede pasar por `cambiar`, que escribe un valor por clave: acá hay que borrar
+   * todos los "area" que había y volver a ponerlos uno por uno.
+   *
+   * Y la lista nueva se calcula sobre los parámetros que llegan al setter, no sobre los
+   * que se leyeron al dibujar. Con la lectura de afuera, dos clics seguidos antes de que
+   * React propague el primero hacen que el segundo pise al primero: marcabas Quilmes y
+   * después Quilmes Oeste, y quedaba solo Quilmes Oeste.
+   */
+  function alternarBarrio(barrio: string) {
+    // Lo que hay puesto se lee de la dirección del navegador y no del estado de React.
+    //
+    // Dos clics seguidos, antes de que React vuelva a dibujar, leen los dos el mismo
+    // valor viejo y el segundo pisa al primero: marcabas Quilmes y después Quilmes
+    // Oeste, y quedaba solo Quilmes Oeste. Pasa igual con la forma funcional del setter,
+    // porque lo que recibe también viene del último dibujo.
+    //
+    // La barra de direcciones, en cambio, ya quedó cambiada por el clic anterior. Acá es
+    // la fuente de verdad: el filtro vive en la dirección justamente para que se pueda
+    // compartir y para que volver atrás lo restablezca.
+    const actuales = new URLSearchParams(window.location.search).getAll('area').filter(Boolean)
+    const proximos = actuales.includes(barrio)
+      ? actuales.filter((b) => b !== barrio)
+      : [...actuales, barrio]
+
+    setParametros(conBarrios(new URLSearchParams(window.location.search), proximos),
+      { replace: true })
+  }
+
+  function limpiarBarrios() {
+    setParametros(conBarrios(new URLSearchParams(window.location.search), []),
+      { replace: true })
   }
 
   const [barrios, setBarrios] = useState<string[]>([])
@@ -95,7 +139,9 @@ export function Explore() {
         .get<PageResponse<BurgerJoint>>('/burger-joints', {
           params: {
             q: query || undefined,
-            area: barrio || undefined,
+            // Axios repite el parámetro por cada elemento del arreglo, que es lo que
+            // espera el servidor. Vacío se omite, y eso quiere decir "todos".
+            area: barriosElegidos.length > 0 ? barriosElegidos : undefined,
             conCadenas,
             page,
             size: PAGE_SIZE,
@@ -110,7 +156,7 @@ export function Explore() {
     }, 300)
 
     return () => clearTimeout(timeout)
-  }, [query, barrio, conCadenas, page, attempt])
+  }, [query, claveDeBarrios, conCadenas, page, attempt])
 
   // Al cambiar de página la lista se renueva entera, pero el navegador conserva el
   // scroll: quedabas a mitad de la página nueva, empezando a leer por el medio.
@@ -190,29 +236,20 @@ export function Explore() {
         * acá", que es lo que uno se pregunta cuando todavía no sabe adónde ir.
         */}
       <div className="flex flex-wrap items-center gap-3">
-        <select
-          value={barrio}
-          aria-label="Filtrar por barrio"
-          onChange={(e) => {
-            cambiar({ area: e.target.value, pagina: null })
-          }}
-          className="select select-sm w-full max-w-64 sm:w-auto"
-        >
-          <option value="">Todos los barrios</option>
-          {barrios.map((b) => (
-            <option key={b} value={b}>
-              {b}
-            </option>
-          ))}
-        </select>
+        <SelectorDeBarrios
+          barrios={barrios}
+          elegidos={barriosElegidos}
+          onAlternar={alternarBarrio}
+          onLimpiar={limpiarBarrios}
+        />
 
-        {barrio && (
+        {barriosElegidos.length > 0 && (
           <button
             type="button"
-            onClick={() => cambiar({ area: null, pagina: null })}
+            onClick={limpiarBarrios}
             className="btn btn-ghost btn-sm"
           >
-            Ver toda la ciudad
+            Ver todos
           </button>
         )}
       </div>
@@ -274,11 +311,12 @@ export function Explore() {
           </li>
         ))}
         {/* Decir qué filtro dejó la lista vacía, que es lo que hay que aflojar: con el
-            barrio puesto, "con ese nombre" mandaba a cambiar lo que no era. */}
+            barrio puesto, "con ese nombre" mandaba a cambiar lo que no era.
+            Con varios se nombran todos: si no, no se sabe en cuál no hay nada. */}
         {!loading && items.length === 0 && (
           <p className="text-sm text-base-content/60">
-            {barrio
-              ? `No encontramos hamburgueserías en ${barrio}${query ? ' con ese nombre' : ''}.`
+            {barriosElegidos.length > 0
+              ? `No encontramos hamburgueserías en ${enCastellano(barriosElegidos)}${query ? ' con ese nombre' : ''}.`
               : 'No encontramos hamburgueserías con ese nombre.'}
           </p>
         )}
@@ -310,4 +348,24 @@ export function Explore() {
       )}
     </div>
   )
+}
+
+/**
+ * "Palermo, Belgrano y Núñez", que es como se enumera en castellano.
+ *
+ * Con una lista separada por comas hasta el final —"Palermo, Belgrano, Núñez"— el
+ * mensaje de "no encontramos nada en..." se lee como si faltara algo.
+ */
+function enCastellano(barrios: string[]) {
+  if (barrios.length === 1) return barrios[0]
+  return `${barrios.slice(0, -1).join(', ')} y ${barrios[barrios.length - 1]}`
+}
+
+/** Los mismos parámetros pero con estos barrios, y de vuelta a la primera página. */
+function conBarrios(previos: URLSearchParams, barrios: string[]) {
+  const nuevos = new URLSearchParams(previos)
+  nuevos.delete('area')
+  barrios.forEach((barrio) => nuevos.append('area', barrio))
+  nuevos.delete('pagina')
+  return nuevos
 }

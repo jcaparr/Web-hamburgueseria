@@ -54,16 +54,16 @@ public interface BurgerJointRepository
     List<BurgerJoint> conFotoElegidaConUnaReglaVieja(@Param("regla") int regla);
 
     /**
-     * El listado de Explorar, con los filtros que hayan puesto: el nombre, el barrio y
+     * El listado de Explorar, con los filtros que hayan puesto: el nombre, los barrios y
      * si se muestran las cadenas.
      *
      * Eran cuatro consultas derivadas, una por combinación de nombre y cadenas, porque
      * escribir los filtros como opcionales rompía contra Postgres. Con el barrio serían
      * ocho. El porqué de armar la condición en vez de escribirla está en FiltroDeLocales.
      */
-    default Page<BurgerJoint> buscar(String nombre, String barrio, boolean conCadenas,
+    default Page<BurgerJoint> buscar(String nombre, List<String> barrios, boolean conCadenas,
                                      Pageable pagina) {
-        return findAll(FiltroDeLocales.con(nombre, barrio, conCadenas), pagina);
+        return findAll(FiltroDeLocales.con(nombre, barrios, conCadenas), pagina);
     }
 
     Optional<BurgerJoint> findByPlaceId(String placeId);
