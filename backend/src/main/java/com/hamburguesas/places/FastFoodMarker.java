@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.Normalizer;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -65,8 +66,28 @@ public class FastFoodMarker {
     }
 
     static boolean esDeUnaCadena(String nombre, List<String> marcas) {
+        return marcaDe(nombre, marcas) != null;
+    }
+
+    /**
+     * De qué marca es este local, o null si no es de ninguna de las que se le pasan.
+     *
+     * Devuelve la marca y no un sí o un no porque hay dos preguntas distintas con la
+     * misma respuesta debajo: si se lo esconde al apagar las cadenas, y con qué otras
+     * sucursales puede compartir una portada. Para lo segundo hace falta el nombre de
+     * la marca, que es lo que las junta: "McDonald's" y "McDonald's Abasto Patio de
+     * Comidas" son la misma, y pedir que el nombre entero coincida las separaba.
+     *
+     * Se queda con la más larga de las que coinciden, para que una marca que empieza
+     * igual que otra —"burger" y "burgerking"— no se lleve puestas a las sucursales de
+     * la otra.
+     */
+    static String marcaDe(String nombre, List<String> marcas) {
         String limpio = sinAdornos(nombre);
-        return marcas.stream().anyMatch(limpio::startsWith);
+        return marcas.stream()
+            .filter(limpio::startsWith)
+            .max(Comparator.comparingInt(String::length))
+            .orElse(null);
     }
 
     /**
