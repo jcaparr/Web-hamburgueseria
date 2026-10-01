@@ -140,6 +140,20 @@ public class PlacesSyncService {
     }
 
     /**
+     * Cuántas consultas seguidas puede fallar Google antes de que dejemos de insistir.
+     *
+     * Una suelta es un hipo del servicio y saltearla cuesta una zona incompleta. Diez
+     * seguidas es que Google no está, y seguir recorriendo las 89 zonas para recibir 89
+     * errores no ayuda a nadie.
+     */
+    private static final int FALLAS_PARA_RENDIRSE = 10;
+
+    /** Lo que no se arregla reintentando: nos pasamos del ritmo, o la clave no sirve. */
+    private static boolean esDefinitivo(int codigo) {
+        return codigo == 429 || codigo == 401 || codigo == 403;
+    }
+
+    /**
      * El barrido completo, con la opción de no tocar ni una foto.
      *
      * Sin fotos existe porque las dos cuotas son muy desparejas —cuatro mil búsquedas por
@@ -161,6 +175,10 @@ public class PlacesSyncService {
         int updated = 0;
         int photosDownloaded = 0;
         int descartados = 0;
+        // Consultas que Google no contestó y se saltearon, y cuántas van seguidas. Si se
+        // encadenan es que Google está caído y no tiene sentido recorrer lo que falta.
+        int saltadas = 0;
+        int fallasSeguidas = 0;
 
         // Se arma una vez: son las marcas que Google reconoce como hamburgueserías, y
         // sirven para rescatar a las sucursales que clasificó distinto al resto.
@@ -186,11 +204,34 @@ public class PlacesSyncService {
                 PlacesSearchResult result;
                 try {
                     result = search(consulta, pageToken);
+                    fallasSeguidas = 0;
                 } catch (RestClientResponseException ex) {
-                    log.warn("Places search failed for {} (HTTP {}), stopping sync: {}",
-                        consulta, ex.getStatusCode().value(), ex.getMessage());
-                    return new PlacesSyncReport(created, updated, photosDownloaded, 0,
-                        "Google respondió " + ex.getStatusCode().value() + ", se frenó la sincronización");
+                    int codigo = ex.getStatusCode().value();
+
+                    // Un 429 o un 403 no se arreglan reintentando: o nos pasamos del
+                    // ritmo o la clave no sirve, y en los dos casos seguir es gastar
+                    // llamadas que van a fallar igual.
+                    if (esDefinitivo(codigo)) {
+                        log.warn("Google respondió {} en {}, se frena el barrido", codigo, consulta);
+                        return new PlacesSyncReport(created, updated, photosDownloaded, 0,
+                            "Google respondió " + codigo + ", se frenó la sincronización");
+                    }
+
+                    // Un 503 sí: es Google que no está disponible por un rato. Antes se
+                    // llevaba puesto el barrido entero, y como las zonas se recorren en
+                    // orden, siempre moría en la misma mitad: las últimas —todo el
+                    // corredor norte y La Plata— no entraron nunca.
+                    fallasSeguidas++;
+                    if (fallasSeguidas >= FALLAS_PARA_RENDIRSE) {
+                        log.warn("Google falló {} veces seguidas, se frena el barrido", fallasSeguidas);
+                        return new PlacesSyncReport(created, updated, photosDownloaded, 0,
+                            "Google falló " + fallasSeguidas + " veces seguidas, se frenó la sincronización");
+                    }
+
+                    log.warn("Google respondió {} en {}, se saltea esta consulta ({} seguidas)",
+                        codigo, consulta, fallasSeguidas);
+                    saltadas++;
+                    break;
                 }
 
                 for (PlacesSearchResult.Place place : result.places()) {
@@ -270,10 +311,15 @@ public class PlacesSyncService {
         fastFoodMarker.marcar();
 
         log.info("Places sync finished: {} created, {} updated, {} photos, {} reused, {} descartados, "
-            + "{} barrios corregidos, {} borrados",
+            + "{} barrios corregidos, {} borrados, {} consultas salteadas",
             created, updated, photosDownloaded, missing.reused(), descartados,
-            limpieza.corregidos(), limpieza.borrados());
-        return new PlacesSyncReport(created, updated, photosDownloaded, missing.reused(), null);
+            limpieza.corregidos(), limpieza.borrados(), saltadas);
+
+        // Terminó de recorrer todo, pero avisando si algo quedó sin preguntar: una zona
+        // con menos locales de los que debería tener se explica por acá.
+        String aviso = saltadas == 0 ? null
+            : saltadas + " consultas quedaron sin respuesta de Google y se saltearon";
+        return new PlacesSyncReport(created, updated, photosDownloaded, missing.reused(), aviso);
     }
 
 
