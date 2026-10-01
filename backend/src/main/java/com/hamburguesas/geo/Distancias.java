@@ -25,4 +25,12 @@ public final class Distancias {
         double y = (latA - latB) * METROS_POR_GRADO_DE_LATITUD;
         return Math.hypot(x, y);
     }
+
+    /**
+     * Con un decimal, que es como se muestran: "1,3 km" se lee, "1,2847 km" no, y los
+     * metros de diferencia no cambian ninguna decisión de quien camina.
+     */
+    public static double aUnDecimal(double kilometros) {
+        return Math.round(kilometros * 10) / 10.0;
+    }
 }

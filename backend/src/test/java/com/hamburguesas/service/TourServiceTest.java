@@ -49,7 +49,8 @@ class TourServiceTest {
         wishlistRepository = mock(WishlistRepository.class);
         savedTourRepository = mock(SavedTourRepository.class);
         service = new TourService(
-            burgerJointRepository, ratingRepository, wishlistRepository, savedTourRepository);
+            burgerJointRepository, ratingRepository, savedTourRepository,
+            new FichaDeLocal(ratingRepository, wishlistRepository));
     }
 
     /** Un local a tantos kilómetros al sur del punto de partida. */

@@ -1,6 +1,5 @@
 package com.hamburguesas.service;
 
-import com.hamburguesas.dto.BurgerJointDto;
 import com.hamburguesas.dto.GuardarTourRequest;
 import com.hamburguesas.dto.SavedTourDto;
 import com.hamburguesas.dto.TourStopDto;
@@ -51,6 +50,7 @@ public class SavedTourService {
     private final BurgerJointRepository burgerJointRepository;
     private final RatingRepository ratingRepository;
     private final UserRepository userRepository;
+    private final FichaDeLocal fichaDeLocal;
 
     @Transactional
     public SavedTourDto guardar(Long userId, GuardarTourRequest request) {
@@ -78,11 +78,11 @@ public class SavedTourService {
             total += tramo;
 
             tour.getStops().add(SavedTourStop.builder()
-                .tour(tour).burgerJoint(parada).position(i + 1).kilometers(redondear(tramo))
+                .tour(tour).burgerJoint(parada).position(i + 1).kilometers(Distancias.aUnDecimal(tramo))
                 .build());
         }
 
-        tour.setKilometers(redondear(total));
+        tour.setKilometers(Distancias.aUnDecimal(total));
         tour.setMinutes(request.modo().minutos(total));
 
         return comoDto(savedTourRepository.save(tour));
@@ -170,23 +170,10 @@ public class SavedTourService {
                 stop.getPosition(),
                 stop.getKilometers(),
                 puntuadas.contains(stop.getBurgerJoint().getId()),
-                comoDto(stop.getBurgerJoint())))
+                fichaDeLocal.conDeseo(stop.getBurgerJoint(), false)))
             .toList();
 
         return new SavedTourDto(tour.getId(), tour.getName(), tour.getKilometers(),
             tour.getMinutes(), tour.getTravelMode(), tour.getCreatedAt(), paradas);
-    }
-
-    private BurgerJointDto comoDto(BurgerJoint b) {
-        return new BurgerJointDto(
-            b.getId(), b.getPlaceId(), b.getName(), b.getAddress(), b.getArea(), b.getPhotoUrl(),
-            b.getLatitude(), b.getLongitude(),
-            ratingRepository.averageScoreByBurgerJoint(b.getId()),
-            ratingRepository.countByBurgerJoint_Id(b.getId()),
-            false);
-    }
-
-    private static double redondear(double kilometros) {
-        return Math.round(kilometros * 10) / 10.0;
     }
 }

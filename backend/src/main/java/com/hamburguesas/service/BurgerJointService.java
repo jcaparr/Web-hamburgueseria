@@ -4,8 +4,6 @@ import com.hamburguesas.dto.BurgerJointDto;
 import com.hamburguesas.exception.ResourceNotFoundException;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.repository.BurgerJointRepository;
-import com.hamburguesas.repository.RatingRepository;
-import com.hamburguesas.repository.WishlistRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,8 +16,7 @@ import java.util.List;
 public class BurgerJointService {
 
     private final BurgerJointRepository burgerJointRepository;
-    private final RatingRepository ratingRepository;
-    private final WishlistRepository wishlistRepository;
+    private final FichaDeLocal fichaDeLocal;
 
     /**
      * El listado de Explorar.
@@ -30,7 +27,7 @@ public class BurgerJointService {
     public Page<BurgerJointDto> search(String query, List<String> areas, boolean conCadenas,
                                        Long userId, Pageable pageable) {
         return burgerJointRepository.buscar(query, areas, conCadenas, pageable)
-            .map(b -> toDto(b, userId));
+            .map(b -> fichaDeLocal.para(b, userId));
     }
 
     /** Los barrios que tienen al menos una hamburguesería, para el selector. */
@@ -41,19 +38,6 @@ public class BurgerJointService {
     public BurgerJointDto get(Long id, Long userId) {
         BurgerJoint burgerJoint = burgerJointRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Burger joint not found"));
-        return toDto(burgerJoint, userId);
-    }
-
-    private BurgerJointDto toDto(BurgerJoint b, Long userId) {
-        Double averageScore = ratingRepository.averageScoreByBurgerJoint(b.getId());
-        long ratingsCount = ratingRepository.countByBurgerJoint_Id(b.getId());
-        boolean inWishlist = userId != null &&
-            wishlistRepository.existsByUser_IdAndBurgerJoint_Id(userId, b.getId());
-
-        return new BurgerJointDto(
-            b.getId(), b.getPlaceId(), b.getName(), b.getAddress(), b.getArea(), b.getPhotoUrl(),
-            b.getLatitude(), b.getLongitude(),
-            averageScore, ratingsCount, inWishlist
-        );
+        return fichaDeLocal.para(burgerJoint, userId);
     }
 }
