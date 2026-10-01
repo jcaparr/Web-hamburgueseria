@@ -124,4 +124,40 @@ class PlacesConfiguracionTest {
             .doesNotHaveDuplicates()
             .doesNotContainAnyElementsOf(properties.getSync().getIncludedPlaceIds());
     }
+
+    /**
+     * Ningún tope puede pasar del tramo gratuito de Google.
+     *
+     * Es el único renglón de la configuración que puede terminar en una factura. El
+     * freno existe porque pasado el tope no se llama más, y un número de más acá adentro
+     * lo desactiva sin que falle nada: las llamadas salen igual y se cobran.
+     *
+     * Los tramos son 5.000 búsquedas, 5.000 fichas, 1.000 fotos y 1.000 resúmenes por
+     * mes. Los dos últimos son los chicos, y el resumen además es el caro: veinticinco
+     * dólares cada mil pasado el tramo.
+     */
+    @Test
+    void ningunTopeSePasaDelTramoGratuito() {
+        var quota = properties.getQuota();
+
+        assertThat(quota.getMonthlySearchCalls()).isLessThanOrEqualTo(5000);
+        assertThat(quota.getMonthlyDetailsCalls()).isLessThanOrEqualTo(5000);
+        assertThat(quota.getMonthlyPhotoCalls()).isLessThanOrEqualTo(1000);
+        assertThat(quota.getMonthlyResumenCalls()).isLessThanOrEqualTo(1000);
+    }
+
+    /**
+     * Y el de fichas tiene que dar para completar todas las fotos del mes.
+     *
+     * Cada portada cuesta una ficha para preguntar y una foto para bajar. Si las fichas
+     * se terminan primero, el mes cierra con fotos sin usar —cuota gratis que no se
+     * acumula y se pierde el día 1—, que es exactamente lo que pasó en octubre.
+     */
+    @Test
+    void lasFichasAlcanzanParaGastarTodasLasFotos() {
+        var quota = properties.getQuota();
+
+        assertThat(quota.getMonthlyDetailsCalls())
+            .isGreaterThanOrEqualTo(quota.getMonthlyPhotoCalls());
+    }
 }

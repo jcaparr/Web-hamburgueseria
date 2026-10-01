@@ -335,7 +335,14 @@ app:
       # por mes. Acá se frena antes de cada uno: pasado el tope no se llama más, así
       # que la factura no puede aparecer sola.
       monthly-search-calls: 4000
-      monthly-details-calls: 4000
+      # Las fichas van más cerca del tope que las búsquedas, y es a propósito.
+      #
+      # Completar la portada de un local cuesta una ficha para preguntar y una foto para
+      # bajar, y hay cinco veces más fichas gratis que fotos. Con el margen en mil, las
+      # fichas se terminaban antes que las fotos y el mes cerraba con fotos sin usar:
+      # cuota gratis que no se acumula y se pierde el día 1. Doscientas de margen
+      # alcanzan para que el freno siga estando y la foto vuelva a ser lo que manda.
+      monthly-details-calls: 4800
       monthly-photo-calls: 1000
     photos:
       directory: ${PLACE_PHOTOS_DIR:./data/place-photos}
