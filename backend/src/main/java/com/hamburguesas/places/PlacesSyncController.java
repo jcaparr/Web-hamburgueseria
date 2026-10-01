@@ -70,6 +70,25 @@ public class PlacesSyncController {
         return ResponseEntity.ok(syncService.revisarFotos());
     }
 
+    /**
+     * Solo pregunta: de qué locales Google no tiene ninguna foto.
+     *
+     * Aparte del de fotos porque son dos cuotas muy desparejas —cuatro mil fichas contra
+     * mil fotos— y conviene poder gastar la barata sola. Preguntar por los mil doscientos
+     * locales sin portada entra holgado en las fichas del mes y dice cuántos quedan en
+     * pie una vez que la limpieza borre los que Google no tiene fotografiados.
+     */
+    @PostMapping("/fichas")
+    public ResponseEntity<?> revisarFichas(
+        @RequestHeader(name = TOKEN_HEADER, required = false) String token
+    ) {
+        if (!authorized(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(syncService.revisarFichas());
+    }
+
     private boolean authorized(String presented) {
         String expected = properties.getSync().getTriggerToken();
         if (expected == null || expected.isBlank() || presented == null) {
