@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -764,6 +765,8 @@ public class PlacesSyncService {
     private MissingPhotosResult fillMissingPhotos() {
         int downloaded = 0;
         int reused = 0;
+        List<String> marcas = marcasQueComparten();
+        Map<String, String> fotoPorMarca = fotosPorMarca(marcas);
         Map<String, String> fotoPorCadena = photosByChain();
 
         for (BurgerJoint joint : burgerJointRepository.findByPhotoUrlIsNull()) {
@@ -780,8 +783,9 @@ public class PlacesSyncService {
             //
             // Cuesta cero llamadas, así que no mira ninguna cuota.
             String deLaHermana = fotoPorCadena.get(chainKey(joint.getName()));
-            if (joint.isFastFood() && deLaHermana != null) {
-                joint.setPhotoUrl(deLaHermana);
+            String deLaMarca = fotoPorMarca.get(FastFoodMarker.marcaDe(joint.getName(), marcas));
+            if (deLaMarca != null) {
+                joint.setPhotoUrl(deLaMarca);
                 burgerJointRepository.save(joint);
                 reused++;
                 continue;
@@ -843,6 +847,10 @@ public class PlacesSyncService {
                         joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
                         burgerJointRepository.save(joint);
                         fotoPorCadena.putIfAbsent(chainKey(joint.getName()), photoUrl);
+                        String marca = FastFoodMarker.marcaDe(joint.getName(), marcas);
+                        if (marca != null) {
+                            fotoPorMarca.putIfAbsent(marca, photoUrl);
+                        }
                         downloaded++;
                         guardada = true;
                         break;
@@ -1001,6 +1009,76 @@ public class PlacesSyncService {
         return candidatas.size() <= PlacesClient.CANDIDATAS_A_PROBAR
             ? candidatas
             : candidatas.subList(0, PlacesClient.CANDIDATAS_A_PROBAR);
+    }
+
+    /**
+     * Las marcas cuyas sucursales pueden compartir una portada.
+     *
+     * Son las cadenas de comida rápida más las otras marcas con sucursales. Las dos
+     * listas están separadas en la configuración porque contestan preguntas distintas
+     * —una decide qué se esconde al apagar las cadenas en Explorar— y acá se juntan
+     * porque para la portada da lo mismo: dos sucursales de la misma marca tienen
+     * prácticamente la misma foto, sea Burger King o Big Pons.
+     */
+    private List<String> marcasQueComparten() {
+        return Stream.concat(
+                properties.getFastFoodBrands().stream(),
+                properties.getMarcasConSucursales().stream())
+            .filter(marca -> marca != null && !marca.isBlank())
+            .toList();
+    }
+
+    /**
+     * Una foto por marca, para prestársela a las sucursales que no tengan.
+     *
+     * La clave es la marca y no el nombre entero, que es lo que hacía que no se
+     * prestaran: "McDonald's" y "McDonald's Abasto Patio de Comidas" son la misma
+     * cadena para el filtro de Explorar y eran dos distintas para la foto, así que
+     * quedaban dieciocho sucursales con el recuadro de iniciales teniendo setenta y
+     * nueve hermanas con portada.
+     */
+    private Map<String, String> fotosPorMarca(List<String> marcas) {
+        Map<String, String> porMarca = new HashMap<>();
+        for (BurgerJoint joint : burgerJointRepository.findByPhotoUrlIsNotNull()) {
+            String marca = FastFoodMarker.marcaDe(joint.getName(), marcas);
+            if (marca != null) {
+                porMarca.putIfAbsent(marca, joint.getPhotoUrl());
+            }
+        }
+        return porMarca;
+    }
+
+    public record FotosPrestadas(int prestadas, int siguenSinPortada) {}
+
+    /**
+     * Solo el préstamo entre sucursales: completa las que faltan y no toca nada más.
+     *
+     * Aparte de la revisión de fotos porque son dos cosas de costo muy distinto. Esto no
+     * le pide nada a Google —la foto ya está bajada, se le apunta la misma a la hermana—
+     * y la revisión gasta una ficha por local y una foto por cada uno que cambie.
+     *
+     * No pisa ninguna portada: solo mira los locales que no tienen. Una sucursal con
+     * foto propia se la queda, que para eso se la bajamos.
+     */
+    public FotosPrestadas prestarFotos() {
+        List<String> marcas = marcasQueComparten();
+        Map<String, String> fotoPorMarca = fotosPorMarca(marcas);
+
+        int prestadas = 0;
+        int sinPortada = 0;
+        for (BurgerJoint joint : burgerJointRepository.findByPhotoUrlIsNull()) {
+            String deLaMarca = fotoPorMarca.get(FastFoodMarker.marcaDe(joint.getName(), marcas));
+            if (deLaMarca == null) {
+                sinPortada++;
+                continue;
+            }
+            joint.setPhotoUrl(deLaMarca);
+            burgerJointRepository.save(joint);
+            prestadas++;
+        }
+
+        log.info("Fotos prestadas entre sucursales: {}, siguen sin portada {}", prestadas, sinPortada);
+        return new FotosPrestadas(prestadas, sinPortada);
     }
 
     /** Una foto por cadena, para prestársela a las sucursales que no tengan. */

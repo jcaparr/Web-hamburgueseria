@@ -114,6 +114,26 @@ public class PlacesSyncController {
         return ResponseEntity.ok(syncService.agregar(texto));
     }
 
+    /**
+     * Solo el préstamo de portadas entre sucursales de la misma marca.
+     *
+     * Aparte de la revisión de fotos porque no le pide nada a Google: la foto ya está
+     * bajada y se le apunta la misma a la hermana que no tiene. La revisión, en cambio,
+     * gasta una ficha por local y una foto por cada uno que cambie.
+     *
+     * No pisa ninguna portada: solo mira los locales que no tienen.
+     */
+    @PostMapping("/fotos-prestadas")
+    public ResponseEntity<?> prestarFotos(
+        @RequestHeader(name = TOKEN_HEADER, required = false) String token
+    ) {
+        if (!authorized(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(syncService.prestarFotos());
+    }
+
     @PostMapping("/limpieza")
     public ResponseEntity<?> limpiar(
         @RequestHeader(name = TOKEN_HEADER, required = false) String token

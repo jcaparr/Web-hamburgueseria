@@ -46,6 +46,11 @@ class FotoPrestadaEntreSucursalesTest {
         PlacesProperties properties = new PlacesProperties();
         properties.setApiKey("clave-de-prueba");
         properties.getSync().setDelayBetweenCallsMs(0);
+        // La marca es lo que junta a las sucursales, asi que sin la lista no hay prestamo.
+        // Antes estas pruebas pasaban con la lista vacia porque alcanzaba con la columna
+        // de comida rapida, que en produccion sale justamente de esta lista.
+        properties.setFastFoodBrands(List.of("mostaza", "mcdonalds"));
+        properties.setMarcasConSucursales(List.of("bigpons"));
 
         placesClient = mock(PlacesClient.class);
         repository = mock(BurgerJointRepository.class);
@@ -153,6 +158,7 @@ class FotoPrestadaEntreSucursalesTest {
         PlacesProperties properties = new PlacesProperties();
         properties.setApiKey("clave-de-prueba");
         properties.getSync().setDelayBetweenCallsMs(0);
+        properties.setFastFoodBrands(List.of("mostaza", "mcdonalds"));
 
         when(repository.findByPhotoUrlIsNull())
             .thenReturn(List.of(sinFoto("Mostaza - Quilmes", true)));
@@ -167,5 +173,124 @@ class FotoPrestadaEntreSucursalesTest {
 
         verify(quotaGuard, never()).record(PlacesCallType.PHOTO);
         verify(quotaGuard, never()).record(PlacesCallType.DETAILS);
+    }
+
+    // ---- la marca, y no el nombre entero, es lo que junta a las sucursales ----
+
+    /**
+     * La sucursal que lleva el barrio en el nombre también recibe la foto.
+     *
+     * Es lo que no pasaba: "McDonald's" y "McDonald's Abasto Patio de Comidas" son la
+     * misma cadena para el filtro de Explorar y eran dos distintas para la foto, porque
+     * la clave era el nombre entero. Quedaban dieciocho sucursales con el recuadro de
+     * iniciales teniendo setenta y nueve hermanas con portada.
+     */
+    @Test
+    void laSucursalConElBarrioEnElNombreTambienRecibeLaFoto() {
+        when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(
+            BurgerJoint.builder().id(9L).placeId("ChIJ9").name("McDonald's")
+                .address("Otra dirección").area("Lanús").fastFood(true)
+                .photoUrl(FOTO_DE_LA_HERMANA).build()));
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(
+            sinFoto("McDonald's Abasto Patio de Comidas", true)));
+
+        service.prestarFotos();
+
+        assertThat(guardado().getPhotoUrl()).isEqualTo(FOTO_DE_LA_HERMANA);
+    }
+
+    /**
+     * Una marca con sucursales que no es comida rápida también presta.
+     *
+     * Es el motivo de que sean dos listas: para que Big Pons pueda compartir la portada
+     * sin que apagar las cadenas en Explorar la esconda.
+     */
+    @Test
+    void unaMarcaConSucursalesQueNoEsComidaRapidaTambienPresta() {
+        when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(
+            BurgerJoint.builder().id(9L).placeId("ChIJ9").name("Big Pons")
+                .address("Otra dirección").area("Palermo").fastFood(false)
+                .photoUrl(FOTO_DE_LA_HERMANA).build()));
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(
+            sinFoto("Big Pons", false)));
+
+        service.prestarFotos();
+
+        BurgerJoint quedo = guardado();
+        assertThat(quedo.getPhotoUrl()).isEqualTo(FOTO_DE_LA_HERMANA);
+        // Y sigue sin ser comida rápida, que es lo que la deja visible en Explorar.
+        assertThat(quedo.isFastFood()).isFalse();
+    }
+
+    /** Dos marcas distintas no se prestan nada, aunque las dos estén en las listas. */
+    @Test
+    void dosMarcasDistintasNoSePrestanNada() {
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(
+            sinFoto("Big Pons", false)));
+
+        assertThat(service.prestarFotos().prestadas()).isZero();
+        verify(repository, never()).save(any());
+    }
+
+    /** Un local de ninguna marca conocida no recibe nada: la foto sería de un desconocido. */
+    @Test
+    void unLocalSinMarcaConocidaNoRecibeNada() {
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(
+            sinFoto("Hamburguesería", false)));
+
+        assertThat(service.prestarFotos().prestadas()).isZero();
+        verify(repository, never()).save(any());
+    }
+
+    // ---- el préstamo suelto ----
+
+    /** No le pide nada a Google: la foto ya está bajada. */
+    @Test
+    void prestarSueltoNoLlamaAGoogle() {
+        when(repository.findByPhotoUrlIsNull())
+            .thenReturn(List.of(sinFoto("Mostaza - Quilmes", true)));
+
+        service.prestarFotos();
+
+        verify(placesClient, never()).fotosDe(anyString());
+        verify(placesClient, never()).downloadPhoto(anyString());
+    }
+
+    /**
+     * Y no pisa ninguna portada: solo mira los locales que no tienen.
+     *
+     * Es la diferencia con la revisión de fotos, que vuelve a elegir las viejas. Una
+     * sucursal con foto propia se la queda, que para eso se la bajamos.
+     */
+    @Test
+    void prestarNoPisaLaPortadaDeNadie() {
+        BurgerJoint laQueTiene = BurgerJoint.builder().id(9L).placeId("ChIJ9")
+            .name("Mostaza - Lanús").address("Otra dirección").area("Lanús")
+            .fastFood(true).photoUrl(FOTO_DE_LA_HERMANA).build();
+        when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(laQueTiene));
+        when(repository.findByPhotoUrlIsNull())
+            .thenReturn(List.of(sinFoto("Mostaza - Quilmes", true)));
+
+        service.prestarFotos();
+
+        // La única que se guarda es la que no tenía.
+        ArgumentCaptor<BurgerJoint> capturado = ArgumentCaptor.forClass(BurgerJoint.class);
+        verify(repository, atLeastOnce()).save(capturado.capture());
+        assertThat(capturado.getAllValues()).allMatch(j -> j.getId() == 1L);
+        assertThat(laQueTiene.getPhotoUrl()).isEqualTo(FOTO_DE_LA_HERMANA);
+    }
+
+    /** Cuenta las que presta y las que siguen sin portada, para poder medirlo. */
+    @Test
+    void cuentaLasPrestadasYLasQueSiguenSinPortada() {
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(
+            sinFoto("Mostaza - Quilmes", true),
+            BurgerJoint.builder().id(2L).placeId("ChIJ2").name("Una de barrio")
+                .address("Una dirección").area("Quilmes").fastFood(false).build()));
+
+        PlacesSyncService.FotosPrestadas resultado = service.prestarFotos();
+
+        assertThat(resultado.prestadas()).isEqualTo(1);
+        assertThat(resultado.siguenSinPortada()).isEqualTo(1);
     }
 }

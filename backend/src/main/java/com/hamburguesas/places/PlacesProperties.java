@@ -20,6 +20,19 @@ public class PlacesProperties {
      */
     private List<String> fastFoodBrands = List.of();
 
+    /**
+     * Marcas con varias sucursales que no son cadenas de comida rápida.
+     *
+     * Están aparte de {@link #fastFoodBrands} porque las dos listas contestan preguntas
+     * distintas. Esa dice qué se esconde cuando alguien apaga las cadenas en Explorar;
+     * esta dice nada más qué sucursales pueden compartir una portada.
+     *
+     * Mezclarlas tenía un costo concreto: para prestarle la foto a una sucursal de La
+     * Birra había que declararla comida rápida, y entonces desaparecía del listado de
+     * quien apaga las cadenas. Son justo los lugares que esa persona quiere ver.
+     */
+    private List<String> marcasConSucursales = List.of();
+
     private Sync sync = new Sync();
     private Quota quota = new Quota();
     private Photos photos = new Photos();

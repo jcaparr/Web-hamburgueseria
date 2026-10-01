@@ -98,6 +98,20 @@ app:
       - hamburguesasextremas
       - deandennys
       - mrtasty
+    # Marcas con varias sucursales que no son cadenas de comida rápida. Están aparte de
+    # fast-food-brands a propósito: esa lista decide qué se esconde al apagar las cadenas
+    # en Explorar, y meter acá a Big Pons o a Mi Barrio las haría desaparecer del listado
+    # de quien justamente quiere ver hamburgueserías y no cadenas.
+    #
+    # Lo único que habilita esta lista es que una sucursal sin portada use la de una
+    # hermana. Se eligen a mano, una por una, porque la prueba es el nombre y hay nombres
+    # que dos locales sin relación comparten: "Burger House" en Barracas y en Grand Bourg
+    # no son la misma marca, y prestarse la foto sería mostrar un local por otro.
+    marcas-con-sucursales:
+      - bigpons
+      - mibarriohamburgueseria
+      - thefoodtruckstore
+      - burger54
     api-key: ${GOOGLE_MAPS_API_KEY:}
     sync:
       # Off by default even with a key configured: flip to true only when you're ready for it to run.
