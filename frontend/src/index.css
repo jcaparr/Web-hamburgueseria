@@ -166,7 +166,32 @@
   --color-base-200: #efe4c4;
   --color-base-300: #e3d6b4;
   --color-base-content: #3a2a1e;
-  --color-info: #b23a2e;
+  /*
+   * Las cuatro de abajo faltaban, igual que faltaban las medidas: un tema propio no
+   * hereda nada, y lo que no está acá queda vacío.
+   *
+   * Vacío no quiere decir feo, quiere decir invisible. "bg-error" no pintaba de rojo
+   * sino de nada: el botón de bloquear a alguien salía del mismo beige que los demás,
+   * los mensajes de error salían del marrón del texto común, y tres de los ocho
+   * colores de avatar —los que a esta altura le tocan a la mayoría— quedaban
+   * transparentes, con la inicial flotando sin círculo detrás.
+   *
+   * El rojo de error es más oscuro que el primario a propósito. El primario es la
+   * marca y está en los botones de siempre; si el de error fuera el mismo, "borrar"
+   * se vería igual que "guardar".
+   */
+  --color-success: #4f7a3a;
+  --color-success-content: #f7efd8;
+  --color-warning: #c57615;
+  --color-warning-content: #f7efd8;
+  --color-error: #8f1d14;
+  --color-error-content: #f7efd8;
+  /*
+   * Y este era el rojo primario repetido. Los avatares sacan el color de una lista de
+   * ocho, así que dos personas de cada ocho recibían el mismo, que es justamente lo
+   * que la lista existe para evitar.
+   */
+  --color-info: #3b6e78;
   --color-info-content: #f7efd8;
   --radius-field: 0.625rem;
   --radius-box: 0.875rem;
