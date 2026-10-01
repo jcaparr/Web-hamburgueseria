@@ -32,10 +32,12 @@ public record Veredicto(boolean vendeHamburguesas, Prueba prueba) {
         SIN_PRUEBAS,
 
         /**
-         * No se pudo preguntar: se acabó la cuota del resumen de reseñas.
+         * No se pudo preguntar: se acabó la cuota del resumen de reseñas, o Google no
+         * contestó.
          *
          * No es lo mismo que no encontrar pruebas. Que no hayamos podido mirar es un
-         * límite nuestro, y nunca puede terminar en borrarle el local a alguien.
+         * límite nuestro o una falla de Google, y nunca puede terminar en borrarle el
+         * local a alguien.
          */
         NO_SE_PUDO_PREGUNTAR
     }

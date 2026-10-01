@@ -9,6 +9,10 @@ import com.hamburguesas.repository.WishlistRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.util.List;
 import java.util.Optional;
@@ -353,6 +357,58 @@ class PlacesSyncFiltroTest {
 
         verify(repository, never()).delete(any(BurgerJoint.class));
         verify(placesClient, never()).resumenDeResenias(anyString());
+    }
+
+    /**
+     * Que Google no conteste tampoco puede terminar en borrarle el local a alguien.
+     *
+     * Es el mismo caso que la cuota agotada: no pudimos mirar. Pero el resumen que no
+     * llegaba por un error se leía igual que un local que no tiene resumen, y eso es
+     * "sin pruebas", que borra. Un 503 de un rato durante una limpieza alcanzaba para
+     * perder hamburgueserías de verdad (#96).
+     */
+    @Test
+    void siGoogleFallaAlPedirElResumenNoSeBorraNada() {
+        googleDevuelve();
+        BurgerJoint dudoso = guardado("Restó", -34.5900, -58.4270, "Palermo");
+        dudoso.setGooglePrimaryType("restaurant");
+        when(placesClient.resumenDeResenias(anyString())).thenThrow(
+            HttpServerErrorException.create(HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable",
+                HttpHeaders.EMPTY, new byte[0], null));
+
+        service.sync();
+
+        verify(repository, never()).delete(any(BurgerJoint.class));
+    }
+
+    /** Y un corte de red, que no trae ni un código: tampoco se sabe nada. */
+    @Test
+    void unCorteDeRedAlPedirElResumenTampocoBorra() {
+        googleDevuelve();
+        BurgerJoint dudoso = guardado("Restó", -34.5900, -58.4270, "Palermo");
+        dudoso.setGooglePrimaryType("restaurant");
+        when(placesClient.resumenDeResenias(anyString()))
+            .thenThrow(new ResourceAccessException("I/O error: Read timed out"));
+
+        service.sync();
+
+        verify(repository, never()).delete(any(BurgerJoint.class));
+    }
+
+    /**
+     * Lo que sí sigue igual: un local que de verdad no tiene resumen, y que nada más
+     * dice que venda hamburguesas, se va. Google contestó, y no hay pruebas.
+     */
+    @Test
+    void siGoogleContestaQueNoTieneResumenSeBorraComoAntes() {
+        googleDevuelve();
+        BurgerJoint dudoso = guardado("Restó", -34.5900, -58.4270, "Palermo");
+        dudoso.setGooglePrimaryType("restaurant");
+        when(placesClient.resumenDeResenias(anyString())).thenReturn(null);
+
+        service.sync();
+
+        verify(repository).delete(dudoso);
     }
 
     /** Y con cuota, si el resumen habla de otra cosa, sí se borra. */
