@@ -160,4 +160,21 @@ class PlacesConfiguracionTest {
         assertThat(quota.getMonthlyDetailsCalls())
             .isGreaterThanOrEqualTo(quota.getMonthlyPhotoCalls());
     }
+
+    /**
+     * Los que se agregaron a mano tienen que estar anotados para entrar.
+     *
+     * Se agregan justamente porque ninguna búsqueda los devuelve: Google no les pone el
+     * rubro de hamburguesería. Esa misma razón hace que la limpieza los borre en la
+     * corrida siguiente si no están acá, así que agregarlos sin anotarlos es trabajo que
+     * se deshace solo.
+     */
+    @Test
+    void losAgregadosAManoEstanAnotadosParaQueNoSeBorren() {
+        assertThat(properties.getSync().getIncludedPlaceIds())
+            // "Lucky Louis", Av. Olazábal 1615: figura como restaurant.
+            .contains("ChIJH7tAfQC1vJURnF0yXSHnV74")
+            // "Austin's Diner & Grill", Darwin 1111: figura como american_restaurant.
+            .contains("ChIJm1VdjT-1vJUR-QBpgx3eg0I");
+    }
 }
