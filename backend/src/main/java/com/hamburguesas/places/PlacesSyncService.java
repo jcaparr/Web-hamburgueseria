@@ -826,7 +826,7 @@ public class PlacesSyncService {
                 // llamada, así que son pocas y solo se llega a la segunda cuando hace
                 // falta.
                 boolean guardada = false;
-                for (FotoElegida candidata : aProbar(candidatas)) {
+                for (FotoElegida candidata : EleccionDeFoto.aProbar(candidatas)) {
                     if (!quotaGuard.canCall(PlacesCallType.PHOTO)) {
                         break;
                     }
@@ -835,7 +835,7 @@ public class PlacesSyncService {
                         joint.setPhotoUrl(photoUrl);
                         joint.setPhotoName(candidata.name());
                         joint.setPhotoFingerprint(candidata.huella());
-                        joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
+                        joint.setPhotoRule(EleccionDeFoto.REGLA_DE_FOTO);
                         burgerJointRepository.save(joint);
                         fotoPorCadena.putIfAbsent(chainKey(joint.getName()), photoUrl);
                         String marca = FastFoodMarker.marcaDe(joint.getName(), marcas);
@@ -924,7 +924,7 @@ public class PlacesSyncService {
              // Los locales que no tienen huella guardada son los de antes de esta
              // columna: caen del lado de bajarla, una única vez, y quedan con huella.
              if (mejor.huella().equals(joint.getPhotoFingerprint())) {
-                 joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
+                 joint.setPhotoRule(EleccionDeFoto.REGLA_DE_FOTO);
                  burgerJointRepository.save(joint);
                  continue;
              }
@@ -937,7 +937,7 @@ public class PlacesSyncService {
 
              // De la mejor a la peor, igual que al conseguir la primera foto: si la que
              // gana por puntaje resulta ser el logo, se prueba la siguiente.
-             for (FotoElegida candidata : aProbar(candidatas)) {
+             for (FotoElegida candidata : EleccionDeFoto.aProbar(candidatas)) {
                  if (!quotaGuard.canCall(PlacesCallType.PHOTO)) {
                      break;
                  }
@@ -946,7 +946,7 @@ public class PlacesSyncService {
                      joint.setPhotoUrl(photoUrl);
                      joint.setPhotoName(candidata.name());
                      joint.setPhotoFingerprint(candidata.huella());
-                     joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
+                     joint.setPhotoRule(EleccionDeFoto.REGLA_DE_FOTO);
                      burgerJointRepository.save(joint);
                      cambiadas++;
                      break;
@@ -972,7 +972,7 @@ public class PlacesSyncService {
     private List<BurgerJoint> aRevisar() {
         Map<Long, BurgerJoint> locales = new LinkedHashMap<>();
         for (BurgerJoint joint
-            : burgerJointRepository.conFotoElegidaConUnaReglaVieja(PlacesClient.REGLA_DE_FOTO)) {
+            : burgerJointRepository.conFotoElegidaConUnaReglaVieja(EleccionDeFoto.REGLA_DE_FOTO)) {
             locales.put(joint.getId(), joint);
         }
 
@@ -986,20 +986,6 @@ public class PlacesSyncService {
         }
 
         return new ArrayList<>(locales.values());
-    }
-
-    /**
-     * Las primeras que vale la pena probar de la lista entera.
-     *
-     * La lista viene completa porque su largo dice cuántas fotos tiene el local, y eso
-     * no cuesta nada. Pero cada una que se prueba cuesta una llamada de foto, así que el
-     * tope se aplica recién acá: si las tres mejores resultaron logos, el local
-     * evidentemente no tiene una portada buena y seguir es gastar.
-     */
-    private static List<FotoElegida> aProbar(List<FotoElegida> candidatas) {
-        return candidatas.size() <= PlacesClient.CANDIDATAS_A_PROBAR
-            ? candidatas
-            : candidatas.subList(0, PlacesClient.CANDIDATAS_A_PROBAR);
     }
 
     /**
@@ -1136,7 +1122,7 @@ public class PlacesSyncService {
                 joint.setPhotoUrl(photoUrl);
                 joint.setPhotoName(place.photoName());
                 joint.setPhotoFingerprint(place.photoFingerprint());
-                joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
+                joint.setPhotoRule(EleccionDeFoto.REGLA_DE_FOTO);
                 gotPhoto = true;
             }
         }
@@ -1224,7 +1210,7 @@ public class PlacesSyncService {
                 joint.setPhotoUrl(photoUrl);
                 joint.setPhotoName(place.photoName());
                 joint.setPhotoFingerprint(place.photoFingerprint());
-                joint.setPhotoRule(PlacesClient.REGLA_DE_FOTO);
+                joint.setPhotoRule(EleccionDeFoto.REGLA_DE_FOTO);
                 gotPhoto = true;
             }
         }

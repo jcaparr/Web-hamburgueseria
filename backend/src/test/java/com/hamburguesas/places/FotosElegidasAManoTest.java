@@ -76,7 +76,7 @@ class FotosElegidasAManoTest {
     /** Sin anotar nada gana el afiche, que es el problema que esto viene a resolver. */
     @Test
     void sinElegirNadaGanaLaQueDiceLaRegla() {
-        List<FotoElegida> fotos = PlacesClient.mejoresFotos(json(DIEZ_FOTOS));
+        List<FotoElegida> fotos = EleccionDeFoto.mejoresFotos(json(DIEZ_FOTOS));
 
         assertThat(fotos.get(0).huella()).isEqualTo(HUELLA_DEL_AFICHE);
     }
@@ -85,7 +85,7 @@ class FotosElegidasAManoTest {
     @Test
     void laElegidaAManoVaPrimera() {
         List<FotoElegida> fotos =
-            PlacesClient.mejoresFotos(json(DIEZ_FOTOS), HUELLA_DE_LA_HAMBURGUESA);
+            EleccionDeFoto.mejoresFotos(json(DIEZ_FOTOS), HUELLA_DE_LA_HAMBURGUESA);
 
         assertThat(fotos.get(0).huella()).isEqualTo(HUELLA_DE_LA_HAMBURGUESA);
         assertThat(fotos.get(0).name()).isEqualTo("places/ChIJkeke/photos/hamburguesa");
@@ -95,7 +95,7 @@ class FotosElegidasAManoTest {
     @Test
     void lasDemasQuedanAtrasYNoSeRepiten() {
         List<FotoElegida> fotos =
-            PlacesClient.mejoresFotos(json(DIEZ_FOTOS), HUELLA_DE_LA_HAMBURGUESA);
+            EleccionDeFoto.mejoresFotos(json(DIEZ_FOTOS), HUELLA_DE_LA_HAMBURGUESA);
 
         assertThat(fotos).extracting(FotoElegida::huella)
             .containsExactly(HUELLA_DE_LA_HAMBURGUESA, HUELLA_DEL_AFICHE);
@@ -110,7 +110,7 @@ class FotosElegidasAManoTest {
     @Test
     void siLaHuellaAnotadaNoEstaMandaLaRegla() {
         List<FotoElegida> fotos =
-            PlacesClient.mejoresFotos(json(DIEZ_FOTOS), "1x1|Nadie");
+            EleccionDeFoto.mejoresFotos(json(DIEZ_FOTOS), "1x1|Nadie");
 
         assertThat(fotos.get(0).huella()).isEqualTo(HUELLA_DEL_AFICHE);
     }
@@ -169,7 +169,7 @@ class FotosElegidasAManoTest {
             .photoUrl("/api/place-photos/afiche.jpg")
             .photoName("places/ChIJkeke/photos/afiche")
             .photoFingerprint(HUELLA_DEL_AFICHE)
-            .photoRule(PlacesClient.REGLA_DE_FOTO)
+            .photoRule(EleccionDeFoto.REGLA_DE_FOTO)
             .build();
     }
 

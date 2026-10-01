@@ -293,7 +293,7 @@ class PlacesSyncPhotoBackfillTest {
 
         verify(placesClient, never()).downloadPhoto(anyString());
         assertThat(vieja.getPhotoUrl()).isEqualTo("/api/place-photos/vieja.jpg");
-        assertThat(vieja.getPhotoRule()).isEqualTo(PlacesClient.REGLA_DE_FOTO);
+        assertThat(vieja.getPhotoRule()).isEqualTo(EleccionDeFoto.REGLA_DE_FOTO);
     }
 
     /** Una foto con su nombre ya anotado no se vuelve a revisar: sería pagar de nuevo. */

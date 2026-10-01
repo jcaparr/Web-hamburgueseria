@@ -148,7 +148,7 @@ class RevisionDeFotosTest {
         service.revisarFotos();
 
         verify(placesClient, never()).downloadPhoto(anyString());
-        assertThat(guardado().getPhotoRule()).isEqualTo(PlacesClient.REGLA_DE_FOTO);
+        assertThat(guardado().getPhotoRule()).isEqualTo(EleccionDeFoto.REGLA_DE_FOTO);
     }
 
     /**
@@ -185,7 +185,7 @@ class RevisionDeFotosTest {
 
         service.revisarFotos();
 
-        assertThat(guardado().getPhotoRule()).isEqualTo(PlacesClient.REGLA_DE_FOTO);
+        assertThat(guardado().getPhotoRule()).isEqualTo(EleccionDeFoto.REGLA_DE_FOTO);
     }
 
     /**
@@ -281,6 +281,6 @@ class RevisionDeFotosTest {
         BurgerJoint despues = guardado();
         assertThat(despues.getPhotoUrl()).isEqualTo("/api/place-photos/mejor.jpg");
         assertThat(despues.getPhotoName()).isEqualTo("places/x/photos/mejor");
-        assertThat(despues.getPhotoRule()).isEqualTo(PlacesClient.REGLA_DE_FOTO);
+        assertThat(despues.getPhotoRule()).isEqualTo(EleccionDeFoto.REGLA_DE_FOTO);
     }
 }
