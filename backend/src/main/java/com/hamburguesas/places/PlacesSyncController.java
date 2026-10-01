@@ -87,6 +87,24 @@ public class PlacesSyncController {
      * locales sin portada entra holgado en las fichas del mes y dice cuántos quedan en
      * pie una vez que la limpieza borre los que Google no tiene fotografiados.
      */
+    /**
+     * Solo la limpieza: borra lo que ya no corresponde y recalcula las zonas.
+     *
+     * Aparte del barrido porque esta mitad no cuesta ninguna búsqueda y la otra cuesta
+     * mil novecientas. Cuando lo que hace falta es aplicar lo que un censo de fichas ya
+     * averiguó, correr el barrido entero es pagar la parte cara para ejecutar la gratis.
+     */
+    @PostMapping("/limpieza")
+    public ResponseEntity<?> limpiar(
+        @RequestHeader(name = TOKEN_HEADER, required = false) String token
+    ) {
+        if (!authorized(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(syncService.limpiar());
+    }
+
     @PostMapping("/fichas")
     public ResponseEntity<?> revisarFichas(
         @RequestHeader(name = TOKEN_HEADER, required = false) String token
