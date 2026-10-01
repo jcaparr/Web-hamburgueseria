@@ -97,6 +97,15 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/rating-photos/**").permitAll()
                 // Protected by its own X-Sync-Token header, not by user JWT auth (see PlacesSyncController).
                 .requestMatchers("/api/admin/places-sync/**").permitAll()
+                // Cuando algo revienta, el servlet redespacha la respuesta a /error. Si
+                // ese camino pide sesión, el error que vuelve es 401 en vez del que pasó,
+                // y eso manda a buscar el problema al lado equivocado: la sincronización
+                // se cortó por una restricción de la base y contestó "no autorizado",
+                // que se lee como que el token estaba mal.
+                //
+                // No cuenta nada de más: el cuerpo de /error lleva estado y ruta, y el
+                // mensaje y la traza están apagados en producción.
+                .requestMatchers("/error").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
