@@ -150,6 +150,79 @@ public class PlacesSyncService {
             preguntados, sinNingunaFoto, preguntados - sinNingunaFoto, sinPreguntar, null);
     }
 
+    /**
+     * Qué pasó al intentar agregar un local a mano.
+     *
+     * Lleva el identificador porque es lo que hay que anotar después en la configuración
+     * para que la limpieza no lo borre: un local que se agrega a mano suele ser
+     * justamente uno que ninguna regla reconoce.
+     */
+    public record LocalAgregado(String placeId, String nombre, String direccion,
+                                String zona, String resultado) {}
+
+    /**
+     * Busca un local por su nombre y lo agrega, sin esperar al barrido.
+     *
+     * Hay hamburgueserías que el barrido no encuentra nunca. "Austin's Diner & Grill" es
+     * el caso de manual: Google no le pone el rubro de hamburguesería, así que la
+     * búsqueda estricta por barrio no lo devuelve, por más veces que se corra.
+     *
+     * Entra sin pasar por el clasificador, a propósito: lo agrega una persona que ya
+     * sabe que el local existe y vende hamburguesas, y esa decisión vale más que
+     * cualquier regla nuestra. Lo que sí se respeta es el radio: un local fuera de los
+     * 75 km no entra, porque la app no lo podría ubicar en ninguna zona.
+     *
+     * Cuesta una búsqueda. No baja la foto: la cuota de fotos es el tramo más chico y
+     * esto se usa de a uno, así que la portada la completa la próxima pasada de fotos.
+     */
+    public LocalAgregado agregar(String texto) {
+        if (!properties.hasApiKey()) {
+            return new LocalAgregado(null, texto, null, null,
+                "Falta configurar GOOGLE_MAPS_API_KEY");
+        }
+        if (!quotaGuard.canCall(PlacesCallType.SEARCH)) {
+            return new LocalAgregado(null, texto, null, null,
+                "Se acabó la cuota mensual de búsquedas");
+        }
+
+        PlacesSearchResult resultado;
+        try {
+            resultado = search(texto, null);
+        } catch (RestClientResponseException ex) {
+            return new LocalAgregado(null, texto, null, null,
+                "Google respondió " + ex.getStatusCode().value());
+        }
+
+        if (resultado.places().isEmpty()) {
+            return new LocalAgregado(null, texto, null, null, "Google no encontró nada");
+        }
+
+        PlacesSearchResult.Place place = resultado.places().get(0);
+        if (place.placeId() == null || place.name() == null) {
+            return new LocalAgregado(null, texto, null, null, "La ficha vino incompleta");
+        }
+
+        var yaEsta = burgerJointRepository.findByPlaceId(place.placeId());
+        if (yaEsta.isPresent()) {
+            BurgerJoint joint = yaEsta.get();
+            return new LocalAgregado(joint.getPlaceId(), joint.getName(), joint.getAddress(),
+                joint.getArea(), "Ya estaba");
+        }
+
+        var zona = zonas.zonaDe(place.latitude(), place.longitude(), place.address());
+        if (zona.isEmpty()) {
+            return new LocalAgregado(place.placeId(), place.name(), place.address(), null,
+                "Queda fuera del radio de búsqueda");
+        }
+
+        create(place, zona.get(), false);
+        fastFoodMarker.marcar();
+
+        log.info("Agregado a mano: {} ({}) — {}", place.name(), zona.get(), place.placeId());
+        return new LocalAgregado(place.placeId(), place.name(), place.address(), zona.get(),
+            "Agregado");
+    }
+
     public PlacesSyncReport sync() {
         return sync(true);
     }
