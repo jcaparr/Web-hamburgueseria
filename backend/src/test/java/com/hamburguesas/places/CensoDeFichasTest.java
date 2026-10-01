@@ -50,7 +50,7 @@ class CensoDeFichasTest {
         quotaGuard = mock(PlacesQuotaGuard.class);
 
         when(quotaGuard.canCall(any())).thenReturn(true);
-        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of());
+        when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of());
         when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of());
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of());
         when(repository.findByPlaceId(anyString())).thenReturn(Optional.empty());
@@ -76,7 +76,7 @@ class CensoDeFichasTest {
     /** Lo que separa este barrido del de fotos: no se baja ni una. */
     @Test
     void noBajaNingunaFoto() {
-        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(sinFoto(1, "Con fotos")));
+        when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(sinFoto(1, "Con fotos")));
         when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
 
         service.revisarFichas();
@@ -94,7 +94,7 @@ class CensoDeFichasTest {
     @Test
     void tampocoLePrestaLaFotoDeOtraSucursal() {
         BurgerJoint sucursal = sinFoto(1, "Mostaza Quilmes");
-        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(sucursal));
+        when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(sucursal));
         when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(
             BurgerJoint.builder().id(9L).placeId("ChIJ9").name("Mostaza Lanús")
                 .address("Otra").area("Lanús").photoUrl("/api/place-photos/mostaza.jpg").build()));
@@ -108,7 +108,7 @@ class CensoDeFichasTest {
     /** El número que se busca: de cuántos Google no tiene nada. */
     @Test
     void cuentaDeCuantosGoogleNoTieneNingunaFoto() {
-        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(
+        when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(
             sinFoto(1, "Tiene"), sinFoto(2, "No tiene"), sinFoto(3, "Tiene también")));
         when(placesClient.fotosDe("ChIJ1")).thenReturn(TIENE_FOTOS);
         when(placesClient.fotosDe("ChIJ2")).thenReturn(List.of());
@@ -125,7 +125,7 @@ class CensoDeFichasTest {
     /** Y queda anotado, que es lo que la limpieza mira para borrarlo. */
     @Test
     void anotaAlQueNoTieneNinguna() {
-        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(sinFoto(1, "Sin nada")));
+        when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(sinFoto(1, "Sin nada")));
         when(placesClient.fotosDe(anyString())).thenReturn(List.of());
 
         service.revisarFichas();
@@ -143,7 +143,7 @@ class CensoDeFichasTest {
     void leBorraLaAnotacionAlQueYaTieneFotos() {
         BurgerJoint local = sinFoto(1, "Ya tiene");
         local.setSinFotosEnGoogle(true);
-        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(local));
+        when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(local));
         when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
 
         service.revisarFichas();
@@ -156,7 +156,7 @@ class CensoDeFichasTest {
     void noGuardaAlQueYaEstabaBienAnotado() {
         BurgerJoint alDia = sinFoto(1, "Tiene");
         alDia.setFotosEnGoogle(TIENE_FOTOS.size());
-        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(alDia));
+        when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(alDia));
         when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
 
         service.revisarFichas();
@@ -172,7 +172,7 @@ class CensoDeFichasTest {
     void guardaCuandoCambioLaCantidadDeFotos() {
         BurgerJoint conOtraCuenta = sinFoto(1, "Tiene más");
         conOtraCuenta.setFotosEnGoogle(99);
-        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(conOtraCuenta));
+        when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(conOtraCuenta));
         when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
 
         service.revisarFichas();
@@ -183,7 +183,7 @@ class CensoDeFichasTest {
     /** Y el que nunca se preguntó queda con el número, que antes no existía. */
     @Test
     void anotaCuantasFotosTiene() {
-        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(sinFoto(1, "Nuevo")));
+        when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(sinFoto(1, "Nuevo")));
         when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
 
         service.revisarFichas();
@@ -194,7 +194,7 @@ class CensoDeFichasTest {
     /** Si la cuota de fichas se termina, se dice cuántos quedaron sin preguntar. */
     @Test
     void avisaCuantosQuedaronSinPreguntar() {
-        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(
+        when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(
             sinFoto(1, "Uno"), sinFoto(2, "Dos"), sinFoto(3, "Tres")));
         when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
         when(quotaGuard.canCall(PlacesCallType.DETAILS)).thenReturn(true, true, false);
@@ -223,5 +223,39 @@ class CensoDeFichasTest {
         ArgumentCaptor<BurgerJoint> capturado = ArgumentCaptor.forClass(BurgerJoint.class);
         verify(repository).save(capturado.capture());
         return capturado.getValue();
+    }
+
+    /**
+     * El censo mira a los que nunca preguntamos, no a los que no tienen portada.
+     *
+     * Es la diferencia que hace que sirva: "PIPÍ CUCÚ" tiene foto puesta y tres fotos en
+     * Google. Mirando solo los que no tienen portada, nunca nos enteraríamos.
+     */
+    @Test
+    void preguntaTambienPorLosQueYaTienenPortada() {
+        BurgerJoint conPortada = sinFoto(1, "Con portada pero pocas fotos");
+        conPortada.setPhotoUrl("/api/place-photos/x.jpg");
+        when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(conPortada));
+        when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
+
+        CensoDeFichas censo = service.revisarFichas();
+
+        assertThat(censo.preguntados()).isEqualTo(1);
+    }
+
+    /**
+     * Y no vuelve a preguntar por los que ya tienen el número.
+     *
+     * Es lo que hace que cada corrida siga donde quedó la anterior cuando la cuota del
+     * mes se termina a la mitad, en vez de empezar siempre por el principio.
+     */
+    @Test
+    void noVuelveAPreguntarPorLosQueYaSabemos() {
+        when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of());
+
+        CensoDeFichas censo = service.revisarFichas();
+
+        assertThat(censo.preguntados()).isZero();
+        verify(placesClient, never()).fotosDe(anyString());
     }
 }
