@@ -42,13 +42,22 @@ public class PlacesSyncController {
         ));
     }
 
+    /**
+     * @param conFotos false para traer locales sin bajar ni una foto. Las dos cuotas son
+     *                 muy desparejas —cuatro mil búsquedas por mes contra mil fotos— y
+     *                 recorrer las 89 zonas sale unas mil doscientas búsquedas, mientras
+     *                 que ponerle portada a todo lo que entra no alcanza ni de cerca.
+     */
     @PostMapping
-    public ResponseEntity<?> trigger(@RequestHeader(name = TOKEN_HEADER, required = false) String token) {
+    public ResponseEntity<?> trigger(
+        @RequestHeader(name = TOKEN_HEADER, required = false) String token,
+        @RequestParam(name = "conFotos", defaultValue = "true") boolean conFotos
+    ) {
         if (!authorized(token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        return ResponseEntity.ok(syncService.sync());
+        return ResponseEntity.ok(syncService.sync(conFotos));
     }
 
     /**

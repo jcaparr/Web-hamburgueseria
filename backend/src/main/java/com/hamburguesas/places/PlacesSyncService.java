@@ -136,6 +136,22 @@ public class PlacesSyncService {
     }
 
     public PlacesSyncReport sync() {
+        return sync(true);
+    }
+
+    /**
+     * El barrido completo, con la opción de no tocar ni una foto.
+     *
+     * Sin fotos existe porque las dos cuotas son muy desparejas —cuatro mil búsquedas por
+     * mes contra mil fotos— y recorrer las 89 zonas sale unas mil doscientas búsquedas,
+     * mientras que ponerle portada a todo lo que entra no alcanza ni de cerca. Separarlas
+     * deja traer los locales ahora y decidir después a quién se le gasta una foto, con el
+     * censo de fichas ya hecho y los que Google no tiene fotografiados ya borrados.
+     *
+     * @param conFotos false para no bajar ninguna: ni al crear, ni al completar, ni al
+     *                 recambiar las elegidas con una regla vieja
+     */
+    public PlacesSyncReport sync(boolean conFotos) {
         if (!properties.hasApiKey()) {
             log.warn("Places sync skipped: no API key configured");
             return PlacesSyncReport.skipped("Falta configurar GOOGLE_MAPS_API_KEY");
@@ -205,7 +221,7 @@ public class PlacesSyncService {
                     var existing = burgerJointRepository.findByPlaceId(place.placeId());
                     boolean gotPhoto;
                     if (existing.isPresent()) {
-                        gotPhoto = refresh(existing.get(), place, barrio.get());
+                        gotPhoto = refresh(existing.get(), place, barrio.get(), conFotos);
                         updated++;
                     } else {
                         // Google tiene dos fichas para algunos negocios, con
@@ -219,7 +235,7 @@ public class PlacesSyncService {
                             continue;
                         }
 
-                        gotPhoto = create(place, barrio.get());
+                        gotPhoto = create(place, barrio.get(), conFotos);
                         yaEstan.add(nuevo);
                         created++;
                     }
@@ -239,9 +255,14 @@ public class PlacesSyncService {
           }
         }
 
-        MissingPhotosResult missing = fillMissingPhotos();
+        // Las dos pasadas de fotos van juntas en el interruptor: completar las que faltan
+        // y recambiar las viejas gastan la misma cuota chica, y la idea de apagarlas es
+        // no gastarla hasta saber a quién conviene.
+        MissingPhotosResult missing = conFotos ? fillMissingPhotos() : new MissingPhotosResult(0, 0);
         photosDownloaded += missing.downloaded();
-        photosDownloaded += repickOldPhotos();
+        if (conFotos) {
+            photosDownloaded += repickOldPhotos();
+        }
 
         // Los locales que entraron recién no tienen marcado si son de una cadena, y el
         // filtro de Explorar mira esa marca. Sin esto, un McDonald's nuevo se vería
@@ -804,11 +825,11 @@ public class PlacesSyncService {
             .build();
     }
 
-    private boolean create(PlacesSearchResult.Place place, String area) {
+    private boolean create(PlacesSearchResult.Place place, String area, boolean conFotos) {
         BurgerJoint joint = comoJoint(place, area);
 
         boolean gotPhoto = false;
-        if (place.photoName() != null && quotaGuard.canCall(PlacesCallType.PHOTO)) {
+        if (conFotos && place.photoName() != null && quotaGuard.canCall(PlacesCallType.PHOTO)) {
             String photoUrl = downloadPhoto(place);
             if (photoUrl != null) {
                 joint.setPhotoUrl(photoUrl);
@@ -876,7 +897,8 @@ public class PlacesSyncService {
     }
 
     /** @return true si en esta pasada se le consiguió la foto que le faltaba. */
-    private boolean refresh(BurgerJoint joint, PlacesSearchResult.Place place, String area) {
+    private boolean refresh(BurgerJoint joint, PlacesSearchResult.Place place, String area,
+                            boolean conFotos) {
         joint.setName(place.name());
         joint.setGooglePrimaryType(place.primaryType());
         if (place.address() != null) {
@@ -894,7 +916,7 @@ public class PlacesSyncService {
         // más allá de la descarga, y el tope mensual de fotos las reparte entre varias
         // sincronizaciones si hacen falta.
         boolean gotPhoto = false;
-        if (joint.getPhotoUrl() == null && place.photoName() != null
+        if (conFotos && joint.getPhotoUrl() == null && place.photoName() != null
             && quotaGuard.canCall(PlacesCallType.PHOTO)) {
             String photoUrl = downloadPhoto(place);
             if (photoUrl != null) {
