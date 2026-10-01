@@ -1,5 +1,6 @@
 package com.hamburguesas.service;
 
+import com.hamburguesas.dto.NotaYComentarioDto;
 import com.hamburguesas.dto.NotaYCuantasDto;
 import com.hamburguesas.dto.RatingResponse;
 import com.hamburguesas.dto.ResumenDeReseniasDto;
@@ -192,6 +193,37 @@ class ReseniasDeUnLocalTest {
         ResumenDeReseniasDto resumen = service.resumen(LOCAL, YO);
 
         assertThat(resumen.deQuienesSigo()).containsExactly(deUnAmigo);
+    }
+
+    // ---- de qué hablan las reseñas ----
+
+    /**
+     * Que lo que cuenta el resumen llegue hasta la pantalla.
+     *
+     * Qué cuenta como mención se prueba en TemasDeLasReseniasTest, que no necesita ni
+     * base ni Spring. Lo único que falta comprobar acá es que estas reseñas son las que
+     * se le pasan: con la consulta mal escrita el resumen quedaría siempre vacío, y
+     * vacío es exactamente lo que se ve en un local sin reseñas.
+     */
+    @Test
+    void elResumenCuentaDeQueHablanLasResenias() {
+        when(ratingRepository.notasYComentarios(LOCAL)).thenReturn(List.of(
+            new NotaYComentarioDto(5, "La carne, espectacular"),
+            new NotaYComentarioDto(4, "Muy buena la carne"),
+            new NotaYComentarioDto(2, "La carne venía cruda")));
+
+        ResumenDeReseniasDto resumen = service.resumen(LOCAL, null);
+
+        assertThat(resumen.temas()).hasSize(1);
+        assertThat(resumen.temas().get(0).tema()).isEqualTo("La carne");
+        assertThat(resumen.temas().get(0).menciones()).isEqualTo(3);
+        assertThat(resumen.temas().get(0).aFavor()).isEqualTo(2);
+    }
+
+    /** Un local sin reseñas escritas no muestra resumen, y eso no es un error. */
+    @Test
+    void sinReseniasEscritasElResumenViajaVacio() {
+        assertThat(service.resumen(LOCAL, null).temas()).isEmpty();
     }
 
     private Rating unaResenia(Long id, String username, int nota) {

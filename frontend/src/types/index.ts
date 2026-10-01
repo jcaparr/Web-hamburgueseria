@@ -60,10 +60,19 @@ export interface NotaYCuantas {
   cuantas: number
 }
 
+/** Un tema del que hablan las reseñas, y en cuántas de ellas la nota fue buena. */
+export interface TemaDeResenias {
+  tema: string
+  menciones: number
+  aFavor: number
+}
+
 /** Lo que va arriba de la lista de reseñas de un local. */
 export interface ResumenDeResenias {
   /** Las cinco notas, del 1 al 5, con cero incluido. */
   distribucion: NotaYCuantas[]
+  /** De qué habla la gente. Vacía mientras no haya reseñas escritas suficientes. */
+  temas: TemaDeResenias[]
   /** Las reseñas de la gente que seguís. Vacía sin sesión. */
   deQuienesSigo: Rating[]
 }

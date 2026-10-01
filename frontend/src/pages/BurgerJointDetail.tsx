@@ -9,6 +9,7 @@ import { JointPhoto } from '../components/JointPhoto'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { Stars } from '../components/Stars'
 import { TarjetaDeResenia } from '../components/TarjetaDeResenia'
+import { TemasDeLasResenias } from '../components/TemasDeLasResenias'
 import { useAuth } from '../context/AuthContext'
 import type { BurgerJoint, PageResponse, Rating, ResumenDeResenias } from '../types'
 import { isNotFound, isSessionExpired } from '../utils/errors'
@@ -174,6 +175,11 @@ export function BurgerJointDetail() {
 
           {/* Lo que el promedio no dice: si las opiniones coinciden o se reparten. */}
           {resumen && <DistribucionDeNotas distribucion={resumen.distribucion} />}
+
+          {/* Y lo que la distribución tampoco dice: de qué se habla. Va acá, pegado a
+              las barras, porque las dos responden a la misma pregunta —qué tan buena
+              es— desde dos lados. */}
+          {resumen && <TemasDeLasResenias temas={resumen.temas} />}
 
           {error && <p className="text-xs text-error">{error}</p>}
 
