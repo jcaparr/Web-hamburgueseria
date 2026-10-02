@@ -17,7 +17,7 @@ import java.util.Set;
  * Lo que se le puede pedir a la sincronización con Google, de a un trabajo por vez.
  *
  * Coordina y nada más: cada trabajo vive en su propia clase —{@link LimpiezaDeLocales},
- * {@link FotosDeLocales}, {@link ClasificadorDeLocales}— y toda llamada a Google pasa por
+ * {@link FotosDeLocales}, {@link ClasificadorDeLocales}, {@link HorariosDeLocales}— y toda llamada a Google pasa por
  * {@link LlamadasAGoogle}, que es la que la espacia y la anota en la cuota. Acá quedan
  * el barrido, que es lo que junta a las demás, y agregar un local a mano.
  *
@@ -46,6 +46,7 @@ public class PlacesSyncService {
     private final ClasificadorDeLocales clasificador;
     private final LimpiezaDeLocales limpieza;
     private final FotosDeLocales fotos;
+    private final HorariosDeLocales horarios;
     private final Zonas zonas;
     private final BurgerJointRepository burgerJointRepository;
     private final FastFoodMarker fastFoodMarker;
@@ -85,6 +86,20 @@ public class PlacesSyncService {
             return CensoDeFichas.skipped(SIN_CLAVE);
         }
         return fotos.censar();
+    }
+
+    /**
+     * Pide el horario de los locales que no lo tienen, o que lo tienen hace más de un mes.
+     *
+     * Aparte del barrido porque sale de otra cuota —el horario es un campo Enterprise, con
+     * mil gratis por mes— y no busca nada: pregunta por los locales que ya están.
+     */
+    public HorariosPedidos completarHorarios() {
+        if (!properties.hasApiKey()) {
+            log.warn("Horarios salteados: falta la clave de Google");
+            return HorariosPedidos.skipped(SIN_CLAVE);
+        }
+        return horarios.completar();
     }
 
     /** Presta la portada entre sucursales de la misma marca, sin pedirle nada a Google. */

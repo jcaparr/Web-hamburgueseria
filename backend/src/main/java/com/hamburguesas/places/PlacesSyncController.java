@@ -114,6 +114,20 @@ public class PlacesSyncController {
     }
 
     /**
+     * Solo los horarios: se los pide a Google a los locales que no tienen, y a los que
+     * lo tienen hace más de un mes.
+     *
+     * Sale de su propia cuota, de 950 por mes. Son más locales que eso, así que lo que
+     * no entra lo completa la pasada del mes siguiente.
+     */
+    @PostMapping("/horarios")
+    public ResponseEntity<?> completarHorarios(
+        @RequestHeader(name = TOKEN_HEADER, required = false) String token
+    ) {
+        return siEstaAutorizado(token, syncService::completarHorarios);
+    }
+
+    /**
      * Agrega un local puntual buscándolo por su nombre.
      *
      * Para las hamburgueserías que el barrido no encuentra nunca: Google no les pone el

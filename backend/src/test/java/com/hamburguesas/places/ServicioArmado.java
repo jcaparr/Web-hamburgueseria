@@ -1,9 +1,12 @@
 package com.hamburguesas.places;
 
 import com.hamburguesas.repository.BurgerJointRepository;
+import com.hamburguesas.repository.FranjaHorariaRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.SavedTourRepository;
 import com.hamburguesas.repository.WishlistRepository;
+
+import static org.mockito.Mockito.mock;
 
 /**
  * Arma la sincronización con sus partes, como lo haría Spring.
@@ -28,8 +31,11 @@ final class ServicioArmado {
         LimpiezaDeLocales limpieza = new LimpiezaDeLocales(
             repository, zonas, clasificador, ratings, wishlist, tours);
         FotosDeLocales fotos = new FotosDeLocales(properties, google, photoStorage, repository);
+        // Ningún test de la sincronización mira los horarios: tienen los suyos.
+        HorariosDeLocales horarios =
+            new HorariosDeLocales(google, repository, mock(FranjaHorariaRepository.class));
 
-        return new PlacesSyncService(
-            properties, google, clasificador, limpieza, fotos, zonas, repository, marcador);
+        return new PlacesSyncService(properties, google, clasificador, limpieza, fotos,
+            horarios, zonas, repository, marcador);
     }
 }

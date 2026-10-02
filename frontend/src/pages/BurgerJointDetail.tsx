@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { IconHeart, IconPencil, IconPin } from '../components/icons'
 import { DistribucionDeNotas } from '../components/DistribucionDeNotas'
+import { HorarioDelLocal } from '../components/HorarioDelLocal'
 import { LoadError } from '../components/LoadError'
 import { ModalDeResenia } from '../components/ModalDeResenia'
 import { JointPhoto } from '../components/JointPhoto'
@@ -11,7 +12,7 @@ import { Stars } from '../components/Stars'
 import { TarjetaDeResenia } from '../components/TarjetaDeResenia'
 import { TemasDeLasResenias } from '../components/TemasDeLasResenias'
 import { useAuth } from '../context/AuthContext'
-import type { BurgerJoint, PageResponse, Rating, ResumenDeResenias } from '../types'
+import type { BurgerJoint, Horario, PageResponse, Rating, ResumenDeResenias } from '../types'
 import { isNotFound, isSessionExpired } from '../utils/errors'
 import { shortAddress } from '../utils/address'
 import { mapsUrl } from '../utils/maps'
@@ -35,6 +36,7 @@ export function BurgerJointDetail() {
   // lo que se puede ver, y no las que el servidor escondió por un bloqueo.
   const [cuantasResenias, setCuantasResenias] = useState<number | null>(null)
   const [resumen, setResumen] = useState<ResumenDeResenias | null>(null)
+  const [horario, setHorario] = useState<Horario | null>(null)
   const [opinando, setOpinando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<unknown>(null)
@@ -61,6 +63,16 @@ export function BurgerJointDetail() {
   }
 
   useEffect(load, [id])
+
+  // Aparte de las demás y sin cartel de error: el horario acompaña a la ficha, no la
+  // completa. Si no llega, el local se ve igual que uno del que Google no tiene horario.
+  // Y no se vuelve a pedir al guardar una reseña o un deseado, que no lo cambian.
+  useEffect(() => {
+    apiClient
+      .get<Horario>(`/burger-joints/${id}/horario`)
+      .then(({ data }) => setHorario(data))
+      .catch(() => setHorario(null))
+  }, [id])
 
   // Se espera a saber si hay sesión antes de tocar el parámetro. Al entrar todavía no se
   // sabe quién sos, y consumirlo en ese momento era gastarlo sin abrir nada: cuando la
@@ -139,14 +151,17 @@ export function BurgerJointDetail() {
           <div className="flex items-start justify-between gap-2">
             <div className="flex min-w-0 flex-col gap-1.5">
               <h1 className="font-display text-2xl font-bold">{burgerJoint.name}</h1>
-              <p className="text-sm text-base-content/60">
-                {shortAddress(burgerJoint.address, burgerJoint.area)}
-              </p>
               {burgerJoint.averageScore ? (
                 <ScoreBadge score={burgerJoint.averageScore} size="sm" />
               ) : (
                 <p className="text-sm text-base-content/50">Todavía sin calificaciones</p>
               )}
+              {/* Arriba qué tan buena es; abajo, juntos, lo que hace falta para ir:
+                  dónde queda, si está abierto ahora y cómo llegar. */}
+              <p className="mt-1 text-sm text-base-content/60">
+                {shortAddress(burgerJoint.address, burgerJoint.area)}
+              </p>
+              {horario && <HorarioDelLocal franjas={horario.franjas} />}
               <a
                 href={mapsUrl(
                   burgerJoint.placeId,

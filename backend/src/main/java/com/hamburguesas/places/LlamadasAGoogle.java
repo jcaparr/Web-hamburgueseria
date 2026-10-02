@@ -92,6 +92,19 @@ public class LlamadasAGoogle {
     }
 
     /**
+     * El horario de apertura del local, vacío si Google no lo tiene.
+     *
+     * Deja pasar el error: "no tiene horario" es una respuesta y se guarda, pero "Google
+     * no contestó" no, y quien pregunta tiene que poder distinguirlos.
+     */
+    List<HorarioDeGoogle.Franja> horarioDe(String placeId) {
+        pausa();
+        List<HorarioDeGoogle.Franja> franjas = placesClient.horarioDe(placeId);
+        quotaGuard.record(PlacesCallType.HORARIO);
+        return franjas;
+    }
+
+    /**
      * Los bytes de una foto.
      *
      * Deja pasar el error: quien baja decide qué hacer con un local que se quedó sin la

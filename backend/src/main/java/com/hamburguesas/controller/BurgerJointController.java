@@ -1,6 +1,7 @@
 package com.hamburguesas.controller;
 
 import com.hamburguesas.dto.BurgerJointDto;
+import com.hamburguesas.dto.HorarioDto;
 import com.hamburguesas.security.CurrentUser;
 import com.hamburguesas.service.BurgerJointService;
 import lombok.RequiredArgsConstructor;
@@ -55,5 +56,11 @@ public class BurgerJointController {
     @GetMapping("/{id}")
     public BurgerJointDto get(@PathVariable Long id) {
         return burgerJointService.get(id, CurrentUser.idOrNull());
+    }
+
+    /** Público como el resto del local: el horario se mira sin cuenta. */
+    @GetMapping("/{id}/horario")
+    public HorarioDto horario(@PathVariable Long id) {
+        return burgerJointService.horario(id);
     }
 }

@@ -5,9 +5,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -89,4 +92,24 @@ public interface BurgerJointRepository
      */
     @Query("select b.name from BurgerJoint b where b.googlePrimaryType = :rubro")
     List<String> nombresDeRubro(@Param("rubro") String rubro);
+
+    /**
+     * Los locales a los que hay que pedirles el horario, en el orden en que conviene.
+     *
+     * Primero los que nunca se preguntaron y después los más viejos, así la cuota del
+     * mes va a lo que falta antes que a refrescar. Los que se preguntaron después de
+     * {@code antesDe} no salen: su horario todavía está fresco.
+     */
+    @Query("""
+        select b from BurgerJoint b
+        where b.placeId is not null
+          and (b.horarioConsultadoEl is null or b.horarioConsultadoEl < :antesDe)
+        order by b.horarioConsultadoEl asc nulls first, b.id
+        """)
+    List<BurgerJoint> paraPedirleElHorario(@Param("antesDe") Instant antesDe);
+
+    @Modifying
+    @Transactional
+    @Query("update BurgerJoint b set b.horarioConsultadoEl = :cuando where b.id = :id")
+    void anotarHorarioConsultado(@Param("id") Long id, @Param("cuando") Instant cuando);
 }

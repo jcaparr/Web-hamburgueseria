@@ -77,6 +77,26 @@ export interface ResumenDeResenias {
   deQuienesSigo: Rating[]
 }
 
+/**
+ * Un tramo en que el local está abierto.
+ *
+ * El cierre se cuenta desde la misma medianoche que la apertura, así que pasa de 1440 si
+ * cierra al día siguiente: un viernes de 19 a 1 es abre 1140 y cierra 1500.
+ */
+export interface FranjaHoraria {
+  /** 0 es domingo y 6 es sábado. */
+  dia: number
+  /** Minutos desde la medianoche. */
+  abre: number
+  cierra: number
+}
+
+export interface Horario {
+  /** Vacía si Google no tiene el horario o si todavía no se le preguntó. */
+  franjas: FranjaHoraria[]
+  consultado: boolean
+}
+
 export interface RankingItem {
   burgerJointId: number
   placeId: string | null
