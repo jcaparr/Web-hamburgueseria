@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import type { CampoDeNombre } from '../hooks/useNombreDeUsuario'
 
 /**
@@ -14,9 +15,13 @@ export function CampoNombreDeUsuario({
   autoFocus?: boolean
 }) {
   const marcado = campo.problema !== null
+  const id = useId()
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-sm font-semibold">
+        Nombre de usuario
+      </label>
       <label
         className={`input input-bordered flex items-center gap-0 ${
           marcado ? 'input-error' : 'focus-within:border-primary'
@@ -38,14 +43,16 @@ export function CampoNombreDeUsuario({
           value={campo.valor}
           onChange={(e) => campo.escribir(e.target.value)}
           onBlur={campo.chequear}
+          id={id}
           placeholder="nombredeusuario"
           className="grow"
           aria-invalid={marcado}
+          aria-describedby={`${id}-ayuda`}
         />
       </label>
 
       {marcado ? (
-        <p className="text-xs text-error">
+        <p id={`${id}-ayuda`} role="alert" className="text-xs text-error">
           {campo.problema}
           {campo.sugerencia && (
             <>
@@ -61,8 +68,8 @@ export function CampoNombreDeUsuario({
           )}
         </p>
       ) : (
-        <p className="text-xs text-base-content/70">
-          Con esto te buscan tus amigos. Letras, números y guión bajo.
+        <p id={`${id}-ayuda`} className="text-xs text-base-content/70">
+          Con esto te encuentran tus amigos. Letras, números y guion bajo.
         </p>
       )}
     </div>

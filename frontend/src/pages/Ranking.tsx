@@ -154,19 +154,20 @@ export function Ranking() {
               href={mapsUrl(item.placeId, item.name, item.latitude, item.longitude)}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 p-3 pt-0 pl-11 text-xs font-semibold text-primary"
+              className="flex w-fit items-center gap-1 p-3 pt-1 pl-11 text-xs font-semibold text-primary hover:underline"
             >
               <IconPin />
               Ver en Maps
             </a>
           </li>
         ))}
-        {!loading && items.length === 0 && (tab === 'general' || user) && (
-          <p className="text-sm text-base-content/70">
-            {tab === 'mine' ? 'Todavía no calificaste ninguna hamburguesería.' : 'Todavía no hay calificaciones.'}
-          </p>
-        )}
       </ol>
+      )}
+
+      {!loading && !error && items.length === 0 && (tab === 'general' || user) && (
+        <p className="text-sm text-base-content/70">
+          {tab === 'mine' ? 'Todavía no calificaste ninguna hamburguesería.' : 'Todavía no hay calificaciones.'}
+        </p>
       )}
     </div>
   )

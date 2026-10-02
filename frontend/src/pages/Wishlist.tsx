@@ -78,7 +78,7 @@ export function Wishlist() {
               href={mapsUrl(b.placeId, b.name, b.latitude, b.longitude)}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 p-3 pt-2 text-xs font-semibold text-primary"
+              className="flex w-fit items-center gap-1 p-3 pt-2 text-xs font-semibold text-primary hover:underline"
             >
               <IconPin />
               Ver en Maps

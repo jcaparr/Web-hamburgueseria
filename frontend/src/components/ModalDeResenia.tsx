@@ -178,10 +178,14 @@ export function ModalDeResenia({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-base-content/70">
+            <label
+              htmlFor="texto-de-la-resenia"
+              className="text-xs font-semibold uppercase tracking-wide text-base-content/70"
+            >
               Tu reseña
-            </span>
+            </label>
             <textarea
+              id="texto-de-la-resenia"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="¿Qué te pareció?"
@@ -190,7 +194,7 @@ export function ModalDeResenia({
             />
           </div>
 
-          {error && <p className="text-xs text-error">{error}</p>}
+          {error && <p role="alert" className="text-sm text-error">{error}</p>}
 
           <button type="submit" disabled={guardando} className="btn btn-primary">
             {guardando ? 'Guardando…' : miResenia ? 'Actualizar reseña' : 'Publicar reseña'}

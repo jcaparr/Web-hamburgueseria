@@ -171,7 +171,7 @@ export function BurgerJointDetail() {
                 )}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs font-semibold text-primary"
+                className="flex w-fit items-center gap-1 py-1.5 text-xs font-semibold text-primary hover:underline"
               >
                 <IconPin />
                 Ver en Maps

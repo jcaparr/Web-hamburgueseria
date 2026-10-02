@@ -97,7 +97,10 @@ export function GoogleSignInButton({
         window.google.accounts.id.renderButton(container.current, {
           theme: 'outline',
           size: 'large',
-          width: 320,
+          // Del ancho del formulario, que es lo que ocupan los campos de arriba. Fijo en
+          // 320 se salía de la tarjeta en el teléfono, donde quedan unos 280. Google
+          // acepta entre 200 y 400.
+          width: Math.max(200, Math.min(400, container.current.clientWidth)),
           text,
           locale: 'es-419',
         })
