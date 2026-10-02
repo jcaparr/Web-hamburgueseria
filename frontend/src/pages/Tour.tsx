@@ -169,7 +169,7 @@ export function Tour() {
 
         <div className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between">
-            <span className="text-sm font-semibold">Cuántas parar</span>
+            <span className="text-sm font-semibold">Cuántas paradas</span>
             <span className="font-display text-lg font-bold text-primary">{cantidad}</span>
           </div>
           <input
@@ -197,7 +197,8 @@ export function Tour() {
                 key={km}
                 type="button"
                 onClick={() => setTope(tope === km ? null : km)}
-                className={`btn btn-xs ${tope === km ? 'btn-primary' : 'btn-outline'}`}
+                aria-pressed={tope === km}
+                className={`btn btn-sm ${tope === km ? 'btn-primary' : 'btn-outline'}`}
               >
                 {km} km
               </button>
@@ -233,7 +234,7 @@ export function Tour() {
           {barrios.length === 0 && (
             <p className="text-xs text-base-content/70">
               {buscandoUbicacion
-                ? 'Buscando dónde estás...'
+                ? 'Buscando dónde estás…'
                 : (sinUbicacion ?? 'Sin barrios, el recorrido arranca donde estás vos.')}
             </p>
           )}
@@ -270,7 +271,7 @@ export function Tour() {
           disabled={armando}
           className="btn btn-primary btn-block"
         >
-          {armando ? 'Armando...' : tour ? 'Armar otro' : 'Armar tour'}
+          {armando ? 'Armando…' : tour ? 'Armar otro' : 'Armar tour'}
         </button>
       </section>
 

@@ -47,7 +47,7 @@ export function PasoNombreDeGoogle({ google }: { google: GoogleSignIn }) {
               disabled={enviando || campo.chequeando}
               className="btn btn-primary"
             >
-              {enviando ? 'Creando...' : 'Crear cuenta'}
+              {enviando ? 'Creando…' : 'Crear cuenta'}
             </button>
           </form>
 

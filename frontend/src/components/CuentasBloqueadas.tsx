@@ -65,7 +65,7 @@ export function CuentasBloqueadas() {
               disabled={desbloqueando === b.username}
               className="btn btn-ghost btn-xs"
             >
-              {desbloqueando === b.username ? 'Desbloqueando...' : 'Desbloquear'}
+              {desbloqueando === b.username ? 'Desbloqueando…' : 'Desbloquear'}
             </button>
           </li>
         ))}

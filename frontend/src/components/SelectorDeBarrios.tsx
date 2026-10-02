@@ -103,7 +103,7 @@ export function SelectorDeBarrios({
               type="search"
               value={buscado}
               onChange={(e) => setBuscado(e.target.value)}
-              placeholder="Buscar barrio..."
+              placeholder="Buscar barrio…"
               autoCapitalize="none"
               autoCorrect="off"
               className="w-full bg-transparent text-base outline-none placeholder:text-base-content/60 md:text-sm"

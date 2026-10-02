@@ -94,7 +94,7 @@ export function Login() {
             {error && <p className="text-xs text-error">{error}</p>}
             {notice && <p className="text-xs text-success">{notice}</p>}
             <button type="submit" disabled={submitting} className="btn btn-primary">
-              {submitting ? 'Ingresando...' : 'Ingresar'}
+              {submitting ? 'Ingresando…' : 'Ingresar'}
             </button>
           </form>
 

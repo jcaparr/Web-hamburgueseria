@@ -61,7 +61,7 @@ export function BotonBloquear({
           disabled={enViaje}
           className="btn btn-sm btn-error"
         >
-          {enViaje ? 'Bloqueando...' : 'Bloquear'}
+          {enViaje ? 'Bloqueando…' : 'Bloquear'}
         </button>
         <button
           type="button"

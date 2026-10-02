@@ -4,7 +4,7 @@ import { apiClient } from '../api/client'
 import { CuentasBloqueadas } from '../components/CuentasBloqueadas'
 import { LoadError } from '../components/LoadError'
 import { JointPhoto } from '../components/JointPhoto'
-import { IconChevronRight, IconMedal, IconSettings, IconUser } from '../components/icons'
+import { IconChevronRight, IconMedal, IconUser } from '../components/icons'
 import { SavedTourCard } from '../components/SavedTourCard'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { useAuth } from '../context/AuthContext'
@@ -72,16 +72,7 @@ export function Profile() {
           setLoading(true)
           setAttempt((n) => n + 1)
         }} />}
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Mi perfil</h1>
-        <button
-          className="btn btn-ghost btn-circle text-base-content/70"
-          title="Configuración (próximamente)"
-          disabled
-        >
-          <IconSettings size={20} />
-        </button>
-      </div>
+      <h1 className="font-display text-2xl font-bold">Mi perfil</h1>
 
       <div className="flex items-center gap-4">
         <div className="flex h-16 w-16 flex-none items-center justify-center rounded-full bg-neutral text-secondary">
@@ -128,7 +119,7 @@ export function Profile() {
             </Link>
           )}
         </div>
-        {loading && <p className="text-sm text-base-content/70">Cargando...</p>}
+        {loading && <p className="text-sm text-base-content/70">Cargando…</p>}
         <div className="flex flex-col gap-2">
           {recentRatings.map((r) => (
             <Link
@@ -149,18 +140,23 @@ export function Profile() {
             </Link>
           ))}
           {!loading && !error && recentRatings.length === 0 && (
-            <p className="text-sm text-base-content/70">Todavía no calificaste ninguna hamburguesería.</p>
+            <p className="text-sm text-base-content/70">
+              Todavía no calificaste ninguna.{' '}
+              <Link to="/" className="link text-primary">Buscá una que conozcas</Link>
+            </p>
           )}
         </div>
       </section>
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-sm font-bold">Favoritos</h2>
-          <Link to="/wishlist" className="flex items-center gap-1 text-xs font-semibold text-primary">
-            Ver todo
-            <IconChevronRight size={14} />
-          </Link>
+          <h2 className="font-display text-sm font-bold">Guardadas</h2>
+          {favorites.length > 0 && (
+            <Link to="/wishlist" className="flex items-center gap-1 text-xs font-semibold text-primary">
+              Ver todas
+              <IconChevronRight size={14} />
+            </Link>
+          )}
         </div>
         {favorites.length > 0 ? (
           <div className="flex gap-3 overflow-x-auto pb-1">
@@ -183,7 +179,11 @@ export function Profile() {
             ))}
           </div>
         ) : (
-          !loading && !error && <p className="text-sm text-base-content/70">Todavía no guardaste ninguna hamburguesería.</p>
+          !loading && !error && (
+            <p className="text-sm text-base-content/70">
+              Todavía no guardaste ninguna. Tocá el corazón de las que quieras probar.
+            </p>
+          )
         )}
       </section>
 
@@ -191,7 +191,7 @@ export function Profile() {
         <div className="flex items-center justify-between">
           <h2 className="font-display text-sm font-bold">Mis recorridos</h2>
           <Link to="/tour" className="flex items-center gap-1 text-xs font-semibold text-primary">
-            Armar otro
+            {tours.length > 0 ? 'Armar otro' : 'Armar uno'}
             <IconChevronRight size={14} />
           </Link>
         </div>

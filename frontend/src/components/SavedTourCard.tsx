@@ -37,7 +37,7 @@ export function SavedTourCard({
           disabled={borrando}
           className="btn btn-ghost btn-xs shrink-0 text-error"
         >
-          {borrando ? 'Borrando...' : 'Borrar'}
+          {borrando ? 'Borrando…' : 'Borrar'}
         </button>
       </div>
 

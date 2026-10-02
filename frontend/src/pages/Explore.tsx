@@ -220,7 +220,7 @@ export function Explore() {
           onChange={(e) => {
             cambiar({ q: e.target.value, pagina: null })
           }}
-          placeholder="Buscar hamburguesería..."
+          placeholder="Buscar hamburguesería…"
           className="w-full bg-transparent text-base outline-none placeholder:text-base-content/60 md:text-sm"
         />
       </div>
@@ -259,7 +259,7 @@ export function Explore() {
         Mostrar cadenas de comida rápida
       </Interruptor>
 
-      {loading && <p className="text-sm text-base-content/70">Buscando...</p>}
+      {loading && <p className="text-sm text-base-content/70">Buscando…</p>}
 
       {error ? (
         <LoadError error={error} onRetry={() => setAttempt((n) => n + 1)} />

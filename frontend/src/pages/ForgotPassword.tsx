@@ -72,7 +72,7 @@ export function ForgotPassword() {
                 />
                 {error && <p className="text-xs text-error">{error}</p>}
                 <button type="submit" disabled={submitting} className="btn btn-primary">
-                  {submitting ? 'Enviando...' : 'Mandarme el código'}
+                  {submitting ? 'Enviando…' : 'Mandarme el código'}
                 </button>
               </form>
             </>
@@ -109,7 +109,7 @@ export function ForgotPassword() {
                   disabled={submitting || code.length !== 6}
                   className="btn btn-primary"
                 >
-                  {submitting ? 'Cambiando...' : 'Cambiar contraseña'}
+                  {submitting ? 'Cambiando…' : 'Cambiar contraseña'}
                 </button>
               </form>
             </>

@@ -103,7 +103,7 @@ export function Recorrido({
           disabled={guardando || guardado !== null}
           className="btn btn-outline btn-block"
         >
-          {guardado ? 'Guardado en tu perfil' : guardando ? 'Guardando...' : 'Guardar este recorrido'}
+          {guardado ? 'Guardado en tu perfil' : guardando ? 'Guardando…' : 'Guardar este recorrido'}
         </button>
       )}
 

@@ -84,7 +84,7 @@ export function Register() {
             />
             {error && <p className="text-xs text-error">{error}</p>}
             <button type="submit" disabled={submitting} className="btn btn-primary">
-              {submitting ? 'Creando...' : 'Crear cuenta'}
+              {submitting ? 'Creando…' : 'Crear cuenta'}
             </button>
           </form>
 

@@ -57,7 +57,7 @@ export function PerfilPublico() {
   }
 
   if (cargando || !perfil) {
-    return <p className="p-4 text-sm text-base-content/70">Cargando...</p>
+    return <p className="p-4 text-sm text-base-content/70">Cargando…</p>
   }
 
   return (

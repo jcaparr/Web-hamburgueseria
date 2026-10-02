@@ -142,7 +142,7 @@ export function ModalDeResenia({
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col">
             <h3 className="font-display text-lg font-bold">
-              {miResenia ? 'Editá tu opinión' : 'Dejá tu opinión'}
+              {miResenia ? 'Editar tu reseña' : 'Escribir una reseña'}
             </h3>
             <span className="truncate text-sm text-base-content/70">{nombreDelLocal}</span>
           </div>
@@ -193,7 +193,7 @@ export function ModalDeResenia({
           {error && <p className="text-xs text-error">{error}</p>}
 
           <button type="submit" disabled={guardando} className="btn btn-primary">
-            {guardando ? 'Guardando...' : miResenia ? 'Actualizar reseña' : 'Publicar reseña'}
+            {guardando ? 'Guardando…' : miResenia ? 'Actualizar reseña' : 'Publicar reseña'}
           </button>
         </form>
       </div>

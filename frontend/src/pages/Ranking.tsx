@@ -65,18 +65,22 @@ export function Ranking() {
 
       <div role="tablist" className="flex w-full gap-1 rounded-full border border-base-300 bg-base-100 p-1">
         <button
+          type="button"
           role="tab"
-          className={`flex-1 cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-            tab === 'general' ? 'bg-neutral text-secondary' : 'text-base-content'
+          aria-selected={tab === 'general'}
+          className={`flex-1 cursor-pointer rounded-full px-4 py-2.5 text-sm font-semibold transition-colors ${
+            tab === 'general' ? 'bg-neutral text-secondary' : 'text-base-content hover:text-primary'
           }`}
           onClick={() => setTab('general')}
         >
           Ranking general
         </button>
         <button
+          type="button"
           role="tab"
-          className={`flex-1 cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-            tab === 'mine' ? 'bg-neutral text-secondary' : 'text-base-content'
+          aria-selected={tab === 'mine'}
+          className={`flex-1 cursor-pointer rounded-full px-4 py-2.5 text-sm font-semibold transition-colors ${
+            tab === 'mine' ? 'bg-neutral text-secondary' : 'text-base-content hover:text-primary'
           }`}
           onClick={() => setTab('mine')}
         >
@@ -87,14 +91,18 @@ export function Ranking() {
       {tab === 'general' && (
         <div className="flex gap-2 text-xs">
           <button
+            type="button"
+            aria-pressed={order === 'score'}
             onClick={() => setOrder('score')}
-            className={`btn btn-xs rounded-full ${order === 'score' ? 'btn-primary' : 'btn-outline'}`}
+            className={`btn btn-sm rounded-full ${order === 'score' ? 'btn-primary' : 'btn-outline'}`}
           >
             Mejor calificadas
           </button>
           <button
+            type="button"
+            aria-pressed={order === 'popularity'}
             onClick={() => setOrder('popularity')}
-            className={`btn btn-xs rounded-full ${order === 'popularity' ? 'btn-primary' : 'btn-outline'}`}
+            className={`btn btn-sm rounded-full ${order === 'popularity' ? 'btn-primary' : 'btn-outline'}`}
           >
             Más populares
           </button>
@@ -102,10 +110,17 @@ export function Ranking() {
       )}
 
       {tab === 'mine' && !user && (
-        <p className="text-sm text-base-content/70">Iniciá sesión para ver las hamburgueserías que calificaste.</p>
+        <div className="flex flex-col items-start gap-3">
+          <p className="text-sm text-base-content/70">
+            Tu ranking ordena las hamburgueserías según las notas que les pusiste vos.
+          </p>
+          <Link to="/login" className="btn btn-primary btn-sm">
+            Iniciar sesión
+          </Link>
+        </div>
       )}
 
-      {loading && <p className="text-sm text-base-content/70">Cargando...</p>}
+      {loading && <p className="text-sm text-base-content/70">Cargando…</p>}
 
       {error ? (
         <LoadError error={error} onRetry={() => setAttempt((n) => n + 1)} />
@@ -127,9 +142,11 @@ export function Ranking() {
               <div className="flex flex-col items-end gap-1 text-right text-sm">
                 <ScoreBadge score={tab === 'mine' ? (item.myScore ?? item.averageScore) : item.averageScore} size="sm" />
                 {tab === 'general' ? (
-                  <div className="text-xs text-base-content/70">{item.ratingsCount} reseñas</div>
+                  <div className="text-xs text-base-content/70">
+                    {item.ratingsCount} {item.ratingsCount === 1 ? 'reseña' : 'reseñas'}
+                  </div>
                 ) : (
-                  <div className="text-xs text-base-content/70">general: {item.averageScore.toFixed(1)}</div>
+                  <div className="text-xs text-base-content/70">Promedio {item.averageScore.toFixed(1)}</div>
                 )}
               </div>
             </Link>

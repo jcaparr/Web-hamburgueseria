@@ -97,7 +97,7 @@ export function VerifyEmail() {
               disabled={submitting || code.length !== 6}
               className="btn btn-primary"
             >
-              {submitting ? 'Verificando...' : 'Activar cuenta'}
+              {submitting ? 'Verificando…' : 'Activar cuenta'}
             </button>
           </form>
 

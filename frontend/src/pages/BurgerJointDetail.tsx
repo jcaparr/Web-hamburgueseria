@@ -102,7 +102,7 @@ export function BurgerJointDetail() {
       if (isSessionExpired(err)) {
         navigate('/login')
       } else {
-        setError('No pudimos actualizar tu lista de deseados')
+        setError('No pudimos actualizar tus guardadas. Probá de nuevo.')
       }
     }
   }
@@ -130,7 +130,7 @@ export function BurgerJointDetail() {
         </div>
       )
     }
-    return <p className="p-4 text-sm text-base-content/70">Cargando...</p>
+    return <p className="p-4 text-sm text-base-content/70">Cargando…</p>
   }
 
   return (
@@ -182,7 +182,8 @@ export function BurgerJointDetail() {
               onClick={toggleWishlist}
               aria-pressed={burgerJoint.inWishlist}
               className={`btn btn-ghost btn-circle flex-none ${burgerJoint.inWishlist ? 'text-primary' : 'text-base-content/60'}`}
-              title={burgerJoint.inWishlist ? 'Quitar de deseados' : 'Guardar en deseados'}
+              aria-label={burgerJoint.inWishlist ? 'Quitar de guardadas' : 'Guardar'}
+              title={burgerJoint.inWishlist ? 'Quitar de guardadas' : 'Guardar'}
             >
               <IconHeart size={24} filled={burgerJoint.inWishlist} />
             </button>
@@ -220,7 +221,7 @@ export function BurgerJointDetail() {
             </div>
           ) : (
             <button type="button" onClick={abrirOpinion} className="btn btn-primary mt-auto">
-              Dejá tu opinión
+              Escribir una reseña
             </button>
           )}
         </div>
@@ -254,7 +255,7 @@ export function BurgerJointDetail() {
           )
         })}
         {ratings.length === 0 && (
-          <p className="text-sm text-base-content/70">Sé el primero en dejar una reseña.</p>
+          <p className="text-sm text-base-content/70">Todavía no hay reseñas. Si fuiste, contá qué te pareció.</p>
         )}
       </section>
 
