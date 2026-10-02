@@ -30,12 +30,14 @@ export function HorarioDelLocal({ franjas }: { franjas: FranjaHoraria[] }) {
 
   return (
     <details className="group text-sm">
-      <summary className="group/resumen flex cursor-pointer list-none flex-wrap items-center gap-x-2 gap-y-0.5 rounded-field focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
-        <span className={`font-semibold ${abierto ? 'text-success' : 'text-error'}`}>
-          {abierto ? 'Abierto' : 'Cerrado'}
+      <summary className="group/resumen flex cursor-pointer list-none items-start gap-2 rounded-field focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
+        <span className="flex min-w-0 flex-1 flex-wrap gap-x-2 gap-y-0.5">
+          <span className={`font-semibold ${abierto ? 'text-success' : 'text-error'}`}>
+            {abierto ? 'Abierto' : 'Cerrado'}
+          </span>
+          <span className="text-base-content/70">{loDeHoy(franjas, momento.dia)}</span>
         </span>
-        <span className="text-base-content/70">{loDeHoy(franjas, momento.dia)}</span>
-        <span aria-hidden="true" className="flex">
+        <span aria-hidden="true" className="flex flex-none pt-0.5">
           <IconChevronRight
             size={14}
             className="text-base-content/70 transition-transform group-open:rotate-90 group-hover/resumen:text-base-content motion-reduce:transition-none"
@@ -44,7 +46,7 @@ export function HorarioDelLocal({ franjas }: { franjas: FranjaHoraria[] }) {
         <span className="sr-only">Ver el horario de toda la semana</span>
       </summary>
 
-      <ul className="mt-2 flex max-w-xs flex-col">
+      <ul className="mt-2 flex flex-col">
         {SEMANA_DE_LUNES_A_DOMINGO.map((dia) => {
           const esHoy = dia === momento.dia
           const cerrado = franjasDelDia(franjas, dia).length === 0

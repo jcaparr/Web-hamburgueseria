@@ -111,3 +111,41 @@ export function IconPencil({ size = 18, className }: IconProps) {
     </svg>
   )
 }
+
+/** Volver a la pantalla anterior. */
+export function IconArrowLeft({ size = 18, className }: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M16 10H4.5M9.5 5 4.5 10l5 5" />
+    </svg>
+  )
+}
+
+/** Compartir: una flecha que sale de una caja, como en los teléfonos. */
+export function IconShare({ size = 18, className }: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M10 12.5V3M6.5 6.5 10 3l3.5 3.5" />
+      <path d="M6 9H5a1.5 1.5 0 0 0-1.5 1.5v5A1.5 1.5 0 0 0 5 17h10a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 15 9h-1" />
+    </svg>
+  )
+}
+
+/** El horario de un local. */
+export function IconClock({ size = 18, className }: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" className={className}>
+      <circle cx="10" cy="10" r="7" />
+      <path d="M10 6v4l2.5 1.5" />
+    </svg>
+  )
+}
+
+/** Un enlace que abre otra página, fuera de la app. */
+export function IconExternal({ size = 14, className }: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M11.5 4.5h4v4M15.5 4.5 9 11M8 5.5H5.5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V12" />
+    </svg>
+  )
+}
