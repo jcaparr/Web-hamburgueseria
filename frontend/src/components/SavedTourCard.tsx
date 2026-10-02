@@ -35,7 +35,7 @@ export function SavedTourCard({
           type="button"
           onClick={() => onBorrar(tour.id)}
           disabled={borrando}
-          className="btn btn-ghost btn-xs shrink-0 text-error"
+          className="btn btn-ghost btn-sm -mr-2 -mt-1 shrink-0 text-error"
         >
           {borrando ? 'Borrando…' : 'Borrar'}
         </button>
@@ -66,7 +66,7 @@ export function SavedTourCard({
         )}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-1 text-xs font-semibold text-primary"
+        className="-my-2 flex w-fit items-center gap-1 py-2 text-xs font-semibold text-primary hover:underline"
       >
         <IconRoute size={14} />
         Abrir el recorrido en Maps

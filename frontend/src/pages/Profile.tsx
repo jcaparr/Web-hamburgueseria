@@ -1,19 +1,23 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
+import { CabeceraDePerfil, CifrasDePerfil } from '../components/CabeceraDePerfil'
 import { CuentasBloqueadas } from '../components/CuentasBloqueadas'
+import { IconMedal, IconSearch } from '../components/icons'
 import { LoadError } from '../components/LoadError'
-import { JointPhoto } from '../components/JointPhoto'
-import { IconChevronRight, IconMedal, IconUser } from '../components/icons'
 import { SavedTourCard } from '../components/SavedTourCard'
-import { ScoreBadge } from '../components/ScoreBadge'
+import { AvisoVacio, Seccion } from '../components/Seccion'
+import { FilaDeTarjetas, LugarEnLaFila, TarjetaChicaDeLocal } from '../components/TarjetaChicaDeLocal'
 import { useAuth } from '../context/AuthContext'
 import type { BurgerJoint, ReseniaDePerfil, ProfileStats, SavedTour } from '../types'
 import { isSessionExpired } from '../utils/errors'
 import { relativeDate } from '../utils/relativeDate'
 
+/** Cuántas reseñas y guardadas se asoman en el perfil; el resto, en "Ver todas". */
+const CUANTAS_EN_LA_FILA = 6
+
 export function Profile() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [stats, setStats] = useState<ProfileStats | null>(null)
   const [ratings, setRatings] = useState<ReseniaDePerfil[]>([])
@@ -35,7 +39,7 @@ export function Profile() {
       .then(([statsRes, ratingsRes, wishlistRes, toursRes]) => {
         setStats(statsRes.data)
         setRatings(ratingsRes.data)
-        setFavorites(wishlistRes.data.slice(0, 5))
+        setFavorites(wishlistRes.data.slice(0, CUANTAS_EN_LA_FILA))
         setTours(toursRes.data)
       })
       .catch((err) => {
@@ -45,7 +49,14 @@ export function Profile() {
       .finally(() => setLoading(false))
   }, [user, navigate, attempt])
 
-  const recentRatings = ratings.slice(0, 3)
+  const recentRatings = ratings.slice(0, CUANTAS_EN_LA_FILA)
+
+  // Lo mismo que "Salir" arriba, y en el mismo orden: primero se va al inicio, porque
+  // borrar la sesión con una página privada abierta manda al login.
+  async function cerrarSesion() {
+    navigate('/')
+    await logout()
+  }
 
   function borrarTour(id: number) {
     setBorrando(id)
@@ -66,169 +77,151 @@ export function Profile() {
   if (!user) return null
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:mx-auto md:max-w-3xl md:p-0">
-      {error !== null && <LoadError error={error} onRetry={() => {
-          setError(null)
-          setLoading(true)
-          setAttempt((n) => n + 1)
-        }} />}
-      <h1 className="font-display text-2xl font-bold">Mi perfil</h1>
-
-      <div className="flex items-center gap-4">
-        <div className="flex h-16 w-16 flex-none items-center justify-center rounded-full bg-neutral text-secondary">
-          <IconUser size={30} />
-        </div>
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <span className="font-display truncate text-lg font-bold">@{user.username}</span>
+    <div className="flex flex-col gap-6 p-4 md:mx-auto md:max-w-3xl md:p-0 md:pt-2">
+      <CabeceraDePerfil
+        username={user.username}
+        bajada={
           <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-secondary/30 px-3 py-1 text-xs font-semibold text-neutral">
             <IconMedal size={14} />
             Nivel hamburguesero: próximamente
           </span>
-        </div>
-      </div>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-sm font-bold">Mis estadísticas</h2>
-        <div className="grid grid-cols-3 gap-3 rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15">
-          <div className="flex flex-col items-center gap-1 text-center">
-            <span className="font-display text-xl font-bold">{stats?.ratingsCount ?? '—'}</span>
-            <span className="text-xs text-base-content/70">Reseñas</span>
-          </div>
-          <div className="flex flex-col items-center gap-1 text-center">
-            <span className="font-display text-xl font-bold">
-              {stats?.averageScore ? stats.averageScore.toFixed(1) : '—'}
-            </span>
-            <span className="text-xs text-base-content/70">Puntaje promedio</span>
-          </div>
-          <div className="flex flex-col items-center gap-1 text-center">
-            <span className="font-display text-xl font-bold">{stats?.seguidores ?? '—'}</span>
-            <span className="text-xs text-base-content/70">
-              {stats?.seguidores === 1 ? 'Seguidor' : 'Seguidores'}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-sm font-bold">Historial</h2>
-          {ratings.length > 0 && (
-            <Link to="/reviews" className="flex items-center gap-1 text-xs font-semibold text-primary">
-              Ver todo
-              <IconChevronRight size={14} />
+        }
+        acciones={
+          <>
+            <Link to="/buscar" className="btn btn-outline gap-2 whitespace-nowrap md:px-6">
+              <IconSearch size={16} />
+              Buscar gente
             </Link>
-          )}
-        </div>
-        {loading && <p className="text-sm text-base-content/70">Cargando…</p>}
-        <div className="flex flex-col gap-2">
-          {recentRatings.map((r) => (
-            <Link
-              key={r.id}
-              to={`/burger-joints/${r.burgerJointId}`}
-              className="flex items-center gap-3 rounded-box bg-base-100 p-3 ring-1 ring-inset ring-base-content/15"
-            >
-              <JointPhoto
-                src={r.photoUrl}
-                name={r.burgerJointName}
-                className="h-12 w-12 flex-none rounded-lg object-cover"
-              />
-              <div className="flex flex-1 flex-col overflow-hidden">
-                <span className="truncate font-medium">{r.burgerJointName}</span>
-                <span className="text-xs text-base-content/70">{relativeDate(r.createdAt)}</span>
-              </div>
-              <ScoreBadge score={r.score} size="sm" />
+            {/* El perfil que ven los demás no muestra tus guardadas ni tus recorridos:
+                acá se puede ver qué queda a la vista. */}
+            <Link to={`/u/${user.username}`} className="btn btn-outline whitespace-nowrap md:px-6">
+              Cómo te ven
             </Link>
-          ))}
-          {!loading && !error && recentRatings.length === 0 && (
-            <p className="text-sm text-base-content/70">
-              Todavía no calificaste ninguna.{' '}
-              <Link to="/" className="link text-primary">Buscá una que conozcas</Link>
-            </p>
-          )}
-        </div>
-      </section>
+          </>
+        }
+      />
 
-      <section className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-sm font-bold">Guardadas</h2>
-          {favorites.length > 0 && (
-            <Link to="/wishlist" className="flex items-center gap-1 text-xs font-semibold text-primary">
-              Ver todas
-              <IconChevronRight size={14} />
-            </Link>
-          )}
-        </div>
-        {favorites.length > 0 ? (
-          <div className="flex gap-3 overflow-x-auto pb-1">
-            {favorites.map((b) => (
-              <Link
-                key={b.id}
-                to={`/burger-joints/${b.id}`}
-                className="w-40 flex-none overflow-hidden rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15"
-              >
-                <JointPhoto src={b.photoUrl} name={b.name} className="h-24 w-full object-cover" />
-                <div className="flex flex-col gap-1 p-2.5">
-                  <span className="truncate text-sm font-semibold">{b.name}</span>
-                  {b.averageScore ? (
-                    <ScoreBadge score={b.averageScore} size="sm" />
-                  ) : (
-                    <span className="text-xs text-base-content/70">Sin calificaciones</span>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          !loading && !error && (
-            <p className="text-sm text-base-content/70">
-              Todavía no guardaste ninguna. Tocá el corazón de las que quieras probar.
-            </p>
-          )
-        )}
-      </section>
+      {error !== null && (
+        <LoadError
+          error={error}
+          onRetry={() => {
+            setError(null)
+            setLoading(true)
+            setAttempt((n) => n + 1)
+          }}
+        />
+      )}
 
-      <section className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-sm font-bold">Mis recorridos</h2>
-          <Link to="/tour" className="flex items-center gap-1 text-xs font-semibold text-primary">
-            {tours.length > 0 ? 'Armar otro' : 'Armar uno'}
-            <IconChevronRight size={14} />
-          </Link>
-        </div>
-        {/* De costado y no apilados, igual que favoritos. Cada recorrido ocupa alto
-            —el nombre, la distancia y las paradas en miniatura—, así que con cuatro
-            guardados el perfil se volvía una tira interminable y lo de abajo, los
-            logros y las cuentas bloqueadas, no lo veía nadie. */}
-        {tours.length > 0 ? (
-          <div className="flex gap-3 overflow-x-auto pb-1">
-            {tours.map((tour) => (
-              <div key={tour.id} className="w-72 flex-none">
-                <SavedTourCard
-                  tour={tour}
-                  onBorrar={borrarTour}
-                  borrando={borrando === tour.id}
+      <CifrasDePerfil
+        cifras={[
+          {
+            valor: stats ? String(stats.ratingsCount) : '—',
+            etiqueta: stats?.ratingsCount === 1 ? 'Reseña' : 'Reseñas',
+            a: '/reviews',
+          },
+          {
+            valor: stats?.averageScore ? stats.averageScore.toFixed(1) : '—',
+            etiqueta: 'Promedio',
+          },
+          {
+            valor: stats ? String(stats.seguidores) : '—',
+            etiqueta: stats?.seguidores === 1 ? 'Seguidor' : 'Seguidores',
+          },
+        ]}
+      />
+
+      {loading && (
+        <p role="status" className="text-sm text-base-content/70">
+          Cargando…
+        </p>
+      )}
+
+      {/* Las tres filas que siguen se deslizan de costado, como "Más hamburgueserías
+          en…" en la ficha: apiladas, con cuatro de cada una el perfil era una tira
+          interminable y lo de abajo no lo veía nadie. */}
+      <Seccion titulo="Mis reseñas" verTodas={ratings.length > 0 ? '/reviews' : undefined}>
+        {recentRatings.length > 0 ? (
+          <FilaDeTarjetas>
+            {recentRatings.map((r) => (
+              <LugarEnLaFila key={r.id}>
+                <TarjetaChicaDeLocal
+                  id={r.burgerJointId}
+                  nombre={r.burgerJointName}
+                  foto={r.photoUrl}
+                  nota={r.score}
+                  detalle={relativeDate(r.createdAt)}
                 />
-              </div>
+              </LugarEnLaFila>
             ))}
-          </div>
+          </FilaDeTarjetas>
         ) : (
-          !loading && (
-            <p className="text-sm text-base-content/70">
-              Todavía no guardaste ningún recorrido.
-            </p>
+          !loading &&
+          !error && (
+            <AvisoVacio accion={{ texto: 'Buscar una para calificar', a: '/' }}>
+              Todavía no calificaste ninguna hamburguesería.
+            </AvisoVacio>
           )
         )}
-      </section>
+      </Seccion>
 
-      <CuentasBloqueadas />
+      <Seccion titulo="Guardadas" verTodas={favorites.length > 0 ? '/wishlist' : undefined}>
+        {favorites.length > 0 ? (
+          <FilaDeTarjetas>
+            {favorites.map((b) => (
+              <LugarEnLaFila key={b.id}>
+                <TarjetaChicaDeLocal id={b.id} nombre={b.name} foto={b.photoUrl} nota={b.averageScore} />
+              </LugarEnLaFila>
+            ))}
+          </FilaDeTarjetas>
+        ) : (
+          !loading &&
+          !error && (
+            <AvisoVacio accion={{ texto: 'Explorar hamburgueserías', a: '/' }}>
+              Todavía no guardaste ninguna. Tocá el corazón de las que quieras probar y
+              aparecen acá.
+            </AvisoVacio>
+          )
+        )}
+      </Seccion>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-sm font-bold">Logros</h2>
-        <div className="rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15">
-          <p className="text-sm text-base-content/70">
-            Muy pronto vas a poder desbloquear logros a medida que calificás y descubrís hamburgueserías.
-          </p>
-        </div>
+      <Seccion
+        titulo="Mis recorridos"
+        verTodas={tours.length > 0 ? '/tour' : undefined}
+        textoDeVerTodas="Armar otro"
+      >
+        {tours.length > 0 ? (
+          <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
+            {tours.map((tour) => (
+              <li key={tour.id} className="w-72 flex-none snap-start">
+                <SavedTourCard tour={tour} onBorrar={borrarTour} borrando={borrando === tour.id} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          !loading &&
+          !error && (
+            <AvisoVacio accion={{ texto: 'Armar un tour', a: '/tour' }}>
+              Armá un recorrido por varias hamburgueserías y guardalo para hacerlo cuando
+              quieras.
+            </AvisoVacio>
+          )
+        )}
+      </Seccion>
+
+      <Seccion titulo="Logros">
+        <AvisoVacio>
+          Muy pronto vas a poder desbloquear logros a medida que calificás y descubrís
+          hamburgueserías.
+        </AvisoVacio>
+      </Seccion>
+
+      {/* Lo de la cuenta al final y aparte: es lo que menos se toca, y cerrar sesión no
+          tiene que quedar al lado de nada que se toque seguido. */}
+      <section className="flex flex-col gap-4 border-t border-base-content/10 pt-6">
+        <CuentasBloqueadas />
+        <button type="button" onClick={cerrarSesion} className="btn btn-outline w-full md:w-fit md:px-6">
+          Cerrar sesión
+        </button>
       </section>
     </div>
   )
