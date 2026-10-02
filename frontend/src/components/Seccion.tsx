@@ -10,11 +10,14 @@ import { IconChevronRight } from './icons'
  */
 export function Seccion({
   titulo,
+  bajada,
   verTodas,
   textoDeVerTodas = 'Ver todas',
   children,
 }: {
   titulo: string
+  /** Una línea debajo del título, para decir para qué está la sección. */
+  bajada?: string
   verTodas?: string
   textoDeVerTodas?: string
   children: ReactNode
@@ -23,9 +26,12 @@ export function Seccion({
   return (
     <section className="flex flex-col gap-3" aria-labelledby={id}>
       <div className="flex items-center justify-between gap-3">
-        <h2 id={id} className="font-display text-lg font-bold">
-          {titulo}
-        </h2>
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <h2 id={id} className="font-display text-lg font-bold">
+            {titulo}
+          </h2>
+          {bajada && <p className="text-sm text-base-content/70">{bajada}</p>}
+        </div>
         {verTodas && (
           <Link
             to={verTodas}

@@ -8,11 +8,11 @@ import { FilaDeTarjetas, LugarEnLaFila, TarjetaChicaDeLocal } from './TarjetaChi
 const CUANTAS = 8
 
 /**
- * Las mejor calificadas, arriba de Explorar.
+ * Las mejor calificadas, al final de la primera página de Explorar.
  *
- * Quien entra sin saber qué busca se encontraba con 1.548 hamburgueserías en el orden
- * de la base, y la mayoría sin calificar. Esta fila le da por dónde empezar. Sale del
- * mismo ranking que la pestaña Ranking, así que no es otra lista que mantener.
+ * Para quien recorrió la lista sin decidirse: veinte hamburgueserías en el orden de la
+ * base, la mayoría sin calificar, y esta fila le da por dónde empezar. Sale del mismo
+ * ranking que la pestaña Ranking, así que no es otra lista que mantener.
  *
  * Si no llega, no se muestra: Explorar funciona igual sin ella.
  */
@@ -36,21 +36,29 @@ export function MejorCalificadas() {
 
   if (locales.length === 0) return null
 
+  // El separador va acá y no en Explorar: si la fila no llega, no queda una línea suelta.
   return (
-    <Seccion titulo="Las mejor calificadas" verTodas="/ranking" textoDeVerTodas="Ver ranking">
-      <FilaDeTarjetas>
-        {locales.map((local) => (
-          <LugarEnLaFila key={local.burgerJointId}>
-            <TarjetaChicaDeLocal
-              id={local.burgerJointId}
-              nombre={local.name}
-              foto={local.photoUrl}
-              nota={local.averageScore}
-              detalle={local.area}
-            />
-          </LugarEnLaFila>
-        ))}
-      </FilaDeTarjetas>
-    </Seccion>
+    <div className="border-t border-base-content/10 pt-6">
+      <Seccion
+        titulo="Las mejor calificadas"
+        bajada="¿No te decidiste? Estas son las que mejor puntuó la gente."
+        verTodas="/ranking"
+        textoDeVerTodas="Ver ranking"
+      >
+        <FilaDeTarjetas>
+          {locales.map((local) => (
+            <LugarEnLaFila key={local.burgerJointId}>
+              <TarjetaChicaDeLocal
+                id={local.burgerJointId}
+                nombre={local.name}
+                foto={local.photoUrl}
+                nota={local.averageScore}
+                detalle={local.area}
+              />
+            </LugarEnLaFila>
+          ))}
+        </FilaDeTarjetas>
+      </Seccion>
+    </div>
   )
 }

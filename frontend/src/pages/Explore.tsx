@@ -261,20 +261,31 @@ export function Explore() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-0">
-      {/* La misma banda de color con la tira a cuadros que la portada de la ficha y la
-          cabecera del perfil: es la primera pantalla de la app y ahora se ve de la
-          misma familia. El buscador va adentro porque es lo primero que se usa. */}
-      <header className="-mx-4 -mt-4 md:mx-0 md:mt-0">
-        <div className="flex flex-col gap-4 bg-neutral px-4 pb-6 pt-6 md:rounded-t-box md:px-8 md:pb-8 md:pt-8">
-          <div className="flex flex-col gap-1">
-            <h1 className="font-display text-3xl font-bold leading-tight text-base-100 md:text-4xl">
-              ¿Dónde comemos hoy?
-            </h1>
-            <p className="text-sm text-base-100/80 md:text-base">
-              Las hamburgueserías de Buenos Aires, con las notas de quienes fueron.
-            </p>
-          </div>
-          <label className="flex items-center gap-2 rounded-field bg-base-100 px-4 py-3 shadow-md focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-secondary md:max-w-xl">
+      {/* Liviana a propósito. La primera versión iba en una banda marrón y, sumada a la
+          fila de mejor calificadas, eran dos bloques pesados antes de la primera foto:
+          acá lo que tiene que llamar la atención son las fotos de las tarjetas.
+
+          El nombre y el barrio van juntos porque son las dos formas de buscar, aunque
+          sean preguntas distintas: buscar por nombre es "quiero este local"; elegir
+          barrio es "quiero comer por acá", que es lo que uno se pregunta cuando todavía
+          no sabe adónde ir.
+
+          Las sucursales de cadenas son cientos, y entre McDonald's, Burger King y
+          Hamburguesas Extremas ocupan páginas enteras de la lista. Quien busca dónde
+          comer algo distinto las quiere fuera del medio; quien busca la más cercana, no.
+          Por eso es una decisión de quien mira, y arranca mostrándolas. */}
+      <header className="flex flex-col gap-4 md:pt-2">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-display text-3xl font-bold leading-tight md:text-4xl">
+            ¿Dónde comemos hoy?
+          </h1>
+          <p className="text-sm text-base-content/70 md:text-base">
+            Las hamburgueserías de Buenos Aires, con las notas de quienes fueron.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+          <label className="flex flex-1 items-center gap-2 rounded-field bg-base-100 px-4 py-3 shadow-sm ring-1 ring-inset ring-base-content/20 focus-within:ring-2 focus-within:ring-primary md:max-w-xl">
             <IconSearch size={18} className="flex-none text-base-content/70" />
             <input
               type="search"
@@ -287,42 +298,25 @@ export function Explore() {
               className="w-full bg-transparent text-base outline-none placeholder:text-base-content/60"
             />
           </label>
+          <div className="flex items-center gap-2">
+            <SelectorDeBarrios
+              barrios={barrios}
+              elegidos={barriosElegidos}
+              onAlternar={alternarBarrio}
+              onLimpiar={limpiarBarrios}
+            />
+            {barriosElegidos.length > 0 && (
+              <button type="button" onClick={limpiarBarrios} className="btn btn-ghost btn-sm">
+                Ver todos
+              </button>
+            )}
+          </div>
         </div>
-        <div className="checker-strip" />
-      </header>
 
-      {/*
-        * El barrio va al lado del buscador y no adentro: son dos preguntas distintas.
-        * Buscar por nombre es "quiero este local"; elegir barrio es "quiero comer por
-        * acá", que es lo que uno se pregunta cuando todavía no sabe adónde ir.
-        *
-        * Las sucursales de cadenas son cientos, y entre McDonald's, Burger King y
-        * Hamburguesas Extremas ocupan páginas enteras de la lista. Quien busca dónde comer
-        * algo distinto las quiere fuera del medio; quien busca la más cercana, no. Por eso
-        * es una decisión de quien mira, y arranca mostrándolas.
-        */}
-      <div className="-mt-2 flex flex-wrap items-center gap-x-4 gap-y-3">
-        <div className="flex items-center gap-2">
-          <SelectorDeBarrios
-            barrios={barrios}
-            elegidos={barriosElegidos}
-            onAlternar={alternarBarrio}
-            onLimpiar={limpiarBarrios}
-          />
-          {barriosElegidos.length > 0 && (
-            <button type="button" onClick={limpiarBarrios} className="btn btn-ghost btn-sm">
-              Ver todos
-            </button>
-          )}
-        </div>
-        <Interruptor activo={conCadenas} onCambiar={cambiarCadenas} className="md:ml-auto">
+        <Interruptor activo={conCadenas} onCambiar={cambiarCadenas} className="self-start">
           Mostrar cadenas de comida rápida
         </Interruptor>
-      </div>
-
-      {/* Para quien entra sin saber qué busca. Con un filtro puesto ya sabe, y la fila
-          solo empujaría hacia abajo lo que pidió. */}
-      {sinFiltros && page === 0 && <MejorCalificadas />}
+      </header>
 
       <section className="flex flex-col gap-4" aria-labelledby="titulo-de-la-lista">
         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -402,6 +396,12 @@ export function Explore() {
           </button>
         </nav>
       )}
+
+      {/* Al final y no arriba: arriba competía con la lista por la primera mirada.
+          Acá llega justo cuando sirve, a quien recorrió la página y no se decidió. Solo
+          sin filtros y en la primera página: con un filtro puesto ya se sabe qué se
+          busca. */}
+      {sinFiltros && page === 0 && !error && <MejorCalificadas />}
     </div>
   )
 }
