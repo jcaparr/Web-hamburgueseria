@@ -180,9 +180,9 @@
    * marca y está en los botones de siempre; si el de error fuera el mismo, "borrar"
    * se vería igual que "guardar".
    */
-  --color-success: #4f7a3a;
+  --color-success: #436b2e;
   --color-success-content: #f7efd8;
-  --color-warning: #c57615;
+  --color-warning: #a8620f;
   --color-warning-content: #f7efd8;
   --color-error: #8f1d14;
   --color-error-content: #f7efd8;
@@ -230,6 +230,19 @@ body {
   font-family: "Baloo 2", "Work Sans", sans-serif;
 }
 
+
+/*
+ * En el celular, todo campo de texto en 16 px. Con menos, iOS hace zoom sobre el campo
+ * al tocarlo y la página queda corrida hasta que uno la vuelve a acomodar con los dedos.
+ * Los campos de daisyUI vienen en 14 px.
+ */
+@media (max-width: 767px) {
+  .input,
+  .select,
+  .textarea {
+    font-size: 1rem;
+  }
+}
 
 .checker-strip {
   height: 6px;

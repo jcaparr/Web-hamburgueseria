@@ -114,7 +114,7 @@ export function Feed() {
             ))}
           </div>
 
-          {cargando && <p className="text-sm text-base-content/60">Cargando...</p>}
+          {cargando && <p className="text-sm text-base-content/70">Cargando…</p>}
 
           {!cargando && items.length === 0 && (
             <div className="flex flex-col items-start gap-3 rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15">
@@ -138,7 +138,7 @@ export function Feed() {
               disabled={trayendoMas}
               className="btn btn-outline btn-block"
             >
-              {trayendoMas ? 'Trayendo...' : 'Ver más'}
+              {trayendoMas ? 'Trayendo…' : 'Ver más'}
             </button>
           )}
         </>

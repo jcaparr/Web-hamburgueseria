@@ -22,7 +22,7 @@ export function BottomNav() {
     <div className="fixed inset-x-0 bottom-0 z-20 md:hidden">
       <div
         className={`flex items-center justify-around pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 transition-colors duration-300 ${
-          hidden ? 'bg-neutral/40 backdrop-blur-md' : 'bg-neutral'
+          hidden ? 'bg-neutral/85 backdrop-blur-md' : 'bg-neutral'
         }`}
       >
         {items.map(({ to, label, Icon }) => (

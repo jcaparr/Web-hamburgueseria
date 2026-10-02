@@ -30,9 +30,9 @@ export function TarjetaDeFeed({ item, esMia }: { item: ItemDeFeed; esMia: boolea
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-semibold hover:text-primary">
               @{item.autorUsername}
-              {esMia && <span className="font-normal text-base-content/50"> · vos</span>}
+              {esMia && <span className="font-normal text-base-content/70"> · vos</span>}
             </span>
-            <span className="text-xs text-base-content/50">
+            <span className="text-xs text-base-content/70">
               {relativeDate(item.createdAt)}
               {/* La fecha sigue siendo la de cuando se escribió: esto solo avisa que lo
                   que se está leyendo ya no es lo de ese día. */}
@@ -63,7 +63,7 @@ export function TarjetaDeFeed({ item, esMia }: { item: ItemDeFeed; esMia: boolea
             )}
           </span>
           {item.area && (
-            <span className="flex items-center gap-1 text-xs text-base-content/50">
+            <span className="flex items-center gap-1 text-xs text-base-content/70">
               <IconPin size={12} />
               {item.area}
             </span>

@@ -113,6 +113,13 @@ export function Explore() {
   }
 
   /** Prende o apaga las cadenas, y se acuerda de la elección para la próxima visita. */
+  /** Saca el nombre y los barrios, que son lo que deja la lista vacía. Las cadenas no: son una preferencia. */
+  function borrarFiltros() {
+    const nuevos = conBarrios(new URLSearchParams(window.location.search), [])
+    nuevos.delete('q')
+    setParametros(nuevos, { replace: true })
+  }
+
   function cambiarCadenas(valor: boolean) {
     cambiar({ cadenas: valor ? null : 'no', pagina: null })
     try {
@@ -213,15 +220,16 @@ export function Explore() {
       <h1 className="font-display text-2xl font-bold">Explorar hamburgueserías</h1>
 
       <div className="flex items-center gap-2 rounded-xl border border-base-300 bg-base-100 px-4 py-2.5">
-        <IconSearch size={16} className="text-base-content/50" />
+        <IconSearch size={16} className="text-base-content/70" />
         <input
           type="search"
           value={query}
           onChange={(e) => {
             cambiar({ q: e.target.value, pagina: null })
           }}
-          placeholder="Buscar hamburguesería..."
-          className="w-full bg-transparent text-sm outline-none placeholder:text-base-content/50"
+          placeholder="Buscar por nombre…"
+          aria-label="Buscar hamburguesería por nombre"
+          className="w-full bg-transparent text-base outline-none placeholder:text-base-content/60 md:text-sm"
         />
       </div>
 
@@ -259,27 +267,29 @@ export function Explore() {
         Mostrar cadenas de comida rápida
       </Interruptor>
 
-      {loading && <p className="text-sm text-base-content/60">Buscando...</p>}
+      <p role="status" className="min-h-5 text-sm text-base-content/70">
+        {loading ? 'Buscando…' : pageData && pageData.totalElements > 0 ? cuantas(pageData.totalElements) : ''}
+      </p>
 
       {error ? (
         <LoadError error={error} onRetry={() => setAttempt((n) => n + 1)} />
-      ) : (
+      ) : items.length > 0 && (
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((b) => (
           <li key={b.id} className="rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15 overflow-hidden">
             <Link to={`/burger-joints/${b.id}`} onClick={anotarDondeQuedo}>
-              <figure className="aspect-[4/3] bg-base-200">
+              <figure className="aspect-[16/10] bg-base-200 sm:aspect-[4/3]">
                 <JointPhoto src={b.photoUrl} name={b.name} className="h-full w-full object-cover" />
               </figure>
               <div className="checker-strip" />
               <div className="flex flex-col gap-1 p-4">
                 <h2 className="font-display line-clamp-1 text-base font-bold">{b.name}</h2>
-                <p className="line-clamp-2 text-xs text-base-content/60">{shortAddress(b.address, b.area)}</p>
+                <p className="line-clamp-2 text-xs text-base-content/70">{shortAddress(b.address, b.area)}</p>
                 <div className="mt-2 flex items-center justify-between">
                   {b.averageScore ? (
                     <ScoreBadge score={b.averageScore} size="sm" />
                   ) : (
-                    <span className="text-xs font-medium text-base-content/50">Sin calificaciones</span>
+                    <span className="text-xs font-medium text-base-content/70">Sin calificaciones</span>
                   )}
                 </div>
               </div>
@@ -289,7 +299,7 @@ export function Explore() {
                 href={mapsUrl(b.placeId, b.name, b.latitude, b.longitude)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs font-semibold text-primary"
+                className="-my-3 inline-flex items-center gap-1 py-3 text-xs font-semibold text-primary hover:underline"
               >
                 <IconPin />
                 Ver en Maps
@@ -300,38 +310,44 @@ export function Explore() {
         {/* Decir qué filtro dejó la lista vacía, que es lo que hay que aflojar: con el
             barrio puesto, "con ese nombre" mandaba a cambiar lo que no era.
             Con varios se nombran todos: si no, no se sabe en cuál no hay nada. */}
-        {!loading && items.length === 0 && (
-          <p className="text-sm text-base-content/60">
+      </ul>
+      )}
+
+      {!error && !loading && pageData && items.length === 0 && (
+        <div className="flex flex-col items-start gap-3">
+          <p className="text-sm text-base-content/70">
             {barriosElegidos.length > 0
               ? `No encontramos hamburgueserías en ${enCastellano(barriosElegidos)}${query ? ' con ese nombre' : ''}.`
               : 'No encontramos hamburgueserías con ese nombre.'}
           </p>
-        )}
-      </ul>
+          <button type="button" onClick={borrarFiltros} className="btn btn-outline btn-sm">
+            Borrar la búsqueda
+          </button>
+        </div>
       )}
 
       {!error && pageData && pageData.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 py-2">
-          <div className="join">
-            <button
-              className="btn join-item btn-sm"
-              disabled={page === 0}
-              onClick={() => cambiar({ pagina: String(Math.max(0, page - 1)) })}
-            >
-              «
-            </button>
-            <span className="btn join-item btn-sm btn-disabled bg-base-100">
-              Página {pageData.number + 1} de {pageData.totalPages}
-            </span>
-            <button
-              className="btn join-item btn-sm"
-              disabled={pageData.last}
-              onClick={() => cambiar({ pagina: String(page + 1) })}
-            >
-              »
-            </button>
-          </div>
-        </div>
+        <nav aria-label="Páginas" className="flex items-center justify-between gap-3 py-2">
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            disabled={page === 0}
+            onClick={() => cambiar({ pagina: String(Math.max(0, page - 1)) })}
+          >
+            Anterior
+          </button>
+          <span className="text-sm tabular-nums text-base-content/70">
+            Página {pageData.number + 1} de {pageData.totalPages}
+          </span>
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            disabled={pageData.last}
+            onClick={() => cambiar({ pagina: String(page + 1) })}
+          >
+            Siguiente
+          </button>
+        </nav>
       )}
     </div>
   )
@@ -346,6 +362,11 @@ export function Explore() {
 function enCastellano(barrios: string[]) {
   if (barrios.length === 1) return barrios[0]
   return `${barrios.slice(0, -1).join(', ')} y ${barrios[barrios.length - 1]}`
+}
+
+/** "1 hamburguesería", "1.548 hamburgueserías". */
+function cuantas(n: number) {
+  return n === 1 ? '1 hamburguesería' : `${n.toLocaleString('es-AR')} hamburgueserías`
 }
 
 /** Los mismos parámetros pero con estos barrios, y de vuelta a la primera página. */

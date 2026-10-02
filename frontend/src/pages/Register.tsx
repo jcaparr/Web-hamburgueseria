@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Campo, CampoDeContrasenia } from '../components/Campo'
 import { CampoNombreDeUsuario } from '../components/CampoNombreDeUsuario'
 import { GoogleSignInButton } from '../components/GoogleSignInButton'
 import { PasoNombreDeGoogle } from '../components/PasoNombreDeGoogle'
@@ -53,50 +54,48 @@ export function Register() {
                 el mail sale con mayúscula inicial y el gestor de contraseñas no ofrece
                 guardar el par. Acá va "new-password", que es lo que hace que ofrezca
                 una contraseña nueva en vez de rellenar una vieja. */}
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              enterKeyHint="next"
-              aria-label="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              className="input input-bordered focus:border-primary"
-            />
-            <input
-              type="password"
+            <Campo etiqueta="Email">
+              {(campo) => (
+                <input
+                  {...campo}
+                  type="email"
+                  required
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  enterKeyHint="next"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input input-bordered w-full focus:border-primary"
+                />
+              )}
+            </Campo>
+            <CampoDeContrasenia
+              etiqueta="Contraseña"
+              ayuda="Mínimo 8 caracteres."
               required
               minLength={8}
               autoComplete="new-password"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
               enterKeyHint="go"
-              aria-label="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Contraseña (mínimo 8 caracteres)"
-              className="input input-bordered focus:border-primary"
             />
-            {error && <p className="text-xs text-error">{error}</p>}
+            {error && <p role="alert" className="text-sm text-error">{error}</p>}
             <button type="submit" disabled={submitting} className="btn btn-primary">
-              {submitting ? 'Creando...' : 'Crear cuenta'}
+              {submitting ? 'Creando…' : 'Crear cuenta'}
             </button>
           </form>
 
           {/* Same endpoint as on the login screen: Google users skip the emailed code
               entirely, because Google has already verified the address. */}
-          {googleError && <p className="text-xs text-error">{googleError}</p>}
+          {googleError && <p role="alert" className="text-sm text-error">{googleError}</p>}
           <GoogleSignInButton
             onCredential={onCredential}
             onError={setGoogleError}
             text="signup_with"
           />
-          <p className="text-sm text-base-content/60">
+          <p className="text-sm text-base-content/70">
             ¿Ya tenés cuenta? <Link to="/login" className="link text-primary">Iniciá sesión</Link>
           </p>
         </div>

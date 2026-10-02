@@ -65,18 +65,22 @@ export function Ranking() {
 
       <div role="tablist" className="flex w-full gap-1 rounded-full border border-base-300 bg-base-100 p-1">
         <button
+          type="button"
           role="tab"
-          className={`flex-1 cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-            tab === 'general' ? 'bg-neutral text-secondary' : 'text-base-content'
+          aria-selected={tab === 'general'}
+          className={`flex-1 cursor-pointer rounded-full px-4 py-2.5 text-sm font-semibold transition-colors ${
+            tab === 'general' ? 'bg-neutral text-secondary' : 'text-base-content hover:text-primary'
           }`}
           onClick={() => setTab('general')}
         >
           Ranking general
         </button>
         <button
+          type="button"
           role="tab"
-          className={`flex-1 cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-            tab === 'mine' ? 'bg-neutral text-secondary' : 'text-base-content'
+          aria-selected={tab === 'mine'}
+          className={`flex-1 cursor-pointer rounded-full px-4 py-2.5 text-sm font-semibold transition-colors ${
+            tab === 'mine' ? 'bg-neutral text-secondary' : 'text-base-content hover:text-primary'
           }`}
           onClick={() => setTab('mine')}
         >
@@ -87,14 +91,18 @@ export function Ranking() {
       {tab === 'general' && (
         <div className="flex gap-2 text-xs">
           <button
+            type="button"
+            aria-pressed={order === 'score'}
             onClick={() => setOrder('score')}
-            className={`btn btn-xs rounded-full ${order === 'score' ? 'btn-primary' : 'btn-outline'}`}
+            className={`btn btn-sm rounded-full ${order === 'score' ? 'btn-primary' : 'btn-outline'}`}
           >
             Mejor calificadas
           </button>
           <button
+            type="button"
+            aria-pressed={order === 'popularity'}
             onClick={() => setOrder('popularity')}
-            className={`btn btn-xs rounded-full ${order === 'popularity' ? 'btn-primary' : 'btn-outline'}`}
+            className={`btn btn-sm rounded-full ${order === 'popularity' ? 'btn-primary' : 'btn-outline'}`}
           >
             Más populares
           </button>
@@ -102,10 +110,17 @@ export function Ranking() {
       )}
 
       {tab === 'mine' && !user && (
-        <p className="text-sm text-base-content/60">Iniciá sesión para ver las hamburgueserías que calificaste.</p>
+        <div className="flex flex-col items-start gap-3">
+          <p className="text-sm text-base-content/70">
+            Tu ranking ordena las hamburgueserías según las notas que les pusiste vos.
+          </p>
+          <Link to="/login" className="btn btn-primary btn-sm">
+            Iniciar sesión
+          </Link>
+        </div>
       )}
 
-      {loading && <p className="text-sm text-base-content/60">Cargando...</p>}
+      {loading && <p className="text-sm text-base-content/70">Cargando…</p>}
 
       {error ? (
         <LoadError error={error} onRetry={() => setAttempt((n) => n + 1)} />
@@ -114,7 +129,7 @@ export function Ranking() {
         {items.map((item, index) => (
           <li key={item.burgerJointId} className="rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15">
             <Link to={`/burger-joints/${item.burgerJointId}`} className="flex items-center gap-3 p-3 pb-2">
-              <span className="w-5 text-center font-display text-sm font-bold text-base-content/40">{index + 1}</span>
+              <span className="w-5 text-center font-display text-sm font-bold text-base-content/70">{index + 1}</span>
               <JointPhoto
                 src={item.photoUrl}
                 name={item.name}
@@ -122,14 +137,16 @@ export function Ranking() {
               />
               <div className="flex flex-1 flex-col overflow-hidden">
                 <span className="truncate font-display font-semibold">{item.name}</span>
-                <span className="truncate text-xs text-base-content/60">{shortAddress(item.address, item.area)}</span>
+                <span className="truncate text-xs text-base-content/70">{shortAddress(item.address, item.area)}</span>
               </div>
               <div className="flex flex-col items-end gap-1 text-right text-sm">
                 <ScoreBadge score={tab === 'mine' ? (item.myScore ?? item.averageScore) : item.averageScore} size="sm" />
                 {tab === 'general' ? (
-                  <div className="text-xs text-base-content/40">{item.ratingsCount} reseñas</div>
+                  <div className="text-xs text-base-content/70">
+                    {item.ratingsCount} {item.ratingsCount === 1 ? 'reseña' : 'reseñas'}
+                  </div>
                 ) : (
-                  <div className="text-xs text-base-content/40">general: {item.averageScore.toFixed(1)}</div>
+                  <div className="text-xs text-base-content/70">Promedio {item.averageScore.toFixed(1)}</div>
                 )}
               </div>
             </Link>
@@ -137,19 +154,20 @@ export function Ranking() {
               href={mapsUrl(item.placeId, item.name, item.latitude, item.longitude)}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 p-3 pt-0 pl-11 text-xs font-semibold text-primary"
+              className="flex w-fit items-center gap-1 p-3 pt-1 pl-11 text-xs font-semibold text-primary hover:underline"
             >
               <IconPin />
               Ver en Maps
             </a>
           </li>
         ))}
-        {!loading && items.length === 0 && (tab === 'general' || user) && (
-          <p className="text-sm text-base-content/60">
-            {tab === 'mine' ? 'Todavía no calificaste ninguna hamburguesería.' : 'Todavía no hay calificaciones.'}
-          </p>
-        )}
       </ol>
+      )}
+
+      {!loading && !error && items.length === 0 && (tab === 'general' || user) && (
+        <p className="text-sm text-base-content/70">
+          {tab === 'mine' ? 'Todavía no calificaste ninguna hamburguesería.' : 'Todavía no hay calificaciones.'}
+        </p>
       )}
     </div>
   )

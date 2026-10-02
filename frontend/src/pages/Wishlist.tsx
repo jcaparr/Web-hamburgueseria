@@ -41,9 +41,9 @@ export function Wishlist() {
 
   return (
     <div className="flex flex-col gap-4 p-4 md:p-0">
-      <h1 className="font-display text-2xl font-bold">Lista de deseados</h1>
+      <h1 className="font-display text-2xl font-bold">Guardadas</h1>
 
-      {loading && <p className="text-sm text-base-content/60">Cargando...</p>}
+      {loading && <p className="text-sm text-base-content/70">Cargando…</p>}
       {error !== null && <LoadError error={error} onRetry={() => {
           setError(null)
           setLoading(true)
@@ -62,13 +62,14 @@ export function Wishlist() {
                 />
                 <div className="flex flex-col overflow-hidden">
                   <span className="truncate font-display font-semibold">{b.name}</span>
-                  <span className="truncate text-xs text-base-content/60">{shortAddress(b.address, b.area)}</span>
+                  <span className="truncate text-xs text-base-content/70">{shortAddress(b.address, b.area)}</span>
                 </div>
               </Link>
               <button
                 onClick={() => remove(b.id)}
                 className="btn btn-ghost btn-circle text-primary"
-                title="Quitar de deseados"
+                aria-label={`Quitar ${b.name} de guardadas`}
+                title="Quitar de guardadas"
               >
                 <IconHeart size={20} filled />
               </button>
@@ -77,17 +78,26 @@ export function Wishlist() {
               href={mapsUrl(b.placeId, b.name, b.latitude, b.longitude)}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 p-3 pt-2 text-xs font-semibold text-primary"
+              className="flex w-fit items-center gap-1 p-3 pt-2 text-xs font-semibold text-primary hover:underline"
             >
               <IconPin />
               Ver en Maps
             </a>
           </li>
         ))}
-        {!loading && !error && items.length === 0 && (
-          <p className="text-sm text-base-content/60">Todavía no guardaste ninguna hamburguesería.</p>
-        )}
       </ul>
+
+      {!loading && !error && items.length === 0 && (
+        <div className="flex flex-col items-start gap-3">
+          <p className="text-sm text-base-content/70">
+            Todavía no guardaste ninguna. Tocá el corazón de las que quieras probar y
+            aparecen acá.
+          </p>
+          <Link to="/" className="btn btn-primary btn-sm">
+            Explorar hamburgueserías
+          </Link>
+        </div>
+      )}
     </div>
   )
 }

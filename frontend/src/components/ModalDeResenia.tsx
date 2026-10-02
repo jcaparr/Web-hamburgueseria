@@ -142,9 +142,9 @@ export function ModalDeResenia({
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col">
             <h3 className="font-display text-lg font-bold">
-              {miResenia ? 'Editá tu opinión' : 'Dejá tu opinión'}
+              {miResenia ? 'Editar tu reseña' : 'Escribir una reseña'}
             </h3>
-            <span className="truncate text-sm text-base-content/60">{nombreDelLocal}</span>
+            <span className="truncate text-sm text-base-content/70">{nombreDelLocal}</span>
           </div>
           <button
             type="button"
@@ -160,14 +160,14 @@ export function ModalDeResenia({
             se quiera contar. Separadas se entiende de un vistazo qué falta. */}
         <form onSubmit={guardar} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-base-content/50">
+            <span className="text-xs font-semibold uppercase tracking-wide text-base-content/70">
               Tu puntaje
             </span>
             <Stars value={score} onChange={setScore} size={30} />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-base-content/50">
+            <span className="text-xs font-semibold uppercase tracking-wide text-base-content/70">
               La foto
             </span>
             <SelectorDeFoto
@@ -178,10 +178,14 @@ export function ModalDeResenia({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-base-content/50">
+            <label
+              htmlFor="texto-de-la-resenia"
+              className="text-xs font-semibold uppercase tracking-wide text-base-content/70"
+            >
               Tu reseña
-            </span>
+            </label>
             <textarea
+              id="texto-de-la-resenia"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="¿Qué te pareció?"
@@ -190,10 +194,10 @@ export function ModalDeResenia({
             />
           </div>
 
-          {error && <p className="text-xs text-error">{error}</p>}
+          {error && <p role="alert" className="text-sm text-error">{error}</p>}
 
           <button type="submit" disabled={guardando} className="btn btn-primary">
-            {guardando ? 'Guardando...' : miResenia ? 'Actualizar reseña' : 'Publicar reseña'}
+            {guardando ? 'Guardando…' : miResenia ? 'Actualizar reseña' : 'Publicar reseña'}
           </button>
         </form>
       </div>

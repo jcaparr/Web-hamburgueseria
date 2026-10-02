@@ -24,7 +24,7 @@ export function DistribucionDeNotas({ distribucion }: { distribucion: NotaYCuant
     <div className="flex flex-col gap-1.5">
       {[...distribucion].reverse().map(({ nota, cuantas }) => (
         <div key={nota} className="flex items-center gap-2">
-          <span className="w-8 flex-none text-right text-xs tabular-nums text-base-content/60">
+          <span className="w-8 flex-none text-right text-xs tabular-nums text-base-content/70">
             {nota} ★
           </span>
           {/* El riel gris de fondo deja ver el largo que la barra no ocupa, que es lo
@@ -35,7 +35,7 @@ export function DistribucionDeNotas({ distribucion }: { distribucion: NotaYCuant
               style={{ width: `${(cuantas / masVotada) * 100}%` }}
             />
           </div>
-          <span className="w-6 flex-none text-xs tabular-nums text-base-content/60">
+          <span className="w-6 flex-none text-xs tabular-nums text-base-content/70">
             {cuantas}
           </span>
         </div>

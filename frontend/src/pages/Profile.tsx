@@ -4,7 +4,7 @@ import { apiClient } from '../api/client'
 import { CuentasBloqueadas } from '../components/CuentasBloqueadas'
 import { LoadError } from '../components/LoadError'
 import { JointPhoto } from '../components/JointPhoto'
-import { IconChevronRight, IconMedal, IconSettings, IconUser } from '../components/icons'
+import { IconChevronRight, IconMedal, IconUser } from '../components/icons'
 import { SavedTourCard } from '../components/SavedTourCard'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { useAuth } from '../context/AuthContext'
@@ -72,16 +72,7 @@ export function Profile() {
           setLoading(true)
           setAttempt((n) => n + 1)
         }} />}
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Mi perfil</h1>
-        <button
-          className="btn btn-ghost btn-circle text-base-content/50"
-          title="Configuración (próximamente)"
-          disabled
-        >
-          <IconSettings size={20} />
-        </button>
-      </div>
+      <h1 className="font-display text-2xl font-bold">Mi perfil</h1>
 
       <div className="flex items-center gap-4">
         <div className="flex h-16 w-16 flex-none items-center justify-center rounded-full bg-neutral text-secondary">
@@ -101,17 +92,17 @@ export function Profile() {
         <div className="grid grid-cols-3 gap-3 rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15">
           <div className="flex flex-col items-center gap-1 text-center">
             <span className="font-display text-xl font-bold">{stats?.ratingsCount ?? '—'}</span>
-            <span className="text-xs text-base-content/60">Reseñas</span>
+            <span className="text-xs text-base-content/70">Reseñas</span>
           </div>
           <div className="flex flex-col items-center gap-1 text-center">
             <span className="font-display text-xl font-bold">
               {stats?.averageScore ? stats.averageScore.toFixed(1) : '—'}
             </span>
-            <span className="text-xs text-base-content/60">Puntaje promedio</span>
+            <span className="text-xs text-base-content/70">Puntaje promedio</span>
           </div>
           <div className="flex flex-col items-center gap-1 text-center">
             <span className="font-display text-xl font-bold">{stats?.seguidores ?? '—'}</span>
-            <span className="text-xs text-base-content/60">
+            <span className="text-xs text-base-content/70">
               {stats?.seguidores === 1 ? 'Seguidor' : 'Seguidores'}
             </span>
           </div>
@@ -128,7 +119,7 @@ export function Profile() {
             </Link>
           )}
         </div>
-        {loading && <p className="text-sm text-base-content/60">Cargando...</p>}
+        {loading && <p className="text-sm text-base-content/70">Cargando…</p>}
         <div className="flex flex-col gap-2">
           {recentRatings.map((r) => (
             <Link
@@ -143,24 +134,29 @@ export function Profile() {
               />
               <div className="flex flex-1 flex-col overflow-hidden">
                 <span className="truncate font-medium">{r.burgerJointName}</span>
-                <span className="text-xs text-base-content/50">{relativeDate(r.createdAt)}</span>
+                <span className="text-xs text-base-content/70">{relativeDate(r.createdAt)}</span>
               </div>
               <ScoreBadge score={r.score} size="sm" />
             </Link>
           ))}
           {!loading && !error && recentRatings.length === 0 && (
-            <p className="text-sm text-base-content/60">Todavía no calificaste ninguna hamburguesería.</p>
+            <p className="text-sm text-base-content/70">
+              Todavía no calificaste ninguna.{' '}
+              <Link to="/" className="link text-primary">Buscá una que conozcas</Link>
+            </p>
           )}
         </div>
       </section>
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-sm font-bold">Favoritos</h2>
-          <Link to="/wishlist" className="flex items-center gap-1 text-xs font-semibold text-primary">
-            Ver todo
-            <IconChevronRight size={14} />
-          </Link>
+          <h2 className="font-display text-sm font-bold">Guardadas</h2>
+          {favorites.length > 0 && (
+            <Link to="/wishlist" className="flex items-center gap-1 text-xs font-semibold text-primary">
+              Ver todas
+              <IconChevronRight size={14} />
+            </Link>
+          )}
         </div>
         {favorites.length > 0 ? (
           <div className="flex gap-3 overflow-x-auto pb-1">
@@ -176,14 +172,18 @@ export function Profile() {
                   {b.averageScore ? (
                     <ScoreBadge score={b.averageScore} size="sm" />
                   ) : (
-                    <span className="text-xs text-base-content/50">Sin calificaciones</span>
+                    <span className="text-xs text-base-content/70">Sin calificaciones</span>
                   )}
                 </div>
               </Link>
             ))}
           </div>
         ) : (
-          !loading && !error && <p className="text-sm text-base-content/60">Todavía no guardaste ninguna hamburguesería.</p>
+          !loading && !error && (
+            <p className="text-sm text-base-content/70">
+              Todavía no guardaste ninguna. Tocá el corazón de las que quieras probar.
+            </p>
+          )
         )}
       </section>
 
@@ -191,7 +191,7 @@ export function Profile() {
         <div className="flex items-center justify-between">
           <h2 className="font-display text-sm font-bold">Mis recorridos</h2>
           <Link to="/tour" className="flex items-center gap-1 text-xs font-semibold text-primary">
-            Armar otro
+            {tours.length > 0 ? 'Armar otro' : 'Armar uno'}
             <IconChevronRight size={14} />
           </Link>
         </div>
@@ -213,7 +213,7 @@ export function Profile() {
           </div>
         ) : (
           !loading && (
-            <p className="text-sm text-base-content/60">
+            <p className="text-sm text-base-content/70">
               Todavía no guardaste ningún recorrido.
             </p>
           )
@@ -225,7 +225,7 @@ export function Profile() {
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-sm font-bold">Logros</h2>
         <div className="rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15">
-          <p className="text-sm text-base-content/60">
+          <p className="text-sm text-base-content/70">
             Muy pronto vas a poder desbloquear logros a medida que calificás y descubrís hamburgueserías.
           </p>
         </div>

@@ -38,9 +38,9 @@ export function TarjetaDeResenia({
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-semibold hover:text-primary">
               @{resenia.username}
-              {esMia && <span className="font-normal text-base-content/50"> · vos</span>}
+              {esMia && <span className="font-normal text-base-content/70"> · vos</span>}
             </span>
-            <span className="text-xs text-base-content/50">{relativeDate(resenia.createdAt)}</span>
+            <span className="text-xs text-base-content/70">{relativeDate(resenia.createdAt)}</span>
           </div>
         </Link>
 
@@ -51,7 +51,7 @@ export function TarjetaDeResenia({
               type="button"
               onClick={onEditar}
               aria-label="Editar tu reseña"
-              className="btn btn-ghost btn-xs btn-square text-base-content/50"
+              className="btn btn-ghost btn-xs btn-square text-base-content/70"
             >
               <IconPencil size={15} />
             </button>

@@ -57,7 +57,7 @@ export function PerfilPublico() {
   }
 
   if (cargando || !perfil) {
-    return <p className="p-4 text-sm text-base-content/60">Cargando...</p>
+    return <p className="p-4 text-sm text-base-content/70">Cargando…</p>
   }
 
   return (
@@ -68,7 +68,7 @@ export function PerfilPublico() {
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="font-display truncate text-lg font-bold">@{perfil.username}</span>
-          <span className="text-sm text-base-content/60">
+          <span className="text-sm text-base-content/70">
             {perfil.seguidores === 1 ? '1 seguidor' : `${perfil.seguidores} seguidores`}
             {' · '}
             sigue a {perfil.siguiendo}
@@ -86,13 +86,13 @@ export function PerfilPublico() {
       <div className="grid grid-cols-2 gap-3 rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15">
         <div className="flex flex-col items-center gap-1 text-center">
           <span className="font-display text-xl font-bold">{perfil.resenias}</span>
-          <span className="text-xs text-base-content/60">Reseñas</span>
+          <span className="text-xs text-base-content/70">Reseñas</span>
         </div>
         <div className="flex flex-col items-center gap-1 text-center">
           <span className="font-display text-xl font-bold">
             {perfil.promedio ? perfil.promedio.toFixed(1) : '—'}
           </span>
-          <span className="text-xs text-base-content/60">Puntaje promedio</span>
+          <span className="text-xs text-base-content/70">Puntaje promedio</span>
         </div>
       </div>
 
@@ -121,13 +121,13 @@ export function PerfilPublico() {
               />
               <div className="flex flex-1 flex-col overflow-hidden">
                 <span className="truncate font-medium">{r.burgerJointName}</span>
-                <span className="text-xs text-base-content/50">{relativeDate(r.createdAt)}</span>
+                <span className="text-xs text-base-content/70">{relativeDate(r.createdAt)}</span>
               </div>
               <ScoreBadge score={r.score} size="sm" />
             </Link>
           ))}
           {perfil.ultimasResenias.length === 0 && (
-            <p className="text-sm text-base-content/60">
+            <p className="text-sm text-base-content/70">
               {perfil.soyYo
                 ? 'Todavía no calificaste ninguna hamburguesería.'
                 : 'Todavía no calificó ninguna hamburguesería.'}

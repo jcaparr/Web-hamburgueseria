@@ -70,19 +70,19 @@ export function Recorrido({
 
               <div className="flex min-w-0 flex-col gap-0.5">
                 <h2 className="font-display line-clamp-1 text-sm font-bold">{parada.local.name}</h2>
-                <p className="line-clamp-1 text-xs text-base-content/60">
+                <p className="line-clamp-1 text-xs text-base-content/70">
                   {shortAddress(parada.local.address, parada.local.area)}
                 </p>
                 <div className="mt-0.5 flex items-center gap-2">
                   {parada.local.averageScore ? (
                     <ScoreBadge score={parada.local.averageScore} size="sm" />
                   ) : (
-                    <span className="text-[11px] font-medium text-base-content/50">
+                    <span className="text-[11px] font-medium text-base-content/70">
                       Sin calificaciones
                     </span>
                   )}
                   {parada.kilometros > 0 && (
-                    <span className="text-[11px] text-base-content/50">
+                    <span className="text-[11px] text-base-content/70">
                       +{parada.kilometros} km
                     </span>
                   )}
@@ -103,7 +103,7 @@ export function Recorrido({
           disabled={guardando || guardado !== null}
           className="btn btn-outline btn-block"
         >
-          {guardado ? 'Guardado en tu perfil' : guardando ? 'Guardando...' : 'Guardar este recorrido'}
+          {guardado ? 'Guardado en tu perfil' : guardando ? 'Guardando…' : 'Guardar este recorrido'}
         </button>
       )}
 
@@ -116,7 +116,7 @@ export function Recorrido({
         <IconRoute size={18} />
         {enAuto ? 'Abrir el recorrido en auto' : 'Abrir el recorrido a pie'}
       </a>
-      <p className="-mt-2 flex items-center justify-center gap-1 text-center text-xs text-base-content/50">
+      <p className="-mt-2 flex items-center justify-center gap-1 text-center text-xs text-base-content/70">
         <IconPin />
         Los kilómetros son una estimación: Maps te da el camino exacto.
       </p>

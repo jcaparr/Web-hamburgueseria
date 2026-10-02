@@ -21,12 +21,12 @@ export function TemasDeLasResenias({ temas }: { temas: TemaDeResenias[] }) {
   return (
     <section className="flex flex-col gap-2 rounded-box bg-base-100 p-3 ring-1 ring-inset ring-base-content/15">
       <div className="flex flex-col">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-base-content/50">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-base-content/70">
           De qué hablan las reseñas
         </h3>
         {/* La aclaración va una vez acá y no en cada fila: repetir "hablan bien" cuatro
             veces hace más ruido que el dato. */}
-        <p className="text-xs text-base-content/50">
+        <p className="text-xs text-base-content/70">
           Cuántos de los que lo nombraron pusieron buena nota.
         </p>
       </div>
@@ -35,7 +35,7 @@ export function TemasDeLasResenias({ temas }: { temas: TemaDeResenias[] }) {
         {temas.map(({ tema, menciones, aFavor }) => (
           <li key={tema} className="flex items-center justify-between gap-3 text-sm">
             <span className="font-medium">{tema}</span>
-            <span className="flex flex-none items-center gap-1.5 text-xs tabular-nums text-base-content/60">
+            <span className="flex flex-none items-center gap-1.5 text-xs tabular-nums text-base-content/70">
               <span className={`h-1.5 w-1.5 rounded-full ${colorDe(aFavor, menciones)}`} />
               {aFavor} de {menciones}
             </span>

@@ -102,7 +102,7 @@ export function BurgerJointDetail() {
       if (isSessionExpired(err)) {
         navigate('/login')
       } else {
-        setError('No pudimos actualizar tu lista de deseados')
+        setError('No pudimos actualizar tus guardadas. Probá de nuevo.')
       }
     }
   }
@@ -130,7 +130,7 @@ export function BurgerJointDetail() {
         </div>
       )
     }
-    return <p className="p-4 text-sm text-base-content/60">Cargando...</p>
+    return <p className="p-4 text-sm text-base-content/70">Cargando…</p>
   }
 
   return (
@@ -154,11 +154,11 @@ export function BurgerJointDetail() {
               {burgerJoint.averageScore ? (
                 <ScoreBadge score={burgerJoint.averageScore} size="sm" />
               ) : (
-                <p className="text-sm text-base-content/50">Todavía sin calificaciones</p>
+                <p className="text-sm text-base-content/70">Todavía sin calificaciones</p>
               )}
               {/* Arriba qué tan buena es; abajo, juntos, lo que hace falta para ir:
                   dónde queda, si está abierto ahora y cómo llegar. */}
-              <p className="mt-1 text-sm text-base-content/60">
+              <p className="mt-1 text-sm text-base-content/70">
                 {shortAddress(burgerJoint.address, burgerJoint.area)}
               </p>
               {horario && <HorarioDelLocal franjas={horario.franjas} />}
@@ -171,7 +171,7 @@ export function BurgerJointDetail() {
                 )}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs font-semibold text-primary"
+                className="flex w-fit items-center gap-1 py-1.5 text-xs font-semibold text-primary hover:underline"
               >
                 <IconPin />
                 Ver en Maps
@@ -181,8 +181,9 @@ export function BurgerJointDetail() {
             <button
               onClick={toggleWishlist}
               aria-pressed={burgerJoint.inWishlist}
-              className={`btn btn-ghost btn-circle flex-none ${burgerJoint.inWishlist ? 'text-primary' : 'text-base-content/40'}`}
-              title={burgerJoint.inWishlist ? 'Quitar de deseados' : 'Guardar en deseados'}
+              className={`btn btn-ghost btn-circle flex-none ${burgerJoint.inWishlist ? 'text-primary' : 'text-base-content/60'}`}
+              aria-label={burgerJoint.inWishlist ? 'Quitar de guardadas' : 'Guardar'}
+              title={burgerJoint.inWishlist ? 'Quitar de guardadas' : 'Guardar'}
             >
               <IconHeart size={24} filled={burgerJoint.inWishlist} />
             </button>
@@ -204,7 +205,7 @@ export function BurgerJointDetail() {
           {myRating ? (
             <div className="mt-auto flex items-center gap-3 rounded-box bg-base-100 px-4 py-3 ring-1 ring-inset ring-base-content/15">
               <div className="flex min-w-0 flex-col gap-1">
-                <span className="text-xs font-semibold uppercase tracking-wide text-base-content/50">
+                <span className="text-xs font-semibold uppercase tracking-wide text-base-content/70">
                   Tu puntaje
                 </span>
                 <Stars value={myRating.score} size={18} />
@@ -220,7 +221,7 @@ export function BurgerJointDetail() {
             </div>
           ) : (
             <button type="button" onClick={abrirOpinion} className="btn btn-primary mt-auto">
-              Dejá tu opinión
+              Escribir una reseña
             </button>
           )}
         </div>
@@ -254,7 +255,7 @@ export function BurgerJointDetail() {
           )
         })}
         {ratings.length === 0 && (
-          <p className="text-sm text-base-content/60">Sé el primero en dejar una reseña.</p>
+          <p className="text-sm text-base-content/70">Todavía no hay reseñas. Si fuiste, contá qué te pareció.</p>
         )}
       </section>
 

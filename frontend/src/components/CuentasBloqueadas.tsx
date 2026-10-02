@@ -55,7 +55,7 @@ export function CuentasBloqueadas() {
           >
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="truncate text-sm font-semibold">@{b.username}</span>
-              <span className="text-xs text-base-content/50">
+              <span className="text-xs text-base-content/70">
                 Bloqueada {relativeDate(b.bloqueadoEl).toLowerCase()}
               </span>
             </div>
@@ -65,7 +65,7 @@ export function CuentasBloqueadas() {
               disabled={desbloqueando === b.username}
               className="btn btn-ghost btn-xs"
             >
-              {desbloqueando === b.username ? 'Desbloqueando...' : 'Desbloquear'}
+              {desbloqueando === b.username ? 'Desbloqueando…' : 'Desbloquear'}
             </button>
           </li>
         ))}

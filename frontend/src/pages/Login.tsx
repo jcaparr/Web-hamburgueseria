@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Campo, CampoDeContrasenia } from '../components/Campo'
 import { GoogleSignInButton } from '../components/GoogleSignInButton'
 import { PasoNombreDeGoogle } from '../components/PasoNombreDeGoogle'
 import { useAuth } from '../context/AuthContext'
@@ -63,50 +64,47 @@ export function Login() {
                 necesita el par. Sin autoCapitalize, iOS escribe "Juan@..." con mayúscula
                 y el login falla sin que se vea por qué. Y enterKeyHint cambia la tecla
                 del teclado, que es cómo se avanza en un formulario desde el celular. */}
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              enterKeyHint="next"
-              aria-label="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              className="input input-bordered focus:border-primary"
-            />
-            <input
-              type="password"
+            <Campo etiqueta="Email">
+              {(campo) => (
+                <input
+                  {...campo}
+                  type="email"
+                  required
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  enterKeyHint="next"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input input-bordered w-full focus:border-primary"
+                />
+              )}
+            </Campo>
+            <CampoDeContrasenia
+              etiqueta="Contraseña"
               required
               autoComplete="current-password"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
               enterKeyHint="go"
-              aria-label="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Contraseña"
-              className="input input-bordered focus:border-primary"
             />
-            {error && <p className="text-xs text-error">{error}</p>}
-            {notice && <p className="text-xs text-success">{notice}</p>}
+            {error && <p role="alert" className="text-sm text-error">{error}</p>}
+            {notice && <p role="status" className="text-sm text-success">{notice}</p>}
             <button type="submit" disabled={submitting} className="btn btn-primary">
-              {submitting ? 'Ingresando...' : 'Ingresar'}
+              {submitting ? 'Ingresando…' : 'Ingresar'}
             </button>
           </form>
 
-          {googleError && <p className="text-xs text-error">{googleError}</p>}
+          {googleError && <p role="alert" className="text-sm text-error">{googleError}</p>}
           <GoogleSignInButton onCredential={onCredential} onError={setGoogleError} text="signin_with" />
 
-          <p className="text-sm text-base-content/60">
+          <p className="text-sm text-base-content/70">
             <Link to="/forgot-password" className="link text-primary">
               ¿Olvidaste tu contraseña?
             </Link>
           </p>
-          <p className="text-sm text-base-content/60">
+          <p className="text-sm text-base-content/70">
             ¿No tenés cuenta? <Link to="/register" className="link text-primary">Registrate</Link>
           </p>
         </div>

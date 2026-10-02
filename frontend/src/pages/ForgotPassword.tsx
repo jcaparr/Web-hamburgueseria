@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Campo, CampoDeContrasenia } from '../components/Campo'
 import { apiClient } from '../api/client'
 
 /**
@@ -58,28 +59,37 @@ export function ForgotPassword() {
 
           {step === 'request' ? (
             <>
-              <p className="text-sm text-base-content/60">
+              <p className="text-sm text-base-content/70">
                 Poné tu email y te mandamos un código para elegir una contraseña nueva.
               </p>
               <form onSubmit={onRequest} className="flex flex-col gap-3">
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email"
-                  className="input input-bordered focus:border-primary"
-                />
-                {error && <p className="text-xs text-error">{error}</p>}
+                <Campo etiqueta="Email">
+                  {(campo) => (
+                    <input
+                      {...campo}
+                      type="email"
+                      required
+                      autoComplete="email"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      enterKeyHint="send"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="input input-bordered w-full focus:border-primary"
+                    />
+                  )}
+                </Campo>
+                {error && <p role="alert" className="text-sm text-error">{error}</p>}
                 <button type="submit" disabled={submitting} className="btn btn-primary">
-                  {submitting ? 'Enviando...' : 'Mandarme el código'}
+                  {submitting ? 'Enviando…' : 'Mandarme el código'}
                 </button>
               </form>
             </>
           ) : (
             <>
               {/* The server message already mentions checking spam. */}
-              <p className="text-sm text-base-content/60">{notice}</p>
+              <p className="text-sm text-base-content/70">{notice}</p>
               <form onSubmit={onReset} className="flex flex-col gap-3">
                 <input
                   required
@@ -93,29 +103,28 @@ export function ForgotPassword() {
                   aria-label="Código de 6 dígitos"
                   className="input input-bordered text-center font-display text-2xl tracking-[0.5em] focus:border-primary"
                 />
-                <input
-                  type="password"
+                <CampoDeContrasenia
+                  etiqueta="Contraseña nueva"
+                  ayuda="Mínimo 8 caracteres."
                   required
                   minLength={8}
                   autoComplete="new-password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Nueva contraseña (mínimo 8 caracteres)"
-                  className="input input-bordered focus:border-primary"
                 />
-                {error && <p className="text-xs text-error">{error}</p>}
+                {error && <p role="alert" className="text-sm text-error">{error}</p>}
                 <button
                   type="submit"
                   disabled={submitting || code.length !== 6}
                   className="btn btn-primary"
                 >
-                  {submitting ? 'Cambiando...' : 'Cambiar contraseña'}
+                  {submitting ? 'Cambiando…' : 'Cambiar contraseña'}
                 </button>
               </form>
             </>
           )}
 
-          <p className="text-sm text-base-content/60">
+          <p className="text-sm text-base-content/70">
             <Link to="/login" className="link text-primary">Volver a iniciar sesión</Link>
           </p>
         </div>

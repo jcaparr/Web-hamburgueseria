@@ -9,6 +9,7 @@ import { Explore } from './pages/Explore'
 import { Feed } from './pages/Feed'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { Login } from './pages/Login'
+import { NoEncontrada } from './pages/NoEncontrada'
 import { PerfilPublico } from './pages/PerfilPublico'
 import { Profile } from './pages/Profile'
 import { Ranking } from './pages/Ranking'
@@ -23,8 +24,14 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <div className="flex min-h-dvh flex-col bg-base-100 text-base-content">
+          <a
+            href="#contenido"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-field focus:bg-neutral focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-secondary"
+          >
+            Saltar al contenido
+          </a>
           <TopBar />
-          <main className="mx-auto w-full max-w-[480px] flex-1 pb-20 md:max-w-5xl md:px-6 md:pb-8 md:pt-6">
+          <main id="contenido" className="mx-auto w-full max-w-[480px] flex-1 pb-20 md:max-w-5xl md:px-6 md:pb-8 md:pt-6">
             <Routes>
               <Route path="/" element={<Explore />} />
               <Route path="/burger-joints/:id" element={<BurgerJointDetail />} />
@@ -42,6 +49,7 @@ export default function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="*" element={<NoEncontrada />} />
             </Routes>
           </main>
           <BottomNav />
