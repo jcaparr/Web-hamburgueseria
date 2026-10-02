@@ -32,14 +32,22 @@ export function TopBar() {
       className={`sticky top-0 z-20 transition-colors duration-300 ${hidden ? 'bg-base-100/85 backdrop-blur-md' : 'bg-base-100'}`}
     >
       <header className="flex items-center justify-between gap-2 px-4 py-2 md:px-6">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <div className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-neutral">
-            <span className="font-display text-base font-extrabold text-secondary">H</span>
-          </div>
-          <NavLink to="/" className="truncate font-display text-lg font-bold" end>
+        <NavLink to="/" end className="flex min-w-0 items-center gap-1.5 sm:gap-2.5">
+          <span
+            aria-hidden="true"
+            className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-neutral font-display text-base font-extrabold text-secondary"
+          >
+            H
+          </span>
+          {/* Sin sesión, en los teléfonos de menos de 360 px los dos botones no dejan
+              lugar para el nombre, y cortado ("Hamburgu…") se ve peor que no estar: queda
+              el logo, y el nombre sigue ahí para los lectores de pantalla. */}
+          <span
+            className={`truncate font-display text-base font-bold sm:text-lg ${user ? '' : 'max-[359px]:sr-only'}`}
+          >
             Hamburgueserías
-          </NavLink>
-        </div>
+          </span>
+        </NavLink>
 
         <div className="hidden flex-1 justify-center md:flex">
           <ul className="flex items-center gap-1 rounded-full border border-base-300/70 bg-base-100/60 p-1">
@@ -61,7 +69,7 @@ export function TopBar() {
           </ul>
         </div>
 
-        <div className="flex flex-none items-center gap-2 text-sm">
+        <div className="flex flex-none items-center gap-1 text-sm sm:gap-2">
           {user ? (
             <>
               <span className="hidden font-medium sm:inline">@{user.username}</span>
@@ -71,10 +79,11 @@ export function TopBar() {
             </>
           ) : (
             <>
-              <NavLink to="/login" className="btn btn-ghost btn-sm hidden sm:inline-flex">
-                Iniciar sesión
+              <NavLink to="/login" className="btn btn-ghost btn-sm px-2.5 sm:px-3">
+                <span className="sm:hidden">Entrar</span>
+                <span className="hidden sm:inline">Iniciar sesión</span>
               </NavLink>
-              <NavLink to="/register" className="btn btn-primary btn-sm">
+              <NavLink to="/register" className="btn btn-primary btn-sm px-2.5 sm:px-3">
                 Registrarse
               </NavLink>
             </>
