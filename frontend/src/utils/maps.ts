@@ -83,3 +83,19 @@ export function mapsUrl(
   // si algún día los hay, no tienen ficha en Google a la que apuntar.
   return placeId ? `${base}&query_place_id=${encodeURIComponent(placeId)}` : base
 }
+
+/**
+ * Cómo llegar a un local desde donde está quien mira.
+ *
+ * Sin origen, Maps arranca desde la ubicación del teléfono, que es lo que se quiere
+ * casi siempre. No sirve {@link routeUrl} con una sola parada: sin ubicación usa la
+ * primera parada como origen, y acá esa parada es también el destino.
+ */
+export function comoLlegarUrl(local: Parada): string {
+  if (local.latitude == null || local.longitude == null) {
+    return mapsUrl(local.placeId, local.name, local.latitude, local.longitude)
+  }
+  const params = new URLSearchParams({ api: '1', destination: donde(local) })
+  if (local.placeId) params.set('destination_place_id', local.placeId)
+  return `https://www.google.com/maps/dir/?${params.toString()}`
+}

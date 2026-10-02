@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
-import { IconHeart, IconPencil, IconPin } from '../components/icons'
-import { DistribucionDeNotas } from '../components/DistribucionDeNotas'
+import { IconClock, IconExternal, IconPin, IconRoute } from '../components/icons'
 import { HorarioDelLocal } from '../components/HorarioDelLocal'
 import { LoadError } from '../components/LoadError'
+import { MasEnElBarrio } from '../components/MasEnElBarrio'
 import { ModalDeResenia } from '../components/ModalDeResenia'
-import { JointPhoto } from '../components/JointPhoto'
+import { PortadaDelLocal } from '../components/PortadaDelLocal'
+import { ResumenDeCalificaciones } from '../components/ResumenDeCalificaciones'
 import { ScoreBadge } from '../components/ScoreBadge'
-import { Stars } from '../components/Stars'
 import { TarjetaDeResenia } from '../components/TarjetaDeResenia'
-import { TemasDeLasResenias } from '../components/TemasDeLasResenias'
 import { useAuth } from '../context/AuthContext'
 import type { BurgerJoint, Horario, PageResponse, Rating, ResumenDeResenias } from '../types'
 import { isNotFound, isSessionExpired } from '../utils/errors'
 import { shortAddress } from '../utils/address'
-import { mapsUrl } from '../utils/maps'
+import { comoLlegarUrl, mapsUrl } from '../utils/maps'
 
 /**
  * Se llega con esto puesto desde "Mis reseñas", para editar sin tener que buscar el
@@ -63,6 +62,12 @@ export function BurgerJointDetail() {
   }
 
   useEffect(load, [id])
+
+  // Cada ficha empieza arriba. Al pasar de un local a otro desde "Más hamburgueserías
+  // en…", que está al final, la página nueva aparecía scrolleada hasta abajo.
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+  }, [id])
 
   // Aparte de las demás y sin cartel de error: el horario acompaña a la ficha, no la
   // completa. Si no llega, el local se ve igual que uno del que Google no tiene horario.
@@ -133,131 +138,127 @@ export function BurgerJointDetail() {
     return <p className="p-4 text-sm text-base-content/70">Cargando…</p>
   }
 
+  const comoLlegar = comoLlegarUrl(burgerJoint)
+
   return (
-    // La ficha arriba a todo el ancho y las reseñas abajo, también a todo el ancho.
-    // Antes eran dos columnas con el formulario en la izquierda; sacado el formulario,
-    // esa columna quedaba un muñón al lado de una lista larga.
-    <div className="flex flex-col gap-6 p-4 md:mx-auto md:max-w-3xl md:p-0 md:pt-6">
+    <div className="flex flex-col gap-6 p-4 md:mx-auto md:max-w-3xl md:p-0 md:pt-2">
       {loadError !== null && <LoadError error={loadError} onRetry={load} />}
 
-      <section className="flex flex-col gap-4 md:flex-row md:gap-6">
-        <JointPhoto
-          src={burgerJoint.photoUrl}
-          name={burgerJoint.name}
-          className="h-48 w-full rounded-box object-cover md:h-60 md:w-80 md:flex-none"
-        />
+      <div className="flex flex-col">
+        <PortadaDelLocal local={burgerJoint} onGuardar={toggleWishlist} />
 
-        <div className="flex flex-1 flex-col gap-3">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <h1 className="font-display text-2xl font-bold">{burgerJoint.name}</h1>
-              {burgerJoint.averageScore ? (
+        {/* Nombre, nota y barrio: lo que se lee primero para saber dónde se está. */}
+        <header className="flex flex-col gap-2 pt-4">
+          <h1 className="font-display text-3xl font-bold leading-tight text-balance">
+            {burgerJoint.name}
+          </h1>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-base-content/70">
+            {burgerJoint.averageScore ? (
+              <>
                 <ScoreBadge score={burgerJoint.averageScore} size="sm" />
-              ) : (
-                <p className="text-sm text-base-content/70">Todavía sin calificaciones</p>
-              )}
-              {/* Arriba qué tan buena es; abajo, juntos, lo que hace falta para ir:
-                  dónde queda, si está abierto ahora y cómo llegar. */}
-              <p className="mt-1 text-sm text-base-content/70">
-                {shortAddress(burgerJoint.address, burgerJoint.area)}
-              </p>
-              {horario && <HorarioDelLocal franjas={horario.franjas} />}
-              <a
-                href={mapsUrl(
-                  burgerJoint.placeId,
-                  burgerJoint.name,
-                  burgerJoint.latitude,
-                  burgerJoint.longitude
-                )}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex w-fit items-center gap-1 py-1.5 text-xs font-semibold text-primary hover:underline"
-              >
-                <IconPin />
-                Ver en Maps
-              </a>
-            </div>
-
-            <button
-              onClick={toggleWishlist}
-              aria-pressed={burgerJoint.inWishlist}
-              className={`btn btn-ghost btn-circle flex-none ${burgerJoint.inWishlist ? 'text-primary' : 'text-base-content/60'}`}
-              aria-label={burgerJoint.inWishlist ? 'Quitar de guardadas' : 'Guardar'}
-              title={burgerJoint.inWishlist ? 'Quitar de guardadas' : 'Guardar'}
-            >
-              <IconHeart size={24} filled={burgerJoint.inWishlist} />
-            </button>
+                <a href="#resenias" className="hover:text-primary hover:underline">
+                  {burgerJoint.ratingsCount === 1 ? '1 reseña' : `${burgerJoint.ratingsCount} reseñas`}
+                </a>
+              </>
+            ) : (
+              <span>Sin calificaciones todavía</span>
+            )}
+            {burgerJoint.area && <span className="font-medium">{burgerJoint.area}</span>}
           </div>
+          {error && <p role="alert" className="text-sm text-error">{error}</p>}
+        </header>
+      </div>
 
-          {/* Lo que el promedio no dice: si las opiniones coinciden o se reparten. */}
-          {resumen && <DistribucionDeNotas distribucion={resumen.distribucion} />}
+      {/* Las dos cosas que se vienen a hacer a una ficha: ir, y contar cómo estuvo.
+          Reseñar es la acción principal de la app, así que va en rojo; ir, al lado y
+          del mismo tamaño, porque en el teléfono es la que más se usa. */}
+      <div className="-mt-2 grid grid-cols-2 gap-3 md:flex">
+        {comoLlegar && (
+          <a
+            href={comoLlegar}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-outline gap-2 whitespace-nowrap md:px-6"
+          >
+            <IconRoute size={18} />
+            Cómo llegar
+          </a>
+        )}
+        <button
+          type="button"
+          onClick={abrirOpinion}
+          className={`btn btn-primary whitespace-nowrap md:px-6 ${comoLlegar ? '' : 'col-span-2'}`}
+        >
+          {myRating ? 'Editar tu reseña' : 'Escribir reseña'}
+        </button>
+      </div>
 
-          {/* Y lo que la distribución tampoco dice: de qué se habla. Va acá, pegado a
-              las barras, porque las dos responden a la misma pregunta —qué tan buena
-              es— desde dos lados. */}
-          {resumen && <TemasDeLasResenias temas={resumen.temas} />}
-
-          {error && <p className="text-xs text-error">{error}</p>}
-
-          {/* La acción principal de la pantalla. Si ya reseñaste, el botón no reemplaza
-              esa información sino que la acompaña: sin las estrellas al lado, un local
-              que ya calificaste se vería igual que uno donde nunca fuiste. */}
-          {myRating ? (
-            <div className="mt-auto flex items-center gap-3 rounded-box bg-base-100 px-4 py-3 ring-1 ring-inset ring-base-content/15">
-              <div className="flex min-w-0 flex-col gap-1">
-                <span className="text-xs font-semibold uppercase tracking-wide text-base-content/70">
-                  Tu puntaje
-                </span>
-                <Stars value={myRating.score} size={18} />
-              </div>
-              <button
-                type="button"
-                onClick={abrirOpinion}
-                className="btn btn-outline btn-sm ml-auto flex-none gap-1.5"
-              >
-                <IconPencil size={15} />
-                Editar
-              </button>
+      {/* Si está abierto y dónde queda, juntos: es lo que se mira antes de salir. */}
+      <section aria-label="Horario y dirección" className="flex flex-col divide-y divide-base-content/10 rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15">
+        {horario && horario.franjas.length > 0 && (
+          <div className="flex items-start gap-3 px-4 py-3">
+            <IconClock size={18} className="mt-0.5 flex-none text-base-content/70" />
+            <div className="min-w-0 flex-1">
+              <HorarioDelLocal franjas={horario.franjas} />
             </div>
-          ) : (
-            <button type="button" onClick={abrirOpinion} className="btn btn-primary mt-auto">
-              Escribir una reseña
-            </button>
-          )}
-        </div>
+          </div>
+        )}
+        <a
+          href={mapsUrl(burgerJoint.placeId, burgerJoint.name, burgerJoint.latitude, burgerJoint.longitude)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-start gap-3 px-4 py-3 text-sm"
+        >
+          <IconPin size={18} className="mt-0.5 flex-none text-base-content/70" />
+          <span className="min-w-0 flex-1">
+            <span className="block">{shortAddress(burgerJoint.address, burgerJoint.area)}</span>
+            <span className="text-xs font-semibold text-primary group-hover:underline">Ver en Maps</span>
+          </span>
+          <IconExternal size={16} className="mt-0.5 flex-none text-base-content/70" />
+        </a>
       </section>
+
+      <ResumenDeCalificaciones
+        promedio={burgerJoint.averageScore}
+        cuantas={burgerJoint.ratingsCount}
+        resumen={resumen}
+        miResenia={myRating}
+      />
 
       {/* Asomadas arriba de la lista: de veinte reseñas, la de alguien que te importa
           puede caer en la página tres, y ahí no la ve nadie. Siguen estando abajo con
           todas las demás, esto es un atajo y no otra lista. */}
       {resumen && resumen.deQuienesSigo.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="font-display text-sm font-bold">Lo que dijeron los que seguís</h2>
+          <h2 className="font-display text-lg font-bold">Lo que dijeron los que seguís</h2>
           {resumen.deQuienesSigo.map((r) => (
             <TarjetaDeResenia key={r.id} resenia={r} esMia={r.userId === user?.userId} />
           ))}
         </section>
       )}
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-sm font-bold">
-          {cuantasResenias !== null ? `Reseñas (${cuantasResenias})` : 'Reseñas'}
-        </h2>
-        {ratings.map((r) => {
-          const esMia = r.userId === user?.userId
-          return (
-            <TarjetaDeResenia
-              key={r.id}
-              resenia={r}
-              esMia={esMia}
-              onEditar={esMia ? abrirOpinion : undefined}
-            />
-          )
-        })}
-        {ratings.length === 0 && (
-          <p className="text-sm text-base-content/70">Todavía no hay reseñas. Si fuiste, contá qué te pareció.</p>
-        )}
-      </section>
+      {/* Sin reseñas, el bloque de calificaciones ya invita a escribir la primera: un
+          "Reseñas (0)" abajo repetiría lo mismo. */}
+      {ratings.length > 0 && (
+        <section id="resenias" className="flex scroll-mt-20 flex-col gap-3">
+          <h2 className="font-display text-lg font-bold">
+            {cuantasResenias !== null ? `Reseñas (${cuantasResenias})` : 'Reseñas'}
+          </h2>
+          {ratings.map((r) => {
+            const esMia = r.userId === user?.userId
+            return (
+              <TarjetaDeResenia
+                key={r.id}
+                resenia={r}
+                esMia={esMia}
+                onEditar={esMia ? abrirOpinion : undefined}
+              />
+            )
+          })}
+        </section>
+      )}
+
+      <MasEnElBarrio barrio={burgerJoint.area} sinEste={burgerJoint.id} />
 
       <ModalDeResenia
         abierto={opinando}
