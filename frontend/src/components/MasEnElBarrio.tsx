@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import type { BurgerJoint, PageResponse } from '../types'
-import { JointPhoto } from './JointPhoto'
-import { ScoreBadge } from './ScoreBadge'
+import { Seccion } from './Seccion'
+import { FilaDeTarjetas, LugarEnLaFila, TarjetaChicaDeLocal } from './TarjetaChicaDeLocal'
 
 /** Cuántas se muestran: entran dos y media en un teléfono, que es lo que invita a deslizar. */
 const CUANTAS = 6
@@ -47,32 +46,19 @@ export function MasEnElBarrio({ barrio, sinEste }: { barrio: string | null; sinE
   if (!barrio || otros.length === 0) return null
 
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="mas-en-el-barrio">
-      <h2 id="mas-en-el-barrio" className="font-display text-lg font-bold">
-        Más hamburgueserías en {barrio}
-      </h2>
-      <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
+    <Seccion titulo={`Más hamburgueserías en ${barrio}`}>
+      <FilaDeTarjetas>
         {otros.map((local) => (
-          <li key={local.id} className="w-40 flex-none snap-start">
-            <Link
-              to={`/burger-joints/${local.id}`}
-              className="flex h-full flex-col overflow-hidden rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15 transition-shadow hover:shadow-md"
-            >
-              <JointPhoto src={local.photoUrl} name={local.name} className="aspect-[4/3] w-full object-cover" />
-              <div className="flex flex-1 flex-col gap-1.5 p-2.5">
-                <span className="line-clamp-2 text-sm font-semibold leading-snug">{local.name}</span>
-                <span className="mt-auto">
-                  {local.averageScore ? (
-                    <ScoreBadge score={local.averageScore} size="sm" />
-                  ) : (
-                    <span className="text-xs text-base-content/70">Sin calificaciones</span>
-                  )}
-                </span>
-              </div>
-            </Link>
-          </li>
+          <LugarEnLaFila key={local.id}>
+            <TarjetaChicaDeLocal
+              id={local.id}
+              nombre={local.name}
+              foto={local.photoUrl}
+              nota={local.averageScore}
+            />
+          </LugarEnLaFila>
         ))}
-      </ul>
-    </section>
+      </FilaDeTarjetas>
+    </Seccion>
   )
 }
