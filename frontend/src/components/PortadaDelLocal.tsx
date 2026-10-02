@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { BurgerJoint } from '../types'
+import { BotonSobreFoto } from './BotonSobreFoto'
 import { IconArrowLeft, IconHeart, IconShare } from './icons'
 import { JointPhoto } from './JointPhoto'
 
@@ -55,9 +56,6 @@ export function PortadaDelLocal({
     }
   }
 
-  const boton =
-    'btn btn-circle btn-sm h-10 w-10 border-0 bg-base-100/90 text-base-content shadow-md backdrop-blur-sm hover:bg-base-100'
-
   return (
     <div className="relative -mx-4 -mt-4 md:mx-0 md:mt-0">
       <JointPhoto
@@ -68,23 +66,22 @@ export function PortadaDelLocal({
       <div className="checker-strip" />
 
       <div className="absolute inset-x-0 top-0 flex items-start justify-between p-3">
-        <button type="button" onClick={volver} aria-label="Volver" className={boton}>
+        <BotonSobreFoto onClick={volver} aria-label="Volver">
           <IconArrowLeft size={20} />
-        </button>
+        </BotonSobreFoto>
 
         <div className="flex items-center gap-2">
-          <button type="button" onClick={compartir} aria-label="Compartir" className={boton}>
+          <BotonSobreFoto onClick={compartir} aria-label="Compartir">
             <IconShare size={19} />
-          </button>
-          <button
-            type="button"
+          </BotonSobreFoto>
+          <BotonSobreFoto
             onClick={onGuardar}
             aria-pressed={local.inWishlist}
             aria-label={local.inWishlist ? 'Quitar de guardadas' : 'Guardar'}
-            className={`${boton} ${local.inWishlist ? 'text-primary' : ''}`}
+            className={local.inWishlist ? 'text-primary' : ''}
           >
             <IconHeart size={20} filled={local.inWishlist} />
-          </button>
+          </BotonSobreFoto>
         </div>
       </div>
 
