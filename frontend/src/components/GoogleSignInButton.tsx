@@ -97,10 +97,7 @@ export function GoogleSignInButton({
         window.google.accounts.id.renderButton(container.current, {
           theme: 'outline',
           size: 'large',
-          // Del ancho del formulario, que es lo que ocupan los campos de arriba. Fijo en
-          // 320 se salía de la tarjeta en el teléfono, donde quedan unos 280. Google
-          // acepta entre 200 y 400.
-          width: Math.max(200, Math.min(400, container.current.clientWidth)),
+          width: anchoDelBoton(container.current),
           text,
           locale: 'es-419',
         })
@@ -128,4 +125,16 @@ export function GoogleSignInButton({
       <div ref={container} className="flex justify-center" />
     </div>
   )
+}
+
+/**
+ * Del ancho del formulario, que es lo que ocupan los campos de arriba.
+ *
+ * Fijo en 320 se salía de la tarjeta en el teléfono, donde quedan unos 280. Google
+ * acepta entre 200 y 400. Si la página todavía no tiene ancho —una pestaña en segundo
+ * plano—, se queda con los 320 de antes en vez de achicarlo al mínimo.
+ */
+function anchoDelBoton(contenedor: HTMLElement) {
+  const ancho = Math.floor(contenedor.getBoundingClientRect().width)
+  return ancho < 200 ? 320 : Math.min(400, ancho)
 }
