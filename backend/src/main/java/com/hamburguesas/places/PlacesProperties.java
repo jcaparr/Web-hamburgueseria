@@ -129,6 +129,12 @@ public class PlacesProperties {
          * veinticinco dólares cada mil después. Se frena antes a propósito.
          */
         private int monthlyResumenCalls = 900;
+        /**
+         * El horario de apertura, que es un campo Enterprise: mil gratis por mes, aparte de
+         * las fichas. Con mil y pico de locales no alcanza para todos en un mes, y está
+         * bien: el resto lo completa el mes siguiente.
+         */
+        private int monthlyHorarioCalls = 950;
         /** Fichas sueltas, para los locales que ninguna búsqueda devuelve. Gratis hasta 5.000. */
         private int monthlyDetailsCalls = 4000;
     }

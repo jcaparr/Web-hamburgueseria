@@ -22,5 +22,11 @@ public class PlacesSyncScheduler {
         log.info("Starting scheduled Places sync");
         PlacesSyncReport report = syncService.sync();
         log.info("Scheduled Places sync report: {}", report);
+
+        // Después del barrido, para que los locales que acaba de traer ya estén. Sale de
+        // otra cuota, así que no le quita nada: el primer domingo del mes gasta la del
+        // mes y los siguientes solo preguntan por lo que haya quedado.
+        HorariosPedidos horarios = syncService.completarHorarios();
+        log.info("Scheduled horarios report: {}", horarios);
     }
 }

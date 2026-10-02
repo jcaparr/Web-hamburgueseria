@@ -11,5 +11,10 @@ public enum PlacesCallType {
      * (Enterprise + Atmosphere, mil gratis por mes). Se pide solo por los locales que
      * ninguna prueba barata resolvió.
      */
-    RESUMEN
+    RESUMEN,
+    /**
+     * El horario de apertura de un local. Es un campo Enterprise: mil gratis por mes, una
+     * cuota aparte de la de fichas aunque la llamada sea la misma.
+     */
+    HORARIO
 }

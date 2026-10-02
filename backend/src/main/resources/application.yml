@@ -616,6 +616,11 @@ app:
       # alcanzan para que el freno siga estando y la foto vuelva a ser lo que manda.
       monthly-details-calls: 4800
       monthly-photo-calls: 1000
+      # El horario es un campo Enterprise, con su propio tramo de 1.000 gratis por mes.
+      # Son más locales que eso, así que completarlos lleva dos meses: los que no
+      # entran en este los toma el próximo, porque se pregunta primero por los que
+      # nunca se preguntaron.
+      monthly-horario-calls: 950
     photos:
       directory: ${PLACE_PHOTOS_DIR:./data/place-photos}
       max-width-px: 800

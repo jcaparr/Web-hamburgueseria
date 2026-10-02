@@ -142,4 +142,15 @@ public class BurgerJoint {
 
     @Column(name = "last_synced_at")
     private Instant lastSyncedAt;
+
+    /**
+     * La última vez que se le pidió el horario a Google.
+     *
+     * Nulo es "nunca se preguntó", que no es lo mismo que "no tiene horario": esos
+     * quedan con la fecha puesta y ninguna franja. Las franjas viven en su propia tabla,
+     * {@link FranjaHoraria}, y no acá: Explorar lista locales de a veinte y no necesita
+     * el horario de ninguno.
+     */
+    @Column(name = "horario_consultado_el")
+    private Instant horarioConsultadoEl;
 }

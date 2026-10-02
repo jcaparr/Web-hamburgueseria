@@ -140,6 +140,20 @@ public class PlacesClient {
             : EleccionDeFoto.mejoresFotos(place, properties.getSync().getFotosElegidas().get(placeId));
     }
 
+    /**
+     * El horario de apertura de un local, o una lista vacía si Google no lo tiene.
+     *
+     * Se pide solo regularOpeningHours, y no también el nombre o la dirección: Google
+     * cobra la llamada al precio del campo más caro que se pida, y este ya es Enterprise.
+     * Agregar campos no la encarecería, pero tampoco hace falta ninguno.
+     *
+     * Es el horario de siempre y no el de esta semana (currentOpeningHours): se guarda y
+     * se muestra durante semanas, y un feriado de hoy no tiene que quedar como horario.
+     */
+    public List<HorarioDeGoogle.Franja> horarioDe(String placeId) {
+        return HorarioDeGoogle.franjas(fichaDe(placeId, "regularOpeningHours"));
+    }
+
     /** La ficha de un local, con solo los campos que se piden: cada campo define el precio. */
     private JsonNode fichaDe(String placeId, String campos) {
         return restClient.get()
