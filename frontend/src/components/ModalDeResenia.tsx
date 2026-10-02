@@ -144,7 +144,7 @@ export function ModalDeResenia({
             <h3 className="font-display text-lg font-bold">
               {miResenia ? 'Editá tu opinión' : 'Dejá tu opinión'}
             </h3>
-            <span className="truncate text-sm text-base-content/60">{nombreDelLocal}</span>
+            <span className="truncate text-sm text-base-content/70">{nombreDelLocal}</span>
           </div>
           <button
             type="button"
@@ -160,14 +160,14 @@ export function ModalDeResenia({
             se quiera contar. Separadas se entiende de un vistazo qué falta. */}
         <form onSubmit={guardar} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-base-content/50">
+            <span className="text-xs font-semibold uppercase tracking-wide text-base-content/70">
               Tu puntaje
             </span>
             <Stars value={score} onChange={setScore} size={30} />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-base-content/50">
+            <span className="text-xs font-semibold uppercase tracking-wide text-base-content/70">
               La foto
             </span>
             <SelectorDeFoto
@@ -178,7 +178,7 @@ export function ModalDeResenia({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-base-content/50">
+            <span className="text-xs font-semibold uppercase tracking-wide text-base-content/70">
               Tu reseña
             </span>
             <textarea

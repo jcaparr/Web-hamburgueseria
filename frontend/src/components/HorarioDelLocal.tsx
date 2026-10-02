@@ -38,7 +38,7 @@ export function HorarioDelLocal({ franjas }: { franjas: FranjaHoraria[] }) {
         <span aria-hidden="true" className="flex">
           <IconChevronRight
             size={14}
-            className="text-base-content/50 transition-transform group-open:rotate-90 group-hover/resumen:text-base-content motion-reduce:transition-none"
+            className="text-base-content/70 transition-transform group-open:rotate-90 group-hover/resumen:text-base-content motion-reduce:transition-none"
           />
         </span>
         <span className="sr-only">Ver el horario de toda la semana</span>
@@ -56,7 +56,7 @@ export function HorarioDelLocal({ franjas }: { franjas: FranjaHoraria[] }) {
             >
               <span>{NOMBRES_DE_LOS_DIAS[dia]}</span>
               <span
-                className={`text-right tabular-nums ${cerrado && !esHoy ? 'text-base-content/50' : ''}`}
+                className={`text-right tabular-nums ${cerrado && !esHoy ? 'text-base-content/70' : ''}`}
               >
                 {horarioDelDia(franjas, dia)}
               </span>

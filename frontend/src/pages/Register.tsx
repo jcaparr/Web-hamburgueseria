@@ -96,7 +96,7 @@ export function Register() {
             onError={setGoogleError}
             text="signup_with"
           />
-          <p className="text-sm text-base-content/60">
+          <p className="text-sm text-base-content/70">
             ¿Ya tenés cuenta? <Link to="/login" className="link text-primary">Iniciá sesión</Link>
           </p>
         </div>

@@ -213,7 +213,7 @@ export function Explore() {
       <h1 className="font-display text-2xl font-bold">Explorar hamburgueserías</h1>
 
       <div className="flex items-center gap-2 rounded-xl border border-base-300 bg-base-100 px-4 py-2.5">
-        <IconSearch size={16} className="text-base-content/50" />
+        <IconSearch size={16} className="text-base-content/70" />
         <input
           type="search"
           value={query}
@@ -221,7 +221,7 @@ export function Explore() {
             cambiar({ q: e.target.value, pagina: null })
           }}
           placeholder="Buscar hamburguesería..."
-          className="w-full bg-transparent text-sm outline-none placeholder:text-base-content/50"
+          className="w-full bg-transparent text-base outline-none placeholder:text-base-content/60 md:text-sm"
         />
       </div>
 
@@ -259,7 +259,7 @@ export function Explore() {
         Mostrar cadenas de comida rápida
       </Interruptor>
 
-      {loading && <p className="text-sm text-base-content/60">Buscando...</p>}
+      {loading && <p className="text-sm text-base-content/70">Buscando...</p>}
 
       {error ? (
         <LoadError error={error} onRetry={() => setAttempt((n) => n + 1)} />
@@ -274,12 +274,12 @@ export function Explore() {
               <div className="checker-strip" />
               <div className="flex flex-col gap-1 p-4">
                 <h2 className="font-display line-clamp-1 text-base font-bold">{b.name}</h2>
-                <p className="line-clamp-2 text-xs text-base-content/60">{shortAddress(b.address, b.area)}</p>
+                <p className="line-clamp-2 text-xs text-base-content/70">{shortAddress(b.address, b.area)}</p>
                 <div className="mt-2 flex items-center justify-between">
                   {b.averageScore ? (
                     <ScoreBadge score={b.averageScore} size="sm" />
                   ) : (
-                    <span className="text-xs font-medium text-base-content/50">Sin calificaciones</span>
+                    <span className="text-xs font-medium text-base-content/70">Sin calificaciones</span>
                   )}
                 </div>
               </div>
@@ -301,7 +301,7 @@ export function Explore() {
             barrio puesto, "con ese nombre" mandaba a cambiar lo que no era.
             Con varios se nombran todos: si no, no se sabe en cuál no hay nada. */}
         {!loading && items.length === 0 && (
-          <p className="text-sm text-base-content/60">
+          <p className="text-sm text-base-content/70">
             {barriosElegidos.length > 0
               ? `No encontramos hamburgueserías en ${enCastellano(barriosElegidos)}${query ? ' con ese nombre' : ''}.`
               : 'No encontramos hamburgueserías con ese nombre.'}

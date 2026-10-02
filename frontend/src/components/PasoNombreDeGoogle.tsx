@@ -35,7 +35,7 @@ export function PasoNombreDeGoogle({ google }: { google: GoogleSignIn }) {
       <div className="card card-border md:p-2">
         <div className="card-body gap-3">
           <h1 className="card-title font-display">Elegí tu nombre de usuario</h1>
-          <p className="text-sm text-base-content/60">
+          <p className="text-sm text-base-content/70">
             Es lo último que falta. Con esto te van a encontrar tus amigos.
           </p>
 

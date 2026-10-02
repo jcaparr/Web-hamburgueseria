@@ -34,7 +34,7 @@ export function Reviews() {
     <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-2xl md:p-0">
       <h1 className="font-display text-2xl font-bold">Mis reseñas</h1>
 
-      {loading && <p className="text-sm text-base-content/60">Cargando...</p>}
+      {loading && <p className="text-sm text-base-content/70">Cargando...</p>}
       {error !== null && <LoadError error={error} onRetry={() => {
           setError(null)
           setLoading(true)
@@ -52,7 +52,7 @@ export function Reviews() {
               />
               <div className="flex flex-1 flex-col overflow-hidden">
                 <span className="truncate font-medium">{r.burgerJointName}</span>
-                <span className="text-xs text-base-content/50">{relativeDate(r.createdAt)}</span>
+                <span className="text-xs text-base-content/70">{relativeDate(r.createdAt)}</span>
               </div>
               <ScoreBadge score={r.score} size="sm" />
             </Link>
@@ -61,7 +61,7 @@ export function Reviews() {
                 era: entrar al local y bajar a buscar el formulario. */}
             <Link
               to={`/burger-joints/${r.burgerJointId}?opinar=1`}
-              className="btn btn-ghost btn-xs mt-2 gap-1.5 text-base-content/60"
+              className="btn btn-ghost btn-xs mt-2 gap-1.5 text-base-content/70"
             >
               <IconPencil size={14} />
               Editar
@@ -69,7 +69,7 @@ export function Reviews() {
           </li>
         ))}
         {!loading && !error && ratings.length === 0 && (
-          <p className="text-sm text-base-content/60">Todavía no calificaste ninguna hamburguesería.</p>
+          <p className="text-sm text-base-content/70">Todavía no calificaste ninguna hamburguesería.</p>
         )}
       </ul>
     </div>

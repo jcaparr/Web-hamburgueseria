@@ -100,7 +100,7 @@ export function SelectorDeFoto({
             </span>
           </>
         ) : (
-          <span className="flex aspect-square w-full flex-col items-center justify-center gap-2 bg-base-200 text-base-content/50 ring-1 ring-inset ring-base-content/10 transition-colors group-hover:bg-base-300">
+          <span className="flex aspect-square w-full flex-col items-center justify-center gap-2 bg-base-200 text-base-content/70 ring-1 ring-inset ring-base-content/10 transition-colors group-hover:bg-base-300">
             <IconCamera size={34} />
             <span className="text-sm font-semibold">Agregá una foto</span>
             <span className="text-xs">Sin foto no se publica</span>

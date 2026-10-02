@@ -27,7 +27,7 @@ export function SavedTourCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="font-display truncate text-sm font-bold">{tour.name}</h3>
-          <p className="text-xs text-base-content/60">
+          <p className="text-xs text-base-content/70">
             {tour.kilometros} km · {enHoras(tour.minutos)} {enAuto ? 'en auto' : 'caminando'}
           </p>
         </div>

@@ -72,7 +72,7 @@ export function VerifyEmail() {
           {/* Plain again: registration now refuses an address that already has an
               account, so everyone who reaches this screen really does have a code
               on the way. */}
-          <p className="text-sm text-base-content/60">
+          <p className="text-sm text-base-content/70">
             Te mandamos un código de 6 dígitos a <span className="font-medium">{email}</span>.
             Si no lo ves, fijate en la carpeta de spam.
           </p>
@@ -91,7 +91,7 @@ export function VerifyEmail() {
               className="input input-bordered text-center font-display text-2xl tracking-[0.5em] focus:border-primary"
             />
             {error && <p className="text-xs text-error">{error}</p>}
-            {notice && <p className="text-xs text-base-content/60">{notice}</p>}
+            {notice && <p className="text-xs text-base-content/70">{notice}</p>}
             <button
               type="submit"
               disabled={submitting || code.length !== 6}
@@ -110,7 +110,7 @@ export function VerifyEmail() {
             {cooldown > 0 ? `Reenviar código (${cooldown}s)` : 'Reenviar código'}
           </button>
 
-          <p className="text-sm text-base-content/60">
+          <p className="text-sm text-base-content/70">
             ¿Te equivocaste de email?{' '}
             <Link to="/register" className="link text-primary">Registrate de nuevo</Link>
           </p>

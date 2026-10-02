@@ -29,7 +29,7 @@ export function TopBar() {
 
   return (
     <div
-      className={`sticky top-0 z-20 transition-colors duration-300 ${hidden ? 'bg-base-100/40 backdrop-blur-md' : 'bg-base-100'}`}
+      className={`sticky top-0 z-20 transition-colors duration-300 ${hidden ? 'bg-base-100/85 backdrop-blur-md' : 'bg-base-100'}`}
     >
       <header className="flex items-center justify-between gap-2 px-4 py-2 md:px-6">
         <div className="flex min-w-0 items-center gap-2.5">

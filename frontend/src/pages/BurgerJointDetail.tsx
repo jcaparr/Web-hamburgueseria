@@ -130,7 +130,7 @@ export function BurgerJointDetail() {
         </div>
       )
     }
-    return <p className="p-4 text-sm text-base-content/60">Cargando...</p>
+    return <p className="p-4 text-sm text-base-content/70">Cargando...</p>
   }
 
   return (
@@ -154,11 +154,11 @@ export function BurgerJointDetail() {
               {burgerJoint.averageScore ? (
                 <ScoreBadge score={burgerJoint.averageScore} size="sm" />
               ) : (
-                <p className="text-sm text-base-content/50">Todavía sin calificaciones</p>
+                <p className="text-sm text-base-content/70">Todavía sin calificaciones</p>
               )}
               {/* Arriba qué tan buena es; abajo, juntos, lo que hace falta para ir:
                   dónde queda, si está abierto ahora y cómo llegar. */}
-              <p className="mt-1 text-sm text-base-content/60">
+              <p className="mt-1 text-sm text-base-content/70">
                 {shortAddress(burgerJoint.address, burgerJoint.area)}
               </p>
               {horario && <HorarioDelLocal franjas={horario.franjas} />}
@@ -181,7 +181,7 @@ export function BurgerJointDetail() {
             <button
               onClick={toggleWishlist}
               aria-pressed={burgerJoint.inWishlist}
-              className={`btn btn-ghost btn-circle flex-none ${burgerJoint.inWishlist ? 'text-primary' : 'text-base-content/40'}`}
+              className={`btn btn-ghost btn-circle flex-none ${burgerJoint.inWishlist ? 'text-primary' : 'text-base-content/60'}`}
               title={burgerJoint.inWishlist ? 'Quitar de deseados' : 'Guardar en deseados'}
             >
               <IconHeart size={24} filled={burgerJoint.inWishlist} />
@@ -204,7 +204,7 @@ export function BurgerJointDetail() {
           {myRating ? (
             <div className="mt-auto flex items-center gap-3 rounded-box bg-base-100 px-4 py-3 ring-1 ring-inset ring-base-content/15">
               <div className="flex min-w-0 flex-col gap-1">
-                <span className="text-xs font-semibold uppercase tracking-wide text-base-content/50">
+                <span className="text-xs font-semibold uppercase tracking-wide text-base-content/70">
                   Tu puntaje
                 </span>
                 <Stars value={myRating.score} size={18} />
@@ -254,7 +254,7 @@ export function BurgerJointDetail() {
           )
         })}
         {ratings.length === 0 && (
-          <p className="text-sm text-base-content/60">Sé el primero en dejar una reseña.</p>
+          <p className="text-sm text-base-content/70">Sé el primero en dejar una reseña.</p>
         )}
       </section>
 

@@ -143,7 +143,7 @@ export function Tour() {
     <div className="flex flex-col gap-5 p-4 md:p-0">
       <div>
         <h1 className="font-display text-2xl font-bold">Armar un tour</h1>
-        <p className="mt-1 text-sm text-base-content/60">
+        <p className="mt-1 text-sm text-base-content/70">
           Un recorrido de hamburgueserías para hacer {modo === 'A_PIE' ? 'caminando' : 'en auto'}.
         </p>
       </div>
@@ -212,7 +212,7 @@ export function Tour() {
               <span className="truncate">
                 {barrios.length === 0 ? 'Cerca mío' : barrios.join(', ')}
               </span>
-              <span className="text-base-content/50">▾</span>
+              <span className="text-base-content/70">▾</span>
             </summary>
             <ul className="dropdown-content menu z-10 mt-1 max-h-72 w-full flex-nowrap overflow-y-auto rounded-box bg-base-100 p-2 shadow ring-1 ring-inset ring-base-content/15">
               {barriosDisponibles.map((barrio) => (
@@ -231,7 +231,7 @@ export function Tour() {
             </ul>
           </details>
           {barrios.length === 0 && (
-            <p className="text-xs text-base-content/60">
+            <p className="text-xs text-base-content/70">
               {buscandoUbicacion
                 ? 'Buscando dónde estás...'
                 : (sinUbicacion ?? 'Sin barrios, el recorrido arranca donde estás vos.')}

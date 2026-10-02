@@ -43,7 +43,7 @@ export function Wishlist() {
     <div className="flex flex-col gap-4 p-4 md:p-0">
       <h1 className="font-display text-2xl font-bold">Lista de deseados</h1>
 
-      {loading && <p className="text-sm text-base-content/60">Cargando...</p>}
+      {loading && <p className="text-sm text-base-content/70">Cargando...</p>}
       {error !== null && <LoadError error={error} onRetry={() => {
           setError(null)
           setLoading(true)
@@ -62,7 +62,7 @@ export function Wishlist() {
                 />
                 <div className="flex flex-col overflow-hidden">
                   <span className="truncate font-display font-semibold">{b.name}</span>
-                  <span className="truncate text-xs text-base-content/60">{shortAddress(b.address, b.area)}</span>
+                  <span className="truncate text-xs text-base-content/70">{shortAddress(b.address, b.area)}</span>
                 </div>
               </Link>
               <button
@@ -85,7 +85,7 @@ export function Wishlist() {
           </li>
         ))}
         {!loading && !error && items.length === 0 && (
-          <p className="text-sm text-base-content/60">Todavía no guardaste ninguna hamburguesería.</p>
+          <p className="text-sm text-base-content/70">Todavía no guardaste ninguna hamburguesería.</p>
         )}
       </ul>
     </div>

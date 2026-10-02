@@ -75,7 +75,7 @@ export function Profile() {
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Mi perfil</h1>
         <button
-          className="btn btn-ghost btn-circle text-base-content/50"
+          className="btn btn-ghost btn-circle text-base-content/70"
           title="Configuración (próximamente)"
           disabled
         >
@@ -101,17 +101,17 @@ export function Profile() {
         <div className="grid grid-cols-3 gap-3 rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15">
           <div className="flex flex-col items-center gap-1 text-center">
             <span className="font-display text-xl font-bold">{stats?.ratingsCount ?? '—'}</span>
-            <span className="text-xs text-base-content/60">Reseñas</span>
+            <span className="text-xs text-base-content/70">Reseñas</span>
           </div>
           <div className="flex flex-col items-center gap-1 text-center">
             <span className="font-display text-xl font-bold">
               {stats?.averageScore ? stats.averageScore.toFixed(1) : '—'}
             </span>
-            <span className="text-xs text-base-content/60">Puntaje promedio</span>
+            <span className="text-xs text-base-content/70">Puntaje promedio</span>
           </div>
           <div className="flex flex-col items-center gap-1 text-center">
             <span className="font-display text-xl font-bold">{stats?.seguidores ?? '—'}</span>
-            <span className="text-xs text-base-content/60">
+            <span className="text-xs text-base-content/70">
               {stats?.seguidores === 1 ? 'Seguidor' : 'Seguidores'}
             </span>
           </div>
@@ -128,7 +128,7 @@ export function Profile() {
             </Link>
           )}
         </div>
-        {loading && <p className="text-sm text-base-content/60">Cargando...</p>}
+        {loading && <p className="text-sm text-base-content/70">Cargando...</p>}
         <div className="flex flex-col gap-2">
           {recentRatings.map((r) => (
             <Link
@@ -143,13 +143,13 @@ export function Profile() {
               />
               <div className="flex flex-1 flex-col overflow-hidden">
                 <span className="truncate font-medium">{r.burgerJointName}</span>
-                <span className="text-xs text-base-content/50">{relativeDate(r.createdAt)}</span>
+                <span className="text-xs text-base-content/70">{relativeDate(r.createdAt)}</span>
               </div>
               <ScoreBadge score={r.score} size="sm" />
             </Link>
           ))}
           {!loading && !error && recentRatings.length === 0 && (
-            <p className="text-sm text-base-content/60">Todavía no calificaste ninguna hamburguesería.</p>
+            <p className="text-sm text-base-content/70">Todavía no calificaste ninguna hamburguesería.</p>
           )}
         </div>
       </section>
@@ -176,14 +176,14 @@ export function Profile() {
                   {b.averageScore ? (
                     <ScoreBadge score={b.averageScore} size="sm" />
                   ) : (
-                    <span className="text-xs text-base-content/50">Sin calificaciones</span>
+                    <span className="text-xs text-base-content/70">Sin calificaciones</span>
                   )}
                 </div>
               </Link>
             ))}
           </div>
         ) : (
-          !loading && !error && <p className="text-sm text-base-content/60">Todavía no guardaste ninguna hamburguesería.</p>
+          !loading && !error && <p className="text-sm text-base-content/70">Todavía no guardaste ninguna hamburguesería.</p>
         )}
       </section>
 
@@ -213,7 +213,7 @@ export function Profile() {
           </div>
         ) : (
           !loading && (
-            <p className="text-sm text-base-content/60">
+            <p className="text-sm text-base-content/70">
               Todavía no guardaste ningún recorrido.
             </p>
           )
@@ -225,7 +225,7 @@ export function Profile() {
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-sm font-bold">Logros</h2>
         <div className="rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15">
-          <p className="text-sm text-base-content/60">
+          <p className="text-sm text-base-content/70">
             Muy pronto vas a poder desbloquear logros a medida que calificás y descubrís hamburgueserías.
           </p>
         </div>

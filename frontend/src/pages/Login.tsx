@@ -101,12 +101,12 @@ export function Login() {
           {googleError && <p className="text-xs text-error">{googleError}</p>}
           <GoogleSignInButton onCredential={onCredential} onError={setGoogleError} text="signin_with" />
 
-          <p className="text-sm text-base-content/60">
+          <p className="text-sm text-base-content/70">
             <Link to="/forgot-password" className="link text-primary">
               ¿Olvidaste tu contraseña?
             </Link>
           </p>
-          <p className="text-sm text-base-content/60">
+          <p className="text-sm text-base-content/70">
             ¿No tenés cuenta? <Link to="/register" className="link text-primary">Registrate</Link>
           </p>
         </div>

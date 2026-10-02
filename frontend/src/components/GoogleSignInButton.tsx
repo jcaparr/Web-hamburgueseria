@@ -119,7 +119,7 @@ export function GoogleSignInButton({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
         <span className="h-px flex-1 bg-base-300" />
-        <span className="text-xs text-base-content/50">o</span>
+        <span className="text-xs text-base-content/70">o</span>
         <span className="h-px flex-1 bg-base-300" />
       </div>
       <div ref={container} className="flex justify-center" />

@@ -98,7 +98,7 @@ export function SelectorDeBarrios({
           </div>
 
           <label className="flex items-center gap-2 rounded-xl border border-base-300 px-3 py-2">
-            <IconSearch size={15} className="text-base-content/50" />
+            <IconSearch size={15} className="text-base-content/70" />
             <input
               type="search"
               value={buscado}
@@ -106,7 +106,7 @@ export function SelectorDeBarrios({
               placeholder="Buscar barrio..."
               autoCapitalize="none"
               autoCorrect="off"
-              className="w-full bg-transparent text-sm outline-none placeholder:text-base-content/50"
+              className="w-full bg-transparent text-base outline-none placeholder:text-base-content/60 md:text-sm"
             />
           </label>
 
@@ -125,7 +125,7 @@ export function SelectorDeBarrios({
               </li>
             ))}
             {visibles.length === 0 && (
-              <li className="py-3 text-sm text-base-content/60">
+              <li className="py-3 text-sm text-base-content/70">
                 Ningún barrio se llama así.
               </li>
             )}

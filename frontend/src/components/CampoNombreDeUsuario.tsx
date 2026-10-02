@@ -22,7 +22,7 @@ export function CampoNombreDeUsuario({
           marcado ? 'input-error' : 'focus-within:border-primary'
         }`}
       >
-        <span className="text-base-content/50">@</span>
+        <span className="text-base-content/70">@</span>
         {/* El nombre de usuario se guarda en minúsculas, así que dejar que el teclado
             del teléfono ponga la primera en mayúscula solo consigue que lo escrito no
             se parezca a lo que va a quedar. */}
@@ -61,7 +61,7 @@ export function CampoNombreDeUsuario({
           )}
         </p>
       ) : (
-        <p className="text-xs text-base-content/50">
+        <p className="text-xs text-base-content/70">
           Con esto te buscan tus amigos. Letras, números y guión bajo.
         </p>
       )}

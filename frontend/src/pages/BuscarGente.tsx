@@ -74,7 +74,7 @@ export function BuscarGente() {
       <h1 className="font-display text-xl font-bold">Buscar gente</h1>
 
       <label className="input input-bordered flex items-center gap-2 focus-within:border-primary">
-        <IconSearch size={16} className="text-base-content/50" />
+        <IconSearch size={16} className="text-base-content/70" />
         <input
           autoFocus
           value={texto}
@@ -103,7 +103,7 @@ export function BuscarGente() {
                 </div>
                 <div className="flex min-w-0 flex-col">
                   <span className="truncate font-semibold">@{persona.username}</span>
-                  <span className="text-xs text-base-content/60">
+                  <span className="text-xs text-base-content/70">
                     {persona.resenias === 1 ? '1 reseña' : `${persona.resenias} reseñas`}
                   </span>
                 </div>
@@ -120,13 +120,13 @@ export function BuscarGente() {
       )}
 
       {!error && !buscando && limpio.length >= MINIMO && resultados.length === 0 && (
-        <p className="text-sm text-base-content/60">
+        <p className="text-sm text-base-content/70">
           No hay nadie con ese nombre.
         </p>
       )}
 
       {limpio.length < MINIMO && (
-        <p className="text-sm text-base-content/60">
+        <p className="text-sm text-base-content/70">
           Escribí al menos {MINIMO} letras del nombre de usuario que buscás.
         </p>
       )}

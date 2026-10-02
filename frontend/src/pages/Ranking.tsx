@@ -102,10 +102,10 @@ export function Ranking() {
       )}
 
       {tab === 'mine' && !user && (
-        <p className="text-sm text-base-content/60">Iniciá sesión para ver las hamburgueserías que calificaste.</p>
+        <p className="text-sm text-base-content/70">Iniciá sesión para ver las hamburgueserías que calificaste.</p>
       )}
 
-      {loading && <p className="text-sm text-base-content/60">Cargando...</p>}
+      {loading && <p className="text-sm text-base-content/70">Cargando...</p>}
 
       {error ? (
         <LoadError error={error} onRetry={() => setAttempt((n) => n + 1)} />
@@ -114,7 +114,7 @@ export function Ranking() {
         {items.map((item, index) => (
           <li key={item.burgerJointId} className="rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15">
             <Link to={`/burger-joints/${item.burgerJointId}`} className="flex items-center gap-3 p-3 pb-2">
-              <span className="w-5 text-center font-display text-sm font-bold text-base-content/40">{index + 1}</span>
+              <span className="w-5 text-center font-display text-sm font-bold text-base-content/70">{index + 1}</span>
               <JointPhoto
                 src={item.photoUrl}
                 name={item.name}
@@ -122,14 +122,14 @@ export function Ranking() {
               />
               <div className="flex flex-1 flex-col overflow-hidden">
                 <span className="truncate font-display font-semibold">{item.name}</span>
-                <span className="truncate text-xs text-base-content/60">{shortAddress(item.address, item.area)}</span>
+                <span className="truncate text-xs text-base-content/70">{shortAddress(item.address, item.area)}</span>
               </div>
               <div className="flex flex-col items-end gap-1 text-right text-sm">
                 <ScoreBadge score={tab === 'mine' ? (item.myScore ?? item.averageScore) : item.averageScore} size="sm" />
                 {tab === 'general' ? (
-                  <div className="text-xs text-base-content/40">{item.ratingsCount} reseñas</div>
+                  <div className="text-xs text-base-content/70">{item.ratingsCount} reseñas</div>
                 ) : (
-                  <div className="text-xs text-base-content/40">general: {item.averageScore.toFixed(1)}</div>
+                  <div className="text-xs text-base-content/70">general: {item.averageScore.toFixed(1)}</div>
                 )}
               </div>
             </Link>
@@ -145,7 +145,7 @@ export function Ranking() {
           </li>
         ))}
         {!loading && items.length === 0 && (tab === 'general' || user) && (
-          <p className="text-sm text-base-content/60">
+          <p className="text-sm text-base-content/70">
             {tab === 'mine' ? 'Todavía no calificaste ninguna hamburguesería.' : 'Todavía no hay calificaciones.'}
           </p>
         )}

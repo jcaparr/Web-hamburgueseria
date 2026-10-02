@@ -58,7 +58,7 @@ export function ForgotPassword() {
 
           {step === 'request' ? (
             <>
-              <p className="text-sm text-base-content/60">
+              <p className="text-sm text-base-content/70">
                 Poné tu email y te mandamos un código para elegir una contraseña nueva.
               </p>
               <form onSubmit={onRequest} className="flex flex-col gap-3">
@@ -79,7 +79,7 @@ export function ForgotPassword() {
           ) : (
             <>
               {/* The server message already mentions checking spam. */}
-              <p className="text-sm text-base-content/60">{notice}</p>
+              <p className="text-sm text-base-content/70">{notice}</p>
               <form onSubmit={onReset} className="flex flex-col gap-3">
                 <input
                   required
@@ -115,7 +115,7 @@ export function ForgotPassword() {
             </>
           )}
 
-          <p className="text-sm text-base-content/60">
+          <p className="text-sm text-base-content/70">
             <Link to="/login" className="link text-primary">Volver a iniciar sesión</Link>
           </p>
         </div>
