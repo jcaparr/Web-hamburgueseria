@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, Route, Routes, useLocation, useNavigationType } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
 import { RequireAuth } from './components/RequireAuth'
 import { TopBar } from './components/TopBar'
@@ -31,7 +31,7 @@ export default function App() {
           >
             Saltar al contenido
           </a>
-          <FocoAlCambiarDePagina />
+          <AlCambiarDePagina />
           <TopBar />
           <main
             id="contenido"
@@ -66,27 +66,30 @@ export default function App() {
 }
 
 /**
- * Al pasar a otra pantalla, el foco va al contenido.
+ * Al pasar a otra pantalla: arranca arriba y el foco va al contenido.
  *
- * En una app de una sola página, cambiar de pantalla no recarga nada, y el foco se
- * quedaba en el enlace que se tocó, que muchas veces ya no existe. Quien usa lector
- * de pantalla no se enteraba de que había cambiado la página, y quien navega con Tab
- * arrancaba de nuevo desde la barra de arriba.
+ * En una app de una sola página, cambiar de pantalla no recarga nada. La pantalla
+ * nueva aparecía con el scroll que traía la anterior —desde la mitad del Ranking,
+ * Explorar se abría por la mitad—, y el foco se quedaba en el enlace que se tocó, que
+ * muchas veces ya no existe: quien usa lector de pantalla no se enteraba del cambio.
  *
- * Solo cuando cambia la ruta, no los filtros: elegir un barrio en Explorar no es ir a
- * otro lado. Y sin mover la página, que cada pantalla decide dónde empieza.
+ * Arriba solo cuando se llega por un enlace, no con "atrás": al volver, cada pantalla
+ * decide dónde estaba, y Explorar vuelve a la tarjeta que se había tocado.
+ *
+ * Y solo cuando cambia la ruta, no los filtros: elegir un barrio en Explorar o una
+ * pestaña del Ranking no es ir a otro lado.
  */
-function FocoAlCambiarDePagina() {
+function AlCambiarDePagina() {
   const { pathname } = useLocation()
-  const primera = useRef(true)
+  const comoLlego = useNavigationType()
+  const anterior = useRef(pathname)
 
   useEffect(() => {
-    if (primera.current) {
-      primera.current = false
-      return
-    }
+    if (anterior.current === pathname) return
+    anterior.current = pathname
+    if (comoLlego !== 'POP') window.scrollTo(0, 0)
     document.getElementById('contenido')?.focus({ preventScroll: true })
-  }, [pathname])
+  }, [pathname, comoLlego])
 
   return null
 }
