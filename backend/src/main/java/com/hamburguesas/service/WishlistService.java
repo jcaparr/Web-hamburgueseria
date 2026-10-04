@@ -26,9 +26,10 @@ public class WishlistService {
 
     @Transactional(readOnly = true)
     public List<BurgerJointDto> list(Long userId) {
-        return wishlistRepository.findByUser_IdOrderByCreatedAtDesc(userId).stream()
-            .map(item -> fichaDeLocal.conDeseo(item.getBurgerJoint(), true))
+        List<BurgerJoint> locales = wishlistRepository.findByUser_IdOrderByCreatedAtDesc(userId).stream()
+            .map(WishlistItem::getBurgerJoint)
             .toList();
+        return fichaDeLocal.conDeseo(locales, true);
     }
 
     @Transactional

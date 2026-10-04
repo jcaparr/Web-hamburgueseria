@@ -1,6 +1,7 @@
 package com.hamburguesas.repository;
 
 import com.hamburguesas.dto.ItemDeFeedDto;
+import com.hamburguesas.dto.NotaDeLocalDto;
 import com.hamburguesas.dto.NotaYComentarioDto;
 import com.hamburguesas.dto.NotaYCuantasDto;
 import com.hamburguesas.dto.RankingItemDto;
@@ -149,10 +150,17 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
     List<RatingResponse> deAutoresEn(@Param("burgerJointId") Long burgerJointId,
                                      @Param("autores") Collection<Long> autores);
 
-    @Query("select avg(r.score) from Rating r where r.burgerJoint.id = :burgerJointId")
-    Double averageScoreByBurgerJoint(@Param("burgerJointId") Long burgerJointId);
-
-    long countByBurgerJoint_Id(Long burgerJointId);
+    /**
+     * La nota promedio y cuántas reseñas tiene cada uno de estos locales, en una sola
+     * consulta. Los que no tienen ninguna no vienen: quien llama los completa.
+     */
+    @Query("""
+        select new com.hamburguesas.dto.NotaDeLocalDto(r.burgerJoint.id, avg(r.score), count(r))
+        from Rating r
+        where r.burgerJoint.id in :ids
+        group by r.burgerJoint.id
+        """)
+    List<NotaDeLocalDto> notasDe(@Param("ids") Collection<Long> ids);
 
     /** Para no borrar un local que alguien puntuó, aunque la limpieza diga que sobra. */
     boolean existsByBurgerJoint_Id(Long burgerJointId);
