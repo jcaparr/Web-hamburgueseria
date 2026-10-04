@@ -18,6 +18,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -38,10 +39,11 @@ class LimpiezaSinBarridoTest {
     private WishlistRepository wishlistRepository;
     private SavedTourRepository savedTourRepository;
     private PlacesSyncService service;
+    private PlacesProperties properties;
 
     @BeforeEach
     void setUp() {
-        PlacesProperties properties = new PlacesProperties();
+        properties = new PlacesProperties();
         properties.setApiKey("clave-de-prueba");
         properties.getSync().setDelayBetweenCallsMs(0);
 
@@ -153,5 +155,67 @@ class LimpiezaSinBarridoTest {
 
         assertThat(resultado.borrados()).isZero();
         assertThat(resultado.corregidos()).isZero();
+    }
+
+    /**
+     * Un local de Palermo que no se llama hamburguesería y que Google tiene como
+     * restaurante: lo único que dice que vende hamburguesas es su resumen de reseñas.
+     */
+    private static BurgerJoint queEntroPorSuResumen(String prueba) {
+        return BurgerJoint.builder()
+            .id(2L).placeId("ChIJ2").name("Austin's Diner & Grill")
+            .address("Costa Rica 5827, CABA").area("Palermo")
+            .latitude(-34.5900).longitude(-58.4270)
+            .googlePrimaryType("restaurant")
+            .pruebaDeHamburguesas(prueba)
+            .build();
+    }
+
+    /**
+     * Con la prueba anotada, la limpieza no le vuelve a pedir el resumen a Google. Antes
+     * cada corrida gastaba unos 32 resúmenes, el tramo más caro, siempre por los mismos
+     * locales (#97).
+     */
+    @Test
+    void noVuelveAPedirElResumenDeUnLocalQueEntroPorEl() {
+        when(repository.findAll()).thenReturn(List.of(queEntroPorSuResumen("LO_DICEN_LAS_RESENIAS")));
+
+        LimpiezaResult resultado = service.limpiar();
+
+        verify(placesClient, never()).resumenDeResenias(anyString());
+        verify(repository, never()).delete(any(BurgerJoint.class));
+        assertThat(resultado.borrados()).isZero();
+    }
+
+    /**
+     * Los que ya estaban no tienen la prueba anotada: la primera limpieza la paga y la
+     * anota, y la siguiente ya no pregunta.
+     */
+    @Test
+    void anotaLaPruebaLaPrimeraVezYDespuesNoVuelveAPreguntar() {
+        BurgerJoint local = queEntroPorSuResumen(null);
+        when(repository.findAll()).thenReturn(List.of(local));
+        when(placesClient.resumenDeResenias("ChIJ2")).thenReturn("Las mejores smash burgers de Palermo");
+
+        service.limpiar();
+        service.limpiar();
+
+        verify(placesClient, times(1)).resumenDeResenias("ChIJ2");
+        assertThat(local.getPruebaDeHamburguesas()).isEqualTo("LO_DICEN_LAS_RESENIAS");
+        verify(repository).save(local);
+    }
+
+    /**
+     * Lo que se decide de este lado manda sobre la prueba anotada: si su rubro pasó a la
+     * lista de los que se dedican a otra cosa, haber entrado por el resumen no lo salva.
+     */
+    @Test
+    void laPruebaAnotadaNoPisaLosRubrosDeOtraCosa() {
+        properties.getSync().setExcludedPrimaryTypes(List.of("restaurant"));
+        when(repository.findAll()).thenReturn(List.of(queEntroPorSuResumen("LO_DICEN_LAS_RESENIAS")));
+
+        service.limpiar();
+
+        verify(repository).delete(any(BurgerJoint.class));
     }
 }

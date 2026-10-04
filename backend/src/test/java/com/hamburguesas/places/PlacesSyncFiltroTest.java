@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -526,7 +527,9 @@ class PlacesSyncFiltroTest {
         PlacesSyncReport report = service.sync();
 
         assertThat(report.created()).isZero();
-        verify(repository, never()).save(any());
+        // El que ya estaba sí se guarda, para anotarle con qué prueba entró (#97); lo que
+        // no puede pasar es que entre otra ficha.
+        verify(repository, never()).save(argThat(joint -> !"ChIJ-469".equals(joint.getPlaceId())));
     }
 
     /** Pero una sucursal nueva de la misma cadena, en otro barrio, sí entra. */
@@ -598,5 +601,37 @@ class PlacesSyncFiltroTest {
         service.sync();
 
         assertThat(nuevo.isFastFood()).isTrue();
+    }
+
+    /** Con qué prueba entró queda anotado: la limpieza la usa en vez de volver a pagarla (#97). */
+    @Test
+    void anotaConQuePruebaEntroCadaLocal() {
+        googleDevuelve(lugar("The Burger Company", -34.5900, -58.4270, "hamburger_restaurant"));
+
+        service.sync();
+
+        ArgumentCaptor<BurgerJoint> guardado = ArgumentCaptor.forClass(BurgerJoint.class);
+        verify(repository).save(guardado.capture());
+        assertThat(guardado.getValue().getPruebaDeHamburguesas()).isEqualTo("RUBRO_DE_GOOGLE");
+    }
+
+    /**
+     * Un local que ya está guardado y entró por su resumen de reseñas no lo vuelve a pagar
+     * cada vez que una búsqueda lo devuelve.
+     */
+    @Test
+    void unLocalGuardadoQueEntroPorSuResumenNoLoVuelveAPagar() {
+        googleDevuelve(lugar("Austin's Diner & Grill", -34.5900, -58.4270, "restaurant"));
+        BurgerJoint guardado = BurgerJoint.builder()
+            .id(5L).placeId("ChIJ-Austin's Diner & Grill").name("Austin's Diner & Grill")
+            .address("Una dirección").area("Palermo").latitude(-34.5900).longitude(-58.4270)
+            .googlePrimaryType("restaurant").pruebaDeHamburguesas("LO_DICEN_LAS_RESENIAS")
+            .build();
+        when(repository.findByPlaceId("ChIJ-Austin's Diner & Grill")).thenReturn(Optional.of(guardado));
+
+        PlacesSyncReport report = service.sync();
+
+        verify(placesClient, never()).resumenDeResenias(anyString());
+        assertThat(report.updated()).isEqualTo(1);
     }
 }

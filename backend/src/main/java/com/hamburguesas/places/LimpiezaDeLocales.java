@@ -60,7 +60,7 @@ public class LimpiezaDeLocales {
             // tiene que decir por qué. Si no se pudo preguntar porque se acabó la cuota,
             // el local se queda. Un límite nuestro no puede terminar en borrarle la
             // hamburguesería a alguien, y el mes que viene se vuelve a mirar.
-            Veredicto veredicto = clasificador.evaluar(ClasificadorDeLocales.comoLugar(joint), cadenas);
+            Veredicto veredicto = clasificador.evaluarGuardado(joint, cadenas);
             boolean noSabemos = veredicto.prueba() == Veredicto.Prueba.NO_SE_PUDO_PREGUNTAR;
 
             boolean sobra = barrio.isEmpty()
@@ -103,10 +103,21 @@ public class LimpiezaDeLocales {
             }
             quedan.add(joint);
 
+            // Los que todavía no tienen anotada su prueba la anotan ahora, para que la
+            // limpieza que viene no tenga que volver a pagarla (#97). La primera vez sí
+            // puede costar un resumen de reseñas; después, ninguno.
+            boolean cambio = false;
+            if (joint.getPruebaDeHamburguesas() == null && veredicto.vendeHamburguesas()) {
+                joint.setPruebaDeHamburguesas(veredicto.prueba().name());
+                cambio = true;
+            }
             if (!barrio.get().equals(joint.getArea())) {
                 joint.setArea(barrio.get());
-                burgerJointRepository.save(joint);
                 corregidos++;
+                cambio = true;
+            }
+            if (cambio) {
+                burgerJointRepository.save(joint);
             }
         }
 
