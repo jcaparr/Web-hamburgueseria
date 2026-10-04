@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom'
 export function NoEncontrada() {
   return (
     <div className="flex flex-col items-start gap-3 p-4 md:p-0">
-      <h1 className="font-display text-2xl font-bold">Esta página no existe</h1>
+      <h1 className="font-display text-2xl font-bold leading-tight md:text-3xl">Esta página no existe</h1>
       <p className="text-sm text-base-content/70">
         Puede que el enlace esté mal escrito o que la página ya no esté.
       </p>

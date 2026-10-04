@@ -142,7 +142,7 @@ export function Tour() {
   return (
     <div className="flex flex-col gap-5 p-4 md:p-0">
       <div>
-        <h1 className="font-display text-2xl font-bold">Armar un tour</h1>
+        <h1 className="font-display text-2xl font-bold leading-tight md:text-3xl">Armar un tour</h1>
         <p className="mt-1 text-sm text-base-content/70">
           Un recorrido de hamburgueserías para hacer {modo === 'A_PIE' ? 'caminando' : 'en auto'}.
         </p>
