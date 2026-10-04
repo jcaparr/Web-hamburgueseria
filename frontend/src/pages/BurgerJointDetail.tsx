@@ -56,7 +56,7 @@ export function BurgerJointDetail() {
       .then(([jointRes, ratingsRes, resumenRes]) => {
         setBurgerJoint(jointRes.data)
         setRatings(ratingsRes.data.content)
-        setCuantasResenias(ratingsRes.data.totalElements)
+        setCuantasResenias(ratingsRes.data.page.totalElements)
         setResumen(resumenRes.data)
         setLoadError(null)
       })
