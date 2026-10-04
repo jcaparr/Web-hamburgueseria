@@ -22,12 +22,14 @@ export function CampoNombreDeUsuario({
       <label htmlFor={id} className="text-sm font-semibold">
         Nombre de usuario
       </label>
-      <label
+      {/* Un div y no otra etiqueta: con dos, el lector de pantalla anunciaba el campo
+          como "arroba, Nombre de usuario". */}
+      <div
         className={`input input-bordered flex items-center gap-0 ${
           marcado ? 'input-error' : 'focus-within:border-primary'
         }`}
       >
-        <span className="text-base-content/70">@</span>
+        <span aria-hidden="true" className="text-base-content/70">@</span>
         {/* El nombre de usuario se guarda en minúsculas, así que dejar que el teclado
             del teléfono ponga la primera en mayúscula solo consigue que lo escrito no
             se parezca a lo que va a quedar. */}
@@ -44,15 +46,15 @@ export function CampoNombreDeUsuario({
           onChange={(e) => campo.escribir(e.target.value)}
           onBlur={campo.chequear}
           id={id}
-          placeholder="nombredeusuario"
+          placeholder="tu_nombre"
           className="grow"
           aria-invalid={marcado}
           aria-describedby={`${id}-ayuda`}
         />
-      </label>
+      </div>
 
       {marcado ? (
-        <p id={`${id}-ayuda`} role="alert" className="text-xs text-error">
+        <p id={`${id}-ayuda`} role="alert" className="text-sm text-error">
           {campo.problema}
           {campo.sugerencia && (
             <>
@@ -69,7 +71,7 @@ export function CampoNombreDeUsuario({
         </p>
       ) : (
         <p id={`${id}-ayuda`} className="text-xs text-base-content/70">
-          Con esto te encuentran tus amigos. Letras, números y guion bajo.
+          Con esto te encuentran tus amigos. Al menos 3 caracteres: letras, números y guion bajo.
         </p>
       )}
     </div>

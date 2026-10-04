@@ -30,7 +30,7 @@ export function HorarioDelLocal({ franjas }: { franjas: FranjaHoraria[] }) {
 
   return (
     <details className="group text-sm">
-      <summary className="group/resumen flex cursor-pointer list-none items-start gap-2 rounded-field focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
+      <summary className="group/resumen -my-3 flex cursor-pointer list-none items-start gap-2 rounded-field py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
         <span className="flex min-w-0 flex-1 flex-wrap gap-x-2 gap-y-0.5">
           <span className={`font-semibold ${abierto ? 'text-success' : 'text-error'}`}>
             {abierto ? 'Abierto' : 'Cerrado'}

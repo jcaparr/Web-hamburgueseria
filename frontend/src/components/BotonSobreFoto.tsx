@@ -12,7 +12,7 @@ export function BotonSobreFoto({ className = '', ...props }: ButtonHTMLAttribute
     <button
       type="button"
       {...props}
-      className={`btn btn-circle btn-sm h-10 w-10 border-0 bg-base-100/90 text-base-content shadow-md backdrop-blur-sm hover:bg-base-100 ${className}`}
+      className={`btn btn-circle btn-sm h-11 w-11 border-0 bg-base-100/90 text-base-content shadow-md backdrop-blur-sm hover:bg-base-100 ${className}`}
     />
   )
 }

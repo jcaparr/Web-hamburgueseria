@@ -65,9 +65,9 @@ export function CampoDeContrasenia({
           <button
             type="button"
             onClick={() => setVisible((v) => !v)}
-            aria-pressed={visible}
+            aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             aria-controls={campo.id}
-            className="btn btn-ghost btn-xs h-8 px-2 font-semibold"
+            className="btn btn-ghost btn-sm px-2 font-semibold"
           >
             {visible ? 'Ocultar' : 'Mostrar'}
           </button>

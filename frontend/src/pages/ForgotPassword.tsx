@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Campo, CampoDeContrasenia } from '../components/Campo'
 import { apiClient } from '../api/client'
+import { useTitulo } from '../hooks/useTitulo'
 
 /**
  * Both halves of the recovery flow on one screen: ask for a code, then use it.
@@ -17,6 +18,15 @@ export function ForgotPassword() {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const campoDelCodigo = useRef<HTMLInputElement>(null)
+  const formulario = useRef<HTMLFormElement>(null)
+  useTitulo('Recuperar contraseña')
+
+  // Al pasar al segundo paso, el botón que se tocó desaparece y el foco quedaba en la
+  // nada. Va al campo del código, que es lo próximo que hay que llenar.
+  useEffect(() => {
+    if (step === 'reset') campoDelCodigo.current?.focus()
+  }, [step])
 
   async function onRequest(e: FormEvent) {
     e.preventDefault()
@@ -29,7 +39,7 @@ export function ForgotPassword() {
       // unknown emails would turn this screen into a way to find out who is registered.
       setStep('reset')
     } catch (err: any) {
-      setError(err.response?.data?.error ?? 'No pudimos procesar el pedido')
+      setError(err.response?.data?.error ?? 'No pudimos mandarte el código. Probá de nuevo en un rato.')
     } finally {
       setSubmitting(false)
     }
@@ -37,15 +47,27 @@ export function ForgotPassword() {
 
   async function onReset(e: FormEvent) {
     e.preventDefault()
+    // Como en la activación de la cuenta: el botón siempre activo, y si falta algo se
+    // dice qué y se va a ese campo.
+    if (code.length !== 6) {
+      setError('Escribí los 6 dígitos del código que te mandamos.')
+      campoDelCodigo.current?.focus()
+      return
+    }
+    if (newPassword.length < 8) {
+      setError('La contraseña nueva necesita al menos 8 caracteres.')
+      formulario.current?.querySelector<HTMLInputElement>('input[autocomplete="new-password"]')?.focus()
+      return
+    }
     setSubmitting(true)
     setError(null)
     try {
       await apiClient.post('/auth/reset-password', { email, code, newPassword })
       navigate('/login', {
-        state: { notice: 'Listo, ya podés entrar con tu nueva contraseña.' },
+        state: { notice: 'Listo, ya podés iniciar sesión con tu contraseña nueva.' },
       })
     } catch (err: any) {
-      setError(err.response?.data?.error ?? 'No pudimos cambiar la contraseña')
+      setError(err.response?.data?.error ?? 'No pudimos cambiar la contraseña. Revisá el código y probá de nuevo.')
     } finally {
       setSubmitting(false)
     }
@@ -82,27 +104,34 @@ export function ForgotPassword() {
                 </Campo>
                 {error && <p role="alert" className="text-sm text-error">{error}</p>}
                 <button type="submit" disabled={submitting} className="btn btn-primary">
-                  {submitting ? 'Enviando…' : 'Mandarme el código'}
+                  {submitting ? 'Enviando…' : 'Enviarme el código'}
                 </button>
               </form>
             </>
           ) : (
             <>
               {/* The server message already mentions checking spam. */}
-              <p className="text-sm text-base-content/70">{notice}</p>
-              <form onSubmit={onReset} className="flex flex-col gap-3">
-                <input
-                  required
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  pattern="\d{6}"
-                  maxLength={6}
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                  placeholder="000000"
-                  aria-label="Código de 6 dígitos"
-                  className="input input-bordered text-center font-display text-2xl tracking-[0.5em] focus:border-primary"
-                />
+              <p role="status" className="text-sm text-base-content/70">
+                {notice}
+              </p>
+              <form ref={formulario} onSubmit={onReset} noValidate className="flex flex-col gap-3">
+                <Campo etiqueta="Código de 6 dígitos">
+                  {(campo) => (
+                    <input
+                      {...campo}
+                      ref={campoDelCodigo}
+                      required
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      pattern="\d{6}"
+                      maxLength={6}
+                      value={code}
+                      onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                      placeholder="000000"
+                      className="input input-bordered w-full text-center font-display text-2xl tracking-[0.5em] focus:border-primary"
+                    />
+                  )}
+                </Campo>
                 <CampoDeContrasenia
                   etiqueta="Contraseña nueva"
                   ayuda="Mínimo 8 caracteres."
@@ -113,11 +142,7 @@ export function ForgotPassword() {
                   onChange={(e) => setNewPassword(e.target.value)}
                 />
                 {error && <p role="alert" className="text-sm text-error">{error}</p>}
-                <button
-                  type="submit"
-                  disabled={submitting || code.length !== 6}
-                  className="btn btn-primary"
-                >
+                <button type="submit" disabled={submitting} className="btn btn-primary">
                   {submitting ? 'Cambiando…' : 'Cambiar contraseña'}
                 </button>
               </form>

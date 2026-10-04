@@ -87,7 +87,9 @@ export function SelectorDeFoto({
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="group relative block cursor-pointer overflow-hidden rounded-box">
+      {/* El campo de archivo es invisible, así que el anillo de foco lo dibuja la
+          etiqueta: sin esto, con el teclado no se veía dónde se estaba. */}
+      <label className="group relative block cursor-pointer overflow-hidden rounded-box has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-primary">
         {mostrando ? (
           <>
             <img
@@ -96,7 +98,7 @@ export function SelectorDeFoto({
               className="aspect-square w-full bg-base-200 object-cover"
             />
             <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 text-xs font-semibold text-white">
-              Tocá para cambiarla
+              Cambiar la foto
             </span>
           </>
         ) : (
@@ -114,7 +116,11 @@ export function SelectorDeFoto({
         />
       </label>
 
-      {error && <p className="text-xs text-error">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-error">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

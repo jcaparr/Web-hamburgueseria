@@ -6,8 +6,10 @@ import { LoadError } from '../components/LoadError'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { AvisoVacio } from '../components/Seccion'
 import { useAuth } from '../context/AuthContext'
+import { useTitulo } from '../hooks/useTitulo'
 import type { PageResponse, RankingItem } from '../types'
 import { shortAddress } from '../utils/address'
+import { nota } from '../utils/numeros'
 
 type Vista = 'nota' | 'resenias' | 'mio'
 
@@ -39,6 +41,7 @@ interface Puesto {
 
 export function Ranking() {
   const { user } = useAuth()
+  useTitulo('Ranking')
   // La lista que se mira va en la dirección: al volver de una ficha se vuelve a la
   // misma, y se puede pasar el enlace.
   const [parametros, setParametros] = useSearchParams()
@@ -100,7 +103,7 @@ export function Ranking() {
     nota: vista === 'mio' ? (item.myScore ?? item.averageScore) : item.averageScore,
     detalle:
       vista === 'mio'
-        ? `Promedio ${item.averageScore.toFixed(1)}`
+        ? `Promedio ${nota(item.averageScore)}`
         : item.ratingsCount === 1
           ? '1 reseña'
           : `${item.ratingsCount} reseñas`,

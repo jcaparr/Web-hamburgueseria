@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { apiClient } from '../api/client'
 import { SelectorDeFoto } from './SelectorDeFoto'
 import { Stars } from './Stars'
@@ -42,7 +42,12 @@ export function ModalDeResenia({
   const [comment, setComment] = useState('')
   const [foto, setFoto] = useState<File | null>(null)
   const [guardando, setGuardando] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  // Con el campo al que se refiere, si es de uno: el aviso va al lado de ese campo y no
+  // al pie del formulario, donde quedaba lejos de lo que había que corregir.
+  const [error, setError] = useState<{ texto: string; campo?: 'puntaje' | 'foto' } | null>(null)
+  const idDelTitulo = useId()
+  const zonaDelPuntaje = useRef<HTMLDivElement>(null)
+  const zonaDeLaFoto = useRef<HTMLDivElement>(null)
 
   // Al abrir se arranca de cero, o de lo que ya había escrito si es una edición. Va acá
   // y no al cerrar para que un borrador a medias no quede esperando la próxima vez.
@@ -75,9 +80,21 @@ export function ModalDeResenia({
     score !== (miResenia?.score ?? 0) ||
     comment !== (miResenia?.comment ?? '')
 
+  // El aviso de un campo se va en cuanto se corrige ese campo, no recién al volver a
+  // apretar Publicar.
+  function elegirPuntaje(nuevo: number) {
+    setScore(nuevo)
+    setError((previo) => (previo?.campo === 'puntaje' ? null : previo))
+  }
+
+  function elegirFoto(nueva: File | null) {
+    setFoto(nueva)
+    if (nueva) setError((previo) => (previo?.campo === 'foto' ? null : previo))
+  }
+
   function intentarCerrar() {
     if (guardando) return
-    if (hayAlgoEscrito && !confirm('Vas a perder lo que escribiste. ¿Cerramos igual?')) return
+    if (hayAlgoEscrito && !confirm('¿Cerrar sin guardar? Vas a perder lo que escribiste.')) return
     onCerrar()
   }
 
@@ -85,13 +102,15 @@ export function ModalDeResenia({
     e.preventDefault()
 
     if (score === 0) {
-      setError('Elegí una calificación de 1 a 5 estrellas')
+      setError({ texto: 'Elegí una nota de 1 a 5 estrellas.', campo: 'puntaje' })
+      zonaDelPuntaje.current?.querySelector<HTMLElement>('[role=radio]')?.focus()
       return
     }
     // El servidor lo exige igual; avisarlo acá evita mandar el formulario entero para
     // que vuelva rechazado por algo que ya se sabía antes de salir.
     if (!foto && !miResenia?.photoUrl) {
-      setError('Toda reseña lleva una foto de lo que comiste')
+      setError({ texto: 'Falta la foto: toda reseña lleva una de lo que comiste.', campo: 'foto' })
+      zonaDeLaFoto.current?.querySelector<HTMLElement>('input')?.focus()
       return
     }
 
@@ -119,7 +138,7 @@ export function ModalDeResenia({
       } else {
         // El servidor sabe por qué no sirvió esa foto —que no es una imagen, que está
         // dañada, que es enorme— y decirlo es lo único que le permite arreglarlo.
-        setError(err.response?.data?.error ?? 'No pudimos guardar tu reseña')
+        setError({ texto: err.response?.data?.error ?? 'No pudimos guardar tu reseña. Probá de nuevo.' })
       }
     } finally {
       setGuardando(false)
@@ -131,6 +150,7 @@ export function ModalDeResenia({
     // una ventana centrada salta cuando el teclado le come el espacio.
     <dialog
       ref={dialogo}
+      aria-labelledby={idDelTitulo}
       className="modal modal-bottom sm:modal-middle"
       // El Esc lo cierra el navegador solo, y eso se llevaría el texto sin preguntar.
       onCancel={(e) => {
@@ -141,48 +161,53 @@ export function ModalDeResenia({
       <div className="modal-box flex flex-col gap-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col">
-            <h3 className="font-display text-lg font-bold">
+            <h2 id={idDelTitulo} className="font-display text-lg font-bold">
               {miResenia ? 'Editar tu reseña' : 'Escribir una reseña'}
-            </h3>
+            </h2>
             <span className="truncate text-sm text-base-content/70">{nombreDelLocal}</span>
           </div>
           <button
             type="button"
             onClick={intentarCerrar}
             aria-label="Cerrar"
-            className="btn btn-ghost btn-sm btn-circle flex-none"
+            className="btn btn-ghost btn-circle -mr-2 -mt-1 flex-none"
           >
-            ✕
+            <span aria-hidden="true">✕</span>
           </button>
         </div>
 
         {/* Las tres partes de reseñar, cada una con su lugar: la nota, la foto y lo que
             se quiera contar. Separadas se entiende de un vistazo qué falta. */}
         <form onSubmit={guardar} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-base-content/70">
-              Tu puntaje
-            </span>
-            <Stars value={score} onChange={setScore} size={30} />
+          <div ref={zonaDelPuntaje} className="flex flex-col gap-1">
+            <span className="text-sm font-semibold">Tu puntaje</span>
+            <div className="-ml-2">
+              <Stars value={score} onChange={elegirPuntaje} size={30} etiqueta="Tu puntaje" />
+            </div>
+            {error?.campo === 'puntaje' && (
+              <p role="alert" className="text-sm text-error">
+                {error.texto}
+              </p>
+            )}
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-base-content/70">
-              La foto
-            </span>
+          <div ref={zonaDeLaFoto} className="flex flex-col gap-1.5">
+            <span className="text-sm font-semibold">La foto</span>
             <SelectorDeFoto
               elegida={foto}
               yaSubida={miResenia?.photoUrl ?? null}
-              onElegir={setFoto}
+              onElegir={elegirFoto}
             />
+            {error?.campo === 'foto' && (
+              <p role="alert" className="text-sm text-error">
+                {error.texto}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="texto-de-la-resenia"
-              className="text-xs font-semibold uppercase tracking-wide text-base-content/70"
-            >
-              Tu reseña
+            <label htmlFor="texto-de-la-resenia" className="text-sm font-semibold">
+              Tu reseña <span className="font-normal text-base-content/70">(opcional)</span>
             </label>
             <textarea
               id="texto-de-la-resenia"
@@ -194,10 +219,18 @@ export function ModalDeResenia({
             />
           </div>
 
-          {error && <p role="alert" className="text-sm text-error">{error}</p>}
+          {error && !error.campo && (
+            <p role="alert" className="text-sm text-error">
+              {error.texto}
+            </p>
+          )}
 
+          {/* El mismo verbo en el botón y mientras trabaja: "Publicar" se vuelve
+              "Publicando…", no "Guardando…". */}
           <button type="submit" disabled={guardando} className="btn btn-primary">
-            {guardando ? 'Guardando…' : miResenia ? 'Actualizar reseña' : 'Publicar reseña'}
+            {miResenia
+              ? guardando ? 'Guardando…' : 'Guardar cambios'
+              : guardando ? 'Publicando…' : 'Publicar reseña'}
           </button>
         </form>
       </div>
@@ -205,8 +238,8 @@ export function ModalDeResenia({
       {/* El clic afuera pasa por el mismo camino que la cruz y que el Esc, así que
           tampoco se lleva el texto sin avisar. */}
       <form method="dialog" className="modal-backdrop">
-        <button type="button" onClick={intentarCerrar}>
-          cerrar
+        <button type="button" tabIndex={-1} aria-hidden="true" onClick={intentarCerrar}>
+          Cerrar
         </button>
       </form>
     </dialog>

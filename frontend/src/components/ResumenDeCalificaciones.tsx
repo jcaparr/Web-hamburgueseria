@@ -1,4 +1,5 @@
 import type { Rating, ResumenDeResenias } from '../types'
+import { nota } from '../utils/numeros'
 import { DistribucionDeNotas } from './DistribucionDeNotas'
 import { Stars } from './Stars'
 import { TemasDeLasResenias } from './TemasDeLasResenias'
@@ -47,7 +48,8 @@ export function ResumenDeCalificaciones({
       <div className="flex items-center gap-5 rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15">
         <div className="flex flex-none flex-col items-center gap-0.5 pr-1">
           <span className="font-display text-5xl font-extrabold leading-none tabular-nums">
-            {promedio.toFixed(1)}
+            <span className="sr-only">Promedio: </span>
+            {nota(promedio)}
           </span>
           <span className="text-xs text-base-content/70">
             {cuantas === 1 ? '1 reseña' : `${cuantas} reseñas`}

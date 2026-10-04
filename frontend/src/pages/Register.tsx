@@ -5,11 +5,13 @@ import { CampoNombreDeUsuario } from '../components/CampoNombreDeUsuario'
 import { GoogleSignInButton } from '../components/GoogleSignInButton'
 import { PasoNombreDeGoogle } from '../components/PasoNombreDeGoogle'
 import { useAuth } from '../context/AuthContext'
+import { useTitulo } from '../hooks/useTitulo'
 import { useGoogleSignIn } from '../hooks/useGoogleSignIn'
 import { useNombreDeUsuario } from '../hooks/useNombreDeUsuario'
 
 export function Register() {
   const { register } = useAuth()
+  useTitulo('Crear cuenta')
   const google = useGoogleSignIn()
   const { onCredential, googleError, setGoogleError } = google
   const navigate = useNavigate()
@@ -33,7 +35,7 @@ export function Register() {
       // Si el problema es el nombre de usuario, queda marcado en ese campo: es donde
       // se arregla, y un cartel arriba no diría dónde mirar.
       if (!username.rechazar(err)) {
-        setError(err.response?.data?.error ?? 'No pudimos crear tu cuenta')
+        setError(err.response?.data?.error ?? 'No pudimos crear tu cuenta. Probá de nuevo en un rato.')
       }
     } finally {
       setSubmitting(false)
@@ -49,7 +51,7 @@ export function Register() {
         <div className="card-body gap-3">
           <h1 className="card-title font-display">Crear cuenta</h1>
           <form onSubmit={onSubmit} className="flex flex-col gap-3">
-            <CampoNombreDeUsuario campo={username} autoFocus />
+            <CampoNombreDeUsuario campo={username} />
             {/* Lo mismo que en iniciar sesión, y por lo mismo: en el teléfono sin esto
                 el mail sale con mayúscula inicial y el gestor de contraseñas no ofrece
                 guardar el par. Acá va "new-password", que es lo que hace que ofrezca
@@ -83,7 +85,7 @@ export function Register() {
             />
             {error && <p role="alert" className="text-sm text-error">{error}</p>}
             <button type="submit" disabled={submitting} className="btn btn-primary">
-              {submitting ? 'Creando…' : 'Crear cuenta'}
+              {submitting ? 'Creando tu cuenta…' : 'Crear cuenta'}
             </button>
           </form>
 

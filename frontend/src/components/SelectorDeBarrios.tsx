@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { IconSearch } from './icons'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { IconChevronRight, IconSearch } from './icons'
 
 /**
  * Elegir uno o varios barrios para filtrar Explorar.
@@ -22,6 +22,8 @@ export function SelectorDeBarrios({
   elegidos,
   onAlternar,
   onLimpiar,
+  textoSinElegir = 'Todos los barrios',
+  claseDelBoton = 'btn-sm',
 }: {
   /** Todos los barrios que tienen al menos un local, como los da el servidor. */
   barrios: string[]
@@ -33,8 +35,12 @@ export function SelectorDeBarrios({
    */
   onAlternar: (barrio: string) => void
   onLimpiar: () => void
+  /** Lo que dice el botón sin ninguno elegido: en Tour, por ejemplo, es "Cerca mío". */
+  textoSinElegir?: string
+  claseDelBoton?: string
 }) {
   const dialogo = useRef<HTMLDialogElement>(null)
+  const idDelTitulo = useId()
   const [abierto, setAbierto] = useState(false)
   const [buscado, setBuscado] = useState('')
 
@@ -73,12 +79,18 @@ export function SelectorDeBarrios({
       <button
         type="button"
         onClick={abrir}
-        className={`btn btn-sm ${elegidos.length > 0 ? 'btn-primary' : 'btn-outline'}`}
+        aria-haspopup="dialog"
+        className={`btn ${claseDelBoton} ${elegidos.length > 0 ? 'btn-primary' : 'btn-outline'}`}
       >
-        {comoSeLee(elegidos)}
+        <span className="truncate">{comoSeLee(elegidos, textoSinElegir)}</span>
+        {/* La flecha dice que el botón abre una lista. */}
+        <IconChevronRight size={14} className="ml-auto flex-none rotate-90" />
       </button>
 
-      <dialog ref={dialogo} className="modal modal-bottom sm:modal-middle"
+      <dialog
+        ref={dialogo}
+        aria-labelledby={idDelTitulo}
+        className="modal modal-bottom sm:modal-middle"
         onCancel={(e) => {
           e.preventDefault()
           setAbierto(false)
@@ -86,34 +98,39 @@ export function SelectorDeBarrios({
       >
         <div className="modal-box flex max-h-[80dvh] flex-col gap-3">
           <div className="flex items-center justify-between gap-3">
-            <h3 className="font-display text-lg font-bold">Barrios</h3>
+            <h2 id={idDelTitulo} className="font-display text-lg font-bold">
+              Barrios
+            </h2>
             {/* Limpiar está arriba y no al final de doscientas filas: deshacer la
                 selección entera es lo que más se busca y no se puede pedir que para eso
                 haya que scrollear hasta el fondo. */}
             {elegidos.length > 0 && (
-              <button type="button" onClick={onLimpiar} className="btn btn-ghost btn-xs">
-                Limpiar
+              <button type="button" onClick={onLimpiar} className="btn btn-ghost btn-sm">
+                Desmarcar todos
               </button>
             )}
           </div>
 
-          <label className="flex items-center gap-2 rounded-xl border border-base-300 px-3 py-2">
+          <label className="flex items-center gap-2 rounded-xl border border-base-content/20 px-3 py-2.5 focus-within:border-primary">
             <IconSearch size={15} className="text-base-content/70" />
             <input
               type="search"
               value={buscado}
               onChange={(e) => setBuscado(e.target.value)}
               placeholder="Buscar barrio…"
+              aria-label="Buscar barrio"
+              autoComplete="off"
               autoCapitalize="none"
               autoCorrect="off"
-              className="w-full bg-transparent text-base outline-none placeholder:text-base-content/60 md:text-sm"
+              spellCheck={false}
+              className="w-full bg-transparent text-base outline-none placeholder:text-base-content/70 md:text-sm"
             />
           </label>
 
           <ul className="flex flex-col overflow-y-auto">
             {visibles.map((barrio) => (
               <li key={barrio}>
-                <label className="flex cursor-pointer items-center gap-3 py-2 text-sm">
+                <label className="flex min-h-11 cursor-pointer items-center gap-3 py-1 text-sm">
                   <input
                     type="checkbox"
                     className="checkbox checkbox-sm checkbox-primary"
@@ -136,9 +153,11 @@ export function SelectorDeBarrios({
           </button>
         </div>
 
+        {/* El clic afuera cierra. Fuera del orden del Tab: es un botón invisible, y con
+            el teclado ya están "Listo" y Esc. */}
         <form method="dialog" className="modal-backdrop">
-          <button type="button" onClick={() => setAbierto(false)}>
-            cerrar
+          <button type="button" tabIndex={-1} aria-hidden="true" onClick={() => setAbierto(false)}>
+            Cerrar
           </button>
         </form>
       </dialog>
@@ -153,8 +172,8 @@ export function SelectorDeBarrios({
  * tres en adelante no entran, así que se cuentan: "4 barrios" ocupa lo mismo siempre y
  * no empuja al resto de la fila.
  */
-function comoSeLee(elegidos: string[]) {
-  if (elegidos.length === 0) return 'Todos los barrios'
+function comoSeLee(elegidos: string[], sinElegir: string) {
+  if (elegidos.length === 0) return sinElegir
   if (elegidos.length === 1) return elegidos[0]
   if (elegidos.length === 2) return `${elegidos[0]} y ${elegidos[1]}`
   return `${elegidos.length} barrios`

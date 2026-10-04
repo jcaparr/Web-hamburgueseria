@@ -35,7 +35,7 @@ export function Seccion({
         {verTodas && (
           <Link
             to={verTodas}
-            className="-my-2 flex flex-none items-center gap-1 py-2 text-sm font-semibold text-primary hover:underline"
+            className="-my-3 flex flex-none items-center gap-1 rounded-field py-3 text-sm font-semibold text-primary hover:underline"
           >
             {textoDeVerTodas}
             <IconChevronRight size={14} />

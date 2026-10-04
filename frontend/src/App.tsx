@@ -1,4 +1,5 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
 import { RequireAuth } from './components/RequireAuth'
 import { TopBar } from './components/TopBar'
@@ -30,8 +31,13 @@ export default function App() {
           >
             Saltar al contenido
           </a>
+          <FocoAlCambiarDePagina />
           <TopBar />
-          <main id="contenido" className="mx-auto w-full max-w-[480px] flex-1 pb-20 md:max-w-5xl md:px-6 md:pb-8 md:pt-6">
+          <main
+            id="contenido"
+            tabIndex={-1}
+            className="mx-auto w-full max-w-[480px] flex-1 pb-20 focus:outline-none md:max-w-5xl md:px-6 md:pb-8 md:pt-6"
+          >
             <Routes>
               <Route path="/" element={<Explore />} />
               <Route path="/burger-joints/:id" element={<BurgerJointDetail />} />
@@ -57,4 +63,30 @@ export default function App() {
       </BrowserRouter>
     </AuthProvider>
   )
+}
+
+/**
+ * Al pasar a otra pantalla, el foco va al contenido.
+ *
+ * En una app de una sola página, cambiar de pantalla no recarga nada, y el foco se
+ * quedaba en el enlace que se tocó, que muchas veces ya no existe. Quien usa lector
+ * de pantalla no se enteraba de que había cambiado la página, y quien navega con Tab
+ * arrancaba de nuevo desde la barra de arriba.
+ *
+ * Solo cuando cambia la ruta, no los filtros: elegir un barrio en Explorar no es ir a
+ * otro lado. Y sin mover la página, que cada pantalla decide dónde empieza.
+ */
+function FocoAlCambiarDePagina() {
+  const { pathname } = useLocation()
+  const primera = useRef(true)
+
+  useEffect(() => {
+    if (primera.current) {
+      primera.current = false
+      return
+    }
+    document.getElementById('contenido')?.focus({ preventScroll: true })
+  }, [pathname])
+
+  return null
 }

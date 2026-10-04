@@ -21,25 +21,30 @@ export function DistribucionDeNotas({ distribucion }: { distribucion: NotaYCuant
   if (masVotada === 0) return null
 
   return (
-    <div className="flex flex-col gap-1.5">
+    // Las barras son para mirar; para el lector de pantalla cada fila se dice entera
+    // ("5 estrellas: 3 reseñas"), porque "5 ★ 3" suelto no se entiende.
+    <ul aria-label="Reseñas por nota" className="flex flex-col gap-1.5">
       {[...distribucion].reverse().map(({ nota, cuantas }) => (
-        <div key={nota} className="flex items-center gap-2">
-          <span className="w-8 flex-none text-right text-xs tabular-nums text-base-content/70">
+        <li key={nota} className="flex items-center gap-2">
+          <span className="sr-only">
+            {nota === 1 ? '1 estrella' : `${nota} estrellas`}: {cuantas === 1 ? '1 reseña' : `${cuantas} reseñas`}
+          </span>
+          <span aria-hidden="true" className="w-8 flex-none text-right text-xs tabular-nums text-base-content/70">
             {nota} ★
           </span>
           {/* El riel gris de fondo deja ver el largo que la barra no ocupa, que es lo
               que hace comparables las cinco filas de un vistazo. */}
-          <div className="h-2 flex-1 overflow-hidden rounded-full bg-base-content/10">
+          <div aria-hidden="true" className="h-2 flex-1 overflow-hidden rounded-full bg-base-content/10">
             <div
               className="h-full rounded-full bg-primary"
               style={{ width: `${(cuantas / masVotada) * 100}%` }}
             />
           </div>
-          <span className="w-6 flex-none text-xs tabular-nums text-base-content/70">
+          <span aria-hidden="true" className="w-6 flex-none text-xs tabular-nums text-base-content/70">
             {cuantas}
           </span>
-        </div>
+        </li>
       ))}
-    </div>
+    </ul>
   )
 }

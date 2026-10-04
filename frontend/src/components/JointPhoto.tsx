@@ -53,17 +53,35 @@ interface Props {
   src?: string | null
   name: string
   className?: string
+  /**
+   * Lo que dice la foto para un lector de pantalla. Vacío por omisión: en toda la app
+   * la foto va al lado del nombre del local, y repetirlo hacía que cada tarjeta se
+   * leyera "Burger Joint, Burger Joint".
+   */
+  alt?: string
+  /** Para la foto que se ve apenas se entra, como la de la ficha: se pide primero. */
+  prioritaria?: boolean
 }
 
-export function JointPhoto({ src, name, className }: Props) {
+export function JointPhoto({ src, name, className, alt = '', prioritaria = false }: Props) {
   if (src) {
-    return <img src={src} alt={name} className={className} />
+    // Las demás, perezosas: Explorar trae veinte por página y la mayoría queda fuera
+    // de la pantalla hasta que se baja.
+    return (
+      <img
+        src={src}
+        alt={alt}
+        loading={prioritaria ? 'eager' : 'lazy'}
+        fetchPriority={prioritaria ? 'high' : undefined}
+        decoding="async"
+        className={className}
+      />
+    )
   }
 
   return (
     <div
-      role="img"
-      aria-label={name}
+      {...(alt ? { role: 'img', 'aria-label': alt } : { 'aria-hidden': true })}
       className={`flex items-center justify-center ${tonoPara(name)} ${className ?? ''}`}
     >
       {/*

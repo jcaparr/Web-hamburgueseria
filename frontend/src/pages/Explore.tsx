@@ -10,6 +10,7 @@ import { SelectorDeBarrios } from '../components/SelectorDeBarrios'
 import { TarjetaDeLocal, TarjetaDeLocalCargando } from '../components/TarjetaDeLocal'
 import { useAuth } from '../context/AuthContext'
 import { useBarrios } from '../hooks/useBarrios'
+import { useTitulo } from '../hooks/useTitulo'
 import type { BurgerJoint, PageResponse } from '../types'
 import { isSessionExpired } from '../utils/errors'
 
@@ -49,6 +50,7 @@ export function Explore() {
   const [parametros, setParametros] = useSearchParams()
   const { user } = useAuth()
   const navigate = useNavigate()
+  useTitulo(null)
 
   const query = parametros.get('q') ?? ''
   // Varios: el parámetro se repite, "?area=Palermo&area=Belgrano". Sigue llamándose
@@ -184,7 +186,9 @@ export function Explore() {
       yaEstuvo.current = true
       return
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    // Sin deslizar si la persona pidió menos movimiento en su sistema.
+    const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({ top: 0, behavior: sinMovimiento ? 'auto' : 'smooth' })
   }, [page])
 
   // Dónde estaba mirando, para volver al mismo lugar de la lista.
@@ -295,7 +299,9 @@ export function Explore() {
               }}
               placeholder="Buscar por nombre…"
               aria-label="Buscar hamburguesería por nombre"
-              className="w-full bg-transparent text-base outline-none placeholder:text-base-content/60"
+              autoComplete="off"
+              enterKeyHint="search"
+              className="w-full bg-transparent text-base outline-none placeholder:text-base-content/70"
             />
           </label>
           <div className="flex items-center gap-2">
@@ -307,7 +313,7 @@ export function Explore() {
             />
             {barriosElegidos.length > 0 && (
               <button type="button" onClick={limpiarBarrios} className="btn btn-ghost btn-sm">
-                Ver todos
+                Ver todos los barrios
               </button>
             )}
           </div>
@@ -366,7 +372,7 @@ export function Explore() {
                   : 'No encontramos hamburgueserías con ese nombre.'}
               </AvisoVacio>
               <button type="button" onClick={borrarFiltros} className="btn btn-outline btn-sm">
-                Borrar la búsqueda
+                Ver todas las hamburgueserías
               </button>
             </div>
           )
@@ -374,7 +380,7 @@ export function Explore() {
       </section>
 
       {!error && pageData && pageData.totalPages > 1 && (
-        <nav aria-label="Páginas" className="flex items-center justify-between gap-3 py-2">
+        <nav aria-label="Páginas de resultados" className="flex items-center justify-between gap-3 py-2">
           <button
             type="button"
             className="btn btn-outline"

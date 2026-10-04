@@ -29,7 +29,13 @@ export function TarjetaDeLocal({
 }) {
   return (
     <article className="relative h-full overflow-hidden rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15 transition-shadow hover:shadow-md">
-      <Link to={`/burger-joints/${local.id}`} onClick={onAbrir} className="flex h-full flex-col">
+      {/* El anillo de foco va hacia adentro: la tarjeta recorta lo que sobresale, y
+          hacia afuera no se veía. */}
+      <Link
+        to={`/burger-joints/${local.id}`}
+        onClick={onAbrir}
+        className="flex h-full flex-col rounded-box focus-visible:-outline-offset-2"
+      >
         <JointPhoto
           src={local.photoUrl}
           name={local.name}

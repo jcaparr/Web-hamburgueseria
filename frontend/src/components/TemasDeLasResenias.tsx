@@ -21,7 +21,7 @@ export function TemasDeLasResenias({ temas }: { temas: TemaDeResenias[] }) {
   return (
     <section className="flex flex-col gap-2 rounded-box bg-base-100 p-3 ring-1 ring-inset ring-base-content/15">
       <div className="flex flex-col">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-base-content/70">
+        <h3 className="text-sm font-semibold">
           De qué hablan las reseñas
         </h3>
         {/* La aclaración va una vez acá y no en cada fila: repetir "hablan bien" cuatro

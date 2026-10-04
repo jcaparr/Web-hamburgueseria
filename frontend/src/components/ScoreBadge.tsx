@@ -1,3 +1,5 @@
+import { nota } from '../utils/numeros'
+
 interface Props {
   score: number
   size?: 'sm' | 'md'
@@ -14,7 +16,7 @@ export function ScoreBadge({ score, size = 'md', plain = false }: Props) {
 
   return (
     <div
-      className={`inline-flex w-fit items-center rounded-lg ${plain ? '' : 'bg-secondary'}`}
+      className={`relative inline-flex w-fit items-center rounded-lg ${plain ? '' : 'bg-secondary'}`}
       style={{ gap: small ? 6 : 8, padding: plain ? 0 : padding }}
     >
       <div className="flex flex-col" style={{ gap: 1.5 }}>
@@ -26,7 +28,8 @@ export function ScoreBadge({ score, size = 'md', plain = false }: Props) {
         className={`font-display font-bold tabular-nums ${plain ? 'text-base-content' : 'text-secondary-content'}`}
         style={{ fontSize: small ? 15 : 18 }}
       >
-        {score.toFixed(1)}
+        <span className="sr-only">Nota </span>
+        {nota(score)}
       </span>
     </div>
   )

@@ -19,9 +19,12 @@ export function BottomNav() {
   const items = ITEMS.filter((item) => user || !item.soloConSesion)
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 md:hidden">
+    <nav aria-label="Principal" className="fixed inset-x-0 bottom-0 z-20 md:hidden">
+      {/* Cada pestaña ocupa su columna entera, de borde a borde y de arriba abajo: antes
+          el blanco era el ícono con su palabra, unos 25 px de ancho, y entre una y otra
+          quedaba un hueco que no hacía nada. */}
       <div
-        className={`flex items-center justify-around pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 transition-colors duration-300 ${
+        className={`flex transition-colors duration-300 ${
           hidden ? 'bg-neutral/85 backdrop-blur-md' : 'bg-neutral'
         }`}
       >
@@ -31,14 +34,14 @@ export function BottomNav() {
             to={to}
             end={to === '/'}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 ${isActive ? 'text-secondary' : 'text-base-100/70'}`
+              `flex flex-1 flex-col items-center gap-1 rounded-field pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 focus-visible:-outline-offset-4 focus-visible:outline-secondary ${isActive ? 'text-secondary' : 'text-base-100/70'}`
             }
           >
             <Icon size={21} />
-            <span className="text-[11px] font-semibold">{label}</span>
+            <span className="text-xs font-semibold">{label}</span>
           </NavLink>
         ))}
       </div>
-    </div>
+    </nav>
   )
 }

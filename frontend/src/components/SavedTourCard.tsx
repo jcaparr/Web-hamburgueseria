@@ -3,6 +3,7 @@ import { IconRoute } from './icons'
 import { JointPhoto } from './JointPhoto'
 import type { SavedTour } from '../types'
 import { routeUrl } from '../utils/maps'
+import { kilometros } from '../utils/numeros'
 import { enHoras } from '../utils/tiempo'
 
 /**
@@ -28,16 +29,21 @@ export function SavedTourCard({
         <div className="min-w-0">
           <h3 className="font-display truncate text-sm font-bold">{tour.name}</h3>
           <p className="text-xs text-base-content/70">
-            {tour.kilometros} km · {enHoras(tour.minutos)} {enAuto ? 'en auto' : 'caminando'}
+            {kilometros(tour.kilometros)} km: {enHoras(tour.minutos)} {enAuto ? 'en auto' : 'caminando'}
           </p>
         </div>
         <button
           type="button"
-          onClick={() => onBorrar(tour.id)}
+          // Borrar no se deshace: antes se iba con un solo toque, y el botón está en la
+          // misma tarjeta que se toca para abrir el recorrido.
+          onClick={() => {
+            if (confirm(`¿Borrar el recorrido “${tour.name}”? No se puede deshacer.`)) onBorrar(tour.id)
+          }}
           disabled={borrando}
           className="btn btn-ghost btn-sm -mr-2 -mt-1 shrink-0 text-error"
         >
           {borrando ? 'Borrando…' : 'Borrar'}
+          <span className="sr-only"> el recorrido {tour.name}</span>
         </button>
       </div>
 
@@ -70,6 +76,7 @@ export function SavedTourCard({
       >
         <IconRoute size={14} />
         Abrir el recorrido en Maps
+        <span className="sr-only"> (se abre en otra pestaña)</span>
       </a>
     </article>
   )

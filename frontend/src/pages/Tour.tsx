@@ -3,8 +3,10 @@ import { apiClient } from '../api/client'
 import { Interruptor } from '../components/Interruptor'
 import { LoadError } from '../components/LoadError'
 import { Recorrido } from '../components/Recorrido'
+import { SelectorDeBarrios } from '../components/SelectorDeBarrios'
 import { useAuth } from '../context/AuthContext'
 import { useBarrios } from '../hooks/useBarrios'
+import { useTitulo } from '../hooks/useTitulo'
 import type { SavedTour, Tour as TourRecorrido } from '../types'
 import { routeUrl } from '../utils/maps'
 
@@ -33,6 +35,7 @@ type Ubicacion = { lat: number; lon: number }
 
 export function Tour() {
   const { user } = useAuth()
+  useTitulo('Armar un tour')
 
   const barriosDisponibles = useBarrios()
   const [barrios, setBarrios] = useState<string[]>([])
@@ -73,7 +76,7 @@ export function Tour() {
       () => {
         // Negarse es una respuesta válida: el recorrido se arma igual, empezando por
         // una bien puntuada en vez de por la más cercana.
-        setSinUbicacion('Sin tu ubicación, el recorrido empieza por una bien puntuada')
+        setSinUbicacion('Sin tu ubicación, el recorrido empieza por una bien puntuada.')
         setBuscandoUbicacion(false)
       },
       { timeout: 10_000 },
@@ -149,11 +152,12 @@ export function Tour() {
       </div>
 
       <section className="flex flex-col gap-5 rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15">
-        <div className="join w-full">
+        <div role="group" aria-label="Cómo vas" className="join w-full">
           {(['A_PIE', 'EN_AUTO'] as const).map((opcion) => (
             <button
               key={opcion}
               type="button"
+              aria-pressed={modo === opcion}
               // Los topes de un modo no significan lo mismo en el otro, así que el que
               // estaba elegido se suelta en vez de arrastrarse.
               onClick={() => {
@@ -169,29 +173,34 @@ export function Tour() {
 
         <div className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between">
-            <span className="text-sm font-semibold">Cuántas paradas</span>
-            <span className="font-display text-lg font-bold text-primary">{cantidad}</span>
+            <label htmlFor="cuantas-paradas" className="text-sm font-semibold">
+              Cuántas paradas
+            </label>
+            <span aria-hidden="true" className="font-display text-lg font-bold text-primary">
+              {cantidad}
+            </span>
           </div>
           <input
+            id="cuantas-paradas"
             type="range"
             min={2}
             max={MAXIMO_DE_PARADAS}
             value={cantidad}
             onChange={(e) => setCantidad(Number(e.target.value))}
-            className="range range-sm range-primary"
+            className="range range-primary"
           />
         </div>
 
         <div className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between">
-            <span className="text-sm font-semibold">
+            <span id="cuanto-recorrer" className="text-sm font-semibold">
               {modo === 'A_PIE' ? 'Cuánto caminar' : 'Cuánto manejar'}
             </span>
             <span className="font-display text-lg font-bold text-primary">
               {tope ? `${tope} km` : 'Sin límite'}
             </span>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div role="group" aria-labelledby="cuanto-recorrer" className="flex flex-wrap gap-2">
             {KILOMETROS[modo].map((km) => (
               <button
                 key={km}
@@ -207,63 +216,59 @@ export function Tour() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-sm font-semibold">En qué barrios</span>
-          <details className="dropdown w-full">
-            <summary className="btn btn-block justify-between font-normal">
-              <span className="truncate">
-                {barrios.length === 0 ? 'Cerca mío' : barrios.join(', ')}
-              </span>
-              <span className="text-base-content/70">▾</span>
-            </summary>
-            <ul className="dropdown-content menu z-10 mt-1 max-h-72 w-full flex-nowrap overflow-y-auto rounded-box bg-base-100 p-2 shadow ring-1 ring-inset ring-base-content/15">
-              {barriosDisponibles.map((barrio) => (
-                <li key={barrio}>
-                  <label className="flex cursor-pointer items-center gap-3">
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-sm checkbox-primary"
-                      checked={barrios.includes(barrio)}
-                      onChange={() => alternarBarrio(barrio)}
-                    />
-                    <span className="text-sm">{barrio}</span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </details>
+          <span id="en-que-barrios" className="text-sm font-semibold">
+            En qué barrios
+          </span>
+          {/* El mismo selector que en Explorar, con buscador. Era un desplegable de más
+              de doscientas casillas sin forma de buscar, y con el teclado eran doscientas
+              paradas del Tab. */}
+          <div role="group" aria-labelledby="en-que-barrios" className="flex">
+            <SelectorDeBarrios
+              barrios={barriosDisponibles}
+              elegidos={barrios}
+              onAlternar={alternarBarrio}
+              onLimpiar={() => setBarrios([])}
+              textoSinElegir="Cerca mío"
+              claseDelBoton="btn-block justify-start font-normal"
+            />
+          </div>
           {barrios.length === 0 && (
-            <p className="text-xs text-base-content/70">
+            <p aria-live="polite" className="text-xs text-base-content/70">
               {buscandoUbicacion
                 ? 'Buscando dónde estás…'
                 : (sinUbicacion ?? 'Sin barrios, el recorrido arranca donde estás vos.')}
             </p>
           )}
+          {/* Sacar los barrios es volver a la ubicación: el botón dice eso. */}
           {barrios.length > 0 && (
             <button
               type="button"
               onClick={() => setBarrios([])}
-              className="self-start text-xs font-semibold text-primary"
+              className="btn btn-ghost btn-sm self-start text-primary"
             >
-              Limpiar barrios
+              Usar mi ubicación
             </button>
           )}
         </div>
 
-        <Interruptor activo={conCadenas} onCambiar={setConCadenas}>
-          Incluir cadenas de comida rápida
-        </Interruptor>
+        {/* Juntos y sin hueco entre uno y otro: cada fila ya mide 44 px de alto. */}
+        <div className="flex flex-col">
+          <Interruptor activo={conCadenas} onCambiar={setConCadenas}>
+            Incluir cadenas de comida rápida
+          </Interruptor>
 
-        {user && (
-          <>
-            <Interruptor activo={incluirVisitadas} onCambiar={setIncluirVisitadas}>
-              Incluir las que ya puntuaste
-            </Interruptor>
+          {user && (
+            <>
+              <Interruptor activo={incluirVisitadas} onCambiar={setIncluirVisitadas}>
+                Incluir las que ya puntuaste
+              </Interruptor>
 
-            <Interruptor activo={excluirLasDeMisTours} onCambiar={setExcluirLasDeMisTours}>
-              No repetir hamburgueserías de mis recorridos
-            </Interruptor>
-          </>
-        )}
+              <Interruptor activo={excluirLasDeMisTours} onCambiar={setExcluirLasDeMisTours}>
+                No repetir hamburgueserías de mis recorridos
+              </Interruptor>
+            </>
+          )}
+        </div>
 
         <button
           type="button"

@@ -33,12 +33,12 @@ export function TarjetaDeResenia({
         {/* Desde acá se llega a su perfil, que es de donde sale la gente a seguir:
             alguien que reseñó lo mismo que vos es mejor candidato que cualquiera que
             encuentres buscando a ciegas. */}
-        <Link to={`/u/${resenia.username}`} className="flex min-w-0 items-center gap-3">
+        <Link to={`/u/${resenia.username}`} className="-my-1 flex min-w-0 items-center gap-3 rounded-field py-1">
           <AvatarDeUsuario username={resenia.username} size={36} />
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-semibold hover:text-primary">
               @{resenia.username}
-              {esMia && <span className="font-normal text-base-content/70"> · vos</span>}
+              {esMia && <span className="font-normal text-base-content/70"> (vos)</span>}
             </span>
             <span className="text-xs text-base-content/70">{relativeDate(resenia.createdAt)}</span>
           </div>
@@ -51,7 +51,7 @@ export function TarjetaDeResenia({
               type="button"
               onClick={onEditar}
               aria-label="Editar tu reseña"
-              className="btn btn-ghost btn-xs btn-square text-base-content/70"
+              className="btn btn-ghost btn-square -my-2 -mr-2 text-base-content/70"
             >
               <IconPencil size={15} />
             </button>
