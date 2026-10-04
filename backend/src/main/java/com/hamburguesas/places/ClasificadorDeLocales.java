@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,7 +34,8 @@ import java.util.Set;
  * con el motivo al lado, igual que los que hay que sacar.
  *
  * Es la misma regla para lo que trae una búsqueda y para lo que ya está guardado: un
- * local guardado se mira como si recién lo hubiera devuelto Google.
+ * local guardado se mira como si recién lo hubiera devuelto Google, con una diferencia,
+ * que es la prueba con la que entró (ver {@link #evaluarGuardado}).
  */
 @Component
 @Slf4j
@@ -44,10 +46,19 @@ public class ClasificadorDeLocales {
     private final LlamadasAGoogle google;
     private final BurgerJointRepository burgerJointRepository;
 
-    /** Si lo que devolvió Google no es una hamburguesería. */
-    boolean noEsUnaHamburgueseria(PlacesSearchResult.Place place, Set<String> cadenas) {
-        return !evaluar(place, cadenas).vendeHamburguesas();
-    }
+    /**
+     * Las pruebas de que es una hamburguesería, que son las que se anotan y se vuelven a
+     * usar. A_MANO también: un local que agregó una persona entra sin pasar por el
+     * clasificador, porque esa decisión vale más que cualquier regla nuestra, y antes la
+     * limpieza siguiente lo podía borrar si Google no tenía resumen de reseñas. Para
+     * sacar uno se lo anota en la lista de excluidos, que se mira antes que todo.
+     */
+    private static final Set<Veredicto.Prueba> PRUEBAS_QUE_SE_ANOTAN = EnumSet.of(
+        Veredicto.Prueba.RUBRO_DE_GOOGLE,
+        Veredicto.Prueba.EL_NOMBRE_LO_DICE,
+        Veredicto.Prueba.SUCURSAL_DE_UNA_CADENA,
+        Veredicto.Prueba.LO_DICEN_LAS_RESENIAS,
+        Veredicto.Prueba.A_MANO);
 
     /**
      * Qué se decidió sobre un local y con qué prueba.
@@ -56,6 +67,33 @@ public class ClasificadorDeLocales {
      * distinguir por qué: borrar es definitivo y no todas las razones alcanzan.
      */
     Veredicto evaluar(PlacesSearchResult.Place place, Set<String> cadenas) {
+        return evaluar(place, cadenas, null);
+    }
+
+    /**
+     * Lo mismo que {@link #evaluar(PlacesSearchResult.Place, Set)}, para un local que ya
+     * está guardado: con la prueba con la que entró.
+     *
+     * Un local guardado tiene menos datos que cuando lo devolvió la búsqueda: el rubro
+     * principal y no la lista entera, y no su resumen de reseñas. Los que entraron por un
+     * rubro secundario o por su resumen caían siempre en "sin pruebas", y cada limpieza le
+     * volvía a pedir a Google el resumen, que es el tramo más caro de la API: unas 32
+     * llamadas por corrida, siempre por los mismos locales (#97). Y uno que entró por su
+     * resumen quedaba atado a él: si Google lo cambiaba, la limpieza siguiente lo borraba.
+     *
+     * Ahora, si las pruebas baratas no alcanzan y el local tiene una prueba anotada, vale
+     * esa. Lo que puede cambiar de este lado se sigue mirando siempre: las listas a mano y
+     * los rubros de otra cosa de la configuración van antes que la prueba anotada.
+     */
+    Veredicto evaluarGuardado(BurgerJoint joint, Set<String> cadenas) {
+        return evaluar(comoLugar(joint), cadenas, pruebaAnotada(joint));
+    }
+
+    /**
+     * @param anotada la prueba con la que entró, si ya está guardado; vale solo cuando
+     *                ninguna prueba barata alcanza, y evita pagar el resumen de reseñas
+     */
+    Veredicto evaluar(PlacesSearchResult.Place place, Set<String> cadenas, Veredicto.Prueba anotada) {
         var sync = properties.getSync();
 
         if (sync.getExcludedPlaceIds().contains(place.placeId())) {
@@ -70,6 +108,12 @@ public class ClasificadorDeLocales {
 
         Veredicto veredicto = VendeHamburguesas.evaluar(
             place.name(), rubros, null, rubrosDeOtraCosa, cadenas);
+
+        // Nada barato alcanzó, pero ya se sabe con qué prueba entró: no hace falta volver
+        // a pagarla.
+        if (veredicto.prueba() == Veredicto.Prueba.SIN_PRUEBAS && anotada != null) {
+            return Veredicto.si(anotada);
+        }
 
         // Solo cuando nada barato alcanzó se pregunta por el resumen de reseñas, que es
         // el tramo más caro de la API. Es la minoría de los casos, y es donde está la
@@ -156,6 +200,24 @@ public class ClasificadorDeLocales {
             }
         }
         return cadenas;
+    }
+
+    /**
+     * La prueba con la que entró el local, si es de las que se pueden volver a usar.
+     *
+     * Nulo si no tiene anotada o si es un nombre que ya no existe en
+     * {@link Veredicto.Prueba}: en esos casos se lo evalúa como a cualquiera.
+     */
+    static Veredicto.Prueba pruebaAnotada(BurgerJoint joint) {
+        if (joint.getPruebaDeHamburguesas() == null) {
+            return null;
+        }
+        try {
+            Veredicto.Prueba prueba = Veredicto.Prueba.valueOf(joint.getPruebaDeHamburguesas());
+            return PRUEBAS_QUE_SE_ANOTAN.contains(prueba) ? prueba : null;
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
     }
 
     /**

@@ -153,4 +153,14 @@ public class BurgerJoint {
      */
     @Column(name = "horario_consultado_el")
     private Instant horarioConsultadoEl;
+
+    /**
+     * Con qué prueba entró como hamburguesería, con el nombre de un {@code Veredicto.Prueba}:
+     * el rubro de Google, el nombre, una sucursal de una cadena o su resumen de reseñas.
+     *
+     * La limpieza la usa cuando las pruebas baratas no alcanzan, en lugar de volver a
+     * pedirle a Google el resumen de reseñas (#97). Nulo es "todavía no se anotó".
+     */
+    @Column(name = "prueba_de_hamburguesas", length = 40)
+    private String pruebaDeHamburguesas;
 }

@@ -187,7 +187,7 @@ public class PlacesSyncService {
                 "Queda fuera del radio de búsqueda");
         }
 
-        create(place, zona.get(), false);
+        create(place, zona.get(), false, Veredicto.Prueba.A_MANO);
         fastFoodMarker.marcar();
 
         log.info("Agregado a mano: {} ({}) — {}", place.name(), zona.get(), place.placeId());
@@ -359,9 +359,14 @@ public class PlacesSyncService {
             return;
         }
 
-        if (clasificador.noEsUnaHamburgueseria(place, cadenas)) {
-            log.debug("{} no es un lugar donde comer ({}), se descarta",
-                place.name(), place.primaryType());
+        // Si ya está guardado, con la prueba con la que entró: así un local que entró por
+        // su resumen de reseñas no lo vuelve a pagar en cada barrido (#97).
+        var existing = burgerJointRepository.findByPlaceId(place.placeId());
+        Veredicto veredicto = clasificador.evaluar(
+            place, cadenas, existing.map(ClasificadorDeLocales::pruebaAnotada).orElse(null));
+        if (!veredicto.vendeHamburguesas()) {
+            log.debug("{} no es un lugar donde comer ({}: {}), se descarta",
+                place.name(), place.primaryType(), veredicto.prueba());
             recuento.descartados++;
             return;
         }
@@ -378,10 +383,9 @@ public class PlacesSyncService {
             return;
         }
 
-        var existing = burgerJointRepository.findByPlaceId(place.placeId());
         boolean gotPhoto;
         if (existing.isPresent()) {
-            gotPhoto = refresh(existing.get(), place, barrio.get(), conFotos);
+            gotPhoto = refresh(existing.get(), place, barrio.get(), conFotos, veredicto.prueba());
             recuento.actualizados++;
         } else {
             // Google tiene dos fichas para algunos negocios, con identificadores
@@ -395,7 +399,7 @@ public class PlacesSyncService {
                 return;
             }
 
-            gotPhoto = create(place, barrio.get(), conFotos);
+            gotPhoto = create(place, barrio.get(), conFotos, veredicto.prueba());
             yaEstan.add(nuevo);
             recuento.creados++;
         }
@@ -419,8 +423,10 @@ public class PlacesSyncService {
     }
 
     /** @return true si en esta pasada se le consiguió la foto. */
-    private boolean create(PlacesSearchResult.Place place, String area, boolean conFotos) {
+    private boolean create(PlacesSearchResult.Place place, String area, boolean conFotos,
+                           Veredicto.Prueba prueba) {
         BurgerJoint joint = comoJoint(place, area);
+        joint.setPruebaDeHamburguesas(prueba.name());
         boolean gotPhoto = conFotos && fotos.ponerLaDeLaBusqueda(joint, place);
         burgerJointRepository.save(joint);
         return gotPhoto;
@@ -428,8 +434,9 @@ public class PlacesSyncService {
 
     /** @return true si en esta pasada se le consiguió la foto que le faltaba. */
     private boolean refresh(BurgerJoint joint, PlacesSearchResult.Place place, String area,
-                            boolean conFotos) {
+                            boolean conFotos, Veredicto.Prueba prueba) {
         joint.setName(place.name());
+        joint.setPruebaDeHamburguesas(prueba.name());
         joint.setGooglePrimaryType(place.primaryType());
         if (place.address() != null) {
             joint.setAddress(place.address());
