@@ -61,7 +61,7 @@ export function Explore() {
   // que pide la lista dispararía un pedido tras otro, sin parar. Lo que no cambia
   // mientras los barrios sean los mismos es este texto.
   const claveDeBarrios = JSON.stringify(barriosElegidos)
-  const page = Number(parametros.get('pagina') ?? '0')
+  const page = paginaDe(parametros.get('pagina'))
   // El interruptor de cadenas sigue recordándose en el navegador cuando la dirección no
   // dice nada: es una preferencia de quien mira, no parte de esta búsqueda.
   const conCadenas = parametros.has('cadenas')
@@ -147,6 +147,9 @@ export function Explore() {
     // obligaría a depender de él, que cambia en cada dibujo.
     const elegidos: string[] = JSON.parse(claveDeBarrios)
 
+    // Si los filtros cambian con un pedido en vuelo, su respuesta ya no es de lo que se
+    // está mirando: no se muestra, y menos se usa para cambiar de página.
+    let vigente = true
     const timeout = setTimeout(() => {
       setLoading(true)
       apiClient
@@ -162,15 +165,39 @@ export function Explore() {
           },
         })
         .then(({ data }) => {
+          if (!vigente) return
+          // Una página que ya no existe lleva a la última. Pasa con un enlace guardado:
+          // desde entonces la limpieza borró locales y hay menos páginas. Sin esto se
+          // leía "Página 79 de 78" y que no había locales con ese nombre (#130). Sigue
+          // cargando, porque la dirección nueva vuelve a pedir.
+          const ultima = data.page.totalPages - 1
+          if (ultima >= 0 && data.page.number > ultima) {
+            setParametros(
+              (previos) => {
+                const nuevos = new URLSearchParams(previos)
+                nuevos.set('pagina', String(ultima))
+                return nuevos
+              },
+              { replace: true },
+            )
+            return
+          }
           setPageData(data)
           setError(null)
+          setLoading(false)
         })
-        .catch(setError)
-        .finally(() => setLoading(false))
+        .catch((err) => {
+          if (!vigente) return
+          setError(err)
+          setLoading(false)
+        })
     }, 300)
 
-    return () => clearTimeout(timeout)
-  }, [query, claveDeBarrios, conCadenas, page, attempt])
+    return () => {
+      vigente = false
+      clearTimeout(timeout)
+    }
+  }, [query, claveDeBarrios, conCadenas, page, attempt, setParametros])
 
   // Al cambiar de página la lista se renueva entera, pero el navegador conserva el
   // scroll: quedabas a mitad de la página nueva, empezando a leer por el medio.
@@ -435,4 +462,14 @@ function conBarrios(previos: URLSearchParams, barrios: string[]) {
   barrios.forEach((barrio) => nuevos.append('area', barrio))
   nuevos.delete('pagina')
   return nuevos
+}
+
+/**
+ * El número de página que trae la dirección, contando desde 0. Lo que no sea un entero
+ * de 0 en adelante es la primera: "abc" terminaba pidiéndole al servidor la página NaN,
+ * y "Siguiente" llevaba a ?pagina=NaN (#130).
+ */
+function paginaDe(valor: string | null) {
+  const n = Number(valor)
+  return Number.isInteger(n) && n > 0 ? n : 0
 }
