@@ -168,18 +168,21 @@ public class FotosDeLocales {
             }
             List<FotoElegida> candidatas = ficha.get();
 
-            // Ya que se preguntó, se anota cuántas tiene: es el mismo dato que acaba de
-            // llegar y guardarlo no cuesta ninguna llamada más.
+            // Ya que se preguntó, se anota cuántas tiene y si tiene alguna, y se guarda
+            // enseguida. Es el mismo dato que acaba de llegar, y antes solo quedaba si
+            // después pasaba algo más que guardara el local: cuando no quedaba cuota de
+            // fotos, o ninguna candidata servía y no había hermana de quien prestar, se
+            // perdía, y el próximo censo gastaba otra ficha en volver a preguntarlo (#98).
+            //
+            // Sin fotos queda anotado porque es lo único que distingue "no hay nada" de
+            // "no fuimos a buscarlo", y la diferencia decide si se lo esconde o se lo
+            // completa. Con fotos se corrige si venía anotado que no: un local que recién
+            // abrió y todavía no tenía ninguna las tiene ahora.
             joint.setFotosEnGoogle(candidatas.size());
+            joint.setSinFotosEnGoogle(candidatas.isEmpty());
+            burgerJointRepository.save(joint);
 
             if (!candidatas.isEmpty()) {
-                // Tenía fotos: si venía anotado como que no, se corrige. Un local que
-                // recién abrió y todavía no tiene ninguna va a tenerlas más adelante.
-                if (joint.isSinFotosEnGoogle()) {
-                    joint.setSinFotosEnGoogle(false);
-                    burgerJointRepository.save(joint);
-                }
-
                 // Tiene fotos pero no hay cuota para bajarlas. No se le presta la de
                 // otra sucursal: tener la propia es mejor, y va a estar el mes que viene.
                 if (!google.quedan(PlacesCallType.PHOTO)) {
@@ -197,12 +200,6 @@ public class FotosDeLocales {
                     bajadas++;
                     continue;
                 }
-            } else {
-                // Google no tiene ni una foto de este local. Queda anotado porque es lo
-                // único que distingue "no hay nada" de "no fuimos a buscarlo", y la
-                // diferencia decide si se lo esconde o se lo completa.
-                joint.setSinFotosEnGoogle(true);
-                burgerJointRepository.save(joint);
             }
 
             // Y acá caen los que no son de cadena pero igual tienen una hermana: un local

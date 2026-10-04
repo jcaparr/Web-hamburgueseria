@@ -133,6 +133,34 @@ class PlacesSyncPhotoBackfillTest {
         verify(quotaGuard).record(PlacesCallType.PHOTO);
     }
 
+    /**
+     * Cuántas fotos tiene un local en Google sale de su ficha, que se paga aparte. Si
+     * después no quedaba cuota para bajar ninguna, el dato no se guardaba y el próximo
+     * censo gastaba otra ficha en volver a preguntarlo (#98).
+     */
+    @Test
+    void laCuentaDeFotosSeGuardaAunqueNoQuedeCuotaParaBajarlas() {
+        when(placesClient.searchText(anyString(), any()))
+            .thenReturn(new PlacesSearchResult(List.of(), null));
+        when(quotaGuard.canCall(PlacesCallType.PHOTO)).thenReturn(false);
+
+        BurgerJoint conFotos = BurgerJoint.builder()
+            .id(9L).placeId("ChIJ-F").name("Con Fotos").address("Calle 1").area(AREA)
+            .build();
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(conFotos));
+        when(placesClient.fotosDe("ChIJ-F")).thenReturn(List.of(
+            new FotoElegida("places/ChIJ-F/photos/a", "huella-a"),
+            new FotoElegida("places/ChIJ-F/photos/b", "huella-b")));
+
+        service.sync();
+
+        assertThat(conFotos.getPhotoUrl()).isNull();
+        verify(repository).save(conFotos);
+        assertThat(conFotos.getFotosEnGoogle()).isEqualTo(2);
+        assertThat(conFotos.isSinFotosEnGoogle()).isFalse();
+        verify(placesClient, never()).downloadPhoto(anyString());
+    }
+
     /** Que Google no tenga fotos de un local es normal: no se marca nada y se reintenta. */
     @Test
     void unLocalSinFotosEnGoogleQuedaComoEstaba() {
