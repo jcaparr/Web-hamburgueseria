@@ -8,6 +8,7 @@ import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.FranjaHorariaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -29,8 +30,11 @@ public class BurgerJointService {
      */
     public Page<BurgerJointDto> search(String query, List<String> areas, boolean conCadenas,
                                        Long userId, Pageable pageable) {
-        return burgerJointRepository.buscar(query, areas, conCadenas, pageable)
-            .map(b -> fichaDeLocal.para(b, userId));
+        Page<BurgerJoint> pagina = burgerJointRepository.buscar(query, areas, conCadenas, pageable);
+        // Las fichas de toda la página juntas: de a una eran dos o tres consultas por
+        // local (#101).
+        List<BurgerJointDto> fichas = fichaDeLocal.para(pagina.getContent(), userId);
+        return new PageImpl<>(fichas, pagina.getPageable(), pagina.getTotalElements());
     }
 
     /** Los barrios que tienen al menos una hamburguesería, para el selector. */

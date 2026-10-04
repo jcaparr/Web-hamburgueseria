@@ -1,5 +1,6 @@
 package com.hamburguesas.service;
 
+import com.hamburguesas.dto.BurgerJointDto;
 import com.hamburguesas.dto.TourDto;
 import com.hamburguesas.dto.TourStopDto;
 import com.hamburguesas.geo.Distancias;
@@ -338,6 +339,7 @@ public class TourService {
 
         List<TourStopDto> stops = new ArrayList<>();
         double total = 0;
+        List<BurgerJointDto> fichas = fichaDeLocal.para(paradas, userId);
 
         for (int i = 0; i < paradas.size(); i++) {
             BurgerJoint parada = paradas.get(i);
@@ -348,7 +350,7 @@ public class TourService {
             total += tramo;
 
             stops.add(new TourStopDto(i + 1, Distancias.aUnDecimal(tramo),
-                puntuadas.contains(parada.getId()), fichaDeLocal.para(parada, userId)));
+                puntuadas.contains(parada.getId()), fichas.get(i)));
 
             latitud = parada.getLatitude();
             longitud = parada.getLongitude();

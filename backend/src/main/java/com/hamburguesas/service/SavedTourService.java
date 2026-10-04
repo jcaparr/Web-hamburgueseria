@@ -1,5 +1,6 @@
 package com.hamburguesas.service;
 
+import com.hamburguesas.dto.BurgerJointDto;
 import com.hamburguesas.dto.GuardarTourRequest;
 import com.hamburguesas.dto.SavedTourDto;
 import com.hamburguesas.dto.TourStopDto;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Los recorridos que alguien guardó.
@@ -165,12 +167,16 @@ public class SavedTourService {
         Set<Long> puntuadas = new HashSet<>(
             ratingRepository.idsPuntuadosPor(tour.getUser().getId()));
 
-        List<TourStopDto> paradas = tour.getStops().stream()
-            .map(stop -> new TourStopDto(
-                stop.getPosition(),
-                stop.getKilometers(),
-                puntuadas.contains(stop.getBurgerJoint().getId()),
-                fichaDeLocal.conDeseo(stop.getBurgerJoint(), false)))
+        List<SavedTourStop> stops = tour.getStops();
+        List<BurgerJointDto> fichas = fichaDeLocal.conDeseo(
+            stops.stream().map(SavedTourStop::getBurgerJoint).toList(), false);
+
+        List<TourStopDto> paradas = IntStream.range(0, stops.size())
+            .mapToObj(i -> new TourStopDto(
+                stops.get(i).getPosition(),
+                stops.get(i).getKilometers(),
+                puntuadas.contains(stops.get(i).getBurgerJoint().getId()),
+                fichas.get(i)))
             .toList();
 
         return new SavedTourDto(tour.getId(), tour.getName(), tour.getKilometers(),
