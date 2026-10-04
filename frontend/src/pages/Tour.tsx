@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { apiClient } from '../api/client'
 import { Interruptor } from '../components/Interruptor'
 import { LoadError } from '../components/LoadError'
@@ -60,39 +60,51 @@ export function Tour() {
   const [guardando, setGuardando] = useState(false)
   const [guardado, setGuardado] = useState<SavedTour | null>(null)
 
-  // Sin barrios el recorrido sale desde donde está quien camina, así que al soltar el
-  // último se pide la ubicación. Se pide acá y no al entrar para no recibir al visitante
-  // con un cartel del navegador antes de que haya hecho nada.
-  useEffect(() => {
-    if (barrios.length > 0 || ubicacion || !navigator.geolocation) return
+  /**
+   * Dónde está quien va a hacer el recorrido, pedido recién cuando hace falta.
+   *
+   * Sin barrios el recorrido sale desde ahí, pero la ubicación se pide al tocar "Armar
+   * tour" y no al entrar: antes el navegador recibía al visitante con su cartel de
+   * permiso apenas abría la pantalla, antes de que hubiera hecho nada.
+   *
+   * Negarse es una respuesta válida: el recorrido se arma igual, empezando por una bien
+   * puntuada en vez de por la más cercana. Y no se vuelve a preguntar en cada intento:
+   * el navegador ya contestó.
+   */
+  function pedirUbicacion(): Promise<Ubicacion | null> {
+    if (ubicacion) return Promise.resolve(ubicacion)
+    if (sinUbicacion || !navigator.geolocation) return Promise.resolve(null)
 
     setBuscandoUbicacion(true)
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        setUbicacion({ lat: coords.latitude, lon: coords.longitude })
-        setSinUbicacion(null)
-        setBuscandoUbicacion(false)
-      },
-      () => {
-        // Negarse es una respuesta válida: el recorrido se arma igual, empezando por
-        // una bien puntuada en vez de por la más cercana.
-        setSinUbicacion('Sin tu ubicación, el recorrido empieza por una bien puntuada.')
-        setBuscandoUbicacion(false)
-      },
-      { timeout: 10_000 },
-    )
-  }, [barrios, ubicacion])
+    return new Promise((listo) => {
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => {
+          const encontrada = { lat: coords.latitude, lon: coords.longitude }
+          setUbicacion(encontrada)
+          setBuscandoUbicacion(false)
+          listo(encontrada)
+        },
+        () => {
+          setSinUbicacion('Sin tu ubicación, el recorrido empieza por una bien puntuada.')
+          setBuscandoUbicacion(false)
+          listo(null)
+        },
+        { timeout: 10_000 },
+      )
+    })
+  }
 
-  function armar() {
+  async function armar() {
     setArmando(true)
+    const desde = barrios.length === 0 ? await pedirUbicacion() : null
     apiClient
       .get<TourRecorrido>('/tours', {
         params: {
           cantidad,
           kilometrosMaximos: tope ?? undefined,
           barrios: barrios.length > 0 ? barrios : undefined,
-          latitud: barrios.length === 0 ? ubicacion?.lat : undefined,
-          longitud: barrios.length === 0 ? ubicacion?.lon : undefined,
+          latitud: desde?.lat,
+          longitud: desde?.lon,
           incluirVisitadas,
           conCadenas,
           modo,
@@ -236,7 +248,8 @@ export function Tour() {
             <p aria-live="polite" className="text-xs text-base-content/70">
               {buscandoUbicacion
                 ? 'Buscando dónde estás…'
-                : (sinUbicacion ?? 'Sin barrios, el recorrido arranca donde estás vos.')}
+                : (sinUbicacion ??
+                  'Sin barrios, el recorrido arranca donde estás vos: al armarlo te vamos a pedir la ubicación.')}
             </p>
           )}
           {/* Sacar los barrios es volver a la ubicación: el botón dice eso. */}
