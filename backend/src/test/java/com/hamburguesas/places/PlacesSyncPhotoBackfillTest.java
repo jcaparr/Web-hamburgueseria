@@ -41,10 +41,11 @@ class PlacesSyncPhotoBackfillTest {
     private PhotoStorage photoStorage;
     private BurgerJointRepository repository;
     private PlacesSyncService service;
+    private PlacesProperties properties;
 
     @BeforeEach
     void setUp() {
-        PlacesProperties properties = new PlacesProperties();
+        properties = new PlacesProperties();
         properties.setApiKey("clave-de-prueba");
         properties.getSync().setAreas(List.of(AREA));
         properties.getSync().setMaxPagesPerArea(1);
@@ -181,14 +182,15 @@ class PlacesSyncPhotoBackfillTest {
     }
 
     /**
-     * Una sucursal cuya dirección Google no tiene fotografiada se queda con la foto de
-     * otra sucursal de la misma cadena. Es preferible el frente de otro local de la
-     * misma marca antes que un recuadro con iniciales.
+     * Una sucursal sin portada se queda con la foto de otra sucursal de la misma marca,
+     * sin pedirle nada a Google. Es preferible el frente de otro local de la misma marca
+     * antes que un recuadro con iniciales.
      */
     @Test
     void unaSucursalSinFotoUsaLaDeSuHermana() {
         when(placesClient.searchText(anyString(), any()))
             .thenReturn(new PlacesSearchResult(List.of(), null));
+        properties.setFastFoodBrands(List.of("burgerking"));
 
         BurgerJoint conFoto = BurgerJoint.builder()
             .id(1L).placeId("ChIJ-BK1").name("Burger King").address("Corrientes 1").area(AREA)
@@ -209,30 +211,34 @@ class PlacesSyncPhotoBackfillTest {
         // Prestarla no cuesta una llamada a Google, que es medio punto del asunto.
         assertThat(report.photosDownloaded()).isZero();
         verify(placesClient, never()).downloadPhoto(anyString());
+        verify(placesClient, never()).fotosDe(anyString());
     }
 
-    /** La foto propia de la sucursal siempre es mejor que la prestada. */
+    /**
+     * Llamarse igual no alcanza para prestar la foto (#99). "Big Burger" son tres locales
+     * sin ninguna relación, en González Catán, Merlo y Pontevedra: el que se quede sin
+     * portada no puede recibir la de otro, porque la tarjeta mostraría un local por otro.
+     */
     @Test
-    void siGoogleTieneLaFotoDeEsaSucursalGanaSobreLaPrestada() {
+    void unLocalQueSeLlamaIgualQueOtroSinSerMarcaNoRecibeSuFoto() {
         when(placesClient.searchText(anyString(), any()))
             .thenReturn(new PlacesSearchResult(List.of(), null));
 
-        BurgerJoint hermana = BurgerJoint.builder()
-            .id(1L).placeId("ChIJ-BK1").name("Burger King").address("Corrientes 1").area(AREA)
-            .photoUrl("/api/place-photos/hermana.jpg")
+        BurgerJoint deMerlo = BurgerJoint.builder()
+            .id(1L).placeId("ChIJ-BB1").name("Big Burger").address("Merlo 1").area(AREA)
+            .photoUrl("/api/place-photos/merlo.jpg")
             .build();
-        BurgerJoint nueva = BurgerJoint.builder()
-            .id(2L).placeId("ChIJ-BK2").name("Burger King").address("Cabildo 2").area(AREA)
+        BurgerJoint dePontevedra = BurgerJoint.builder()
+            .id(2L).placeId("ChIJ-BB2").name("Big Burger").address("Pontevedra 2").area(AREA)
             .build();
 
-        when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(hermana));
-        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(nueva));
-        when(placesClient.fotosDe("ChIJ-BK2")).thenReturn(java.util.List.of(new FotoElegida("places/ChIJ-BK2/photos/propia", "huella-de-places/ChIJ-BK2/photos/propia")));
+        when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(deMerlo));
+        when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(dePontevedra));
+        when(placesClient.fotosDe("ChIJ-BB2")).thenReturn(List.of());
 
         PlacesSyncReport report = service.sync();
 
-        assertThat(nueva.getPhotoUrl()).isEqualTo("/api/place-photos/abc.jpg");
-        assertThat(report.photosDownloaded()).isEqualTo(1);
+        assertThat(dePontevedra.getPhotoUrl()).isNull();
         assertThat(report.photosReused()).isZero();
     }
 
@@ -260,18 +266,6 @@ class PlacesSyncPhotoBackfillTest {
         assertThat(report.photosReused()).isZero();
     }
 
-    @Test
-    void reconoceLaCadenaAunqueElNombreTraigaElBarrioOAcentos() {
-        assertThat(FotosDeLocales.chainKey("Dean & Dennys - Palermo Soho"))
-            .isEqualTo(FotosDeLocales.chainKey("Dean & Dennys - Barrio Norte"));
-        assertThat(FotosDeLocales.chainKey("Chopi's Burger"))
-            .isEqualTo(FotosDeLocales.chainKey("CHOPI'S  BURGER"));
-        assertThat(FotosDeLocales.chainKey("Ché Burgers"))
-            .isEqualTo(FotosDeLocales.chainKey("che burgers"));
-        // Parecerse no alcanza: si alcanzara, un "Heaven" cualquiera heredaría fotos ajenas.
-        assertThat(FotosDeLocales.chainKey("Burger King"))
-            .isNotEqualTo(FotosDeLocales.chainKey("Burger King Express"));
-    }
 
     /**
      * Las fotos bajadas con la regla de elección vieja se revisan una vez. Sobre 150

@@ -3,7 +3,6 @@ package com.hamburguesas.places;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.PlacesCallType;
 import com.hamburguesas.repository.BurgerJointRepository;
-import com.hamburguesas.texto.Texto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -129,7 +128,6 @@ public class FotosDeLocales {
         int prestadas = 0;
         List<String> marcas = marcasQueComparten();
         Map<String, String> fotoPorMarca = fotosPorMarca(marcas);
-        Map<String, String> fotoPorNombre = fotosPorNombre();
 
         for (BurgerJoint joint : burgerJointRepository.findByPhotoUrlIsNull()) {
             // Una sucursal de cadena se queda con la foto de una hermana y no se le pide
@@ -144,7 +142,12 @@ public class FotosDeLocales {
             // foto es prácticamente la misma.
             //
             // Cuesta cero llamadas, así que no mira ninguna cuota.
-            String deLaHermana = fotoPorNombre.get(chainKey(joint.getName()));
+            //
+            // Solo entre sucursales de una marca anotada a mano. También se prestaba entre
+            // locales que se llamaban igual, pero hay nombres que comparten locales sin
+            // ninguna relación —"Big Burger" en González Catán, Merlo y Pontevedra;
+            // "Burger House" en Barracas y en Grand Bourg—, y el que perdiera su portada
+            // recibía la de un desconocido: la tarjeta mostraba un local por otro (#99).
             String deLaMarca = fotoPorMarca.get(FastFoodMarker.marcaDe(joint.getName(), marcas));
             if (deLaMarca != null) {
                 ponerPrestada(joint, deLaMarca);
@@ -192,7 +195,6 @@ public class FotosDeLocales {
                 String puesta = probarHastaQueUnaSirva(joint, candidatas);
                 if (puesta != null) {
                     // Las sucursales que vienen después ya la pueden usar.
-                    fotoPorNombre.putIfAbsent(chainKey(joint.getName()), puesta);
                     String marca = FastFoodMarker.marcaDe(joint.getName(), marcas);
                     if (marca != null) {
                         fotoPorMarca.putIfAbsent(marca, puesta);
@@ -200,14 +202,6 @@ public class FotosDeLocales {
                     bajadas++;
                     continue;
                 }
-            }
-
-            // Y acá caen los que no son de cadena pero igual tienen una hermana: un local
-            // que se llama igual que otro sin ser una marca reconocida. Los de cadena ya
-            // se resolvieron arriba, antes de gastarle una llamada a Google.
-            if (deLaHermana != null) {
-                ponerPrestada(joint, deLaHermana);
-                prestadas++;
             }
         }
 
@@ -327,22 +321,6 @@ public class FotosDeLocales {
         }
         ponerFoto(joint, ruta, place.photoName(), place.photoFingerprint());
         return true;
-    }
-
-    /**
-     * El nombre de la cadena detrás del nombre del local.
-     *
-     * Las sucursales se escriben de varias formas: "Burger King" repetido tal cual,
-     * o "Dean & Dennys - Palermo Soho" y "Dean & Dennys - Barrio Norte". Se corta en
-     * el guión y se normaliza mayúsculas y acentos, porque la misma cadena aparece
-     * escrita distinto según quién la cargó en Google.
-     *
-     * Se exige igualdad y no parecido: con nombres cortos y genéricos —"Heaven",
-     * "Rubi"— cualquier coincidencia parcial terminaría pegándole la foto de un local
-     * que no tiene nada que ver.
-     */
-    static String chainKey(String name) {
-        return Texto.paraComparar(name.split(" - ")[0]);
     }
 
     /**
@@ -488,12 +466,4 @@ public class FotosDeLocales {
         return porMarca;
     }
 
-    /** Una foto por nombre de local, para los que se llaman igual sin ser una marca anotada. */
-    private Map<String, String> fotosPorNombre() {
-        Map<String, String> porNombre = new HashMap<>();
-        for (BurgerJoint joint : burgerJointRepository.findByPhotoUrlIsNotNull()) {
-            porNombre.putIfAbsent(chainKey(joint.getName()), joint.getPhotoUrl());
-        }
-        return porNombre;
-    }
 }
