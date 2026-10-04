@@ -21,6 +21,15 @@ spring:
       # Flyway owns the schema now; Hibernate only checks that the entities still match it.
       ddl-auto: validate
     open-in-view: false
+  # Las páginas (Explorar, el ranking, las reseñas de un local) salen en el formato
+  # estable de Spring Data: la lista en "content" y los datos de la página aparte, en
+  # "page" (size, number, totalElements, totalPages). Sin esto se serializaba el
+  # PageImpl tal cual, en un formato que Spring no garantiza y que avisaba en el log:
+  # una actualización podía cambiarlo y romper la paginación sin ningún error (#103).
+  data:
+    web:
+      pageable:
+        serialization-mode: via-dto
   mail:
     # host/username/password come from the environment only (SPRING_MAIL_HOST and
     # friends). With no host set, Spring creates no mail sender and EmailService

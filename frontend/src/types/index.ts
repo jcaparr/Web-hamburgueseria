@@ -114,12 +114,20 @@ export interface RankingItem {
   myScore: number | null
 }
 
+/**
+ * Una página de resultados, en el formato estable de Spring Data: la lista, y aparte
+ * dónde está parada. Antes los datos de la página venían sueltos al lado de la lista, en
+ * un formato que Spring no garantizaba y que una actualización podía cambiar (#103).
+ */
 export interface PageResponse<T> {
   content: T[]
-  totalElements: number
-  totalPages: number
-  number: number
-  last: boolean
+  page: {
+    size: number
+    /** Desde cero. */
+    number: number
+    totalElements: number
+    totalPages: number
+  }
 }
 
 export interface User {

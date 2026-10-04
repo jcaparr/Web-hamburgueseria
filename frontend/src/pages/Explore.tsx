@@ -334,8 +334,8 @@ export function Explore() {
           <p role="status" className="min-h-5 text-sm text-base-content/70">
             {loading
               ? 'Buscando…'
-              : pageData && pageData.totalElements > 0
-                ? cuantas(pageData.totalElements)
+              : pageData && pageData.page.totalElements > 0
+                ? cuantas(pageData.page.totalElements)
                 : ''}
           </p>
         </div>
@@ -379,7 +379,7 @@ export function Explore() {
         )}
       </section>
 
-      {!error && pageData && pageData.totalPages > 1 && (
+      {!error && pageData && pageData.page.totalPages > 1 && (
         <nav aria-label="Páginas de resultados" className="flex items-center justify-between gap-3 py-2">
           <button
             type="button"
@@ -390,12 +390,12 @@ export function Explore() {
             Anterior
           </button>
           <span className="text-sm tabular-nums text-base-content/70">
-            Página {pageData.number + 1} de {pageData.totalPages}
+            Página {pageData.page.number + 1} de {pageData.page.totalPages}
           </span>
           <button
             type="button"
             className="btn btn-outline"
-            disabled={pageData.last}
+            disabled={pageData.page.number + 1 >= pageData.page.totalPages}
             onClick={() => cambiar({ pagina: String(page + 1) })}
           >
             Siguiente
