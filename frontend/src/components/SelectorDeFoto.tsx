@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { IconCamera } from './icons'
 
 /** Lo mismo que acepta el servidor. El WEBP queda afuera: el JDK no lo sabe leer. */
@@ -27,57 +27,68 @@ const LADO_MINIMO = 600
  * se sube al revés o de otra cosa, y recién se nota cuando ya está publicada.
  */
 export function SelectorDeFoto({
-  elegida,
   yaSubida,
   onElegir,
 }: {
-  elegida: File | null
   /** La que ya está guardada en la reseña, si hay. */
   yaSubida: string | null
   onElegir: (foto: File | null) => void
 }) {
+  // La vista previa se arma en el mismo toque en que se elige la foto, y no mirando
+  // desde un efecto qué foto quedó elegida: es un dibujo menos, y lo que marcaba el
+  // linter (#109). Arranca vacía cada vez que se abre la ventana de reseñar, porque la
+  // ventana se vuelve a armar de cero.
   const [vistaPrevia, setVistaPrevia] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // La URL del objeto ocupa memoria hasta que se la suelta, así que se revoca al
-  // cambiar de foto y al desmontar.
-  useEffect(() => {
-    if (!elegida) {
-      setVistaPrevia(null)
-      return
-    }
-    const url = URL.createObjectURL(elegida)
+  // La URL de la vista previa ocupa memoria hasta que se la suelta: se revoca al
+  // cambiar de foto y al cerrar.
+  const urlActual = useRef<string | null>(null)
+  useEffect(
+    () => () => {
+      if (urlActual.current) URL.revokeObjectURL(urlActual.current)
+    },
+    [],
+  )
+
+  function mostrar(url: string | null) {
+    if (urlActual.current) URL.revokeObjectURL(urlActual.current)
+    urlActual.current = url
     setVistaPrevia(url)
-    return () => URL.revokeObjectURL(url)
-  }, [elegida])
+  }
 
   function elegir(archivo: File | null) {
     setError(null)
     if (!archivo) {
+      mostrar(null)
       onElegir(null)
       return
     }
     if (archivo.size > MAXIMO_MB * 1024 * 1024) {
       setError(`Esa foto pesa más de ${MAXIMO_MB} MB. Probá con otra.`)
+      mostrar(null)
       onElegir(null)
       return
     }
 
-    // Las medidas se leen cargándola, así que la respuesta llega después. Mientras
-    // tanto se la toma como buena: el servidor la vuelve a chequear igual.
     const url = URL.createObjectURL(archivo)
+    mostrar(url)
+
+    // Las medidas se leen cargándola, así que la respuesta llega después. Mientras
+    // tanto se la toma como buena: el servidor la vuelve a chequear igual. Si para
+    // entonces ya se eligió otra, la respuesta es de una foto que ya no está.
     const prueba = new Image()
     prueba.onload = () => {
-      URL.revokeObjectURL(url)
+      if (urlActual.current !== url) return
       if (Math.min(prueba.naturalWidth, prueba.naturalHeight) < LADO_MINIMO) {
         setError(
           `Esa foto es muy chica (${prueba.naturalWidth}×${prueba.naturalHeight}) y se ` +
             `vería borrosa. Necesita al menos ${LADO_MINIMO} px de lado.`,
         )
+        mostrar(null)
         onElegir(null)
       }
     }
-    prueba.onerror = () => URL.revokeObjectURL(url)
     prueba.src = url
 
     onElegir(archivo)
