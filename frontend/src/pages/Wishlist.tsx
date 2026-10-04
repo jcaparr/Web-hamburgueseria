@@ -41,7 +41,7 @@ export function Wishlist() {
 
   return (
     <div className="flex flex-col gap-4 p-4 md:p-0">
-      <h1 className="font-display text-2xl font-bold">Guardadas</h1>
+      <h1 className="font-display text-2xl font-bold leading-tight md:text-3xl">Guardadas</h1>
 
       {loading && <p className="text-sm text-base-content/70">Cargando…</p>}
       {error !== null && <LoadError error={error} onRetry={() => {

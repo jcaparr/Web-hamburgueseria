@@ -276,7 +276,7 @@ export function Explore() {
           Por eso es una decisión de quien mira, y arranca mostrándolas. */}
       <header className="flex flex-col gap-4 md:pt-2">
         <div className="flex flex-col gap-1">
-          <h1 className="font-display text-3xl font-bold leading-tight md:text-4xl">
+          <h1 className="font-display text-2xl font-bold leading-tight md:text-3xl">
             ¿Dónde comemos hoy?
           </h1>
           <p className="text-sm text-base-content/70 md:text-base">
