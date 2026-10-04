@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { Campo } from '../components/Campo'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 import { useTitulo } from '../hooks/useTitulo'
 
 const RESEND_COOLDOWN_SECONDS = 60

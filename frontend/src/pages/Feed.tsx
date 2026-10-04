@@ -1,14 +1,18 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { IconSearch } from '../components/icons'
 import { LoadError } from '../components/LoadError'
 import { TarjetaDeFeed } from '../components/TarjetaDeFeed'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
+import { usePedido } from '../hooks/usePedido'
 import { useTitulo } from '../hooks/useTitulo'
 import type { ItemDeFeed, PaginaDeFeed } from '../types'
 
 type Fuente = 'TODOS' | 'SIGUIENDO'
+
+/** Una página del feed y de qué pestaña es. */
+type ListaDelFeed = PaginaDeFeed & { fuente: Fuente }
 
 const PESTANIAS: { fuente: Fuente; texto: string }[] = [
   { fuente: 'TODOS', texto: 'Para vos' },
@@ -26,52 +30,49 @@ export function Feed() {
   const { user } = useAuth()
   useTitulo('Feed')
   const [fuente, setFuente] = useState<Fuente>('TODOS')
-  const [items, setItems] = useState<ItemDeFeed[]>([])
-  const [siguiente, setSiguiente] = useState<string | null>(null)
-  const [cargando, setCargando] = useState(true)
   const [trayendoMas, setTrayendoMas] = useState(false)
-  const [error, setError] = useState<unknown>(null)
-  const [intento, setIntento] = useState(0)
+  const [errorAlTraerMas, setErrorAlTraerMas] = useState<unknown>(null)
 
   // Al cambiar de pestaña se vuelve a empezar: el cursor de una no sirve para la otra,
-  // porque apunta a una reseña que en la otra lista puede no estar.
-  useEffect(() => {
-    let vigente = true
-    setCargando(true)
-
+  // porque apunta a una reseña que en la otra lista puede no estar. La página lleva de
+  // qué pestaña es, para no sumarle a una lo que llegue tarde de la otra.
+  const pedido = usePedido(`feed:${fuente}`, () =>
     apiClient
       .get<PaginaDeFeed>('/feed', { params: { fuente } })
-      .then(({ data }) => {
-        if (!vigente) return
-        setItems(data.items)
-        setSiguiente(data.siguiente)
-        setError(null)
-      })
-      .catch((err) => {
-        if (vigente) setError(err)
-      })
-      .finally(() => {
-        if (vigente) setCargando(false)
-      })
+      .then(({ data }): ListaDelFeed => ({ fuente, ...data })),
+  )
+  const items: ItemDeFeed[] = pedido.datos?.items ?? []
+  const siguiente = pedido.datos?.siguiente ?? null
+  const cargando = pedido.cargando
+  const error = pedido.error ?? errorAlTraerMas
 
-    return () => {
-      vigente = false
-    }
-  }, [fuente, intento])
+  function cambiarDePestania(nueva: Fuente) {
+    setFuente(nueva)
+    setErrorAlTraerMas(null)
+  }
 
-  const traerMas = useCallback(() => {
+  function reintentar() {
+    setErrorAlTraerMas(null)
+    pedido.reintentar()
+  }
+
+  function traerMas() {
     if (!siguiente || trayendoMas) return
 
+    const deQueFuente = fuente
     setTrayendoMas(true)
     apiClient
       .get<PaginaDeFeed>('/feed', { params: { fuente, cursor: siguiente } })
       .then(({ data }) => {
-        setItems((previos) => [...previos, ...data.items])
-        setSiguiente(data.siguiente)
+        pedido.actualizar((previa) =>
+          previa.fuente === deQueFuente
+            ? { fuente: deQueFuente, items: [...previa.items, ...data.items], siguiente: data.siguiente }
+            : previa,
+        )
       })
-      .catch(setError)
+      .catch(setErrorAlTraerMas)
       .finally(() => setTrayendoMas(false))
-  }, [fuente, siguiente, trayendoMas])
+  }
 
   return (
     // Angosto en pantalla grande, y no todo el ancho disponible: la foto se muestra en
@@ -97,7 +98,7 @@ export function Feed() {
               role="tab"
               type="button"
               aria-selected={fuente === p.fuente}
-              onClick={() => setFuente(p.fuente)}
+              onClick={() => cambiarDePestania(p.fuente)}
               className={`tab flex-1 ${fuente === p.fuente ? 'tab-active' : 'text-base-content/70'}`}
             >
               {p.texto}
@@ -107,7 +108,7 @@ export function Feed() {
       </div>
 
       {error ? (
-        <LoadError error={error} onRetry={() => setIntento((n) => n + 1)} />
+        <LoadError error={error} onRetry={reintentar} />
       ) : (
         <>
           <div className="flex flex-col gap-3">

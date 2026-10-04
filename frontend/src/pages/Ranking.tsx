@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { JointPhoto } from '../components/JointPhoto'
 import { LoadError } from '../components/LoadError'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { AvisoVacio } from '../components/Seccion'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
+import { usePedido } from '../hooks/usePedido'
 import { useTitulo } from '../hooks/useTitulo'
 import type { PageResponse, RankingItem } from '../types'
 import { shortAddress } from '../utils/address'
@@ -47,10 +47,6 @@ export function Ranking() {
   const [parametros, setParametros] = useSearchParams()
   const pedida = parametros.get('vista')
   const vista: Vista = esVista(pedida) ? pedida : 'nota'
-  const [items, setItems] = useState<RankingItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<unknown>(null)
-  const [attempt, setAttempt] = useState(0)
 
   function elegir(nueva: Vista) {
     // replace: cambiar de pestaña no es ir a otra página, y "atrás" tiene que salir
@@ -58,44 +54,25 @@ export function Ranking() {
     setParametros(nueva === 'nota' ? {} : { vista: nueva }, { replace: true })
   }
 
-  useEffect(() => {
-    // Sin sesión "Mi ranking" no tiene qué mostrar. Antes se pedía igual: volvía 401
-    // y en pantalla quedaba la lista del ranking general debajo del aviso de iniciar
-    // sesión, como si fuera la tuya.
-    if (vista === 'mio' && !user) {
-      setItems([])
-      setError(null)
-      setLoading(false)
-      return
-    }
-
-    // Evita que una respuesta lenta de la pestaña anterior pise a la actual.
-    let cancelled = false
-    setLoading(true)
-    const request =
-      vista === 'mio'
+  // Sin sesión "Mi ranking" no tiene qué pedir. Antes se pedía igual: volvía 401 y en
+  // pantalla quedaba la lista del ranking general debajo del aviso de iniciar sesión,
+  // como si fuera la tuya.
+  const sinSesion = vista === 'mio' && !user
+  const pedido = usePedido(
+    sinSesion ? null : vista === 'mio' ? `mio:${user?.userId}` : `general:${vista}`,
+    () =>
+      (vista === 'mio'
         ? apiClient.get<PageResponse<RankingItem>>('/ranking/mine')
         : apiClient.get<PageResponse<RankingItem>>('/ranking/general', {
             params: { order: vista === 'resenias' ? 'popularity' : 'score' },
           })
-
-    request
-      .then(({ data }) => {
-        if (cancelled) return
-        setItems(data.content)
-        setError(null)
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err)
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [vista, user, attempt])
+      ).then(({ data }) => data.content),
+  )
+  // Al cambiar de pestaña queda la lista anterior hasta que llega la nueva, que es menos
+  // salto que vaciarla.
+  const items = pedido.datos ?? pedido.datosAnteriores ?? []
+  const loading = pedido.cargando
+  const error = pedido.error
 
   const puestos: Puesto[] = items.map((item, index) => ({
     item,
@@ -110,8 +87,6 @@ export function Ranking() {
   }))
   const [primero, ...siguientes] = puestos
   // La primera vez, o al cambiar de pestaña con la lista vacía: la forma de la lista.
-  // Al cambiar de pestaña con una lista ya puesta, queda la anterior hasta que llega
-  // la nueva, que es menos salto que vaciarla.
   const cargandoDeCero = loading && items.length === 0
   const actual = VISTAS.find((v) => v.id === vista)!
 
@@ -147,12 +122,12 @@ export function Ranking() {
         aria-busy={loading}
         className="flex flex-col gap-4"
       >
-        {vista === 'mio' && !user ? (
+        {sinSesion ? (
           <AvisoVacio accion={{ texto: 'Iniciar sesión', a: '/login' }}>
             Tu ranking se arma solo con las notas que vas poniendo. Iniciá sesión para verlo.
           </AvisoVacio>
         ) : error ? (
-          <LoadError error={error} onRetry={() => setAttempt((n) => n + 1)} />
+          <LoadError error={error} onRetry={pedido.reintentar} />
         ) : cargandoDeCero ? (
           <ListaCargando />
         ) : !primero ? (

@@ -38,8 +38,11 @@ export function ModalDeResenia({
   onSesionVencida: () => void
 }) {
   const dialogo = useRef<HTMLDialogElement>(null)
-  const [score, setScore] = useState(0)
-  const [comment, setComment] = useState('')
+  // Arranca con lo que ya tenía la reseña, si había. Quien la abre le cambia la key a
+  // la ventana cada vez que la abre, así que siempre se arma de cero: antes se volvía
+  // a llenar desde un efecto al abrirse, un dibujo de más (#109).
+  const [score, setScore] = useState(miResenia?.score ?? 0)
+  const [comment, setComment] = useState(miResenia?.comment ?? '')
   const [foto, setFoto] = useState<File | null>(null)
   const [guardando, setGuardando] = useState(false)
   // Con el campo al que se refiere, si es de uno: el aviso va al lado de ese campo y no
@@ -48,16 +51,6 @@ export function ModalDeResenia({
   const idDelTitulo = useId()
   const zonaDelPuntaje = useRef<HTMLDivElement>(null)
   const zonaDeLaFoto = useRef<HTMLDivElement>(null)
-
-  // Al abrir se arranca de cero, o de lo que ya había escrito si es una edición. Va acá
-  // y no al cerrar para que un borrador a medias no quede esperando la próxima vez.
-  useEffect(() => {
-    if (!abierto) return
-    setScore(miResenia?.score ?? 0)
-    setComment(miResenia?.comment ?? '')
-    setFoto(null)
-    setError(null)
-  }, [abierto, miResenia?.id])
 
   // El estado de la ventana lo maneja el navegador, así que hay que empujarlo: showModal
   // es lo que da el foco atrapado y el fondo inerte, y no hay forma de pedirlo con JSX.
@@ -194,7 +187,6 @@ export function ModalDeResenia({
           <div ref={zonaDeLaFoto} className="flex flex-col gap-1.5">
             <span className="text-sm font-semibold">La foto</span>
             <SelectorDeFoto
-              elegida={foto}
               yaSubida={miResenia?.photoUrl ?? null}
               onElegir={elegirFoto}
             />

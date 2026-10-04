@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { BotonBloquear } from '../components/BotonBloquear'
@@ -8,6 +7,7 @@ import { JointPhoto } from '../components/JointPhoto'
 import { LoadError } from '../components/LoadError'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { AvisoVacio, Seccion } from '../components/Seccion'
+import { usePedido } from '../hooks/usePedido'
 import { useTitulo } from '../hooks/useTitulo'
 import { nota } from '../utils/numeros'
 import { relativeDate } from '../utils/relativeDate'
@@ -23,44 +23,34 @@ import type { PerfilPublico as Perfil } from '../types'
 export function PerfilPublico() {
   const { username = '' } = useParams()
   const navigate = useNavigate()
-  const [perfil, setPerfil] = useState<Perfil | null>(null)
-  const [error, setError] = useState<unknown>(null)
-  const [cargando, setCargando] = useState(true)
   useTitulo(`@${username}`)
 
-  const cargar = useCallback(() => {
-    setCargando(true)
-    apiClient
-      .get<Perfil>(`/usuarios/${username}`)
-      .then(({ data }) => {
-        setPerfil(data)
-        setError(null)
-      })
-      .catch(setError)
-      .finally(() => setCargando(false))
-  }, [username])
-
-  useEffect(cargar, [cargar])
+  // Solo lo de esta persona: al pasar de un perfil a otro no se ve el anterior mientras
+  // llega el nuevo.
+  const pedido = usePedido(`usuario:${username}`, () =>
+    apiClient.get<Perfil>(`/usuarios/${username}`).then(({ data }) => data),
+  )
+  const perfil = pedido.datos
 
   // El servidor manda los contadores; al seguir o dejar de seguir se corrigen acá, para
   // que el número no quede contradiciendo al botón que se acaba de tocar.
   function cambioDeSeguimiento(loSigo: boolean) {
-    setPerfil((previo) =>
-      previo === null
-        ? previo
-        : { ...previo, loSigo, seguidores: previo.seguidores + (loSigo ? 1 : -1) },
-    )
+    pedido.actualizar((previo) => ({
+      ...previo,
+      loSigo,
+      seguidores: previo.seguidores + (loSigo ? 1 : -1),
+    }))
   }
 
-  if (error) {
+  if (pedido.error) {
     return (
       <div className="p-4 md:mx-auto md:max-w-2xl md:p-0 md:pt-6">
-        <LoadError error={error} onRetry={cargar} />
+        <LoadError error={pedido.error} onRetry={pedido.reintentar} />
       </div>
     )
   }
 
-  if (cargando || !perfil) {
+  if (!perfil) {
     return (
       <p role="status" className="p-4 text-sm text-base-content/70">
         Cargando…

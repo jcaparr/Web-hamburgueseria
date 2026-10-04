@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Campo, CampoDeContrasenia } from '../components/Campo'
 import { GoogleSignInButton } from '../components/GoogleSignInButton'
 import { PasoNombreDeGoogle } from '../components/PasoNombreDeGoogle'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 import { useTitulo } from '../hooks/useTitulo'
 import { useGoogleSignIn } from '../hooks/useGoogleSignIn'
 

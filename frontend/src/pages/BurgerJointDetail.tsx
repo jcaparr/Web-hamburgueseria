@@ -10,7 +10,7 @@ import { PortadaDelLocal } from '../components/PortadaDelLocal'
 import { ResumenDeCalificaciones } from '../components/ResumenDeCalificaciones'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { TarjetaDeResenia } from '../components/TarjetaDeResenia'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 import { useTitulo } from '../hooks/useTitulo'
 import type { BurgerJoint, Horario, PageResponse, Rating, ResumenDeResenias } from '../types'
 import { isNotFound, isSessionExpired } from '../utils/errors'
@@ -19,14 +19,14 @@ import { comoLlegarUrl, mapsUrl } from '../utils/maps'
 
 /**
  * Se llega con esto puesto desde "Mis reseñas", para editar sin tener que buscar el
- * formulario en la página. Se limpia en cuanto se usa: si quedara en la URL, volver
- * atrás abriría la ventana de nuevo.
+ * formulario en la página. La ventana se abre mientras está, y al cerrarla se saca: si
+ * quedara en la URL, volver atrás la abriría de nuevo.
  */
 const ABRIR_OPINION = 'opinar'
 
 export function BurgerJointDetail() {
   const { id } = useParams()
-  const { user, loading: cargandoSesion } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [parametros, setParametros] = useSearchParams()
   const [burgerJoint, setBurgerJoint] = useState<BurgerJoint | null>(null)
@@ -38,6 +38,9 @@ export function BurgerJointDetail() {
   const [resumen, setResumen] = useState<ResumenDeResenias | null>(null)
   const [horario, setHorario] = useState<Horario | null>(null)
   const [opinando, setOpinando] = useState(false)
+  // Cuántas veces se abrió la ventana de reseñar: es su key, para que cada vez se arme
+  // de cero con lo que ya tenía la reseña.
+  const [aperturas, setAperturas] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<unknown>(null)
 
@@ -81,18 +84,11 @@ export function BurgerJointDetail() {
       .catch(() => setHorario(null))
   }, [id])
 
-  // Se espera a saber si hay sesión antes de tocar el parámetro. Al entrar todavía no se
-  // sabe quién sos, y consumirlo en ese momento era gastarlo sin abrir nada: cuando la
-  // sesión llegaba, el parámetro ya no estaba.
-  useEffect(() => {
-    if (cargandoSesion || !parametros.has(ABRIR_OPINION)) return
-    // Sin sesión no se abre: primero hay que entrar, y para eso está el botón.
-    if (user) setOpinando(true)
-
-    const limpios = new URLSearchParams(parametros)
-    limpios.delete(ABRIR_OPINION)
-    setParametros(limpios, { replace: true })
-  }, [cargandoSesion, parametros, user, setParametros])
+  // Abierta por el enlace mientras el parámetro esté y haya sesión. Se deduce en vez de
+  // prenderla desde un efecto: un dibujo menos (#109), y no hace falta esperar a saber
+  // quién sos para no gastar el parámetro antes de tiempo. Sin sesión no se abre:
+  // primero hay que entrar, y para eso está el botón.
+  const abiertaPorEnlace = parametros.has(ABRIR_OPINION) && user !== null
 
   async function toggleWishlist() {
     if (!user) return navigate('/login')
@@ -116,7 +112,17 @@ export function BurgerJointDetail() {
 
   function abrirOpinion() {
     if (!user) return navigate('/login')
+    setAperturas((n) => n + 1)
     setOpinando(true)
+  }
+
+  function cerrarOpinion() {
+    setOpinando(false)
+    if (parametros.has(ABRIR_OPINION)) {
+      const limpios = new URLSearchParams(parametros)
+      limpios.delete(ABRIR_OPINION)
+      setParametros(limpios, { replace: true })
+    }
   }
 
   if (!burgerJoint) {
@@ -273,12 +279,15 @@ export function BurgerJointDetail() {
 
       <MasEnElBarrio barrio={burgerJoint.area} sinEste={burgerJoint.id} />
 
+      {/* La key cambia al abrirla y cuando cambia la reseña propia —que llega con la
+          sesión, o al publicar la primera—: así siempre arranca con lo que corresponde. */}
       <ModalDeResenia
-        abierto={opinando}
+        key={`${aperturas}-${myRating?.id ?? 'nueva'}`}
+        abierto={opinando || abiertaPorEnlace}
         localId={burgerJoint.id}
         nombreDelLocal={burgerJoint.name}
         miResenia={myRating}
-        onCerrar={() => setOpinando(false)}
+        onCerrar={cerrarOpinion}
         onGuardada={load}
         onSesionVencida={() => navigate('/login')}
       />

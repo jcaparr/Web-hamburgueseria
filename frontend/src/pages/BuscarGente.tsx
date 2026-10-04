@@ -5,6 +5,7 @@ import { AvatarDeUsuario } from '../components/AvatarDeUsuario'
 import { BotonSeguir } from '../components/BotonSeguir'
 import { IconSearch } from '../components/icons'
 import { LoadError } from '../components/LoadError'
+import { usePedido } from '../hooks/usePedido'
 import { useTitulo } from '../hooks/useTitulo'
 import type { UsuarioBuscado } from '../types'
 
@@ -17,57 +18,32 @@ const MINIMO = 2
 export function BuscarGente() {
   const [texto, setTexto] = useState('')
   useTitulo('Buscar gente')
-  const [resultados, setResultados] = useState<UsuarioBuscado[]>([])
-  const [buscando, setBuscando] = useState(false)
-  const [error, setError] = useState<unknown>(null)
-
-  // Para reintentar sin tocar lo escrito. Cambiar el texto no sirve: al normalizarlo
-  // volvería a ser el mismo, y el efecto no se enteraría de que hay que buscar de nuevo.
-  const [intento, setIntento] = useState(0)
 
   // El campo muestra siempre lo que de verdad se está buscando. Dejarle escribir un
   // acento o un espacio y después ignorarlo por lo bajo es peor: vería su nombre
   // completo escrito, cero resultados, y ninguna pista de por qué.
   const limpio = texto
 
+  // Una consulta por tecla haría que escribir "juanca" dispare seis búsquedas: se busca
+  // lo escrito recién cuando se deja de tipear un momento. Si ya había salido una
+  // búsqueda, su respuesta se ignora: dos pedidos en vuelo pueden volver en cualquier
+  // orden, y el que llega último no es necesariamente el de lo que está escrito ahora.
+  const [buscado, setBuscado] = useState('')
   useEffect(() => {
-    if (limpio.length < MINIMO) {
-      setResultados([])
-      setBuscando(false)
-      return
-    }
+    const reloj = setTimeout(() => setBuscado(limpio), ESPERA_MS)
+    return () => clearTimeout(reloj)
+  }, [limpio])
 
-    // Una consulta por tecla haría que escribir "juanca" dispare seis búsquedas. Se
-    // espera a que pare de escribir; y si ya había salido una, su respuesta se ignora,
-    // porque dos pedidos en vuelo pueden volver en cualquier orden y el que llega
-    // último no es necesariamente el de lo que está escrito ahora.
-    let vigente = true
-    setBuscando(true)
-
-    const reloj = setTimeout(() => {
-      apiClient
-        .get<UsuarioBuscado[]>('/usuarios', { params: { q: limpio } })
-        .then(({ data }) => {
-          if (!vigente) return
-          setResultados(data)
-          setError(null)
-        })
-        .catch((err) => {
-          if (vigente) setError(err)
-        })
-        .finally(() => {
-          if (vigente) setBuscando(false)
-        })
-    }, ESPERA_MS)
-
-    return () => {
-      vigente = false
-      clearTimeout(reloj)
-    }
-  }, [limpio, intento])
+  const pedido = usePedido(buscado.length >= MINIMO ? `usuarios:${buscado}` : null, () =>
+    apiClient.get<UsuarioBuscado[]>('/usuarios', { params: { q: buscado } }).then(({ data }) => data),
+  )
+  const alcanza = limpio.length >= MINIMO
+  const resultados = alcanza ? (pedido.datos ?? []) : []
+  const buscando = alcanza && (limpio !== buscado || pedido.cargando)
+  const error = alcanza ? pedido.error : undefined
 
   function cambioDeSeguimiento(username: string, loSigo: boolean) {
-    setResultados((previos) =>
+    pedido.actualizar((previos) =>
       previos.map((u) => (u.username === username ? { ...u, loSigo } : u)),
     )
   }
@@ -95,7 +71,7 @@ export function BuscarGente() {
       </label>
 
       {error ? (
-        <LoadError error={error} onRetry={() => setIntento((n) => n + 1)} />
+        <LoadError error={error} onRetry={pedido.reintentar} />
       ) : (
         <ul className="flex flex-col gap-2">
           {resultados.map((persona) => (
