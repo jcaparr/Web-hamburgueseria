@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { IconSearch } from '../components/icons'
 import { Interruptor } from '../components/Interruptor'
@@ -223,16 +223,22 @@ export function Explore() {
   // El navegador solo no alcanza: los locales llegan después de pedirlos, así que al
   // volver la página mide cero y no hay a dónde bajar. Se guarda al salir y se
   // restablece recién cuando la lista está dibujada.
+  //
+  // Solo al volver con "atrás". Se restablecía también al llegar desde la barra de
+  // navegación, y Explorar se abría por la mitad, donde había quedado la última vez que
+  // se tocó una tarjeta: tocar "Explorar" es empezar, y empieza arriba.
+  const comoLlego = useNavigationType()
   useEffect(() => {
     if (loading || items.length === 0 || yaSeVolvio.current) return
     yaSeVolvio.current = true
+    if (comoLlego !== 'POP') return
     try {
       const guardado = window.sessionStorage.getItem(CLAVE_SCROLL)
       if (guardado) window.scrollTo({ top: Number(guardado) })
     } catch {
       // Sin almacenamiento se vuelve arriba, que es lo que pasaba antes.
     }
-  }, [loading, items.length])
+  }, [loading, items.length, comoLlego])
 
   function marcarGuardada(id: number, guardada: boolean) {
     setPageData((previa) =>
