@@ -9,8 +9,10 @@ import { SavedTourCard } from '../components/SavedTourCard'
 import { AvisoVacio, Seccion } from '../components/Seccion'
 import { FilaDeTarjetas, LugarEnLaFila, TarjetaChicaDeLocal } from '../components/TarjetaChicaDeLocal'
 import { useAuth } from '../context/AuthContext'
+import { useTitulo } from '../hooks/useTitulo'
 import type { BurgerJoint, ReseniaDePerfil, ProfileStats, SavedTour } from '../types'
 import { isSessionExpired } from '../utils/errors'
+import { nota } from '../utils/numeros'
 import { relativeDate } from '../utils/relativeDate'
 
 /** Cuántas reseñas y guardadas se asoman en el perfil; el resto, en "Ver todas". */
@@ -18,6 +20,7 @@ const CUANTAS_EN_LA_FILA = 6
 
 export function Profile() {
   const { user, logout } = useAuth()
+  useTitulo('Tu perfil')
   const navigate = useNavigate()
   const [stats, setStats] = useState<ProfileStats | null>(null)
   const [ratings, setRatings] = useState<ReseniaDePerfil[]>([])
@@ -95,7 +98,7 @@ export function Profile() {
             {/* El perfil que ven los demás no muestra tus guardadas ni tus recorridos:
                 acá se puede ver qué queda a la vista. */}
             <Link to={`/u/${user.username}`} className="btn btn-outline whitespace-nowrap md:px-6">
-              Cómo te ven
+              Perfil público
             </Link>
           </>
         }
@@ -120,7 +123,7 @@ export function Profile() {
             a: '/reviews',
           },
           {
-            valor: stats?.averageScore ? stats.averageScore.toFixed(1) : '—',
+            valor: stats?.averageScore ? nota(stats.averageScore) : '—',
             etiqueta: 'Promedio',
           },
           {
@@ -190,7 +193,7 @@ export function Profile() {
         textoDeVerTodas="Armar otro"
       >
         {tours.length > 0 ? (
-          <ul className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:scroll-px-0 md:px-0">
+          <ul className="relative -mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:scroll-px-0 md:px-0">
             {tours.map((tour) => (
               <li key={tour.id} className="w-72 flex-none snap-start">
                 <SavedTourCard tour={tour} onBorrar={borrarTour} borrando={borrando === tour.id} />

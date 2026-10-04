@@ -5,6 +5,7 @@ import { IconSearch } from '../components/icons'
 import { LoadError } from '../components/LoadError'
 import { TarjetaDeFeed } from '../components/TarjetaDeFeed'
 import { useAuth } from '../context/AuthContext'
+import { useTitulo } from '../hooks/useTitulo'
 import type { ItemDeFeed, PaginaDeFeed } from '../types'
 
 type Fuente = 'TODOS' | 'SIGUIENDO'
@@ -23,6 +24,7 @@ const PESTANIAS: { fuente: Fuente; texto: string }[] = [
  */
 export function Feed() {
   const { user } = useAuth()
+  useTitulo('Feed')
   const [fuente, setFuente] = useState<Fuente>('TODOS')
   const [items, setItems] = useState<ItemDeFeed[]>([])
   const [siguiente, setSiguiente] = useState<string | null>(null)
@@ -77,22 +79,26 @@ export function Feed() {
     // fotos de 900 para verse nítida. A este ancho, el mínimo que se exige al subir
     // alcanza y sobra.
     <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-[560px] md:p-0 md:pt-6">
+      {/* Sin título a la vista, porque la pestaña de abajo ya dice dónde se está; pero
+          el lector de pantalla necesita uno para saber en qué página cayó. */}
+      <h1 className="sr-only">Feed</h1>
       <div className="flex items-center gap-3">
         <Link
           to="/buscar"
           aria-label="Buscar gente"
-          className="btn btn-ghost btn-sm btn-square flex-none"
+          className="btn btn-ghost btn-square flex-none"
         >
           <IconSearch size={18} />
         </Link>
-        <div role="tablist" className="tabs tabs-box flex-1">
+        <div role="tablist" aria-label="Qué reseñas ver" className="tabs tabs-box flex-1">
           {PESTANIAS.map((p) => (
             <button
               key={p.fuente}
               role="tab"
               type="button"
+              aria-selected={fuente === p.fuente}
               onClick={() => setFuente(p.fuente)}
-              className={`tab flex-1 ${fuente === p.fuente ? 'tab-active' : ''}`}
+              className={`tab flex-1 ${fuente === p.fuente ? 'tab-active' : 'text-base-content/70'}`}
             >
               {p.texto}
             </button>
@@ -114,7 +120,7 @@ export function Feed() {
             ))}
           </div>
 
-          {cargando && <p className="text-sm text-base-content/70">Cargando…</p>}
+          {cargando && <p role="status" className="text-sm text-base-content/70">Cargando…</p>}
 
           {!cargando && items.length === 0 && (
             <div className="flex flex-col items-start gap-3 rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15">
@@ -138,7 +144,7 @@ export function Feed() {
               disabled={trayendoMas}
               className="btn btn-outline btn-block"
             >
-              {trayendoMas ? 'Trayendo…' : 'Ver más'}
+              {trayendoMas ? 'Cargando más…' : 'Ver más'}
             </button>
           )}
         </>

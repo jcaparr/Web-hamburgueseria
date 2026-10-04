@@ -5,6 +5,7 @@ import { IconHeart, IconPin } from '../components/icons'
 import { LoadError } from '../components/LoadError'
 import { JointPhoto } from '../components/JointPhoto'
 import { useAuth } from '../context/AuthContext'
+import { useTitulo } from '../hooks/useTitulo'
 import type { BurgerJoint } from '../types'
 import { isSessionExpired } from '../utils/errors'
 import { shortAddress } from '../utils/address'
@@ -12,6 +13,7 @@ import { mapsUrl } from '../utils/maps'
 
 export function Wishlist() {
   const { user } = useAuth()
+  useTitulo('Guardadas')
   const navigate = useNavigate()
   const [items, setItems] = useState<BurgerJoint[]>([])
   const [loading, setLoading] = useState(true)
@@ -43,7 +45,7 @@ export function Wishlist() {
     <div className="flex flex-col gap-4 p-4 md:p-0">
       <h1 className="font-display text-2xl font-bold leading-tight md:text-3xl">Guardadas</h1>
 
-      {loading && <p className="text-sm text-base-content/70">Cargando…</p>}
+      {loading && <p role="status" className="text-sm text-base-content/70">Cargando…</p>}
       {error !== null && <LoadError error={error} onRetry={() => {
           setError(null)
           setLoading(true)
@@ -66,6 +68,7 @@ export function Wishlist() {
                 </div>
               </Link>
               <button
+                type="button"
                 onClick={() => remove(b.id)}
                 className="btn btn-ghost btn-circle text-primary"
                 aria-label={`Quitar ${b.name} de guardadas`}
@@ -82,6 +85,7 @@ export function Wishlist() {
             >
               <IconPin />
               Ver en Maps
+              <span className="sr-only"> (se abre en otra pestaña)</span>
             </a>
           </li>
         ))}

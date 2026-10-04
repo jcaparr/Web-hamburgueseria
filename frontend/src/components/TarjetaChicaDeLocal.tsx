@@ -30,7 +30,7 @@ export function TarjetaChicaDeLocal({
   return (
     <Link
       to={`/burger-joints/${id}`}
-      className="flex h-full flex-col overflow-hidden rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15 transition-shadow hover:shadow-md"
+      className="flex h-full flex-col overflow-hidden rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15 transition-shadow hover:shadow-md focus-visible:-outline-offset-2"
     >
       <JointPhoto src={foto} name={nombre} className="aspect-[4/3] w-full object-cover" />
       <div className="flex flex-1 flex-col gap-1.5 p-2.5">
@@ -56,8 +56,11 @@ export function TarjetaChicaDeLocal({
  * vea cortada por el borde y no por el margen.
  */
 export function FilaDeTarjetas({ children }: { children: ReactNode }) {
+  // relative para que la fila recorte también lo que va posicionado adentro, como los
+  // textos solo para lectores de pantalla: sin esto, los de las tarjetas que no entran
+  // ensanchaban la página entera y el teléfono la mostraba achicada.
   return (
-    <ul className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:scroll-px-0 md:px-0">
+    <ul className="relative -mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:scroll-px-0 md:px-0">
       {children}
     </ul>
   )

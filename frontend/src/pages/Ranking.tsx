@@ -6,8 +6,10 @@ import { LoadError } from '../components/LoadError'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { AvisoVacio } from '../components/Seccion'
 import { useAuth } from '../context/AuthContext'
+import { useTitulo } from '../hooks/useTitulo'
 import type { PageResponse, RankingItem } from '../types'
 import { shortAddress } from '../utils/address'
+import { nota } from '../utils/numeros'
 
 type Vista = 'nota' | 'resenias' | 'mio'
 
@@ -39,6 +41,7 @@ interface Puesto {
 
 export function Ranking() {
   const { user } = useAuth()
+  useTitulo('Ranking')
   // La lista que se mira va en la dirección: al volver de una ficha se vuelve a la
   // misma, y se puede pasar el enlace.
   const [parametros, setParametros] = useSearchParams()
@@ -100,7 +103,7 @@ export function Ranking() {
     nota: vista === 'mio' ? (item.myScore ?? item.averageScore) : item.averageScore,
     detalle:
       vista === 'mio'
-        ? `Promedio ${item.averageScore.toFixed(1)}`
+        ? `Promedio ${nota(item.averageScore)}`
         : item.ratingsCount === 1
           ? '1 reseña'
           : `${item.ratingsCount} reseñas`,
@@ -232,9 +235,12 @@ function PrimerPuesto({ puesto }: { puesto: Puesto }) {
 }
 
 /**
- * Del segundo puesto para abajo: número, foto chica, nombre y nota, sin caja ni sello.
- * Diecisiete sellos amarillos en columna eran lo que más ruido hacía; la nota se lee
- * igual con la hamburguesita al lado.
+ * Del segundo puesto para abajo: número, foto chica, nombre y nota, sin caja.
+ *
+ * La nota va en el mismo sello amarillo que la del primero. Probé una versión sin el
+ * fondo para que la lista hiciera menos ruido, pero el sello es como se reconoce una
+ * nota en toda la app, y un primer puesto con sello y el resto sin se leía como dos
+ * cosas distintas.
  */
 function FilaDelRanking({ puesto }: { puesto: Puesto }) {
   const { item, posicion, nota, detalle } = puesto
@@ -252,7 +258,7 @@ function FilaDelRanking({ puesto }: { puesto: Puesto }) {
         <span className="truncate text-sm text-base-content/70">{lugarDe(item)}</span>
       </div>
       <div className="flex flex-none flex-col items-end gap-0.5">
-        <ScoreBadge score={nota} size="sm" plain />
+        <ScoreBadge score={nota} size="sm" />
         <span className="text-xs text-base-content/70">{detalle}</span>
       </div>
     </Link>

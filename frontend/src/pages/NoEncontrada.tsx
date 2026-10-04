@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTitulo } from '../hooks/useTitulo'
 
 /**
  * Lo que se ve en una dirección que no existe.
@@ -7,6 +8,7 @@ import { Link } from 'react-router-dom'
  * dejaba la página en blanco entre las dos barras, sin decir qué pasó ni adónde ir.
  */
 export function NoEncontrada() {
+  useTitulo('Página no encontrada')
   return (
     <div className="flex flex-col items-start gap-3 p-4 md:p-0">
       <h1 className="font-display text-2xl font-bold leading-tight md:text-3xl">Esta página no existe</h1>

@@ -4,10 +4,12 @@ import { Campo, CampoDeContrasenia } from '../components/Campo'
 import { GoogleSignInButton } from '../components/GoogleSignInButton'
 import { PasoNombreDeGoogle } from '../components/PasoNombreDeGoogle'
 import { useAuth } from '../context/AuthContext'
+import { useTitulo } from '../hooks/useTitulo'
 import { useGoogleSignIn } from '../hooks/useGoogleSignIn'
 
 export function Login() {
   const { login } = useAuth()
+  useTitulo('Iniciar sesión')
   const google = useGoogleSignIn()
   const { onCredential, googleError, setGoogleError } = google
   const navigate = useNavigate()
@@ -43,7 +45,7 @@ export function Login() {
         return
       }
 
-      setError('Email o contraseña incorrectos')
+      setError('El email o la contraseña no son correctos. Revisalos y probá de nuevo.')
     } finally {
       setSubmitting(false)
     }
@@ -92,7 +94,7 @@ export function Login() {
             {error && <p role="alert" className="text-sm text-error">{error}</p>}
             {notice && <p role="status" className="text-sm text-success">{notice}</p>}
             <button type="submit" disabled={submitting} className="btn btn-primary">
-              {submitting ? 'Ingresando…' : 'Ingresar'}
+              {submitting ? 'Iniciando sesión…' : 'Iniciar sesión'}
             </button>
           </form>
 
@@ -105,7 +107,7 @@ export function Login() {
             </Link>
           </p>
           <p className="text-sm text-base-content/70">
-            ¿No tenés cuenta? <Link to="/register" className="link text-primary">Registrate</Link>
+            ¿No tenés cuenta? <Link to="/register" className="link text-primary">Creá una</Link>
           </p>
         </div>
       </div>

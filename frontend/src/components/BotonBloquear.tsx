@@ -30,7 +30,7 @@ export function BotonBloquear({
       .post(`/usuarios/${username}/bloquear`)
       .then(onBloqueado)
       .catch(() => {
-        setError('No pudimos bloquearlo. Probá de nuevo.')
+        setError(`No pudimos bloquear a @${username}. Probá de nuevo.`)
         setEnViaje(false)
       })
   }
@@ -42,7 +42,7 @@ export function BotonBloquear({
         onClick={() => setConfirmando(true)}
         className="btn btn-ghost btn-sm text-error"
       >
-        Bloquear
+        Bloquear a @{username}
       </button>
     )
   }
@@ -53,7 +53,11 @@ export function BotonBloquear({
         Si bloqueás a @{username}, dejan de seguirse y ninguno de los dos va a ver al
         otro en el feed ni en el buscador. Podés deshacerlo desde tu perfil.
       </p>
-      {error && <p className="text-xs text-error">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-error">
+          {error}
+        </p>
+      )}
       <div className="flex gap-2">
         <button
           type="button"

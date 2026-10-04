@@ -6,12 +6,14 @@ import { LoadError } from '../components/LoadError'
 import { JointPhoto } from '../components/JointPhoto'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { useAuth } from '../context/AuthContext'
+import { useTitulo } from '../hooks/useTitulo'
 import type { ReseniaDePerfil } from '../types'
 import { isSessionExpired } from '../utils/errors'
 import { relativeDate } from '../utils/relativeDate'
 
 export function Reviews() {
   const { user } = useAuth()
+  useTitulo('Mis reseñas')
   const navigate = useNavigate()
   const [ratings, setRatings] = useState<ReseniaDePerfil[]>([])
   const [loading, setLoading] = useState(true)
@@ -34,7 +36,7 @@ export function Reviews() {
     <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-2xl md:p-0">
       <h1 className="font-display text-2xl font-bold leading-tight md:text-3xl">Mis reseñas</h1>
 
-      {loading && <p className="text-sm text-base-content/70">Cargando…</p>}
+      {loading && <p role="status" className="text-sm text-base-content/70">Cargando…</p>}
       {error !== null && <LoadError error={error} onRetry={() => {
           setError(null)
           setLoading(true)
@@ -61,10 +63,11 @@ export function Reviews() {
                 era: entrar al local y bajar a buscar el formulario. */}
             <Link
               to={`/burger-joints/${r.burgerJointId}?opinar=1`}
-              className="btn btn-ghost btn-xs mt-2 gap-1.5 text-base-content/70"
+              className="btn btn-ghost btn-sm mt-2 gap-1.5 text-base-content/70"
             >
               <IconPencil size={14} />
-              Editar
+              Editar reseña
+              <span className="sr-only"> de {r.burgerJointName}</span>
             </Link>
           </li>
         ))}

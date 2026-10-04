@@ -44,6 +44,7 @@ export function BotonSeguir({
       className={`btn ${chico ? 'btn-sm' : ''} ${loSigo ? 'btn-outline' : 'btn-primary'}`}
     >
       {loSigo ? 'Siguiendo' : 'Seguir'}
+      <span className="sr-only"> a @{username}</span>
     </button>
   )
 }

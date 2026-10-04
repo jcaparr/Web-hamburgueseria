@@ -59,6 +59,7 @@ export function PortadaDelLocal({
   return (
     <div className="relative -mx-4 -mt-4 md:mx-0 md:mt-0">
       <JointPhoto
+        prioritaria
         src={local.photoUrl}
         name={local.name}
         className="aspect-[4/3] w-full object-cover md:aspect-[21/9] md:rounded-t-box"

@@ -32,7 +32,7 @@ export function TopBar() {
       className={`sticky top-0 z-20 transition-colors duration-300 ${hidden ? 'bg-base-100/85 backdrop-blur-md' : 'bg-base-100'}`}
     >
       <header className="flex items-center justify-between gap-2 px-4 py-2 md:px-6">
-        <NavLink to="/" end className="flex min-w-0 items-center gap-1.5 sm:gap-2.5">
+        <NavLink to="/" end className="flex min-h-11 min-w-0 items-center gap-1.5 rounded-field sm:gap-2.5">
           <span
             aria-hidden="true"
             className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-neutral font-display text-base font-extrabold text-secondary"
@@ -49,7 +49,7 @@ export function TopBar() {
           </span>
         </NavLink>
 
-        <div className="hidden flex-1 justify-center md:flex">
+        <nav aria-label="Principal" className="hidden flex-1 justify-center md:flex">
           <ul className="flex items-center gap-1 rounded-full border border-base-300/70 bg-base-100/60 p-1">
             {links.map((link) => (
               <li key={link.to}>
@@ -67,24 +67,28 @@ export function TopBar() {
               </li>
             ))}
           </ul>
-        </div>
+        </nav>
 
+        {/* Botones de alto completo (44 px): son de lo que más se toca, y en la barra
+            de arriba, lejos del pulgar, un blanco chico se erra más. Las palabras cortas
+            son para el teléfono angosto: es la misma acción con su nombre entero. */}
         <div className="flex flex-none items-center gap-1 text-sm sm:gap-2">
           {user ? (
             <>
               <span className="hidden font-medium sm:inline">@{user.username}</span>
-              <button onClick={handleLogout} className="btn btn-ghost btn-sm">
-                Salir
+              <button type="button" onClick={handleLogout} className="btn btn-ghost px-3">
+                <span className="sm:hidden">Salir</span>
+                <span className="hidden sm:inline">Cerrar sesión</span>
               </button>
             </>
           ) : (
             <>
-              <NavLink to="/login" className="btn btn-ghost btn-sm px-2.5 sm:px-3">
+              <NavLink to="/login" className="btn btn-ghost px-2.5 sm:px-3">
                 <span className="sm:hidden">Entrar</span>
                 <span className="hidden sm:inline">Iniciar sesión</span>
               </NavLink>
-              <NavLink to="/register" className="btn btn-primary btn-sm px-2.5 sm:px-3">
-                Registrarse
+              <NavLink to="/register" className="btn btn-primary px-2.5 sm:px-3">
+                Crear cuenta
               </NavLink>
             </>
           )}

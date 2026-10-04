@@ -15,6 +15,7 @@ import type { UsuarioBloqueado } from '../types'
 export function CuentasBloqueadas() {
   const [bloqueados, setBloqueados] = useState<UsuarioBloqueado[]>([])
   const [desbloqueando, setDesbloqueando] = useState<string | null>(null)
+  const [fallo, setFallo] = useState<string | null>(null)
 
   useEffect(() => {
     let vigente = true
@@ -33,9 +34,13 @@ export function CuentasBloqueadas() {
 
   function desbloquear(username: string) {
     setDesbloqueando(username)
+    setFallo(null)
     apiClient
       .delete(`/usuarios/${username}/bloquear`)
       .then(() => setBloqueados((previos) => previos.filter((b) => b.username !== username)))
+      // Antes fallaba en silencio: el botón volvía a decir "Desbloquear" y parecía que
+      // no se había tocado.
+      .catch(() => setFallo(username))
       .finally(() => setDesbloqueando(null))
   }
 
@@ -43,11 +48,16 @@ export function CuentasBloqueadas() {
 
   return (
     <details className="flex flex-col gap-3">
-      <summary className="cursor-pointer font-display text-sm font-bold">
+      <summary className="cursor-pointer rounded-field py-3 font-display text-base font-bold">
         Cuentas bloqueadas ({bloqueados.length})
       </summary>
 
-      <ul className="mt-3 flex flex-col gap-2">
+      {fallo && (
+        <p role="alert" className="text-sm text-error">
+          No pudimos desbloquear a @{fallo}. Probá de nuevo.
+        </p>
+      )}
+      <ul className="mt-1 flex flex-col gap-2">
         {bloqueados.map((b) => (
           <li
             key={b.userId}
@@ -63,9 +73,10 @@ export function CuentasBloqueadas() {
               type="button"
               onClick={() => desbloquear(b.username)}
               disabled={desbloqueando === b.username}
-              className="btn btn-ghost btn-xs"
+              className="btn btn-ghost btn-sm"
             >
               {desbloqueando === b.username ? 'Desbloqueando…' : 'Desbloquear'}
+              <span className="sr-only"> a @{b.username}</span>
             </button>
           </li>
         ))}

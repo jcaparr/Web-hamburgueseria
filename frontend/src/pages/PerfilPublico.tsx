@@ -8,6 +8,8 @@ import { JointPhoto } from '../components/JointPhoto'
 import { LoadError } from '../components/LoadError'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { AvisoVacio, Seccion } from '../components/Seccion'
+import { useTitulo } from '../hooks/useTitulo'
+import { nota } from '../utils/numeros'
 import { relativeDate } from '../utils/relativeDate'
 import type { PerfilPublico as Perfil } from '../types'
 
@@ -24,6 +26,7 @@ export function PerfilPublico() {
   const [perfil, setPerfil] = useState<Perfil | null>(null)
   const [error, setError] = useState<unknown>(null)
   const [cargando, setCargando] = useState(true)
+  useTitulo(`@${username}`)
 
   const cargar = useCallback(() => {
     setCargando(true)
@@ -58,7 +61,11 @@ export function PerfilPublico() {
   }
 
   if (cargando || !perfil) {
-    return <p className="p-4 text-sm text-base-content/70">Cargando…</p>
+    return (
+      <p role="status" className="p-4 text-sm text-base-content/70">
+        Cargando…
+      </p>
+    )
   }
 
   return (
@@ -92,7 +99,7 @@ export function PerfilPublico() {
       <CifrasDePerfil
         cifras={[
           { valor: String(perfil.resenias), etiqueta: perfil.resenias === 1 ? 'Reseña' : 'Reseñas' },
-          { valor: perfil.promedio ? perfil.promedio.toFixed(1) : '—', etiqueta: 'Promedio' },
+          { valor: perfil.promedio ? nota(perfil.promedio) : '—', etiqueta: 'Promedio' },
           { valor: String(perfil.seguidores), etiqueta: perfil.seguidores === 1 ? 'Seguidor' : 'Seguidores' },
         ]}
       />

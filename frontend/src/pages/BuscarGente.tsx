@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiClient } from '../api/client'
+import { AvatarDeUsuario } from '../components/AvatarDeUsuario'
 import { BotonSeguir } from '../components/BotonSeguir'
-import { IconSearch, IconUser } from '../components/icons'
+import { IconSearch } from '../components/icons'
 import { LoadError } from '../components/LoadError'
+import { useTitulo } from '../hooks/useTitulo'
 import type { UsuarioBuscado } from '../types'
 
 /** Cuánto se espera después de la última tecla antes de preguntarle al servidor. */
@@ -14,6 +16,7 @@ const MINIMO = 2
 
 export function BuscarGente() {
   const [texto, setTexto] = useState('')
+  useTitulo('Buscar gente')
   const [resultados, setResultados] = useState<UsuarioBuscado[]>([])
   const [buscando, setBuscando] = useState(false)
   const [error, setError] = useState<unknown>(null)
@@ -77,11 +80,17 @@ export function BuscarGente() {
         <IconSearch size={16} className="text-base-content/70" />
         <input
           autoFocus
+          type="search"
           value={texto}
           onChange={(e) => setTexto(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-          placeholder="Nombre de usuario"
+          placeholder="Nombre de usuario…"
           className="grow"
           aria-label="Buscar por nombre de usuario"
+          autoComplete="off"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          enterKeyHint="search"
         />
       </label>
 
@@ -98,9 +107,7 @@ export function BuscarGente() {
                 to={`/u/${persona.username}`}
                 className="flex min-w-0 flex-1 items-center gap-3"
               >
-                <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-neutral text-secondary">
-                  <IconUser size={20} />
-                </div>
+                <AvatarDeUsuario username={persona.username} size={40} />
                 <div className="flex min-w-0 flex-col">
                   <span className="truncate font-semibold">@{persona.username}</span>
                   <span className="text-xs text-base-content/70">
@@ -119,17 +126,21 @@ export function BuscarGente() {
         </ul>
       )}
 
-      {!error && !buscando && limpio.length >= MINIMO && resultados.length === 0 && (
-        <p className="text-sm text-base-content/70">
-          No hay nadie con ese nombre.
-        </p>
-      )}
-
-      {limpio.length < MINIMO && (
-        <p className="text-sm text-base-content/70">
-          Escribí al menos {MINIMO} letras del nombre de usuario que buscás.
-        </p>
-      )}
+      {/* Un solo renglón que dice cómo va la búsqueda, y que el lector de pantalla
+          anuncia: antes los resultados aparecían y desaparecían sin que se dijera. */}
+      <p role="status" className="text-sm text-base-content/70">
+        {error
+          ? ''
+          : limpio.length < MINIMO
+            ? `Escribí al menos ${MINIMO} letras del nombre de usuario que buscás.`
+            : buscando
+              ? 'Buscando…'
+              : resultados.length === 0
+                ? 'No hay nadie con ese nombre.'
+                : resultados.length === 1
+                  ? '1 persona'
+                  : `${resultados.length} personas`}
+      </p>
     </div>
   )
 }

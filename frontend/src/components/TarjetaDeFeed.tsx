@@ -25,25 +25,27 @@ export function TarjetaDeFeed({ item, esMia }: { item: ItemDeFeed; esMia: boolea
   return (
     <article className="overflow-hidden rounded-box bg-base-100 ring-1 ring-inset ring-base-content/10">
       <header className="flex items-center gap-3 px-4 py-3">
-        <Link to={`/u/${item.autorUsername}`} className="flex min-w-0 items-center gap-3">
+        <Link to={`/u/${item.autorUsername}`} className="-my-1 flex min-w-0 items-center gap-3 rounded-field py-1">
           <AvatarDeUsuario username={item.autorUsername} size={38} />
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-semibold hover:text-primary">
               @{item.autorUsername}
-              {esMia && <span className="font-normal text-base-content/70"> · vos</span>}
+              {esMia && <span className="font-normal text-base-content/70"> (vos)</span>}
             </span>
             <span className="text-xs text-base-content/70">
               {relativeDate(item.createdAt)}
               {/* La fecha sigue siendo la de cuando se escribió: esto solo avisa que lo
                   que se está leyendo ya no es lo de ese día. */}
-              {item.editada && ' · editada'}
+              {item.editada && ' (editada)'}
             </span>
           </div>
         </Link>
       </header>
 
       {item.fotoDeLaResenia && (
-        <Link to={`/burger-joints/${item.burgerJointId}`} className="block">
+        // Lleva al mismo lugar que el nombre del local, justo abajo: fuera del Tab y del
+        // lector de pantalla, para no pasar dos veces por el mismo enlace.
+        <Link to={`/burger-joints/${item.burgerJointId}`} tabIndex={-1} aria-hidden="true" className="block">
           <FotoDeResenia src={item.fotoDeLaResenia} autorUsername={item.autorUsername} />
         </Link>
       )}

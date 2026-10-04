@@ -11,6 +11,7 @@ import { ResumenDeCalificaciones } from '../components/ResumenDeCalificaciones'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { TarjetaDeResenia } from '../components/TarjetaDeResenia'
 import { useAuth } from '../context/AuthContext'
+import { useTitulo } from '../hooks/useTitulo'
 import type { BurgerJoint, Horario, PageResponse, Rating, ResumenDeResenias } from '../types'
 import { isNotFound, isSessionExpired } from '../utils/errors'
 import { shortAddress } from '../utils/address'
@@ -41,6 +42,7 @@ export function BurgerJointDetail() {
   const [loadError, setLoadError] = useState<unknown>(null)
 
   const myRating = ratings.find((r) => r.userId === user?.userId) ?? null
+  useTitulo(burgerJoint?.name ?? (isNotFound(loadError) ? 'Hamburguesería no encontrada' : null))
 
   function load() {
     // Juntas: si cualquiera de las dos falla, la página no está completa. Antes cada
@@ -121,9 +123,12 @@ export function BurgerJointDetail() {
     if (isNotFound(loadError)) {
       return (
         <div className="flex flex-col items-start gap-3 p-4">
-          <p className="text-sm text-base-content/70">No encontramos esta hamburguesería.</p>
+          <p className="text-sm text-base-content/70">
+            No encontramos esta hamburguesería. Puede que el enlace esté mal o que ya no
+            esté en la app.
+          </p>
           <Link to="/" className="btn btn-sm btn-outline">
-            Ver todas
+            Ver todas las hamburgueserías
           </Link>
         </div>
       )
@@ -135,7 +140,11 @@ export function BurgerJointDetail() {
         </div>
       )
     }
-    return <p className="p-4 text-sm text-base-content/70">Cargando…</p>
+    return (
+      <p role="status" className="p-4 text-sm text-base-content/70">
+        Cargando…
+      </p>
+    )
   }
 
   const comoLlegar = comoLlegarUrl(burgerJoint)
@@ -156,7 +165,7 @@ export function BurgerJointDetail() {
             {burgerJoint.averageScore ? (
               <>
                 <ScoreBadge score={burgerJoint.averageScore} size="sm" />
-                <a href="#resenias" className="hover:text-primary hover:underline">
+                <a href="#resenias" className="-my-3 rounded-field py-3 hover:text-primary hover:underline">
                   {burgerJoint.ratingsCount === 1 ? '1 reseña' : `${burgerJoint.ratingsCount} reseñas`}
                 </a>
               </>
@@ -182,6 +191,7 @@ export function BurgerJointDetail() {
           >
             <IconRoute size={18} />
             Cómo llegar
+            <span className="sr-only"> (se abre en otra pestaña)</span>
           </a>
         )}
         <button
@@ -212,7 +222,10 @@ export function BurgerJointDetail() {
           <IconPin size={18} className="mt-0.5 flex-none text-base-content/70" />
           <span className="min-w-0 flex-1">
             <span className="block">{shortAddress(burgerJoint.address, burgerJoint.area)}</span>
-            <span className="text-xs font-semibold text-primary group-hover:underline">Ver en Maps</span>
+            <span className="text-xs font-semibold text-primary group-hover:underline">
+              Ver en Maps
+              <span className="sr-only"> (se abre en otra pestaña)</span>
+            </span>
           </span>
           <IconExternal size={16} className="mt-0.5 flex-none text-base-content/70" />
         </a>

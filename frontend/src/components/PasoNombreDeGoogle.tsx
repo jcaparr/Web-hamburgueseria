@@ -23,7 +23,7 @@ export function PasoNombreDeGoogle({ google }: { google: GoogleSignIn }) {
     } catch (err: any) {
       // Si el problema es el nombre, queda marcado en el campo y no hace falta cartel.
       if (!campo.rechazar(err)) {
-        setError(err.response?.data?.error ?? 'No pudimos crear tu cuenta')
+        setError(err.response?.data?.error ?? 'No pudimos crear tu cuenta. Probá de nuevo.')
       }
     } finally {
       setEnviando(false)
@@ -41,13 +41,17 @@ export function PasoNombreDeGoogle({ google }: { google: GoogleSignIn }) {
 
           <form onSubmit={onSubmit} className="flex flex-col gap-3">
             <CampoNombreDeUsuario campo={campo} autoFocus />
-            {error && <p className="text-xs text-error">{error}</p>}
+            {error && (
+              <p role="alert" className="text-sm text-error">
+                {error}
+              </p>
+            )}
             <button
               type="submit"
               disabled={enviando || campo.chequeando}
               className="btn btn-primary"
             >
-              {enviando ? 'Creando…' : 'Crear cuenta'}
+              {enviando ? 'Creando tu cuenta…' : 'Crear cuenta'}
             </button>
           </form>
 
