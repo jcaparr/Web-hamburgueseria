@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
-import { IconPin, IconSearch } from '../components/icons'
+import { IconSearch } from '../components/icons'
 import { Interruptor } from '../components/Interruptor'
 import { LoadError } from '../components/LoadError'
-import { JointPhoto } from '../components/JointPhoto'
-import { ScoreBadge } from '../components/ScoreBadge'
+import { MejorCalificadas } from '../components/MejorCalificadas'
+import { AvisoVacio } from '../components/Seccion'
 import { SelectorDeBarrios } from '../components/SelectorDeBarrios'
+import { TarjetaDeLocal, TarjetaDeLocalCargando } from '../components/TarjetaDeLocal'
+import { useAuth } from '../context/AuthContext'
 import { useBarrios } from '../hooks/useBarrios'
 import type { BurgerJoint, PageResponse } from '../types'
-import { shortAddress } from '../utils/address'
-import { mapsUrl } from '../utils/maps'
+import { isSessionExpired } from '../utils/errors'
 
 const PAGE_SIZE = 20
 
@@ -46,6 +47,8 @@ export function Explore() {
   // De paso, un listado filtrado se puede compartir o dejar en favoritos, que antes no
   // se podía: todas las búsquedas eran la misma dirección.
   const [parametros, setParametros] = useSearchParams()
+  const { user } = useAuth()
+  const navigate = useNavigate()
 
   const query = parametros.get('q') ?? ''
   // Varios: el parámetro se repite, "?area=Palermo&area=Belgrano". Sigue llamándose
@@ -200,6 +203,40 @@ export function Explore() {
     }
   }, [loading, items.length])
 
+  function marcarGuardada(id: number, guardada: boolean) {
+    setPageData((previa) =>
+      previa && {
+        ...previa,
+        content: previa.content.map((local) =>
+          local.id === id ? { ...local, inWishlist: guardada } : local,
+        ),
+      },
+    )
+  }
+
+  /**
+   * Guarda o saca de guardadas desde la tarjeta, sin entrar a la ficha.
+   *
+   * El corazón se marca enseguida y se desmarca si el servidor no lo acepta: esperar la
+   * respuesta para pintarlo se sentía como un toque que no anduvo. Sin sesión lleva a
+   * ingresar, que después vuelve acá.
+   */
+  async function alternarGuardada(local: BurgerJoint) {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+    const guardar = !local.inWishlist
+    marcarGuardada(local.id, guardar)
+    try {
+      if (guardar) await apiClient.post(`/wishlist/${local.id}`)
+      else await apiClient.delete(`/wishlist/${local.id}`)
+    } catch (err) {
+      marcarGuardada(local.id, !guardar)
+      if (isSessionExpired(err)) navigate('/login')
+    }
+  }
+
   /**
    * Anota dónde estaba la lista justo antes de entrar a una hamburguesería.
    *
@@ -215,122 +252,132 @@ export function Explore() {
     }
   }
 
+  const sinFiltros = !query && barriosElegidos.length === 0
+  const titulo = barriosElegidos.length > 0
+    ? `En ${enCastellano(barriosElegidos)}`
+    : query
+      ? 'Resultados'
+      : 'Todas las hamburgueserías'
+
   return (
-    <div className="flex flex-col gap-4 p-4 md:p-0">
-      <h1 className="font-display text-2xl font-bold">Explorar hamburgueserías</h1>
+    <div className="flex flex-col gap-6 p-4 md:p-0">
+      {/* Liviana a propósito. La primera versión iba en una banda marrón y, sumada a la
+          fila de mejor calificadas, eran dos bloques pesados antes de la primera foto:
+          acá lo que tiene que llamar la atención son las fotos de las tarjetas.
 
-      <div className="flex items-center gap-2 rounded-xl border border-base-300 bg-base-100 px-4 py-2.5">
-        <IconSearch size={16} className="text-base-content/70" />
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => {
-            cambiar({ q: e.target.value, pagina: null })
-          }}
-          placeholder="Buscar por nombre…"
-          aria-label="Buscar hamburguesería por nombre"
-          className="w-full bg-transparent text-base outline-none placeholder:text-base-content/60 md:text-sm"
-        />
-      </div>
+          El nombre y el barrio van juntos porque son las dos formas de buscar, aunque
+          sean preguntas distintas: buscar por nombre es "quiero este local"; elegir
+          barrio es "quiero comer por acá", que es lo que uno se pregunta cuando todavía
+          no sabe adónde ir.
 
-      {/*
-        * El barrio va al lado del buscador y no adentro: son dos preguntas distintas.
-        * Buscar por nombre es "quiero este local"; elegir barrio es "quiero comer por
-        * acá", que es lo que uno se pregunta cuando todavía no sabe adónde ir.
-        */}
-      <div className="flex flex-wrap items-center gap-3">
-        <SelectorDeBarrios
-          barrios={barrios}
-          elegidos={barriosElegidos}
-          onAlternar={alternarBarrio}
-          onLimpiar={limpiarBarrios}
-        />
-
-        {barriosElegidos.length > 0 && (
-          <button
-            type="button"
-            onClick={limpiarBarrios}
-            className="btn btn-ghost btn-sm"
-          >
-            Ver todos
-          </button>
-        )}
-      </div>
-
-      {/*
-        * Las sucursales de cadenas son cientos, y entre McDonald's, Burger King y
-        * Hamburguesas Extremas ocupan páginas enteras de la lista. Quien busca dónde comer
-        * algo distinto las quiere fuera del medio; quien busca la más cercana, no. Por eso
-        * es una decisión de quien mira, y arranca mostrándolas.
-        */}
-      <Interruptor activo={conCadenas} onCambiar={cambiarCadenas} className="self-start">
-        Mostrar cadenas de comida rápida
-      </Interruptor>
-
-      <p role="status" className="min-h-5 text-sm text-base-content/70">
-        {loading ? 'Buscando…' : pageData && pageData.totalElements > 0 ? cuantas(pageData.totalElements) : ''}
-      </p>
-
-      {error ? (
-        <LoadError error={error} onRetry={() => setAttempt((n) => n + 1)} />
-      ) : items.length > 0 && (
-      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((b) => (
-          <li key={b.id} className="rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15 overflow-hidden">
-            <Link to={`/burger-joints/${b.id}`} onClick={anotarDondeQuedo}>
-              <figure className="aspect-[16/10] bg-base-200 sm:aspect-[4/3]">
-                <JointPhoto src={b.photoUrl} name={b.name} className="h-full w-full object-cover" />
-              </figure>
-              <div className="checker-strip" />
-              <div className="flex flex-col gap-1 p-4">
-                <h2 className="font-display line-clamp-1 text-base font-bold">{b.name}</h2>
-                <p className="line-clamp-2 text-xs text-base-content/70">{shortAddress(b.address, b.area)}</p>
-                <div className="mt-2 flex items-center justify-between">
-                  {b.averageScore ? (
-                    <ScoreBadge score={b.averageScore} size="sm" />
-                  ) : (
-                    <span className="text-xs font-medium text-base-content/70">Sin calificaciones</span>
-                  )}
-                </div>
-              </div>
-            </Link>
-            <div className="px-4 pb-4">
-              <a
-                href={mapsUrl(b.placeId, b.name, b.latitude, b.longitude)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="-my-3 inline-flex items-center gap-1 py-3 text-xs font-semibold text-primary hover:underline"
-              >
-                <IconPin />
-                Ver en Maps
-              </a>
-            </div>
-          </li>
-        ))}
-        {/* Decir qué filtro dejó la lista vacía, que es lo que hay que aflojar: con el
-            barrio puesto, "con ese nombre" mandaba a cambiar lo que no era.
-            Con varios se nombran todos: si no, no se sabe en cuál no hay nada. */}
-      </ul>
-      )}
-
-      {!error && !loading && pageData && items.length === 0 && (
-        <div className="flex flex-col items-start gap-3">
-          <p className="text-sm text-base-content/70">
-            {barriosElegidos.length > 0
-              ? `No encontramos hamburgueserías en ${enCastellano(barriosElegidos)}${query ? ' con ese nombre' : ''}.`
-              : 'No encontramos hamburgueserías con ese nombre.'}
+          Las sucursales de cadenas son cientos, y entre McDonald's, Burger King y
+          Hamburguesas Extremas ocupan páginas enteras de la lista. Quien busca dónde
+          comer algo distinto las quiere fuera del medio; quien busca la más cercana, no.
+          Por eso es una decisión de quien mira, y arranca mostrándolas. */}
+      <header className="flex flex-col gap-4 md:pt-2">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-display text-3xl font-bold leading-tight md:text-4xl">
+            ¿Dónde comemos hoy?
+          </h1>
+          <p className="text-sm text-base-content/70 md:text-base">
+            Las hamburgueserías de Buenos Aires, con las notas de quienes fueron.
           </p>
-          <button type="button" onClick={borrarFiltros} className="btn btn-outline btn-sm">
-            Borrar la búsqueda
-          </button>
         </div>
-      )}
+
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+          <label className="flex flex-1 items-center gap-2 rounded-field bg-base-100 px-4 py-3 shadow-sm ring-1 ring-inset ring-base-content/20 focus-within:ring-2 focus-within:ring-primary md:max-w-xl">
+            <IconSearch size={18} className="flex-none text-base-content/70" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => {
+                cambiar({ q: e.target.value, pagina: null })
+              }}
+              placeholder="Buscar por nombre…"
+              aria-label="Buscar hamburguesería por nombre"
+              className="w-full bg-transparent text-base outline-none placeholder:text-base-content/60"
+            />
+          </label>
+          <div className="flex items-center gap-2">
+            <SelectorDeBarrios
+              barrios={barrios}
+              elegidos={barriosElegidos}
+              onAlternar={alternarBarrio}
+              onLimpiar={limpiarBarrios}
+            />
+            {barriosElegidos.length > 0 && (
+              <button type="button" onClick={limpiarBarrios} className="btn btn-ghost btn-sm">
+                Ver todos
+              </button>
+            )}
+          </div>
+        </div>
+
+        <Interruptor activo={conCadenas} onCambiar={cambiarCadenas} className="self-start">
+          Mostrar cadenas de comida rápida
+        </Interruptor>
+      </header>
+
+      <section className="flex flex-col gap-4" aria-labelledby="titulo-de-la-lista">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <h2 id="titulo-de-la-lista" className="font-display text-lg font-bold">
+            {titulo}
+          </h2>
+          {/* Cuántas hay, en el mismo renglón que "Buscando…": así la lista no salta
+              cuando termina de buscar, y quien filtra ve enseguida cuánto achicó. */}
+          <p role="status" className="min-h-5 text-sm text-base-content/70">
+            {loading
+              ? 'Buscando…'
+              : pageData && pageData.totalElements > 0
+                ? cuantas(pageData.totalElements)
+                : ''}
+          </p>
+        </div>
+
+        {error ? (
+          <LoadError error={error} onRetry={() => setAttempt((n) => n + 1)} />
+        ) : items.length > 0 ? (
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {items.map((local) => (
+              <li key={local.id}>
+                <TarjetaDeLocal local={local} onAbrir={anotarDondeQuedo} onGuardar={alternarGuardada} />
+              </li>
+            ))}
+          </ul>
+        ) : loading ? (
+          // La forma de las tarjetas mientras llegan, la primera vez: con el texto
+          // "Buscando…" solo, la página quedaba vacía y después saltaba.
+          <ul aria-hidden="true" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2].map((n) => (
+              <li key={n}>
+                <TarjetaDeLocalCargando />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          pageData && (
+            // Decir qué filtro dejó la lista vacía, que es lo que hay que aflojar: con
+            // el barrio puesto, "con ese nombre" mandaba a cambiar lo que no era. Con
+            // varios se nombran todos: si no, no se sabe en cuál no hay nada.
+            <div className="flex flex-col items-start gap-3">
+              <AvisoVacio>
+                {barriosElegidos.length > 0
+                  ? `No encontramos hamburgueserías en ${enCastellano(barriosElegidos)}${query ? ' con ese nombre' : ''}.`
+                  : 'No encontramos hamburgueserías con ese nombre.'}
+              </AvisoVacio>
+              <button type="button" onClick={borrarFiltros} className="btn btn-outline btn-sm">
+                Borrar la búsqueda
+              </button>
+            </div>
+          )
+        )}
+      </section>
 
       {!error && pageData && pageData.totalPages > 1 && (
         <nav aria-label="Páginas" className="flex items-center justify-between gap-3 py-2">
           <button
             type="button"
-            className="btn btn-outline btn-sm"
+            className="btn btn-outline"
             disabled={page === 0}
             onClick={() => cambiar({ pagina: String(Math.max(0, page - 1)) })}
           >
@@ -341,7 +388,7 @@ export function Explore() {
           </span>
           <button
             type="button"
-            className="btn btn-outline btn-sm"
+            className="btn btn-outline"
             disabled={pageData.last}
             onClick={() => cambiar({ pagina: String(page + 1) })}
           >
@@ -349,6 +396,12 @@ export function Explore() {
           </button>
         </nav>
       )}
+
+      {/* Al final y no arriba: arriba competía con la lista por la primera mirada.
+          Acá llega justo cuando sirve, a quien recorrió la página y no se decidió. Solo
+          sin filtros y en la primera página: con un filtro puesto ya se sabe qué se
+          busca. */}
+      {sinFiltros && page === 0 && !error && <MejorCalificadas />}
     </div>
   )
 }
