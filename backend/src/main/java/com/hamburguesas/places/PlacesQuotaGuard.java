@@ -57,6 +57,11 @@ public class PlacesQuotaGuard {
         usageRepository.save(usage);
     }
 
+    /** El mes que se está contando, como "2026-10": las cuotas de Google arrancan de cero el 1. */
+    public String mesEnCurso() {
+        return currentMonth();
+    }
+
     private String currentMonth() {
         return YearMonth.now().toString();
     }

@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -32,10 +34,10 @@ public class PlacesSyncController {
     ) {
         return siEstaAutorizado(token, () -> new PlacesSyncStatus(
             properties.hasApiKey(),
-            quotaGuard.used(PlacesCallType.SEARCH),
-            quotaGuard.limitFor(PlacesCallType.SEARCH),
-            quotaGuard.used(PlacesCallType.PHOTO),
-            quotaGuard.limitFor(PlacesCallType.PHOTO)
+            quotaGuard.mesEnCurso(),
+            Arrays.stream(PlacesCallType.values())
+                .map(tipo -> UsoDeCuota.de(tipo, quotaGuard.used(tipo), quotaGuard.limitFor(tipo)))
+                .toList()
         ));
     }
 
@@ -170,11 +172,20 @@ public class PlacesSyncController {
             presented.getBytes(StandardCharsets.UTF_8));
     }
 
-    public record PlacesSyncStatus(
-        boolean apiKeyConfigured,
-        int searchCallsUsed,
-        int searchCallsLimit,
-        int photoCallsUsed,
-        int photoCallsLimit
-    ) {}
+    /**
+     * @param cuotas una por cada tipo de llamada que se cuenta, en el orden del enum.
+     *               Antes eran campos sueltos para búsquedas y fotos, y cada tipo nuevo
+     *               —fichas, resúmenes, horarios— quedaba afuera hasta que alguien se
+     *               acordara de sumarlo: en octubre la de fichas llegó al tope y acá no
+     *               se veía. Recorriendo el enum, el próximo tipo aparece solo.
+     */
+    public record PlacesSyncStatus(boolean apiKeyConfigured, String mes, List<UsoDeCuota> cuotas) {}
+
+    /** @param quedan las que todavía se pueden hacer este mes; nunca negativo. */
+    public record UsoDeCuota(PlacesCallType tipo, int usadas, int tope, int quedan) {
+
+        static UsoDeCuota de(PlacesCallType tipo, int usadas, int tope) {
+            return new UsoDeCuota(tipo, usadas, tope, Math.max(0, tope - usadas));
+        }
+    }
 }
