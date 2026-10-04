@@ -235,9 +235,12 @@ function PrimerPuesto({ puesto }: { puesto: Puesto }) {
 }
 
 /**
- * Del segundo puesto para abajo: número, foto chica, nombre y nota, sin caja ni sello.
- * Diecisiete sellos amarillos en columna eran lo que más ruido hacía; la nota se lee
- * igual con la hamburguesita al lado.
+ * Del segundo puesto para abajo: número, foto chica, nombre y nota, sin caja.
+ *
+ * La nota va en el mismo sello amarillo que la del primero. Probé una versión sin el
+ * fondo para que la lista hiciera menos ruido, pero el sello es como se reconoce una
+ * nota en toda la app, y un primer puesto con sello y el resto sin se leía como dos
+ * cosas distintas.
  */
 function FilaDelRanking({ puesto }: { puesto: Puesto }) {
   const { item, posicion, nota, detalle } = puesto
@@ -255,7 +258,7 @@ function FilaDelRanking({ puesto }: { puesto: Puesto }) {
         <span className="truncate text-sm text-base-content/70">{lugarDe(item)}</span>
       </div>
       <div className="flex flex-none flex-col items-end gap-0.5">
-        <ScoreBadge score={nota} size="sm" plain />
+        <ScoreBadge score={nota} size="sm" />
         <span className="text-xs text-base-content/70">{detalle}</span>
       </div>
     </Link>
