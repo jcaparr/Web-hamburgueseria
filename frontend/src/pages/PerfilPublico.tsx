@@ -9,6 +9,7 @@ import { ScoreBadge } from '../components/ScoreBadge'
 import { AvisoVacio, Seccion } from '../components/Seccion'
 import { usePedido } from '../hooks/usePedido'
 import { useTitulo } from '../hooks/useTitulo'
+import { isNotFound } from '../utils/errors'
 import { nota } from '../utils/numeros'
 import { relativeDate } from '../utils/relativeDate'
 import type { PerfilPublico as Perfil } from '../types'
@@ -23,7 +24,6 @@ import type { PerfilPublico as Perfil } from '../types'
 export function PerfilPublico() {
   const { username = '' } = useParams()
   const navigate = useNavigate()
-  useTitulo(`@${username}`)
 
   // Solo lo de esta persona: al pasar de un perfil a otro no se ve el anterior mientras
   // llega el nuevo.
@@ -31,6 +31,8 @@ export function PerfilPublico() {
     apiClient.get<Perfil>(`/usuarios/${username}`).then(({ data }) => data),
   )
   const perfil = pedido.datos
+  const noExiste = isNotFound(pedido.error)
+  useTitulo(noExiste ? 'Perfil no encontrado' : `@${username}`)
 
   // El servidor manda los contadores; al seguir o dejar de seguir se corrigen acá, para
   // que el número no quede contradiciendo al botón que se acaba de tocar.
@@ -40,6 +42,24 @@ export function PerfilPublico() {
       loSigo,
       seguidores: previo.seguidores + (loSigo ? 1 : -1),
     }))
+  }
+
+  // Que no exista no es una falla: reintentar no lo arregla, y "algo salió mal" lo
+  // hacía parecer un problema nuestro (#129).
+  if (noExiste) {
+    return (
+      <div className="flex flex-col items-start gap-3 p-4 md:mx-auto md:max-w-2xl md:p-0 md:pt-6">
+        <h1 className="font-display text-2xl font-bold leading-tight md:text-3xl">
+          No encontramos a @{username}
+        </h1>
+        <p className="text-sm text-base-content/70">
+          Puede que el enlace esté mal escrito o que esa cuenta ya no exista.
+        </p>
+        <Link to="/buscar" className="btn btn-primary btn-sm">
+          Buscar gente
+        </Link>
+      </div>
+    )
   }
 
   if (pedido.error) {
