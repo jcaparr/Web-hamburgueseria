@@ -22,15 +22,17 @@ export function Stars({ value, onChange, size = 20, etiqueta = 'Puntaje' }: Prop
     WebkitTextStroke: `${size < 20 ? 1 : 1.5}px color-mix(in srgb, var(--color-base-content) 65%, var(--color-base-100))`,
   })
 
+  // De solo lectura va en un span, que entra donde entra el texto: un div no puede ir
+  // dentro de un párrafo, y "Tu puntaje ★★★" es un renglón de texto (#131).
   if (!interactive) {
     return (
-      <div className="flex gap-0.5" role="img" aria-label={`${value} de 5 estrellas`}>
+      <span className="inline-flex gap-0.5" role="img" aria-label={`${value} de 5 estrellas`}>
         {[1, 2, 3, 4, 5].map((n) => (
           <span key={n} aria-hidden="true" style={estilo(n)}>
             ★
           </span>
         ))}
-      </div>
+      </span>
     )
   }
 
