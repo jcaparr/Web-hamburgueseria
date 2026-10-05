@@ -45,6 +45,9 @@ services:
       PLACES_SYNC_TOKEN: ${PLACES_SYNC_TOKEN:-}
     volumes:
       - place_photos:/data/place-photos
+      # Las fotos de las reseñas: las sube la gente y no se pueden volver a bajar de
+      # ningún lado, así que van en su propio volumen y entran en el backup (#136).
+      - rating_photos:/data/rating-photos
     # Also not published: only Caddy talks to it, over the internal network.
 
   caddy:
@@ -72,5 +75,6 @@ services:
 volumes:
   db_data:
   place_photos:
+  rating_photos:
   caddy_data:
   caddy_config:

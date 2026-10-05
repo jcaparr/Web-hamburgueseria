@@ -37,6 +37,28 @@ Flyway crea el esquema en el primer arranque. Si faltara alguna variable de ento
 el backend no arranca: eso es a propósito, para que nada quede corriendo con un valor
 por defecto.
 
+### Llevar los datos de desarrollo
+
+La base arranca vacía. Volver a bajar los locales de Google gasta cuota (las fotos tienen
+un tope de 1.000 por mes), así que conviene llevar los de la base de desarrollo. Se arma
+el mismo par de archivos que deja `backup.sh`, desde la raíz del repo en la máquina de
+desarrollo:
+
+```bash
+STAMP=$(date +%Y%m%d-%H%M%S)
+mkdir -p deploy/backups
+pg_dump -h localhost -U hamburguesas -d hamburguesas --no-owner --no-privileges | gzip > deploy/backups/db-$STAMP.sql.gz
+tar -czf deploy/backups/photos-$STAMP.tar.gz -C backend/data place-photos rating-photos
+```
+
+En Windows, desde Git Bash: `pg_dump` no está en el PATH, está en
+`"/c/Program Files/PostgreSQL/17/bin/pg_dump.exe"`, y la contraseña es la de
+`application-dev.yml` (`PGPASSWORD=... pg_dump ...`).
+
+Se copian al servidor (`scp`) y se restauran con `./restore.sh` (ver [Backups](#backups)).
+Las cuentas de desarrollo viajan con la base: si hay alguna de prueba, conviene borrarla
+antes de abrir el sitio.
+
 ## Email
 
 Los códigos de verificación y de recuperación de contraseña salen por SMTP de Gmail,
@@ -93,6 +115,8 @@ docker compose -f docker-compose.prod.yml --env-file .env up -d --build
 ## Backups
 
 `backup.sh` guarda la base y las fotos en `deploy/backups` y borra lo que pasa de 14 días.
+Las fotos son de dos clases: las que bajan de Google y las que sube la gente con sus
+reseñas. Las segundas no se pueden volver a conseguir de ningún lado, así que van las dos.
 Un backup que vive en el mismo servidor que la base no sirve de mucho, así que conviene
 configurar `RCLONE_REMOTE` para copiarlo afuera.
 
@@ -101,14 +125,27 @@ crontab -e
 # 15 3 * * * /opt/hamburgueserias/deploy/backup.sh >> /var/log/hamburguesas-backup.log 2>&1
 ```
 
-Para restaurar: `./restore.sh backups/db-AAAAMMDD-HHMMSS.sql.gz`. **Probalo una vez antes
-de necesitarlo**, con un backup real, para saber que funciona.
+Para restaurar, la base y, si se pasan, las fotos del mismo momento:
+
+```bash
+./restore.sh backups/db-AAAAMMDD-HHMMSS.sql.gz backups/photos-AAAAMMDD-HHMMSS.tar.gz
+```
+
+**Probalo una vez antes de necesitarlo**, con un backup real, para saber que funciona.
 
 ## Probar el stack localmente
 
-Sin dominio ni HTTPS, poniendo `SITE_ADDRESS=:80` en el `.env`:
+Sin dominio ni HTTPS, con un `.env` aparte para no tocar el de verdad: copiá
+`.env.example` a, por ejemplo, `.env.prueba` y poné `SITE_ADDRESS=:80`,
+`SITE_URL=http://localhost`, `MAIL_ENABLED=false` (los códigos salen en el log) y
+`COMPOSE_PROJECT_NAME=prueba`, para que los volúmenes de la prueba no se mezclen con
+otros.
 
 ```bash
-docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+docker compose -f docker-compose.prod.yml --env-file .env.prueba up -d --build
 curl http://localhost/api/burger-joints?size=1
 ```
+
+`backup.sh` y `restore.sh` usan ese mismo archivo con `ENV_FILE=.env.prueba`. Al terminar,
+`docker compose -f docker-compose.prod.yml --env-file .env.prueba down -v` borra todo lo
+de la prueba, volúmenes incluidos.
