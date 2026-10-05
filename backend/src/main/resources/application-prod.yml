@@ -31,6 +31,11 @@ app:
     photos:
       # A Docker volume, so photos survive redeploys.
       directory: ${PLACE_PHOTOS_DIR:/data/place-photos}
+  fotos-de-resenias:
+    # También en un volumen. Sin esto caían en ./data adentro del contenedor, donde el
+    # usuario de la app ni siquiera puede escribir: no se podía publicar ninguna reseña,
+    # y si se hubiera podido, cada deploy las habría borrado (#136).
+    directorio: ${RATING_PHOTOS_DIR:/data/rating-photos}
 
 logging:
   level:

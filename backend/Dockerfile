@@ -16,8 +16,9 @@ RUN addgroup -S app && adduser -S -G app app
 
 COPY --from=build /build/target/*.jar app.jar
 
-# Photos live on a volume mounted here; the app user has to own it to write new ones.
-RUN mkdir -p /data/place-photos && chown -R app:app /data
+# Photos live on volumes mounted here; the app user has to own them to write new ones.
+# Docker copies this ownership into a volume the first time it is mounted.
+RUN mkdir -p /data/place-photos /data/rating-photos && chown -R app:app /data
 USER app
 
 EXPOSE 8080

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Dumps the database (and the downloaded photos) to ./backups, keeps the last N days,
-# and optionally copies them off the server.
+# Dumps the database and the photos (the ones downloaded from Google and the ones people
+# upload with their reviews) to ./backups, keeps the last N days, and optionally copies
+# them off the server.
 #
 # A backup that only exists on the machine it is backing up is not a backup, so set
 # RCLONE_REMOTE (for example "r2:hamburguesas-backups") once you have somewhere to put it.
@@ -18,13 +19,15 @@ DUMP=""
 PHOTOS=""
 trap 'status=$?; if [ "$status" -ne 0 ]; then echo "!! Backup failed (exit $status), removing partial files" >&2; rm -f "$DUMP" "$PHOTOS"; fi' EXIT
 
-COMPOSE="docker compose -f docker-compose.prod.yml --env-file .env"
+# ENV_FILE lets you rehearse against a throwaway stack without touching the real .env.
+ENV_FILE="${ENV_FILE:-.env}"
+COMPOSE="docker compose -f docker-compose.prod.yml --env-file $ENV_FILE"
 RETENTION_DAYS="${RETENTION_DAYS:-14}"
 BACKUP_DIR="${BACKUP_DIR:-$(pwd)/backups}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
 # shellcheck disable=SC1091
-set -a; source .env; set +a
+set -a; source "$ENV_FILE"; set +a
 
 mkdir -p "$BACKUP_DIR"
 # The dump can contain every user's email: keep it unreadable to anyone else.
@@ -46,7 +49,8 @@ fi
 
 PHOTOS="$BACKUP_DIR/photos-$STAMP.tar.gz"
 echo "==> Archiving photos to $PHOTOS"
-$COMPOSE exec -T backend tar -czf - -C /data place-photos > "$PHOTOS"
+# Review photos are the one thing that cannot be downloaded again from anywhere.
+$COMPOSE exec -T backend tar -czf - -C /data place-photos rating-photos > "$PHOTOS"
 chmod 600 "$PHOTOS"
 
 # Same reasoning as the dump: an empty archive is a failure that would otherwise
