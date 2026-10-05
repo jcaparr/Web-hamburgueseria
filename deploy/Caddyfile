@@ -39,9 +39,14 @@
 		# Las tipografías se sirven desde acá, así que no hay nada de Google en
 		# style-src ni en font-src. Mientras estuvieron los dominios de Google, cada
 		# visitante le dejaba su IP en cada visita.
+		# blob: en img-src es la foto que se elige al reseñar: la vista previa y la
+		# medición de su tamaño la cargan desde una URL que crea el propio navegador.
+		# Sin eso no se veía y una foto chica pasaba sin aviso (#137). Una URL blob:
+		# solo la puede crear un script de este origen.
+		#
 		# En una sola línea a propósito: un valor de header no puede contener saltos
 		# de línea, y partido en varias Caddy lo descarta en silencio.
-		Content-Security-Policy "default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; frame-src https://accounts.google.com/gsi/; connect-src 'self' https://accounts.google.com/gsi/; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; font-src 'self'; img-src 'self' data: https://lh3.googleusercontent.com; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'"
+		Content-Security-Policy "default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; frame-src https://accounts.google.com/gsi/; connect-src 'self' https://accounts.google.com/gsi/; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; font-src 'self'; img-src 'self' data: blob: https://lh3.googleusercontent.com; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'"
 
 		# Nada de esto usa cámara, micrófono ni pagos, así que no están disponibles ni
 		# para un script que logre entrar. La ubicación sí: la pantalla de tour la pide
