@@ -150,7 +150,7 @@ public class VerificationService {
 
             ¿No lo ves? Revisá la carpeta de spam o correo no deseado.
 
-            Hamburgueserías BA
+            Burgómetro
             """.formatted(username, action, code, ttlMinutes);
     }
 }

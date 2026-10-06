@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-const SITIO = 'Hamburgueserías BA'
+const SITIO = 'Burgómetro'
 
 /**
  * El título de la pestaña del navegador para esta pantalla.

@@ -62,6 +62,15 @@ class UsernameServiceTest {
             .hasMessageContaining("ya está en uso");
     }
 
+    /** Con @burgometro alguien podría pasar por la web misma. */
+    @Test
+    void elNombreDeLaWebEstaReservado() {
+        yaExisten();
+
+        assertThatThrownBy(() -> service.reservar("Burgometro"))
+            .isInstanceOf(UsernameTakenException.class);
+    }
+
     @Test
     void unNombreMalFormadoSeRechazaDiciendoQueSeAcepta() {
         yaExisten();

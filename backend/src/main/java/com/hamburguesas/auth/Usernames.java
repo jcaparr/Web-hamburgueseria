@@ -34,7 +34,7 @@ public final class Usernames {
     private static final Set<String> RESERVADOS = Set.of(
         "admin", "administrador", "administracion", "soporte", "ayuda", "oficial",
         "staff", "equipo", "moderador", "moderacion", "root", "sistema", "api",
-        "hamburguesas", "hamburgueserias", "null", "undefined");
+        "hamburguesas", "hamburgueserias", "burgometro", "null", "undefined");
 
     private Usernames() {
     }

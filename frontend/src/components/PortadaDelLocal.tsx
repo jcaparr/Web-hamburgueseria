@@ -42,7 +42,7 @@ export function PortadaDelLocal({
     const url = `${window.location.origin}/burger-joints/${local.id}`
     if (navigator.share) {
       try {
-        await navigator.share({ title: local.name, text: `${local.name} en Hamburgueserías`, url })
+        await navigator.share({ title: local.name, text: `${local.name} en Burgómetro`, url })
       } catch {
         // Cerrar el menú de compartir también llega acá, y no es un error.
       }

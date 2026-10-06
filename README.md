@@ -3,7 +3,7 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/img/banner-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="docs/img/banner-light.svg">
-  <img src="docs/img/banner-light.svg" width="100%" alt="Hamburgueserías BA. Descubrí, calificá y reseñá las hamburgueserías de Buenos Aires.">
+  <img src="docs/img/banner-light.svg" width="100%" alt="Burgómetro. Descubrí, calificá y reseñá las hamburgueserías de Buenos Aires.">
 </picture>
 
 [![CI](https://github.com/jcaparr/Web-hamburgueseria/actions/workflows/ci.yml/badge.svg)](https://github.com/jcaparr/Web-hamburgueseria/actions/workflows/ci.yml)
@@ -15,7 +15,7 @@
 
 </div>
 
-Una web para descubrir, calificar y reseñar las hamburgueserías de Buenos Aires: más de 1.500 locales de CABA y del conurbano, cargados desde Google Places.
+**Burgómetro** es una web para descubrir, calificar y reseñar las hamburgueserías de Buenos Aires: más de 1.500 locales de CABA y del conurbano, cargados desde Google Places.
 
 ## Qué se puede hacer
 
