@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="960" height="470" viewBox="0 0 960 470" role="img" aria-labelledby="title desc">
-  <title id="title">Hamburgueserías BA: el stack, capa por capa</title>
+  <title id="title">Burgómetro: el stack, capa por capa</title>
   <desc id="desc">Una hamburguesa donde cada capa es una parte del sistema. Frontend: React 19, TypeScript y Vite. Borde: Caddy con HTTPS automático y CSP. Seguridad: Spring Security, JWT en cookies HttpOnly y rate limiting. API: Spring Boot 4 con Java 17. Datos externos: Google Places API. Persistencia: PostgreSQL 17 con Flyway.</desc>
   <defs>
     <style>

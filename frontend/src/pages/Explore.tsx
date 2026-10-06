@@ -312,14 +312,11 @@ export function Explore() {
           comer algo distinto las quiere fuera del medio; quien busca la más cercana, no.
           Por eso es una decisión de quien mira, y arranca mostrándolas. */}
       <header className="flex flex-col gap-4 md:pt-2">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-display text-2xl font-bold leading-tight md:text-3xl">
-            ¿Dónde comemos hoy?
-          </h1>
-          <p className="text-sm text-base-content/70 md:text-base">
-            Las hamburgueserías de Buenos Aires, con las notas de quienes fueron.
-          </p>
-        </div>
+        {/* Sin bajada: la que había ("las hamburgueserías de Buenos Aires, con las
+            notas de quienes fueron") repetía lo que la pantalla muestra apenas se baja.
+            Esa frase sigue como descripción en index.html, que es lo que Google pone
+            debajo del enlace. */}
+        <h1 className="font-display text-2xl font-bold leading-tight md:text-3xl">¿Dónde comemos hoy?</h1>
 
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
           <label className="flex flex-1 items-center gap-2 rounded-field bg-base-100 px-4 py-3 shadow-sm ring-1 ring-inset ring-base-content/20 focus-within:ring-2 focus-within:ring-primary md:max-w-xl">

@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { useHideOnScroll } from '../hooks/useScrollDirection'
+import { MarcaBurgometro } from './MarcaBurgometro'
 
 const NAV_LINKS = [
   { to: '/', label: 'Explorar' },
@@ -32,20 +33,19 @@ export function TopBar() {
       className={`sticky top-0 z-20 transition-colors duration-300 ${hidden ? 'bg-base-100/85 backdrop-blur-md' : 'bg-base-100'}`}
     >
       <header className="flex items-center justify-between gap-2 px-4 py-2 md:px-6">
-        <NavLink to="/" end className="flex min-h-11 min-w-0 items-center gap-1.5 rounded-field sm:gap-2.5">
+        <NavLink to="/" end className="flex min-h-11 min-w-0 items-center gap-1.5 rounded-field sm:gap-2">
+          <MarcaBurgometro className="h-8 w-[38px] flex-none" />
+          {/* En minúscula y en su ancho normal, no angosta como los títulos: así es el
+              logo, y es lo que tiene que reconocerse igual en la barra, en la pestaña y
+              en un mail.
+
+              Sin sesión, en los teléfonos de menos de 360 px los dos botones no dejan
+              lugar para el nombre, y cortado ("burgóme…") se ve peor que no estar: queda
+              el dibujo, y el nombre sigue ahí para los lectores de pantalla. */}
           <span
-            aria-hidden="true"
-            className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-neutral font-display text-base font-extrabold text-secondary"
+            className={`truncate text-lg font-extrabold tracking-tight sm:text-xl ${user ? '' : 'max-[359px]:sr-only'}`}
           >
-            H
-          </span>
-          {/* Sin sesión, en los teléfonos de menos de 360 px los dos botones no dejan
-              lugar para el nombre, y cortado ("Hamburgu…") se ve peor que no estar: queda
-              el logo, y el nombre sigue ahí para los lectores de pantalla. */}
-          <span
-            className={`truncate font-display text-base font-bold sm:text-lg ${user ? '' : 'max-[359px]:sr-only'}`}
-          >
-            Hamburgueserías
+            burgómetro
           </span>
         </NavLink>
 

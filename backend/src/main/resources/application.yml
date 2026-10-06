@@ -73,7 +73,7 @@ app:
     # Must be the same address as SPRING_MAIL_USERNAME: Gmail rejects a From it
     # did not authenticate.
     from: ${MAIL_FROM:}
-    from-name: ${MAIL_FROM_NAME:Hamburgueserías BA}
+    from-name: ${MAIL_FROM_NAME:Burgómetro}
   auth:
     session:
       access-token-minutes: 15

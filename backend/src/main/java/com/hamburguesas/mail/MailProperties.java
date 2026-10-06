@@ -22,5 +22,5 @@ public class MailProperties {
     /** Address the emails are sent from. Must match the authenticated SMTP account. */
     private String from = "";
 
-    private String fromName = "Hamburgueserías BA";
+    private String fromName = "Burgómetro";
 }
