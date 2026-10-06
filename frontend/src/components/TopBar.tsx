@@ -30,7 +30,7 @@ export function TopBar() {
 
   return (
     <div
-      className={`sticky top-0 z-20 transition-colors duration-300 ${hidden ? 'bg-base-100/85 backdrop-blur-md' : 'bg-base-100'}`}
+      className={`sticky top-0 z-20 transition-colors duration-300 ${hidden ? 'bg-base-200/85 backdrop-blur-md' : 'bg-base-200'}`}
     >
       <header className="flex items-center justify-between gap-2 px-4 py-2 md:px-6">
         <NavLink to="/" end className="flex min-h-11 min-w-0 items-center gap-1.5 rounded-field sm:gap-2">
@@ -50,7 +50,7 @@ export function TopBar() {
         </NavLink>
 
         <nav aria-label="Principal" className="hidden flex-1 justify-center md:flex">
-          <ul className="flex items-center gap-1 rounded-full border border-base-300/70 bg-base-100/60 p-1">
+          <ul className="flex items-center gap-1 rounded-full bg-base-100 p-1 shadow-[var(--sombra-tarjeta)]">
             {links.map((link) => (
               <li key={link.to}>
                 <NavLink

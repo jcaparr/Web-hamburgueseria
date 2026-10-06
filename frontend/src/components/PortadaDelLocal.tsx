@@ -62,9 +62,8 @@ export function PortadaDelLocal({
         prioritaria
         src={local.photoUrl}
         name={local.name}
-        className="aspect-[4/3] w-full object-cover md:aspect-[21/9] md:rounded-t-box"
+        className="aspect-[4/3] w-full object-cover md:aspect-[21/9] md:rounded-box"
       />
-      <div className="checker-strip" />
 
       <div className="absolute inset-x-0 top-0 flex items-start justify-between p-3">
         <BotonSobreFoto onClick={volver} aria-label="Volver">

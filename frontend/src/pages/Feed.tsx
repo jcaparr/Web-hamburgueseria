@@ -124,7 +124,7 @@ export function Feed() {
           {cargando && <p role="status" className="text-sm text-base-content/70">Cargando…</p>}
 
           {!cargando && items.length === 0 && (
-            <div className="flex flex-col items-start gap-3 rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15">
+            <div className="flex flex-col items-start gap-3 tarjeta p-4">
               <p className="text-sm text-base-content/80">
                 {fuente === 'SIGUIENDO'
                   ? 'Todavía no seguís a nadie, o quienes seguís no reseñaron nada.'

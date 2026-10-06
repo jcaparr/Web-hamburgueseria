@@ -3,9 +3,10 @@
  * sésamo son las marcas de la escala y la aguja de kétchup apunta alto. Abajo, el
  * cheddar, el medallón y el pan de abajo.
  *
- * Los colores del pan y de la carne no son del tema —ningún botón es color pan—, así
- * que van fijos acá, que es el único lugar donde existen. El contorno es currentColor:
- * toma el color del texto de alrededor, marrón sobre crema.
+ * Los colores van fijos y no salen del tema: el pan y la carne no existen en ningún otro
+ * lado, y las semillas y la aguja son las de la hamburguesa, no las del tema de turno (en
+ * el oscuro, el fondo de las tarjetas pintaría las semillas de negro). El contorno sí es
+ * currentColor: marrón sobre crema y crema sobre la pizarra del modo oscuro.
  *
  * Es decorativo: va siempre al lado del nombre escrito, que es lo que lee un lector de
  * pantalla.
@@ -31,7 +32,7 @@ export function MarcaBurgometro({ className }: { className?: string }) {
       />
       {/* Siete semillas sobre un arco de radio 38, cada una alineada con el centro,
           como las marcas de un velocímetro. */}
-      <g className="fill-base-100" stroke="currentColor" strokeWidth="1.2">
+      <g fill="#f7efd8" stroke="currentColor" strokeWidth="1.2">
         <ellipse cx="23.3" cy="56.17" rx="2.4" ry="5" transform="rotate(-75 23.3 56.17)" />
         <ellipse cx="30.89" cy="41.57" rx="2.4" ry="5" transform="rotate(-50 30.89 41.57)" />
         <ellipse cx="43.94" cy="31.56" rx="2.4" ry="5" transform="rotate(-25 43.94 31.56)" />
@@ -42,7 +43,7 @@ export function MarcaBurgometro({ className }: { className?: string }) {
       </g>
       <polygon
         points="86.05,44.15 62.57,69.06 57.43,62.94"
-        className="fill-primary"
+        className="fill-ketchup"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinejoin="round"

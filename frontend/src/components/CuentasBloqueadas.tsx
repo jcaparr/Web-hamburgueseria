@@ -61,7 +61,7 @@ export function CuentasBloqueadas() {
         {bloqueados.map((b) => (
           <li
             key={b.userId}
-            className="flex items-center gap-3 rounded-box bg-base-100 p-3 ring-1 ring-inset ring-base-content/15"
+            className="flex items-center gap-3 tarjeta p-3"
           >
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="truncate text-sm font-semibold">@{b.username}</span>

@@ -28,20 +28,23 @@ export function TarjetaDeLocal({
   onGuardar: (local: BurgerJoint) => void
 }) {
   return (
-    <article className="relative h-full overflow-hidden rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15 transition-shadow hover:shadow-md">
+    <article className="relative h-full overflow-hidden tarjeta transition-shadow hover:tarjeta-alzada">
       {/* El anillo de foco va hacia adentro: la tarjeta recorta lo que sobresale, y
           hacia afuera no se veía. */}
+      {/* La foto va adentro de la tarjeta, con su propio redondeo, y más alta que antes
+          (4:3 también en el teléfono): es lo que hace que alguien quiera ir, y en 16:10
+          ocupaba menos de la mitad de la tarjeta. */}
       <Link
         to={`/burger-joints/${local.id}`}
         onClick={onAbrir}
-        className="flex h-full flex-col rounded-box focus-visible:-outline-offset-2"
+        className="flex h-full flex-col rounded-box p-1.5 focus-visible:-outline-offset-2"
       >
         <JointPhoto
           src={local.photoUrl}
           name={local.name}
-          className="aspect-[16/10] w-full object-cover sm:aspect-[4/3]"
+          className="aspect-[4/3] w-full rounded-[calc(var(--radius-box)-0.25rem)] object-cover"
         />
-        <div className="flex flex-1 flex-col gap-1 p-4">
+        <div className="flex flex-1 flex-col gap-1 px-2.5 pb-2.5 pt-3">
           <h3 className="line-clamp-1 font-display text-lg font-bold">{local.name}</h3>
           <p className="line-clamp-1 text-sm text-base-content/70">
             {shortAddress(local.address, local.area)}
@@ -67,7 +70,7 @@ export function TarjetaDeLocal({
         onClick={() => onGuardar(local)}
         aria-pressed={local.inWishlist}
         aria-label={local.inWishlist ? `Quitar ${local.name} de guardadas` : `Guardar ${local.name}`}
-        className={`absolute right-3 top-3 ${local.inWishlist ? 'text-primary' : ''}`}
+        className={`absolute right-4 top-4 ${local.inWishlist ? 'text-primary' : ''}`}
       >
         <IconHeart size={20} filled={local.inWishlist} />
       </BotonSobreFoto>
@@ -78,9 +81,9 @@ export function TarjetaDeLocal({
 /** Lo que se ve mientras llegan las tarjetas: su forma, para que la lista no salte. */
 export function TarjetaDeLocalCargando() {
   return (
-    <div aria-hidden="true" className="overflow-hidden rounded-box ring-1 ring-inset ring-base-content/10">
-      <div className="skeleton aspect-[16/10] w-full rounded-none sm:aspect-[4/3]" />
-      <div className="flex flex-col gap-2 p-4">
+    <div aria-hidden="true" className="overflow-hidden tarjeta p-1.5">
+      <div className="skeleton aspect-[4/3] w-full rounded-[calc(var(--radius-box)-0.25rem)]" />
+      <div className="flex flex-col gap-2 px-2.5 pb-2.5 pt-3">
         <div className="skeleton h-5 w-2/3" />
         <div className="skeleton h-4 w-1/2" />
         <div className="skeleton mt-2 h-6 w-16" />

@@ -61,7 +61,7 @@ export function AvisoVacio({
   accion?: { texto: string; a: string }
 }) {
   return (
-    <div className="flex flex-col items-start gap-3 rounded-box bg-base-200 p-4">
+    <div className="tarjeta flex flex-col items-start gap-3 p-4">
       <p className="text-sm text-base-content/70">{children}</p>
       {accion && (
         <Link to={accion.a} className="btn btn-outline btn-sm">

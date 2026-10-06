@@ -30,7 +30,7 @@ export function TarjetaChicaDeLocal({
   return (
     <Link
       to={`/burger-joints/${id}`}
-      className="flex h-full flex-col overflow-hidden rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15 transition-shadow hover:shadow-md focus-visible:-outline-offset-2"
+      className="flex h-full flex-col overflow-hidden tarjeta transition-shadow hover:tarjeta-alzada focus-visible:-outline-offset-2"
     >
       <JointPhoto src={foto} name={nombre} className="aspect-[4/3] w-full object-cover" />
       <div className="flex flex-1 flex-col gap-1.5 p-2.5">

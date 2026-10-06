@@ -80,7 +80,7 @@ export function SelectorDeBarrios({
         type="button"
         onClick={abrir}
         aria-haspopup="dialog"
-        className={`btn ${claseDelBoton} ${elegidos.length > 0 ? 'btn-primary' : 'btn-outline'}`}
+        className={`btn rounded-full ${claseDelBoton} ${elegidos.length > 0 ? 'btn-neutral' : 'border-0 bg-base-100 shadow-[var(--sombra-tarjeta)]'}`}
       >
         <span className="truncate">{comoSeLee(elegidos, textoSinElegir)}</span>
         {/* La flecha dice que el botón abre una lista. */}

@@ -28,7 +28,7 @@ export function TarjetaDeResenia({
   onEditar?: () => void
 }) {
   return (
-    <article className="overflow-hidden rounded-box bg-base-100 ring-1 ring-inset ring-base-content/10">
+    <article className="overflow-hidden tarjeta">
       <header className="flex items-center gap-3 px-4 py-3">
         {/* Desde acá se llega a su perfil, que es de donde sale la gente a seguir:
             alguien que reseñó lo mismo que vos es mejor candidato que cualquiera que

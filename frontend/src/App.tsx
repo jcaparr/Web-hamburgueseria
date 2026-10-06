@@ -24,7 +24,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div className="flex min-h-dvh flex-col bg-base-100 text-base-content">
+        <div className="flex min-h-dvh flex-col bg-base-200 text-base-content">
           <a
             href="#contenido"
             className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-field focus:bg-neutral focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-secondary"
@@ -36,7 +36,7 @@ export default function App() {
           <main
             id="contenido"
             tabIndex={-1}
-            className="mx-auto w-full max-w-[480px] flex-1 pb-20 focus:outline-none md:max-w-5xl md:px-6 md:pb-8 md:pt-6"
+            className="mx-auto w-full max-w-[480px] flex-1 pb-28 focus:outline-none md:max-w-5xl md:px-6 md:pb-8 md:pt-6"
           >
             <Routes>
               <Route path="/" element={<Explore />} />

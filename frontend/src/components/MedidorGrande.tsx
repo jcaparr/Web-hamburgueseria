@@ -100,9 +100,9 @@ export function MedidorGrande({
             transitionTimingFunction: 'cubic-bezier(.3, 1.35, .5, 1)',
           }}
         >
-          <polygon points="100,42 105,100 95,100" className="fill-neutral" />
+          <polygon points="100,42 105,100 95,100" className="fill-base-content" />
         </g>
-        <circle cx="100" cy="100" r="9" className="fill-neutral" />
+        <circle cx="100" cy="100" r="9" className="fill-base-content" />
         <circle cx="100" cy="100" r="3.5" className="fill-base-100" />
       </svg>
       <span

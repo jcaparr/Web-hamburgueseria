@@ -164,7 +164,7 @@ export function BurgerJointDetail() {
 
         {/* Nombre, nota y barrio: lo que se lee primero para saber dónde se está. */}
         <header className="flex flex-col gap-2 pt-4">
-          <h1 className="font-display text-3xl font-extrabold leading-tight text-balance md:text-4xl">
+          <h1 className="font-display text-2xl font-extrabold leading-tight text-balance md:text-3xl">
             {burgerJoint.name}
           </h1>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-base-content/70">
@@ -210,7 +210,7 @@ export function BurgerJointDetail() {
       </div>
 
       {/* Si está abierto y dónde queda, juntos: es lo que se mira antes de salir. */}
-      <section aria-label="Horario y dirección" className="flex flex-col divide-y divide-base-content/10 rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15">
+      <section aria-label="Horario y dirección" className="flex flex-col divide-y divide-base-content/10 tarjeta">
         {horario && horario.franjas.length > 0 && (
           <div className="flex items-start gap-3 px-4 py-3">
             <IconClock size={18} className="mt-0.5 flex-none text-base-content/70" />

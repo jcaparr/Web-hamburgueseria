@@ -30,7 +30,7 @@ export function Recorrido({
 }) {
   if (tour.paradas.length === 0) {
     return (
-      <p className="rounded-box bg-base-200 p-4 text-sm text-base-content/70">
+      <p className="tarjeta p-4 text-sm text-base-content/70">
         {tour.aviso ?? 'No salió ningún recorrido con esos filtros. Probá con más kilómetros o con otros barrios.'}
       </p>
     )
@@ -41,14 +41,14 @@ export function Recorrido({
       <h2 id="titulo-del-recorrido" className="font-display text-lg font-bold">
         Tu recorrido
       </h2>
-      <div className="flex items-center justify-around rounded-box bg-neutral p-4 text-base-100">
+      <div className="flex items-center justify-around rounded-box bg-neutral p-4 text-neutral-content">
         <Dato valor={String(tour.paradas.length)} etiqueta="paradas" />
         <Dato valor={kilometros(tour.kilometros)} etiqueta="km" />
         <Dato valor={enHoras(tour.minutos)} etiqueta={enAuto ? 'manejando' : 'caminando'} />
       </div>
 
       {tour.aviso && (
-        <p className="rounded-box bg-base-200 px-4 py-3 text-sm text-base-content/70">
+        <p className="tarjeta px-4 py-3 text-sm text-base-content/70">
           {tour.aviso}
         </p>
       )}
@@ -57,7 +57,7 @@ export function Recorrido({
         {tour.paradas.map((parada) => (
           <li
             key={parada.local.id}
-            className="flex items-center gap-3 rounded-box bg-base-100 p-3 ring-1 ring-inset ring-base-content/15"
+            className="flex items-center gap-3 tarjeta p-3"
           >
             {/* El número ya lo dice la lista numerada; este es para mirar. */}
             <span aria-hidden="true" className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-neutral font-display text-sm font-bold text-secondary">

@@ -30,7 +30,7 @@ export function ResumenDeCalificaciones({
 }) {
   if (!promedio || cuantas === 0) {
     return (
-      <section className="flex flex-col gap-2 rounded-box bg-base-200 p-5">
+      <section className="tarjeta flex flex-col gap-2 p-5">
         <h2 className="font-display text-lg font-bold">Todavía nadie la calificó</h2>
         <p className="text-sm text-base-content/70">
           Si fuiste, contá qué tal estuvo. La primera reseña es la que más ayuda a los
@@ -46,7 +46,7 @@ export function ResumenDeCalificaciones({
         Calificaciones
       </h2>
 
-      <div className="flex items-center gap-4 rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15 md:gap-6">
+      <div className="flex items-center gap-4 tarjeta p-4 md:gap-6">
         <MedidorGrande valor={promedio}>
           <span className="mt-1 text-xs text-base-content/70">
             {cuantas === 1 ? '1 reseña' : `${cuantas} reseñas`}
