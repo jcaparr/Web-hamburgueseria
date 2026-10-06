@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState, type ReactNode } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
-import { CabeceraDePerfil, CifrasDePerfil } from '../components/CabeceraDePerfil'
+import { CabeceraDePerfil } from '../components/CabeceraDePerfil'
 import { CuentasBloqueadas } from '../components/CuentasBloqueadas'
-import { IconMedal, IconSearch } from '../components/icons'
+import { IconChevronRight, IconSearch, IconSettings, IconUser } from '../components/icons'
 import { LoadError } from '../components/LoadError'
 import { SavedTourCard } from '../components/SavedTourCard'
-import { AvisoVacio, Seccion } from '../components/Seccion'
-import { FilaDeTarjetas, LugarEnLaFila, TarjetaChicaDeLocal } from '../components/TarjetaChicaDeLocal'
+import { AvisoVacio } from '../components/Seccion'
+import { TarjetaChicaDeLocal } from '../components/TarjetaChicaDeLocal'
 import { useAuth } from '../context/useAuth'
 import { useTitulo } from '../hooks/useTitulo'
 import type { BurgerJoint, ReseniaDePerfil, ProfileStats, SavedTour } from '../types'
@@ -16,12 +16,29 @@ import { nota } from '../utils/numeros'
 import { relativeDate } from '../utils/relativeDate'
 
 /** Cuántas reseñas y guardadas se asoman en el perfil; el resto, en "Ver todas". */
-const CUANTAS_EN_LA_FILA = 6
+const CUANTAS_EN_LA_GRILLA = 6
+
+type Pestania = 'resenias' | 'guardadas' | 'recorridos'
+
+const PESTANIAS: { id: Pestania; texto: string }[] = [
+  { id: 'resenias', texto: 'Reseñas' },
+  { id: 'guardadas', texto: 'Guardadas' },
+  { id: 'recorridos', texto: 'Recorridos' },
+]
+
+function esPestania(valor: string | null): valor is Pestania {
+  return PESTANIAS.some((p) => p.id === valor)
+}
 
 export function Profile() {
   const { user, logout } = useAuth()
   useTitulo('Tu perfil')
   const navigate = useNavigate()
+  // La pestaña va en la dirección, como en el Ranking: al volver de una ficha se vuelve
+  // a la misma, y no a Reseñas.
+  const [parametros, setParametros] = useSearchParams()
+  const pedida = parametros.get('ver')
+  const pestania: Pestania = esPestania(pedida) ? pedida : 'resenias'
   const [stats, setStats] = useState<ProfileStats | null>(null)
   const [ratings, setRatings] = useState<ReseniaDePerfil[]>([])
   const [favorites, setFavorites] = useState<BurgerJoint[]>([])
@@ -42,7 +59,7 @@ export function Profile() {
       .then(([statsRes, ratingsRes, wishlistRes, toursRes]) => {
         setStats(statsRes.data)
         setRatings(ratingsRes.data)
-        setFavorites(wishlistRes.data.slice(0, CUANTAS_EN_LA_FILA))
+        setFavorites(wishlistRes.data)
         setTours(toursRes.data)
       })
       .catch((err) => {
@@ -52,7 +69,11 @@ export function Profile() {
       .finally(() => setLoading(false))
   }, [user, navigate, attempt])
 
-  const recentRatings = ratings.slice(0, CUANTAS_EN_LA_FILA)
+  function elegir(nueva: Pestania) {
+    // replace: cambiar de pestaña no es ir a otra página, y "atrás" tiene que salir del
+    // perfil, no recorrer las pestañas que se tocaron.
+    setParametros(nueva === 'resenias' ? {} : { ver: nueva }, { replace: true })
+  }
 
   // Lo mismo que "Salir" arriba, y en el mismo orden: primero se va al inicio, porque
   // borrar la sesión con una página privada abierta manda al login.
@@ -80,27 +101,43 @@ export function Profile() {
   if (!user) return null
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:mx-auto md:max-w-3xl md:p-0 md:pt-2">
+    <div className="flex flex-col gap-6 p-4 md:mx-auto md:max-w-3xl md:p-0 md:pt-6">
       <CabeceraDePerfil
         username={user.username}
-        bajada={
-          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-secondary/30 px-3 py-1 text-xs font-semibold text-neutral">
-            <IconMedal size={14} />
-            Nivel hamburguesero: próximamente
-          </span>
-        }
+        cifras={[
+          {
+            valor: stats ? String(stats.ratingsCount) : '—',
+            etiqueta: stats?.ratingsCount === 1 ? 'reseña' : 'reseñas',
+            a: '/reviews',
+          },
+          {
+            valor: stats?.averageScore ? nota(stats.averageScore) : '—',
+            etiqueta: 'promedio',
+          },
+          {
+            valor: stats ? String(stats.seguidores) : '—',
+            etiqueta: stats?.seguidores === 1 ? 'seguidor' : 'seguidores',
+          },
+        ]}
         acciones={
-          <>
-            <Link to="/buscar" className="btn btn-outline gap-2 whitespace-nowrap md:px-6">
+          // Accesos y no botones grandes: se usan de vez en cuando, y dos botones de
+          // ancho completo pesaban más que el perfil mismo. Buscar gente está también en
+          // el Feed, que es donde más se busca.
+          <div className="-my-2 flex flex-wrap gap-x-5">
+            <Link to="/buscar" className="inline-flex min-h-11 items-center gap-1.5 rounded-field text-sm font-semibold text-primary hover:underline">
               <IconSearch size={16} />
               Buscar gente
             </Link>
             {/* El perfil que ven los demás no muestra tus guardadas ni tus recorridos:
                 acá se puede ver qué queda a la vista. */}
-            <Link to={`/u/${user.username}`} className="btn btn-outline whitespace-nowrap md:px-6">
-              Perfil público
+            <Link
+              to={`/u/${user.username}`}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-field text-sm font-semibold text-primary hover:underline"
+            >
+              <IconUser size={16} />
+              Cómo te ven los demás
             </Link>
-          </>
+          </div>
         }
       />
 
@@ -115,117 +152,139 @@ export function Profile() {
         />
       )}
 
-      <CifrasDePerfil
-        cifras={[
-          {
-            valor: stats ? String(stats.ratingsCount) : '—',
-            etiqueta: stats?.ratingsCount === 1 ? 'Reseña' : 'Reseñas',
-            a: '/reviews',
-          },
-          {
-            valor: stats?.averageScore ? nota(stats.averageScore) : '—',
-            etiqueta: 'Promedio',
-          },
-          {
-            valor: stats ? String(stats.seguidores) : '—',
-            etiqueta: stats?.seguidores === 1 ? 'Seguidor' : 'Seguidores',
-          },
-        ]}
-      />
+      {/* Pestañas en vez de tres secciones apiladas: con las tres a la vista, el perfil
+          era una tira larga de tarjetas y cajas vacías, y lo de abajo no lo veía nadie. */}
+      <div className="flex flex-col gap-4">
+        <div role="tablist" aria-label="Qué ver de tu perfil" className="flex border-b border-base-content/15">
+          {PESTANIAS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              role="tab"
+              id={`pestania-${p.id}`}
+              aria-selected={pestania === p.id}
+              aria-controls="contenido-del-perfil"
+              onClick={() => elegir(p.id)}
+              className={`-mb-px min-h-11 flex-1 cursor-pointer border-b-2 px-2 text-sm font-semibold transition-colors ${
+                pestania === p.id
+                  ? 'border-primary text-base-content'
+                  : 'border-transparent text-base-content/70 hover:text-base-content'
+              }`}
+            >
+              {p.texto}
+            </button>
+          ))}
+        </div>
 
-      {loading && (
-        <p role="status" className="text-sm text-base-content/70">
-          Cargando…
-        </p>
-      )}
-
-      {/* Las tres filas que siguen se deslizan de costado, como "Más hamburgueserías
-          en…" en la ficha: apiladas, con cuatro de cada una el perfil era una tira
-          interminable y lo de abajo no lo veía nadie. */}
-      <Seccion titulo="Mis reseñas" verTodas={ratings.length > 0 ? '/reviews' : undefined}>
-        {recentRatings.length > 0 ? (
-          <FilaDeTarjetas>
-            {recentRatings.map((r) => (
-              <LugarEnLaFila key={r.id}>
-                <TarjetaChicaDeLocal
-                  id={r.burgerJointId}
-                  nombre={r.burgerJointName}
-                  foto={r.photoUrl}
-                  nota={r.score}
-                  detalle={relativeDate(r.createdAt)}
-                />
-              </LugarEnLaFila>
-            ))}
-          </FilaDeTarjetas>
-        ) : (
-          !loading &&
-          !error && (
-            <AvisoVacio accion={{ texto: 'Buscar una para calificar', a: '/' }}>
-              Todavía no calificaste ninguna hamburguesería.
-            </AvisoVacio>
-          )
-        )}
-      </Seccion>
-
-      <Seccion titulo="Guardadas" verTodas={favorites.length > 0 ? '/wishlist' : undefined}>
-        {favorites.length > 0 ? (
-          <FilaDeTarjetas>
-            {favorites.map((b) => (
-              <LugarEnLaFila key={b.id}>
-                <TarjetaChicaDeLocal id={b.id} nombre={b.name} foto={b.photoUrl} nota={b.averageScore} />
-              </LugarEnLaFila>
-            ))}
-          </FilaDeTarjetas>
-        ) : (
-          !loading &&
-          !error && (
-            <AvisoVacio accion={{ texto: 'Explorar hamburgueserías', a: '/' }}>
-              Todavía no guardaste ninguna. Tocá el corazón de las que quieras probar y
-              aparecen acá.
-            </AvisoVacio>
-          )
-        )}
-      </Seccion>
-
-      <Seccion
-        titulo="Mis recorridos"
-        verTodas={tours.length > 0 ? '/tour' : undefined}
-        textoDeVerTodas="Armar otro"
-      >
-        {tours.length > 0 ? (
-          <ul className="relative -mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:scroll-px-0 md:px-0">
-            {tours.map((tour) => (
-              <li key={tour.id} className="w-72 flex-none snap-start">
-                <SavedTourCard tour={tour} onBorrar={borrarTour} borrando={borrando === tour.id} />
-              </li>
-            ))}
-          </ul>
-        ) : (
-          !loading &&
-          !error && (
-            <AvisoVacio accion={{ texto: 'Armar un tour', a: '/tour' }}>
+        <section
+          id="contenido-del-perfil"
+          role="tabpanel"
+          aria-labelledby={`pestania-${pestania}`}
+          aria-busy={loading}
+          className="flex flex-col gap-4"
+        >
+          {loading ? (
+            <p role="status" className="text-sm text-base-content/70">
+              Cargando…
+            </p>
+          ) : error !== null ? null : pestania === 'resenias' ? (
+            ratings.length > 0 ? (
+              <>
+                <GrillaDeLocales>
+                  {ratings.slice(0, CUANTAS_EN_LA_GRILLA).map((r) => (
+                    <li key={r.id}>
+                      <TarjetaChicaDeLocal
+                        id={r.burgerJointId}
+                        nombre={r.burgerJointName}
+                        foto={r.photoUrl}
+                        nota={r.score}
+                        detalle={relativeDate(r.createdAt)}
+                      />
+                    </li>
+                  ))}
+                </GrillaDeLocales>
+                {ratings.length > CUANTAS_EN_LA_GRILLA && (
+                  <VerTodas a="/reviews">Ver tus {ratings.length} reseñas</VerTodas>
+                )}
+              </>
+            ) : (
+              <AvisoVacio accion={{ texto: 'Buscar una para calificar', a: '/' }}>
+                Todavía no calificaste ninguna hamburguesería.
+              </AvisoVacio>
+            )
+          ) : pestania === 'guardadas' ? (
+            favorites.length > 0 ? (
+              <>
+                <GrillaDeLocales>
+                  {favorites.slice(0, CUANTAS_EN_LA_GRILLA).map((b) => (
+                    <li key={b.id}>
+                      <TarjetaChicaDeLocal id={b.id} nombre={b.name} foto={b.photoUrl} nota={b.averageScore} />
+                    </li>
+                  ))}
+                </GrillaDeLocales>
+                {favorites.length > CUANTAS_EN_LA_GRILLA && (
+                  <VerTodas a="/wishlist">Ver las {favorites.length} guardadas</VerTodas>
+                )}
+              </>
+            ) : (
+              <AvisoVacio accion={{ texto: 'Explorar hamburgueserías', a: '/' }}>
+                Todavía no guardaste ninguna. Tocá el corazón de las que quieras probar y
+                aparecen acá.
+              </AvisoVacio>
+            )
+          ) : tours.length > 0 ? (
+            <>
+              <ul className="grid gap-3 md:grid-cols-2">
+                {tours.map((tour) => (
+                  <li key={tour.id}>
+                    <SavedTourCard tour={tour} onBorrar={borrarTour} borrando={borrando === tour.id} />
+                  </li>
+                ))}
+              </ul>
+              <VerTodas a="/tour">Armar otro recorrido</VerTodas>
+            </>
+          ) : (
+            <AvisoVacio accion={{ texto: 'Armar un recorrido', a: '/tour' }}>
               Armá un recorrido por varias hamburgueserías y guardalo para hacerlo cuando
               quieras.
             </AvisoVacio>
-          )
-        )}
-      </Seccion>
+          )}
+        </section>
+      </div>
 
-      <Seccion titulo="Logros">
-        <AvisoVacio>
-          Muy pronto vas a poder desbloquear logros a medida que calificás y descubrís
-          hamburgueserías.
-        </AvisoVacio>
-      </Seccion>
-
-      {/* Lo de la cuenta al final y aparte: es lo que menos se toca, y cerrar sesión no
-          tiene que quedar al lado de nada que se toque seguido. */}
-      <section className="flex flex-col gap-4 border-t border-base-content/10 pt-6">
-        <CuentasBloqueadas />
-        <button type="button" onClick={cerrarSesion} className="btn btn-outline w-full md:w-fit md:px-6">
-          Cerrar sesión
-        </button>
-      </section>
+      {/* Lo de la cuenta al final, aparte y plegado: es lo que menos se toca, y cerrar
+          sesión ya está arriba, en la barra. */}
+      <details className="group border-t border-base-content/10 pt-2">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-field font-display text-base font-bold [&::-webkit-details-marker]:hidden">
+          <IconSettings size={18} />
+          Cuenta
+          <IconChevronRight size={16} className="ml-auto transition-transform group-open:rotate-90" />
+        </summary>
+        <div className="flex flex-col gap-4 pt-2 pb-2">
+          <CuentasBloqueadas />
+          <button type="button" onClick={cerrarSesion} className="btn btn-outline w-full md:w-fit md:px-6">
+            Cerrar sesión
+          </button>
+        </div>
+      </details>
     </div>
+  )
+}
+
+/** Las tarjetas de una pestaña: de a dos en el teléfono y de a tres en la compu. */
+function GrillaDeLocales({ children }: { children: ReactNode }) {
+  return <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">{children}</ul>
+}
+
+/** El enlace al final de una pestaña, hacia la lista entera. */
+function VerTodas({ a, children }: { a: string; children: ReactNode }) {
+  return (
+    <Link
+      to={a}
+      className="-my-3 flex w-fit items-center gap-1 self-end rounded-field py-3 text-sm font-semibold text-primary hover:underline"
+    >
+      {children}
+      <IconChevronRight size={14} />
+    </Link>
   )
 }

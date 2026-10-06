@@ -3,74 +3,70 @@ import { Link } from 'react-router-dom'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
 
 /**
- * La parte de arriba de un perfil: una franja de color con el avatar encima, el nombre
- * y lo que se puede hacer.
+ * La parte de arriba de un perfil: el avatar, el nombre, los números y lo que se puede
+ * hacer.
  *
- * Es la misma idea que la portada de la ficha de un local —una banda arriba con la
- * tira a cuadros, y lo importante superpuesto—, para que el perfil se sienta de la
- * misma app. El avatar es el de las reseñas, con la inicial y el color de cada uno: el
- * ícono gris de persona que había era igual para todo el mundo.
+ * Compacta, como en cualquier red: el avatar a la izquierda y el nombre con los números
+ * al lado. La versión anterior apilaba una banda marrón, el avatar grande, el nombre,
+ * una insignia, dos botones y una tarjeta con los números: en el teléfono eran ocho
+ * bloques antes de llegar a la primera reseña.
  *
- * @param bajada  la línea de debajo del nombre: seguidores, una insignia
- * @param acciones los botones, en una fila que reparte el ancho en el teléfono
+ * El avatar es el de las reseñas, con la inicial y el color de cada uno, para que la
+ * persona se reconozca igual acá que en el feed.
+ *
+ * @param bajada   la línea de debajo del nombre, como a cuántos sigue
+ * @param cifras   los números; los que llevan a algún lado son enlaces
+ * @param acciones lo que se puede hacer, debajo de todo
  */
 export function CabeceraDePerfil({
   username,
   bajada,
+  cifras,
   acciones,
 }: {
   username: string
   bajada?: ReactNode
+  cifras: { valor: string; etiqueta: string; a?: string }[]
   acciones?: ReactNode
 }) {
   return (
-    <div className="flex flex-col">
-      <div aria-hidden="true" className="-mx-4 -mt-4 md:mx-0 md:mt-0">
-        <div className="h-24 bg-neutral md:h-28 md:rounded-t-box" />
-        <div className="checker-strip" />
-      </div>
-
-      <div className="-mt-12 flex flex-col gap-3 px-1">
-        <div className="w-fit rounded-full ring-4 ring-base-100 md:ml-6">
-          <AvatarDeUsuario username={username} size={88} />
+    <header className="flex flex-col gap-4">
+      <div className="flex items-center gap-4">
+        <AvatarDeUsuario username={username} size={72} />
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <h1 className="truncate font-display text-2xl font-bold leading-tight">@{username}</h1>
+            {bajada}
+          </div>
+          <CifrasDePerfil cifras={cifras} />
         </div>
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <h1 className="truncate font-display text-2xl font-bold">@{username}</h1>
-          {bajada}
-        </div>
-        {acciones && <div className="grid grid-cols-2 gap-3 md:flex">{acciones}</div>}
       </div>
-    </div>
+      {acciones}
+    </header>
   )
 }
 
 /**
- * Los números de un perfil en una tarjeta, separados por líneas finas.
- *
- * Los que llevan a algún lado son enlaces: "12 reseñas" en tu perfil abre tus reseñas.
+ * Los números en una fila, cada uno con su nombre abajo y sin tarjeta alrededor: son
+ * parte de la cabecera, no un bloque aparte.
  */
-export function CifrasDePerfil({
-  cifras,
-}: {
-  cifras: { valor: string; etiqueta: string; a?: string }[]
-}) {
+function CifrasDePerfil({ cifras }: { cifras: { valor: string; etiqueta: string; a?: string }[] }) {
   return (
-    <ul
-      className="grid divide-x divide-base-content/10 rounded-box bg-base-100 py-3 ring-1 ring-inset ring-base-content/15"
-      style={{ gridTemplateColumns: `repeat(${cifras.length}, minmax(0, 1fr))` }}
-    >
+    <ul className="flex gap-5">
       {cifras.map(({ valor, etiqueta, a }) => {
         const contenido = (
           <>
-            <span className="font-display text-2xl font-bold tabular-nums">{valor}</span>
+            <span className="font-display text-xl font-bold leading-none tabular-nums">{valor}</span>
             <span className="text-xs text-base-content/70">{etiqueta}</span>
           </>
         )
-        const estilo = 'flex flex-col items-center gap-0.5 px-2 text-center'
+        const estilo = 'flex flex-col gap-1'
         return (
           <li key={etiqueta}>
             {a ? (
-              <Link to={a} className={`${estilo} hover:text-primary`}>
+              // El relleno agranda lo que se toca hasta pasar los 44 px que pide el dedo,
+              // y el margen negativo lo compensa para que la fila no crezca.
+              <Link to={a} className={`${estilo} -my-1.5 justify-center rounded-field py-1.5 hover:text-primary`}>
                 {contenido}
               </Link>
             ) : (
