@@ -164,7 +164,7 @@ export function BurgerJointDetail() {
 
         {/* Nombre, nota y barrio: lo que se lee primero para saber dónde se está. */}
         <header className="flex flex-col gap-2 pt-4">
-          <h1 className="font-display text-3xl font-bold leading-tight text-balance">
+          <h1 className="font-display text-3xl font-extrabold leading-tight text-balance md:text-4xl">
             {burgerJoint.name}
           </h1>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-base-content/70">

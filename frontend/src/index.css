@@ -228,6 +228,12 @@ body {
   color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
 }
 
+/*
+ * La tira a cuadros del mantel de hamburguesería. Va en dos lugares: debajo de la barra
+ * de arriba, que es la firma de la app, y debajo de la foto de portada de un local.
+ * Estuvo también en cada tarjeta de Explorar, y repetida veinte veces por página dejaba
+ * de ser un detalle para pasar a ser ruido.
+ */
 .checker-strip {
   height: 6px;
   background: repeating-conic-gradient(var(--color-primary) 0% 25%, var(--color-base-100) 0% 50%) 0 0 / 14px 14px;

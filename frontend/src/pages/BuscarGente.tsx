@@ -50,7 +50,7 @@ export function BuscarGente() {
 
   return (
     <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-2xl md:p-0 md:pt-6">
-      <h1 className="font-display text-2xl font-bold leading-tight md:text-3xl">Buscar gente</h1>
+      <h1 className="font-display text-3xl font-extrabold leading-tight md:text-4xl">Buscar gente</h1>
 
       <label className="input input-bordered flex items-center gap-2 focus-within:border-primary">
         <IconSearch size={16} className="text-base-content/70" />

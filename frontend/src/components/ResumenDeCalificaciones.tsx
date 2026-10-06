@@ -1,6 +1,6 @@
 import type { Rating, ResumenDeResenias } from '../types'
-import { nota } from '../utils/numeros'
 import { DistribucionDeNotas } from './DistribucionDeNotas'
+import { MedidorGrande } from './MedidorGrande'
 import { Stars } from './Stars'
 import { TemasDeLasResenias } from './TemasDeLasResenias'
 
@@ -10,7 +10,8 @@ import { TemasDeLasResenias } from './TemasDeLasResenias'
  *
  * El promedio va grande al lado de las barras porque son la misma respuesta a dos
  * escalas: el número dice cuánto, las barras dicen si todos coinciden. Antes las
- * barras estaban solas y el promedio, chico, arriba al lado del nombre.
+ * barras estaban solas y el promedio, chico, arriba al lado del nombre. Va en el
+ * burgómetro grande, el tablero del logo, que es lo que le da sentido al nombre.
  *
  * Sin calificaciones no hay nada que resumir, y en vez de un bloque vacío se invita a
  * ser quien empieza: es el momento en que una reseña más vale más. Sin botón propio:
@@ -45,16 +46,12 @@ export function ResumenDeCalificaciones({
         Calificaciones
       </h2>
 
-      <div className="flex items-center gap-5 rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15">
-        <div className="flex flex-none flex-col items-center gap-0.5 pr-1">
-          <span className="font-display text-5xl font-extrabold leading-none tabular-nums">
-            <span className="sr-only">Promedio: </span>
-            {nota(promedio)}
-          </span>
-          <span className="text-xs text-base-content/70">
+      <div className="flex items-center gap-4 rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15 md:gap-6">
+        <MedidorGrande valor={promedio}>
+          <span className="mt-1 text-xs text-base-content/70">
             {cuantas === 1 ? '1 reseña' : `${cuantas} reseñas`}
           </span>
-        </div>
+        </MedidorGrande>
         <div className="min-w-0 flex-1">
           {resumen && <DistribucionDeNotas distribucion={resumen.distribucion} />}
         </div>

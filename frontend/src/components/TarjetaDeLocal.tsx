@@ -41,7 +41,6 @@ export function TarjetaDeLocal({
           name={local.name}
           className="aspect-[16/10] w-full object-cover sm:aspect-[4/3]"
         />
-        <div className="checker-strip" />
         <div className="flex flex-1 flex-col gap-1 p-4">
           <h3 className="line-clamp-1 font-display text-lg font-bold">{local.name}</h3>
           <p className="line-clamp-1 text-sm text-base-content/70">
