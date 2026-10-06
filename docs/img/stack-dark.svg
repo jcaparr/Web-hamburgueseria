@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="470" viewBox="0 0 960 470" role="img" aria-labelledby="title desc">
+  <title id="title">Hamburgueserías BA: el stack, capa por capa</title>
+  <desc id="desc">Una hamburguesa donde cada capa es una parte del sistema. Frontend: React 19, TypeScript y Vite. Borde: Caddy con HTTPS automático y CSP. Seguridad: Spring Security, JWT en cookies HttpOnly y rate limiting. API: Spring Boot 4 con Java 17. Datos externos: Google Places API. Persistencia: PostgreSQL 17 con Flyway.</desc>
+  <defs>
+    <style>
+      .sans{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,Arial,sans-serif}
+      .mono{font-family:'JetBrains Mono','Cascadia Code','SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace}
+      .drop{opacity:0;animation:drop .55s cubic-bezier(.2,.9,.25,1.2) forwards}
+      @keyframes drop{from{opacity:0;transform:translateY(-28px)}to{opacity:1;transform:none}}
+      .in{opacity:0;animation:in .5s ease-out forwards}
+      @keyframes in{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+      .layer{font-size:12px;fill:#f5a524;letter-spacing:.04em}
+      .main{font-size:16px;font-weight:600;fill:#e6edf3}
+      .det{font-weight:400;fill:#8b949e}
+    </style>
+    <linearGradient id="bunTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7c46f"/>
+      <stop offset="1" stop-color="#d9862a"/>
+    </linearGradient>
+    <linearGradient id="bunBottom" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eaa64f"/>
+      <stop offset="1" stop-color="#c47522"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="1" y="1" width="958" height="468" rx="16" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+
+  <text class="mono" x="440" y="46" font-size="13" fill="#6e7681"><tspan fill="#58a6ff" font-weight="700">GET</tspan> /proyectos/hamburgueserias-ba/stack</text>
+
+  <!-- Líneas guía -->
+  <g stroke="#30363d" stroke-width="1.5" stroke-dasharray="3 4">
+    <path d="M372 93H426"/><path d="M372 160H426"/><path d="M372 222H426"/>
+    <path d="M372 284H426"/><path d="M372 346H426"/><path d="M372 406H426"/>
+  </g>
+  <g fill="#f5a524">
+    <circle cx="428" cy="93" r="3"/><circle cx="428" cy="160" r="3"/><circle cx="428" cy="222" r="3"/>
+    <circle cx="428" cy="284" r="3"/><circle cx="428" cy="346" r="3"/><circle cx="428" cy="406" r="3"/>
+  </g>
+
+  <!-- 06 · pan de abajo -->
+  <g class="drop" style="animation-delay:.1s">
+    <path d="M70 388H350Q356 388 356 394V404Q356 424 334 424H86Q64 424 64 404V394Q64 388 70 388Z" fill="url(#bunBottom)" stroke="#a9611a" stroke-width="2"/>
+  </g>
+  <!-- 05 · tomate -->
+  <g class="drop" style="animation-delay:.3s">
+    <rect x="80" y="336" width="126" height="20" rx="10" fill="#e8513f" stroke="#b8382a" stroke-width="2"/>
+    <rect x="214" y="336" width="126" height="20" rx="10" fill="#e8513f" stroke="#b8382a" stroke-width="2"/>
+    <g fill="#ffd2c4">
+      <ellipse cx="112" cy="346" rx="4" ry="2.2"/><ellipse cx="143" cy="346" rx="4" ry="2.2"/><ellipse cx="174" cy="346" rx="4" ry="2.2"/>
+      <ellipse cx="246" cy="346" rx="4" ry="2.2"/><ellipse cx="277" cy="346" rx="4" ry="2.2"/><ellipse cx="308" cy="346" rx="4" ry="2.2"/>
+    </g>
+  </g>
+  <!-- 04 · medallón -->
+  <g class="drop" style="animation-delay:.5s">
+    <rect x="70" y="262" width="280" height="44" rx="22" fill="#6e3b1f" stroke="#4b2412" stroke-width="2"/>
+    <g stroke="#4b2412" stroke-width="4" stroke-linecap="round">
+      <path d="M118 273l16 22"/><path d="M164 273l16 22"/><path d="M210 273l16 22"/><path d="M256 273l16 22"/><path d="M302 273l12 17"/>
+    </g>
+    <g fill="#8f532d">
+      <circle cx="100" cy="280" r="2"/><circle cx="146" cy="292" r="2"/><circle cx="194" cy="276" r="2"/>
+      <circle cx="240" cy="293" r="2"/><circle cx="288" cy="279" r="2"/><circle cx="330" cy="292" r="2"/>
+    </g>
+  </g>
+  <!-- 03 · queso -->
+  <g class="drop" style="animation-delay:.7s">
+    <path d="M64 210H356L346 226H330Q326 242 318 242Q310 242 306 226H252Q248 236 242 236Q236 236 232 226H150Q146 246 136 246Q126 246 122 226H76Z" fill="#ffc83d" stroke="#e3a514" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+  <!-- 02 · lechuga -->
+  <g class="drop" style="animation-delay:.9s">
+    <path d="M62 156q9-10 18 0t18 0q9-10 18 0t18 0q9-10 18 0t18 0q9-10 18 0t18 0q9-10 18 0t18 0q9-10 18 0t18 0q9-10 18 0t18 0q9-10 18 0t18 0q6-6 10 2L356 168q-9 8-18 0t-18 0q-9 8-18 0t-18 0q-9 8-18 0t-18 0q-9 8-18 0t-18 0q-9 8-18 0t-18 0q-9 8-18 0t-18 0q-9 8-18 0t-18 0q-9 8-18 0t-18 0L60 162Z" fill="#79c84a" stroke="#4f9a2a" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+  <!-- 01 · pan de arriba -->
+  <g class="drop" style="animation-delay:1.1s">
+    <path d="M74 124Q66 124 68 114C76 74 130 58 210 58C290 58 344 74 352 114Q354 124 346 124Z" fill="url(#bunTop)" stroke="#a9611a" stroke-width="2"/>
+    <ellipse cx="150" cy="80" rx="42" ry="7" fill="#ffffff" fill-opacity=".22" transform="rotate(-8 150 80)"/>
+    <g fill="#fff3d6">
+      <ellipse cx="128" cy="90" rx="5" ry="2.4" transform="rotate(-20 128 90)"/>
+      <ellipse cx="168" cy="74" rx="5" ry="2.4" transform="rotate(12 168 74)"/>
+      <ellipse cx="206" cy="92" rx="5" ry="2.4" transform="rotate(-8 206 92)"/>
+      <ellipse cx="248" cy="74" rx="5" ry="2.4" transform="rotate(18 248 74)"/>
+      <ellipse cx="290" cy="92" rx="5" ry="2.4" transform="rotate(-24 290 92)"/>
+      <ellipse cx="160" cy="108" rx="5" ry="2.4" transform="rotate(6 160 108)"/>
+      <ellipse cx="236" cy="110" rx="5" ry="2.4" transform="rotate(-6 236 110)"/>
+      <ellipse cx="318" cy="110" rx="5" ry="2.4" transform="rotate(14 318 110)"/>
+      <ellipse cx="102" cy="110" rx="5" ry="2.4" transform="rotate(-14 102 110)"/>
+    </g>
+  </g>
+
+  <!-- Las capas -->
+  <g class="mono">
+    <text class="layer in" x="440" y="87" style="animation-delay:1.2s">01 · FRONTEND</text>
+    <text class="layer in" x="440" y="154" style="animation-delay:1.0s">02 · BORDE</text>
+    <text class="layer in" x="440" y="216" style="animation-delay:.8s">03 · SEGURIDAD</text>
+    <text class="layer in" x="440" y="278" style="animation-delay:.6s">04 · API</text>
+    <text class="layer in" x="440" y="340" style="animation-delay:.4s">05 · DATOS EXTERNOS</text>
+    <text class="layer in" x="440" y="400" style="animation-delay:.2s">06 · PERSISTENCIA</text>
+  </g>
+  <g class="sans">
+    <text class="main in" x="440" y="109" style="animation-delay:1.25s">React 19 · TypeScript · Vite<tspan class="det"> · Tailwind + daisyUI</tspan></text>
+    <text class="main in" x="440" y="176" style="animation-delay:1.05s">Caddy<tspan class="det"> · HTTPS automático · CSP estricta</tspan></text>
+    <text class="main in" x="440" y="238" style="animation-delay:.85s">Spring Security<tspan class="det"> · JWT en cookies HttpOnly · rate limiting</tspan></text>
+    <text class="main in" x="440" y="300" style="animation-delay:.65s">Spring Boot 4 · Java 17<tspan class="det"> · Spring Data JPA</tspan></text>
+    <text class="main in" x="440" y="362" style="animation-delay:.45s">Google Places API<tspan class="det"> · sync programada con control de cuota</tspan></text>
+    <text class="main in" x="440" y="422" style="animation-delay:.25s">PostgreSQL 17 · Flyway<tspan class="det"> · 25 migraciones versionadas</tspan></text>
+  </g>
+
+  <text class="mono" x="440" y="452" font-size="12" fill="#6e7681">docker compose  ·  github actions  ·  dependabot  ·  46 clases de test</text>
+</svg>
