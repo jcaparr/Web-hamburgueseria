@@ -2,6 +2,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { JointPhoto } from '../components/JointPhoto'
 import { LoadError } from '../components/LoadError'
+import { MedidorGrande } from '../components/MedidorGrande'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { AvisoVacio } from '../components/Seccion'
 import { useAuth } from '../context/useAuth'
@@ -92,7 +93,7 @@ export function Ranking() {
 
   return (
     <div className="flex flex-col gap-5 p-4 md:mx-auto md:max-w-2xl md:p-0 md:pt-2">
-      <h1 className="font-display text-2xl font-bold leading-tight md:text-3xl">Ranking</h1>
+      <h1 className="font-display text-3xl font-extrabold leading-tight md:text-4xl">Ranking</h1>
 
       <div role="tablist" aria-label="Qué ranking ver" className="flex border-b border-base-content/15">
         {VISTAS.map((v) => (
@@ -192,18 +193,19 @@ function PrimerPuesto({ puesto }: { puesto: Puesto }) {
           1
         </span>
       </div>
+      {/* La nota del primero en el burgómetro grande, el del logo: es el puesto que se
+          viene a ver, y el único de la lista que lo lleva. */}
       <div className="flex items-center justify-between gap-3 p-4">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <h2 className="line-clamp-2 font-display text-xl font-bold leading-tight">
+          <h2 className="line-clamp-2 font-display text-2xl font-extrabold leading-tight">
             <span className="sr-only">Puesto 1: </span>
             {item.name}
           </h2>
           <p className="truncate text-sm text-base-content/70">{lugarDe(item)}</p>
         </div>
-        <div className="flex flex-none flex-col items-end gap-1">
-          <ScoreBadge score={nota} size="sm" />
-          <span className="text-xs text-base-content/70">{detalle}</span>
-        </div>
+        <MedidorGrande valor={nota} tamanio="md" etiqueta="Nota">
+          <span className="mt-1 text-xs text-base-content/70">{detalle}</span>
+        </MedidorGrande>
       </div>
     </Link>
   )
@@ -224,7 +226,13 @@ function FilaDelRanking({ puesto }: { puesto: Puesto }) {
       to={`/burger-joints/${item.burgerJointId}`}
       className="-mx-2 flex items-center gap-3 rounded-field px-2 py-3 transition-colors hover:bg-base-200"
     >
-      <span className="w-6 flex-none text-right font-display text-lg font-bold tabular-nums text-base-content/70">
+      {/* El segundo y el tercero en kétchup, como el podio que les falta: el primero
+          ya tiene su foto grande arriba. */}
+      <span
+        className={`w-7 flex-none text-right font-display text-2xl font-extrabold tabular-nums ${
+          posicion <= 3 ? 'text-primary' : 'text-base-content/70'
+        }`}
+      >
         {posicion}
       </span>
       <JointPhoto src={item.photoUrl} name={item.name} className="size-11 flex-none rounded-field object-cover" />
