@@ -2,7 +2,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { BotonBloquear } from '../components/BotonBloquear'
 import { BotonSeguir } from '../components/BotonSeguir'
-import { CabeceraDePerfil, CifrasDePerfil } from '../components/CabeceraDePerfil'
+import { CabeceraDePerfil } from '../components/CabeceraDePerfil'
 import { JointPhoto } from '../components/JointPhoto'
 import { LoadError } from '../components/LoadError'
 import { ScoreBadge } from '../components/ScoreBadge'
@@ -79,7 +79,7 @@ export function PerfilPublico() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:mx-auto md:max-w-3xl md:p-0 md:pt-2">
+    <div className="flex flex-col gap-6 p-4 md:mx-auto md:max-w-3xl md:p-0 md:pt-6">
       <CabeceraDePerfil
         username={perfil.username}
         bajada={
@@ -87,6 +87,11 @@ export function PerfilPublico() {
             {siguiendoEnPalabras(perfil.siguiendo)}
           </span>
         }
+        cifras={[
+          { valor: String(perfil.resenias), etiqueta: perfil.resenias === 1 ? 'reseña' : 'reseñas' },
+          { valor: perfil.promedio ? nota(perfil.promedio) : '—', etiqueta: 'promedio' },
+          { valor: String(perfil.seguidores), etiqueta: perfil.seguidores === 1 ? 'seguidor' : 'seguidores' },
+        ]}
         acciones={
           perfil.soyYo ? (
             <Link to="/profile" className="btn btn-outline col-span-2 md:px-6">
@@ -104,14 +109,6 @@ export function PerfilPublico() {
             </div>
           )
         }
-      />
-
-      <CifrasDePerfil
-        cifras={[
-          { valor: String(perfil.resenias), etiqueta: perfil.resenias === 1 ? 'Reseña' : 'Reseñas' },
-          { valor: perfil.promedio ? nota(perfil.promedio) : '—', etiqueta: 'Promedio' },
-          { valor: String(perfil.seguidores), etiqueta: perfil.seguidores === 1 ? 'Seguidor' : 'Seguidores' },
-        ]}
       />
 
       {/* Con lo que escribió y no solo la nota: es lo que dice si vale la pena seguirla.
