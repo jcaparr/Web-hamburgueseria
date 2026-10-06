@@ -19,13 +19,19 @@ export function BottomNav() {
   const items = ITEMS.filter((item) => user || !item.soloConSesion)
 
   return (
-    <nav aria-label="Principal" className="fixed inset-x-0 bottom-0 z-20 md:hidden">
+    // Flota sobre la página, separada de los bordes: antes era un bloque marrón de borde
+    // a borde que pesaba más que todo lo que había arriba. La distancia al borde de
+    // abajo respeta la barra de gestos del teléfono.
+    <nav
+      aria-label="Principal"
+      className="fixed inset-x-0 bottom-0 z-20 px-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] md:hidden"
+    >
       {/* Cada pestaña ocupa su columna entera, de borde a borde y de arriba abajo: antes
           el blanco era el ícono con su palabra, unos 25 px de ancho, y entre una y otra
           quedaba un hueco que no hacía nada. */}
       <div
-        className={`flex transition-colors duration-300 ${
-          hidden ? 'bg-neutral/85 backdrop-blur-md' : 'bg-neutral'
+        className={`flex rounded-[1.375rem] shadow-[var(--sombra-alzada)] backdrop-blur-md transition-colors duration-300 ${
+          hidden ? 'bg-base-100/80' : 'bg-base-100/95'
         }`}
       >
         {items.map(({ to, label, Icon }) => (
@@ -34,7 +40,7 @@ export function BottomNav() {
             to={to}
             end={to === '/'}
             className={({ isActive }) =>
-              `flex flex-1 flex-col items-center gap-1 rounded-field pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 focus-visible:-outline-offset-4 focus-visible:outline-secondary ${isActive ? 'text-secondary' : 'text-base-100/70'}`
+              `flex flex-1 flex-col items-center gap-0.5 rounded-[1.375rem] pb-2 pt-2.5 focus-visible:-outline-offset-4 ${isActive ? 'text-primary' : 'text-base-content/70'}`
             }
           >
             <Icon size={21} />

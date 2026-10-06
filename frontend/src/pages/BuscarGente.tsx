@@ -50,7 +50,7 @@ export function BuscarGente() {
 
   return (
     <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-2xl md:p-0 md:pt-6">
-      <h1 className="font-display text-3xl font-extrabold leading-tight md:text-4xl">Buscar gente</h1>
+      <h1 className="titulo-pagina">Buscar gente</h1>
 
       <label className="input input-bordered flex items-center gap-2 focus-within:border-primary">
         <IconSearch size={16} className="text-base-content/70" />
@@ -77,7 +77,7 @@ export function BuscarGente() {
           {resultados.map((persona) => (
             <li
               key={persona.userId}
-              className="flex items-center gap-3 rounded-box bg-base-100 p-3 ring-1 ring-inset ring-base-content/15"
+              className="flex items-center gap-3 tarjeta p-3"
             >
               <Link
                 to={`/u/${persona.username}`}

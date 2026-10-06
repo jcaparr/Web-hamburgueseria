@@ -6,6 +6,7 @@ import { CuentasBloqueadas } from '../components/CuentasBloqueadas'
 import { IconChevronRight, IconSearch, IconSettings, IconUser } from '../components/icons'
 import { LoadError } from '../components/LoadError'
 import { SavedTourCard } from '../components/SavedTourCard'
+import { SelectorDeTema } from '../components/SelectorDeTema'
 import { AvisoVacio } from '../components/Seccion'
 import { TarjetaChicaDeLocal } from '../components/TarjetaChicaDeLocal'
 import { useAuth } from '../context/useAuth'
@@ -252,15 +253,16 @@ export function Profile() {
         </section>
       </div>
 
-      {/* Lo de la cuenta al final, aparte y plegado: es lo que menos se toca, y cerrar
+      {/* Los ajustes al final, aparte y plegados: es lo que menos se toca, y cerrar
           sesión ya está arriba, en la barra. */}
       <details className="group border-t border-base-content/10 pt-2">
         <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-field font-display text-base font-bold [&::-webkit-details-marker]:hidden">
           <IconSettings size={18} />
-          Cuenta
+          Ajustes
           <IconChevronRight size={16} className="ml-auto transition-transform group-open:rotate-90" />
         </summary>
-        <div className="flex flex-col gap-4 pt-2 pb-2">
+        <div className="flex flex-col gap-5 pt-2 pb-2">
+          <SelectorDeTema />
           <CuentasBloqueadas />
           <button type="button" onClick={cerrarSesion} className="btn btn-outline w-full md:w-fit md:px-6">
             Cerrar sesión

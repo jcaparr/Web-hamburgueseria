@@ -24,7 +24,7 @@ export function SavedTourCard({
   const enAuto = tour.modo === 'EN_AUTO'
 
   return (
-    <article className="flex flex-col gap-3 rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15">
+    <article className="flex flex-col gap-3 tarjeta p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="font-display truncate text-sm font-bold">{tour.name}</h3>

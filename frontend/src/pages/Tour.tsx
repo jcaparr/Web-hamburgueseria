@@ -157,13 +157,13 @@ export function Tour() {
   return (
     <div className="flex flex-col gap-5 p-4 md:p-0">
       <div>
-        <h1 className="font-display text-3xl font-extrabold leading-tight md:text-4xl">Armar un tour</h1>
+        <h1 className="titulo-pagina">Armar un tour</h1>
         <p className="mt-1 text-sm text-base-content/70">
           Un recorrido de hamburgueserías para hacer {modo === 'A_PIE' ? 'caminando' : 'en auto'}.
         </p>
       </div>
 
-      <section className="flex flex-col gap-5 rounded-box bg-base-100 p-4 ring-1 ring-inset ring-base-content/15">
+      <section className="flex flex-col gap-5 tarjeta p-4">
         <div role="group" aria-label="Cómo vas" className="join w-full">
           {(['A_PIE', 'EN_AUTO'] as const).map((opcion) => (
             <button

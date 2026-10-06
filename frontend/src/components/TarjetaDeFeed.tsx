@@ -23,7 +23,7 @@ import type { ItemDeFeed } from '../types'
  */
 export function TarjetaDeFeed({ item, esMia }: { item: ItemDeFeed; esMia: boolean }) {
   return (
-    <article className="overflow-hidden rounded-box bg-base-100 ring-1 ring-inset ring-base-content/10">
+    <article className="overflow-hidden tarjeta">
       <header className="flex items-center gap-3 px-4 py-3">
         <Link to={`/u/${item.autorUsername}`} className="-my-1 flex min-w-0 items-center gap-3 rounded-field py-1">
           <AvatarDeUsuario username={item.autorUsername} size={38} />

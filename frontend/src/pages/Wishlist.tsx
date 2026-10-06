@@ -43,7 +43,7 @@ export function Wishlist() {
 
   return (
     <div className="flex flex-col gap-4 p-4 md:p-0">
-      <h1 className="font-display text-3xl font-extrabold leading-tight md:text-4xl">Guardadas</h1>
+      <h1 className="titulo-pagina">Guardadas</h1>
 
       {loading && <p role="status" className="text-sm text-base-content/70">Cargando…</p>}
       {error !== null && <LoadError error={error} onRetry={() => {
@@ -54,7 +54,7 @@ export function Wishlist() {
 
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((b) => (
-          <li key={b.id} className="rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15">
+          <li key={b.id} className="tarjeta">
             <div className="flex items-center gap-3 p-3 pb-0">
               <Link to={`/burger-joints/${b.id}`} className="flex flex-1 items-center gap-3 overflow-hidden">
                 <JointPhoto

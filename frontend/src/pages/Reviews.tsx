@@ -34,7 +34,7 @@ export function Reviews() {
 
   return (
     <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-2xl md:p-0">
-      <h1 className="font-display text-3xl font-extrabold leading-tight md:text-4xl">Mis reseñas</h1>
+      <h1 className="titulo-pagina">Mis reseñas</h1>
 
       {loading && <p role="status" className="text-sm text-base-content/70">Cargando…</p>}
       {error !== null && <LoadError error={error} onRetry={() => {
@@ -45,7 +45,7 @@ export function Reviews() {
 
       <ul className="flex flex-col gap-3">
         {ratings.map((r) => (
-          <li key={r.id} className="rounded-box bg-base-100 p-3 ring-1 ring-inset ring-base-content/15">
+          <li key={r.id} className="tarjeta p-3">
             <Link to={`/burger-joints/${r.burgerJointId}`} className="flex items-center gap-3">
               <JointPhoto
                 src={r.photoUrl}

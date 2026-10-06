@@ -9,7 +9,11 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Las hamburgueserías de Buenos Aires, con las notas y reseñas de quienes fueron." />
-    <meta name="theme-color" content="#f7efd8" />
+    <!-- El color de la barra del navegador, el del fondo de cada tema. -->
+    <meta name="theme-color" content="#faf3e3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#17110d" media="(prefers-color-scheme: dark)" />
+    <!-- Antes que todo lo demás: si alguien eligió un tema, se aplica antes de pintar. -->
+    <script src="/tema.js"></script>
     <title>Burgómetro</title>
   </head>
   <body>

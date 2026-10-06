@@ -19,7 +19,7 @@ export function TemasDeLasResenias({ temas }: { temas: TemaDeResenias[] }) {
   if (temas.length === 0) return null
 
   return (
-    <section className="flex flex-col gap-2 rounded-box bg-base-100 p-3 ring-1 ring-inset ring-base-content/15">
+    <section className="flex flex-col gap-2 tarjeta p-3">
       <div className="flex flex-col">
         <h3 className="text-sm font-semibold">
           De qué hablan las reseñas

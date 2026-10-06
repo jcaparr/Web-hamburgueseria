@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { IconSearch } from '../components/icons'
-import { Interruptor } from '../components/Interruptor'
 import { LoadError } from '../components/LoadError'
 import { MejorCalificadas } from '../components/MejorCalificadas'
 import { AvisoVacio } from '../components/Seccion'
@@ -311,15 +310,17 @@ export function Explore() {
           Hamburguesas Extremas ocupan páginas enteras de la lista. Quien busca dónde
           comer algo distinto las quiere fuera del medio; quien busca la más cercana, no.
           Por eso es una decisión de quien mira, y arranca mostrándolas. */}
-      <header className="flex flex-col gap-4 md:pt-2">
+      {/* El título va pegado al buscador, que es su respuesta: la pregunta y donde se
+          contesta forman un solo bloque, separado de la lista por más aire. */}
+      <header className="flex flex-col gap-3 md:pt-2">
         {/* Sin bajada: la que había ("las hamburgueserías de Buenos Aires, con las
             notas de quienes fueron") repetía lo que la pantalla muestra apenas se baja.
             Esa frase sigue como descripción en index.html, que es lo que Google pone
             debajo del enlace. */}
-        <h1 className="font-display text-3xl font-extrabold leading-tight md:text-4xl">¿Dónde comemos hoy?</h1>
+        <h1 className="titulo-pagina">¿Dónde comemos hoy?</h1>
 
-        <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          <label className="flex flex-1 items-center gap-2 rounded-field bg-base-100 px-4 py-3 shadow-sm ring-1 ring-inset ring-base-content/20 focus-within:ring-2 focus-within:ring-primary md:max-w-xl">
+        <div className="flex flex-col gap-2.5 md:flex-row md:items-center">
+          <label className="flex flex-1 items-center gap-2 rounded-full bg-base-100 px-4 py-3 shadow-[var(--sombra-tarjeta)] focus-within:ring-2 focus-within:ring-primary md:max-w-xl">
             <IconSearch size={18} className="flex-none text-base-content/70" />
             <input
               type="search"
@@ -334,13 +335,27 @@ export function Explore() {
               className="w-full bg-transparent text-base outline-none placeholder:text-base-content/70"
             />
           </label>
-          <div className="flex items-center gap-2">
+          {/* Los dos filtros como pastillas en una fila: antes el de cadenas era un
+              interruptor con su renglón propio, y el encabezado tenía cuatro pisos. La
+              pastilla apretada es el filtro puesto, igual que el barrio elegido. */}
+          <div className="flex flex-wrap items-center gap-2">
             <SelectorDeBarrios
               barrios={barrios}
               elegidos={barriosElegidos}
               onAlternar={alternarBarrio}
               onLimpiar={limpiarBarrios}
             />
+            <button
+              type="button"
+              aria-pressed={!conCadenas}
+              aria-label="Sin cadenas de comida rápida"
+              onClick={() => cambiarCadenas(!conCadenas)}
+              className={`btn btn-sm rounded-full ${
+                conCadenas ? 'border-0 bg-base-100 shadow-[var(--sombra-tarjeta)]' : 'btn-neutral'
+              }`}
+            >
+              Sin cadenas
+            </button>
             {barriosElegidos.length > 0 && (
               <button type="button" onClick={limpiarBarrios} className="btn btn-ghost btn-sm">
                 Ver todos los barrios
@@ -348,10 +363,6 @@ export function Explore() {
             )}
           </div>
         </div>
-
-        <Interruptor activo={conCadenas} onCambiar={cambiarCadenas} className="self-start">
-          Mostrar cadenas de comida rápida
-        </Interruptor>
       </header>
 
       <section className="flex flex-col gap-4" aria-labelledby="titulo-de-la-lista">

@@ -8,6 +8,13 @@
    */
   --text-xs: 0.8125rem;
   --text-xs--line-height: 1.125rem;
+
+  /*
+   * El kétchup del logo, fijo en los dos temas. El primario del tema oscuro es un
+   * kétchup más claro, para que un botón se lea sobre el fondo casi negro; pero la aguja
+   * del tablero va sobre el cheddar del sello, y ahí el claro casi no se distingue.
+   */
+  --color-ketchup: #b23a2e;
 }
 
 /*
@@ -67,11 +74,18 @@
 }
 
 @plugin "daisyui" {
-  themes: burger --default;
+  themes: burger --default, burger-noche --prefersdark;
 }
+/*
+ * Dos niveles de crema: el fondo de la página (base-200) y, encima, las superficies
+ * casi blancas de tarjetas, campos y ventanas (base-100), que se despegan con una sombra
+ * suave en vez de con un borde. Antes todo era del mismo crema y lo único que separaba
+ * una tarjeta de la página era una línea finita: se veía plano.
+ */
 @plugin "daisyui/theme" {
   name: "burger";
   default: true;
+  color-scheme: light;
   --color-primary: #b23a2e;
   --color-primary-content: #f7efd8;
   --color-secondary: #f2b705;
@@ -86,9 +100,9 @@
   --color-accent-content: #f7efd8;
   --color-neutral: #3a2a1e;
   --color-neutral-content: #f2b705;
-  --color-base-100: #f7efd8;
-  --color-base-200: #efe4c4;
-  --color-base-300: #e3d6b4;
+  --color-base-100: #fffdf8;
+  --color-base-200: #faf3e3;
+  --color-base-300: #ebe0c7;
   --color-base-content: #3a2a1e;
   /*
    * Las cuatro de abajo faltaban, igual que faltaban las medidas: un tema propio no
@@ -142,6 +156,100 @@
   --border: 1px;
   --depth: 1;
   --noise: 0;
+}
+
+/*
+ * El modo oscuro: la pizarra de una hamburguesería de noche. Fondo casi negro y cálido,
+ * texto crema y el cheddar de las notas. Lo toma quien tiene el teléfono en oscuro, o
+ * quien lo elige en Perfil > Cuenta.
+ *
+ * Los colores con texto encima llevan el texto oscuro y no crema: un kétchup lo bastante
+ * claro para leerse como botón sobre este fondo ya no deja leer letra clara encima.
+ * Todos pasan 4,5:1 contra su texto.
+ */
+@plugin "daisyui/theme" {
+  name: "burger-noche";
+  prefersdark: true;
+  color-scheme: dark;
+  --color-primary: #e5674f;
+  --color-primary-content: #17110d;
+  --color-secondary: #f2b705;
+  --color-secondary-content: #17110d;
+  --color-accent: #8fb56a;
+  --color-accent-content: #17110d;
+  --color-neutral: #3a2c21;
+  --color-neutral-content: #f2b705;
+  --color-base-100: #241a13;
+  --color-base-200: #17110d;
+  --color-base-300: #35291f;
+  --color-base-content: #f3e8cf;
+  --color-success: #93c46f;
+  --color-success-content: #17110d;
+  --color-warning: #f0a54a;
+  --color-warning-content: #17110d;
+  --color-error: #f28b7d;
+  --color-error-content: #17110d;
+  --color-info: #8cc0c9;
+  --color-info-content: #17110d;
+  --radius-field: 0.625rem;
+  --radius-box: 0.875rem;
+  --radius-selector: 0.5rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.275rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+/*
+ * La sombra de las tarjetas, una por tema. En claro, una sombra cálida y difusa; en
+ * oscuro una sombra no se ve, así que la tarjeta se despega con un filo apenas más claro.
+ * Van acá y no en los temas porque las usa CSS propio, no daisyUI.
+ */
+:root,
+[data-theme="burger"] {
+  --root-bg: var(--color-base-200);
+  --sombra-tarjeta: 0 1px 2px rgb(58 42 30 / 0.06), 0 10px 24px -16px rgb(58 42 30 / 0.4);
+  --sombra-alzada: 0 2px 4px rgb(58 42 30 / 0.08), 0 16px 32px -16px rgb(58 42 30 / 0.5);
+}
+[data-theme="burger-noche"] {
+  --sombra-tarjeta: inset 0 0 0 1px rgb(243 232 207 / 0.07);
+  --sombra-alzada: inset 0 0 0 1px rgb(243 232 207 / 0.16);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --sombra-tarjeta: inset 0 0 0 1px rgb(243 232 207 / 0.07);
+    --sombra-alzada: inset 0 0 0 1px rgb(243 232 207 / 0.16);
+  }
+}
+
+/* Una superficie: tarjetas, recuadros de la ficha, avisos. */
+@utility tarjeta {
+  background-color: var(--color-base-100);
+  border-radius: var(--radius-box);
+  box-shadow: var(--sombra-tarjeta);
+}
+/* La misma, levantada: para el hover de lo que se toca. */
+@utility tarjeta-alzada {
+  box-shadow: var(--sombra-alzada);
+}
+
+/*
+ * El título de cada pantalla. Antes era de 30 a 36 px y quedaba suelto, como un cartel
+ * aparte de lo que encabeza; a este tamaño se lee como el nombre de la sección, y va
+ * pegado a lo primero que se usa debajo (el buscador, las pestañas).
+ */
+@utility titulo-pagina {
+  font-family: "Archivo", system-ui, "Segoe UI", sans-serif;
+  font-stretch: 75%;
+  font-weight: 800;
+  font-size: 1.5rem;
+  line-height: 1.05;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+  @media (width >= 48rem) {
+    font-size: 1.75rem;
+  }
 }
 
 body {
@@ -229,12 +337,15 @@ body {
 }
 
 /*
- * La tira a cuadros del mantel de hamburguesería. Va en dos lugares: debajo de la barra
- * de arriba, que es la firma de la app, y debajo de la foto de portada de un local.
- * Estuvo también en cada tarjeta de Explorar, y repetida veinte veces por página dejaba
- * de ser un detalle para pasar a ser ruido.
+ * El borde del mantel de hamburguesería, la firma de la app. Una sola vez por pantalla,
+ * debajo de la barra de arriba.
+ *
+ * Fina, de cuadritos de 4 px: antes medía 6 px de alto con cuadros de 7 y aparecía
+ * también bajo la portada de cada local y en cada tarjeta de Explorar. Gruesa y repetida
+ * cansaba; así se lee como un ribete. Los huecos son transparentes, así que toma el
+ * fondo de lo que tenga detrás, en claro y en oscuro.
  */
 .checker-strip {
-  height: 6px;
-  background: repeating-conic-gradient(var(--color-primary) 0% 25%, var(--color-base-100) 0% 50%) 0 0 / 14px 14px;
+  height: 3px;
+  background: repeating-conic-gradient(var(--color-primary) 0% 25%, transparent 0% 50%) 0 0 / 8px 8px;
 }

@@ -93,27 +93,30 @@ export function Ranking() {
 
   return (
     <div className="flex flex-col gap-5 p-4 md:mx-auto md:max-w-2xl md:p-0 md:pt-2">
-      <h1 className="font-display text-3xl font-extrabold leading-tight md:text-4xl">Ranking</h1>
-
-      <div role="tablist" aria-label="Qué ranking ver" className="flex border-b border-base-content/15">
-        {VISTAS.map((v) => (
-          <button
-            key={v.id}
-            type="button"
-            role="tab"
-            id={`pestania-${v.id}`}
-            aria-selected={vista === v.id}
-            aria-controls="lista-del-ranking"
-            onClick={() => elegir(v.id)}
-            className={`-mb-px min-h-11 flex-1 cursor-pointer border-b-2 px-2 text-sm font-semibold transition-colors ${
-              vista === v.id
-                ? 'border-primary text-base-content'
-                : 'border-transparent text-base-content/70 hover:text-base-content'
-            }`}
-          >
-            {v.texto}
-          </button>
-        ))}
+      {/* El título y sus pestañas son un bloque: el nombre de la sección y las tres formas
+          de mirarla, sin aire entre medio. */}
+      <div className="flex flex-col gap-1.5">
+        <h1 className="titulo-pagina">Ranking</h1>
+        <div role="tablist" aria-label="Qué ranking ver" className="flex border-b border-base-content/15">
+          {VISTAS.map((v) => (
+            <button
+              key={v.id}
+              type="button"
+              role="tab"
+              id={`pestania-${v.id}`}
+              aria-selected={vista === v.id}
+              aria-controls="lista-del-ranking"
+              onClick={() => elegir(v.id)}
+              className={`-mb-px min-h-11 flex-1 cursor-pointer border-b-2 px-2 text-sm font-semibold transition-colors ${
+                vista === v.id
+                  ? 'border-primary text-base-content'
+                  : 'border-transparent text-base-content/70 hover:text-base-content'
+              }`}
+            >
+              {v.texto}
+            </button>
+          ))}
+        </div>
       </div>
 
       <section
@@ -176,7 +179,7 @@ function PrimerPuesto({ puesto }: { puesto: Puesto }) {
   return (
     <Link
       to={`/burger-joints/${item.burgerJointId}`}
-      className="flex flex-col overflow-hidden rounded-box bg-base-100 ring-1 ring-inset ring-base-content/15 transition-shadow hover:shadow-md"
+      className="flex flex-col overflow-hidden tarjeta transition-shadow hover:tarjeta-alzada"
     >
       <div className="relative">
         <JointPhoto
@@ -224,7 +227,7 @@ function FilaDelRanking({ puesto }: { puesto: Puesto }) {
   return (
     <Link
       to={`/burger-joints/${item.burgerJointId}`}
-      className="-mx-2 flex items-center gap-3 rounded-field px-2 py-3 transition-colors hover:bg-base-200"
+      className="-mx-2 flex items-center gap-3 rounded-field px-2 py-3 transition-colors hover:bg-base-100"
     >
       {/* El segundo y el tercero en kétchup, como el podio que les falta: el primero
           ya tiene su foto grande arriba. */}
@@ -253,7 +256,7 @@ function ListaCargando() {
   return (
     <div aria-hidden="true" className="flex flex-col gap-4">
       <div className="skeleton h-4 w-1/2" />
-      <div className="overflow-hidden rounded-box ring-1 ring-inset ring-base-content/10">
+      <div className="overflow-hidden tarjeta">
         <div className="skeleton aspect-[16/9] w-full rounded-none md:aspect-[21/9]" />
         <div className="flex flex-col gap-2 p-4">
           <div className="skeleton h-5 w-2/3" />

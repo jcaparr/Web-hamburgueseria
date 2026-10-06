@@ -50,14 +50,14 @@ function TableroChico({ fraccion, ancho }: { fraccion: number; ancho: number }) 
   const giro = -90 + lleno * 1.8
   return (
     <svg viewBox="0 0 24 14" width={ancho} height={(ancho * 14) / 24} aria-hidden="true" className="flex-none">
-      <path d="M3 12 A9 9 0 0 1 21 12" pathLength={100} fill="none" strokeWidth={3.2} className="stroke-neutral/25" />
+      <path d="M3 12 A9 9 0 0 1 21 12" pathLength={100} fill="none" strokeWidth={3.2} className="stroke-secondary-content/25" />
       <path
         d="M3 12 A9 9 0 0 1 21 12"
         pathLength={100}
         fill="none"
         strokeWidth={3.2}
         strokeDasharray={`${lleno} 100`}
-        className="stroke-neutral"
+        className="stroke-secondary-content"
       />
       <line
         x1="12"
@@ -67,9 +67,9 @@ function TableroChico({ fraccion, ancho }: { fraccion: number; ancho: number }) 
         strokeWidth={2.2}
         strokeLinecap="round"
         transform={`rotate(${giro} 12 12)`}
-        className="stroke-primary"
+        className="stroke-ketchup"
       />
-      <circle cx="12" cy="12" r="2" className="fill-neutral" />
+      <circle cx="12" cy="12" r="2" className="fill-secondary-content" />
     </svg>
   )
 }

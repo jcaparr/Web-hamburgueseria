@@ -49,7 +49,7 @@ export function PerfilPublico() {
   if (noExiste) {
     return (
       <div className="flex flex-col items-start gap-3 p-4 md:mx-auto md:max-w-2xl md:p-0 md:pt-6">
-        <h1 className="font-display text-3xl font-extrabold leading-tight md:text-4xl">
+        <h1 className="titulo-pagina">
           No encontramos a @{username}
         </h1>
         <p className="text-sm text-base-content/70">
@@ -120,7 +120,7 @@ export function PerfilPublico() {
               <li key={r.id}>
                 <Link
                   to={`/burger-joints/${r.burgerJointId}`}
-                  className="flex flex-col gap-2 rounded-box bg-base-100 p-3 ring-1 ring-inset ring-base-content/15 transition-shadow hover:shadow-md"
+                  className="flex flex-col gap-2 tarjeta p-3 transition-shadow hover:tarjeta-alzada"
                 >
                   <span className="flex items-center gap-3">
                     <JointPhoto
