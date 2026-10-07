@@ -22,7 +22,9 @@ export function Interruptor({
     <label className={`flex min-h-11 cursor-pointer items-center gap-3 text-sm ${className}`}>
       <input
         type="checkbox"
-        className="toggle toggle-sm toggle-secondary shrink-0"
+        // Del color del texto y no amarillo: el amarillo es el de las notas, y un
+        // interruptor amarillo al lado de un sello de nota se leía como parte de él.
+        className="toggle toggle-sm shrink-0"
         checked={activo}
         onChange={(e) => onCambiar(e.target.checked)}
       />

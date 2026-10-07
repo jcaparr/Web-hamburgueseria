@@ -41,11 +41,15 @@ export function Recorrido({
       <h2 id="titulo-del-recorrido" className="font-display text-lg font-bold">
         Tu recorrido
       </h2>
-      <div className="flex items-center justify-around rounded-box bg-neutral p-4 text-neutral-content">
+      {/* Los números como los del perfil: una tarjeta partida en casillas, con letra del
+          color del texto. Antes era una franja marrón con los números en amarillo: el
+          amarillo es el de las notas, y en el modo oscuro el marrón casi no se separaba
+          del fondo y las etiquetas no se leían. */}
+      <dl className="grid grid-cols-3 divide-x divide-base-content/10 tarjeta py-3">
         <Dato valor={String(tour.paradas.length)} etiqueta="paradas" />
         <Dato valor={kilometros(tour.kilometros)} etiqueta="km" />
         <Dato valor={enHoras(tour.minutos)} etiqueta={enAuto ? 'manejando' : 'caminando'} />
-      </div>
+      </dl>
 
       {tour.aviso && (
         <p className="tarjeta px-4 py-3 text-sm text-base-content/70">
@@ -60,7 +64,7 @@ export function Recorrido({
             className="flex items-center gap-3 tarjeta p-3"
           >
             {/* El número ya lo dice la lista numerada; este es para mirar. */}
-            <span aria-hidden="true" className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-neutral font-display text-sm font-bold text-secondary">
+            <span aria-hidden="true" className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-base-content font-display text-sm font-bold text-base-100">
               {parada.orden}
             </span>
 
@@ -92,7 +96,7 @@ export function Recorrido({
                     </span>
                   )}
                   {parada.visitada && (
-                    <span className="rounded-full bg-secondary/40 px-2 text-xs font-semibold text-neutral">Ya fuiste</span>
+                    <span className="rounded-full bg-base-content/10 px-2 text-xs font-semibold">Ya fuiste</span>
                   )}
                 </div>
               </div>
@@ -116,7 +120,9 @@ export function Recorrido({
         href={enlace}
         target="_blank"
         rel="noopener noreferrer"
-        className="btn btn-neutral btn-block"
+        // Es lo que se viene a hacer después de armarlo, así que es el rojo de la pantalla.
+        // Marrón con letra amarilla, en el modo oscuro se perdía contra el fondo.
+        className="btn btn-primary btn-block"
       >
         <IconRoute size={18} />
         {enAuto ? 'Abrir el recorrido en auto' : 'Abrir el recorrido a pie'}
@@ -130,11 +136,12 @@ export function Recorrido({
   )
 }
 
+/** El número arriba y qué es abajo; en el HTML va al revés, como pide una lista de definiciones. */
 function Dato({ valor, etiqueta }: { valor: string; etiqueta: string }) {
   return (
-    <div className="flex flex-col items-center">
-      <span className="font-display text-xl font-bold text-secondary">{valor}</span>
-      <span className="text-xs text-base-100/80">{etiqueta}</span>
+    <div className="flex flex-col-reverse items-center gap-1">
+      <dt className="text-xs text-base-content/70">{etiqueta}</dt>
+      <dd className="font-display text-xl font-bold leading-none tabular-nums">{valor}</dd>
     </div>
   )
 }
