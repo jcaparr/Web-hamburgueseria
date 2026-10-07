@@ -279,6 +279,14 @@ export function Profile() {
           <button type="button" onClick={cerrarSesion} className="btn btn-outline w-full md:w-fit md:px-6">
             Cerrar sesión
           </button>
+          <nav aria-label="Legales" className="-my-2 flex flex-wrap gap-x-5 text-sm">
+            <Link to="/terminos" className="inline-flex min-h-11 items-center rounded-field text-base-content/70 hover:text-base-content hover:underline">
+              Términos y condiciones
+            </Link>
+            <Link to="/privacidad" className="inline-flex min-h-11 items-center rounded-field text-base-content/70 hover:text-base-content hover:underline">
+              Política de privacidad
+            </Link>
+          </nav>
         </div>
       </details>
     </div>

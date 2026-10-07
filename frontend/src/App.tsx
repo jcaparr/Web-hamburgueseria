@@ -13,10 +13,12 @@ import { ForgotPassword } from './pages/ForgotPassword'
 import { Login } from './pages/Login'
 import { NoEncontrada } from './pages/NoEncontrada'
 import { PerfilPublico } from './pages/PerfilPublico'
+import { Privacidad } from './pages/Privacidad'
 import { Profile } from './pages/Profile'
 import { Ranking } from './pages/Ranking'
 import { Register } from './pages/Register'
 import { Reviews } from './pages/Reviews'
+import { Terminos } from './pages/Terminos'
 import { Tour } from './pages/Tour'
 import { VerifyEmail } from './pages/VerifyEmail'
 import { Wishlist } from './pages/Wishlist'
@@ -57,6 +59,8 @@ export default function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/terminos" element={<Terminos />} />
+              <Route path="/privacidad" element={<Privacidad />} />
               <Route path="*" element={<NoEncontrada />} />
             </Routes>
           </main>

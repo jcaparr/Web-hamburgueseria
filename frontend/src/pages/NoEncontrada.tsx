@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useNoIndexar } from '../hooks/useMetadatos'
 import { useTitulo } from '../hooks/useTitulo'
 
 /**
@@ -9,6 +10,7 @@ import { useTitulo } from '../hooks/useTitulo'
  */
 export function NoEncontrada() {
   useTitulo('Página no encontrada')
+  useNoIndexar()
   return (
     <div className="flex flex-col items-start gap-3 p-4 md:p-0">
       <h1 className="titulo-pagina">Esta página no existe</h1>

@@ -55,6 +55,11 @@ spring:
       max-request-size: 14MB
 
 app:
+  # La dirección pública del sitio, para armar enlaces absolutos como los del mapa del
+  # sitio. En producción es la misma que SITE_URL del .env.
+  sitio:
+    url: ${SITE_URL:http://localhost:5173}
+
   # Las fotos que sube la gente, aparte de las que bajan de Google: son de otra
   # procedencia y conviene poder moverlas o borrarlas sin tocar las otras.
   fotos-de-resenias:

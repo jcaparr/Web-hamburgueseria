@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Campo, CampoDeContrasenia } from '../components/Campo'
 import { CampoNombreDeUsuario } from '../components/CampoNombreDeUsuario'
+import { AvisoDeTerminos } from '../components/AvisoDeTerminos'
 import { GoogleSignInButton } from '../components/GoogleSignInButton'
 import { PasoNombreDeGoogle } from '../components/PasoNombreDeGoogle'
 import { useAuth } from '../context/useAuth'
@@ -97,6 +98,7 @@ export function Register() {
             onError={setGoogleError}
             text="signup_with"
           />
+          <AvisoDeTerminos accion="Al crear tu cuenta" />
           <p className="text-sm text-base-content/70">
             ¿Ya tenés cuenta? <Link to="/login" className="link text-primary">Iniciá sesión</Link>
           </p>

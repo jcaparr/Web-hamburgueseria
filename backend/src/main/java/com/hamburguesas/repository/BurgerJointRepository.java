@@ -21,6 +21,10 @@ public interface BurgerJointRepository
     /** Los que todavía no tienen foto, para completarlas en la próxima sincronización. */
     List<BurgerJoint> findByPhotoUrlIsNull();
 
+    /** Todos los locales, para el mapa del sitio: cada uno tiene su ficha pública. */
+    @Query("select b.id from BurgerJoint b order by b.id")
+    List<Long> idsDeTodos();
+
     /**
      * Los locales a los que todavía no les preguntamos cuántas fotos tiene Google.
      *
