@@ -1,5 +1,6 @@
 package com.hamburguesas.dto;
 
+import com.hamburguesas.auth.EntraEnBcrypt;
 import com.hamburguesas.auth.Usernames;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -13,5 +14,7 @@ public record RegisterRequest(
         message = "Entre 3 y 20 caracteres, solo letras, números y guión bajo")
     String username,
     @NotBlank @Email @Size(max = 180) String email,
-    @NotBlank @Size(min = 8, max = 72) String password
+    // Lo largo lo mide en bytes @EntraEnBcrypt, no en letras: ver ahí por qué.
+    @NotBlank @Size(min = 8, message = "La contraseña tiene que tener al menos 8 caracteres") @EntraEnBcrypt
+    String password
 ) {}
