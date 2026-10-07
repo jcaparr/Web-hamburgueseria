@@ -13,6 +13,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Set;
 
 /**
  * Caps how many auth requests one address can make.
@@ -26,12 +27,30 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class AuthRateLimitFilter extends OncePerRequestFilter {
 
+    /**
+     * Lo de /api/auth que no cuenta para el límite: preguntar de quién es la cookie,
+     * renovar la sesión y cerrarla.
+     *
+     * Ninguno sirve para adivinar una contraseña ni hace mandar un mail, que es lo que
+     * el límite existe para frenar, y cuestan lo mismo que cualquier otra llamada de la
+     * API, que no tiene límite. Contarlos no protegía nada y dejaba gente afuera: /me se
+     * pide en cada carga de página, y detrás de una misma IP —las redes de celular
+     * comparten una entre muchos— unas pocas recargas gastaban el cupo de todos, que
+     * pasaban a verse desconectados y tampoco podían volver a entrar (#148).
+     *
+     * Van por igualdad exacta y no por prefijo: cualquier variante del camino sigue
+     * contando, y una que no sea exactamente esta no llega a estos tres.
+     */
+    private static final Set<String> DE_LA_SESION = Set.of(
+        "/api/auth/me", "/api/auth/refresh", "/api/auth/logout");
+
     private final RateLimiter rateLimiter;
     private final AuthProperties properties;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().startsWith("/api/auth/");
+        String camino = request.getRequestURI();
+        return !camino.startsWith("/api/auth/") || DE_LA_SESION.contains(camino);
     }
 
     @Override

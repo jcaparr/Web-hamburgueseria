@@ -51,8 +51,9 @@ public class AuthProperties {
     @Data
     public static class RateLimit {
         /**
-         * Everything under /api/auth from one address. Generous enough for a family
-         * behind one connection, tight enough to make scripted guessing pointless.
+         * Everything under /api/auth from one address, except the session calls (me,
+         * refresh, logout; see AuthRateLimitFilter). Generous enough for a family behind
+         * one connection, tight enough to make scripted guessing pointless.
          */
         private int perIpRequests = 30;
         private int perIpWindowMinutes = 15;
