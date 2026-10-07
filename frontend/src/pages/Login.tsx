@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Campo, CampoDeContrasenia } from '../components/Campo'
+import { AvisoDeTerminos } from '../components/AvisoDeTerminos'
 import { GoogleSignInButton } from '../components/GoogleSignInButton'
 import { PasoNombreDeGoogle } from '../components/PasoNombreDeGoogle'
 import { useAuth } from '../context/useAuth'
@@ -100,6 +101,7 @@ export function Login() {
 
           {googleError && <p role="alert" className="text-sm text-error">{googleError}</p>}
           <GoogleSignInButton onCredential={onCredential} onError={setGoogleError} text="signin_with" />
+          <AvisoDeTerminos accion="Si entrás con Google por primera vez, se crea tu cuenta y" />
 
           <p className="text-sm text-base-content/70">
             <Link to="/forgot-password" className="link text-primary">

@@ -32,6 +32,8 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       ALLOWED_ORIGIN: ${SITE_URL}
+      # La dirección pública, para los enlaces absolutos del mapa del sitio.
+      SITE_URL: ${SITE_URL}
       # Vacío es distinto de ausente: Spring ve la variable igual. Por eso la decisión
       # de enviar o no la toma MAIL_ENABLED, no la presencia de estas.
       MAIL_ENABLED: ${MAIL_ENABLED:-true}

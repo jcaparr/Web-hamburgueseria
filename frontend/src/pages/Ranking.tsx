@@ -7,6 +7,7 @@ import { ScoreBadge } from '../components/ScoreBadge'
 import { AvisoVacio } from '../components/Seccion'
 import { useAuth } from '../context/useAuth'
 import { usePedido } from '../hooks/usePedido'
+import { useDescripcion } from '../hooks/useMetadatos'
 import { useTitulo } from '../hooks/useTitulo'
 import type { PageResponse, RankingItem } from '../types'
 import { shortAddress } from '../utils/address'
@@ -43,6 +44,7 @@ interface Puesto {
 export function Ranking() {
   const { user } = useAuth()
   useTitulo('Ranking')
+  useDescripcion('El ranking de las hamburgueserías de Buenos Aires según quienes fueron: las de mejor nota y las más reseñadas.')
   // La lista que se mira va en la dirección: al volver de una ficha se vuelve a la
   // misma, y se puede pasar el enlace.
   const [parametros, setParametros] = useSearchParams()

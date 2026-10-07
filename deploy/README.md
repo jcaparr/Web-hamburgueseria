@@ -103,7 +103,24 @@ Vacío, el botón simplemente no aparece y el endpoint rechaza cualquier intento
 Mientras la app esté en modo "Prueba" en la pantalla de consentimiento, funciona igual
 para cualquier cuenta, porque solo pedimos permisos básicos (email y perfil). Antes de
 abrirla al público conviene completar la pantalla de consentimiento con el nombre real
-de la app: es lo que ve el usuario al entrar.
+de la app: es lo que ve el usuario al entrar. En la misma pantalla van los enlaces a
+`https://tu-dominio/privacidad` y `https://tu-dominio/terminos`.
+
+## Buscadores
+
+La web ya publica `robots.txt` y `sitemap.xml`. El mapa del sitio lo arma el backend
+con `SITE_URL`, así que tiene que ser la dirección pública exacta, con `https://`.
+
+Para que Google la empiece a recorrer y avise de problemas:
+
+1. Entrar a [Google Search Console](https://search.google.com/search-console) y agregar
+   el dominio como **propiedad de dominio**.
+2. Google da un registro TXT: se carga en el DNS del dominio (en Cloudflare, **DNS →
+   Add record → TXT**) y se toca **Verificar**.
+3. En **Sitemaps**, enviar `https://tu-dominio/sitemap.xml`.
+
+Las páginas legales (`/terminos` y `/privacidad`) toman el nombre y el domicilio del
+responsable de `frontend/src/utils/legal.ts`: completarlos antes del primer deploy.
 
 ## Actualizar
 

@@ -6,6 +6,7 @@ import { Recorrido } from '../components/Recorrido'
 import { SelectorDeBarrios } from '../components/SelectorDeBarrios'
 import { useAuth } from '../context/useAuth'
 import { useBarrios } from '../hooks/useBarrios'
+import { useDescripcion } from '../hooks/useMetadatos'
 import { useTitulo } from '../hooks/useTitulo'
 import type { SavedTour, Tour as TourRecorrido } from '../types'
 import { routeUrl } from '../utils/maps'
@@ -36,6 +37,7 @@ type Ubicacion = { lat: number; lon: number }
 export function Tour() {
   const { user } = useAuth()
   useTitulo('Armar un tour')
+  useDescripcion('Armá un recorrido de hamburgueserías por Buenos Aires, a pie o en auto, y abrilo en Google Maps.')
 
   const barriosDisponibles = useBarrios()
   const [barrios, setBarrios] = useState<string[]>([])

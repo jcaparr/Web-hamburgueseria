@@ -9,11 +9,23 @@
 		reverse_proxy backend:8080
 	}
 
+	# El mapa del sitio lo arma el backend, porque cambia con los locales. Va en la raíz
+	# porque es donde lo anuncia robots.txt.
+	handle /sitemap.xml {
+		rewrite * /api/sitemap.xml
+		reverse_proxy backend:8080
+	}
+
 	handle {
 		root * /srv
 		# Hashed asset filenames change on every build, so they can be cached forever.
 		@assets path /assets/*
 		header @assets Cache-Control "public, max-age=31536000, immutable"
+		# Todo lo demás —el index.html sobre todo— se vuelve a confirmar en cada visita.
+		# Sin esto el navegador podía quedarse con el index.html de antes de un deploy,
+		# que pide archivos de /assets que ya no existen, y la página quedaba en blanco.
+		@resto not path /assets/*
+		header @resto Cache-Control "no-cache"
 		# Client-side routing: unknown paths are React Router's problem, not a 404.
 		try_files {path} /index.html
 		file_server

@@ -1,0 +1,20 @@
+# Lo público se puede recorrer entero: Explorar, las fichas de los locales, el ranking,
+# el tour y las páginas legales.
+#
+# Lo que pide cuenta no le sirve a un buscador: solo vería la pantalla de entrar. La API
+# no se bloquea a propósito: Google arma cada página ejecutándola, y sin poder leer la
+# API vería las fichas vacías.
+User-agent: *
+Disallow: /feed
+Disallow: /profile
+Disallow: /reviews
+Disallow: /wishlist
+Disallow: /buscar
+Disallow: /u/
+Disallow: /login
+Disallow: /register
+Disallow: /verify-email
+Disallow: /forgot-password
+Disallow: /api/admin/
+
+Sitemap: https://burgometro.com.ar/sitemap.xml

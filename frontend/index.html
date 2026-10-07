@@ -9,6 +9,32 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Las hamburgueserías de Buenos Aires, con las notas y reseñas de quienes fueron." />
+    <!-- La tarjeta que se arma al compartir un enlace por WhatsApp, X o donde sea. Esos
+         lectores no ejecutan la app, así que solo ven esto: es la misma para cualquier
+         dirección. La imagen y su dirección tienen que ser absolutas. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Burgómetro" />
+    <meta property="og:locale" content="es_AR" />
+    <meta property="og:title" content="Burgómetro" />
+    <meta property="og:description" content="Las hamburgueserías de Buenos Aires, con las notas y reseñas de quienes fueron." />
+    <meta property="og:image" content="https://burgometro.com.ar/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="El logo de Burgómetro, una hamburguesa con un medidor en el pan, y el texto: las hamburgueserías de Buenos Aires, medidas por quienes fueron." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <!-- Para los buscadores: qué sitio es. La ficha de cada local la agrega la app al
+         abrirla (ver useDatosEstructurados). No es un script que se ejecute, así que la
+         política de seguridad no lo frena. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Burgómetro",
+        "url": "https://burgometro.com.ar/",
+        "inLanguage": "es-AR",
+        "description": "Las hamburgueserías de Buenos Aires, con las notas y reseñas de quienes fueron."
+      }
+    </script>
     <!-- El color de la barra del navegador, el del fondo de cada tema. -->
     <meta name="theme-color" content="#faf3e3" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#17110d" media="(prefers-color-scheme: dark)" />

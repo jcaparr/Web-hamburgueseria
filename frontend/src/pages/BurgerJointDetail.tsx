@@ -11,8 +11,10 @@ import { ResumenDeCalificaciones } from '../components/ResumenDeCalificaciones'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { TarjetaDeResenia } from '../components/TarjetaDeResenia'
 import { useAuth } from '../context/useAuth'
+import { useDatosEstructurados, useDescripcion, useNoIndexar } from '../hooks/useMetadatos'
 import { useTitulo } from '../hooks/useTitulo'
 import type { BurgerJoint, Horario, PageResponse, Rating, ResumenDeResenias } from '../types'
+import { descripcionDe, restauranteDe } from '../utils/datosEstructurados'
 import { isNotFound, isSessionExpired } from '../utils/errors'
 import { shortAddress } from '../utils/address'
 import { comoLlegarUrl, mapsUrl } from '../utils/maps'
@@ -46,6 +48,11 @@ export function BurgerJointDetail() {
 
   const myRating = ratings.find((r) => r.userId === user?.userId) ?? null
   useTitulo(burgerJoint?.name ?? (isNotFound(loadError) ? 'Hamburguesería no encontrada' : null))
+  // Para los buscadores: la descripción y la ficha en schema.org. Un local que no existe
+  // no se tiene que guardar, aunque el servidor haya contestado 200 con la app.
+  useDescripcion(burgerJoint ? descripcionDe(burgerJoint) : null)
+  useDatosEstructurados(burgerJoint ? restauranteDe(burgerJoint, horario, window.location.origin) : null)
+  useNoIndexar(isNotFound(loadError))
 
   function load() {
     // Juntas: si cualquiera de las dos falla, la página no está completa. Antes cada
