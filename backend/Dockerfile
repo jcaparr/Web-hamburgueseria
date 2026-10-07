@@ -7,12 +7,14 @@ RUN mvn -B -q dependency:go-offline
 COPY src ./src
 RUN mvn -B -q clean package -DskipTests
 
-FROM eclipse-temurin:17-jre-alpine
+# No la variante alpine: esa sale solo para x86, y el servidor de Oracle es ARM
+# (Ampere). Con alpine el build fallaba con "no match for platform in manifest".
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 
 # Running as root inside the container would mean a container escape lands as root
 # on the VPS too.
-RUN addgroup -S app && adduser -S -G app app
+RUN groupadd --system app && useradd --system --gid app --no-create-home --shell /usr/sbin/nologin app
 
 COPY --from=build /build/target/*.jar app.jar
 
