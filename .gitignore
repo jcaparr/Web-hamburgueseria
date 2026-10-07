@@ -17,6 +17,10 @@ frontend/.env.local
 
 # Backups: contienen los emails de todos los usuarios
 deploy/backups/
+# Lo que deja una restauración desde la copia de afuera, y la clave que la abre.
+deploy/fotos-de-afuera/
+*.sql.gz.age
+burgometro-backups.key
 
 # IDE
 .idea/

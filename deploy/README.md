@@ -211,11 +211,9 @@ docker compose -f docker-compose.prod.yml --env-file .env up -d --build
 `backup.sh` guarda la base y las fotos en `deploy/backups` y borra lo que pasa de 14 días.
 Las fotos son de dos clases: las que bajan de Google y las que sube la gente con sus
 reseñas. Las segundas no se pueden volver a conseguir de ningún lado, así que van las dos.
-Un backup que vive en el mismo servidor que la base no sirve de mucho, así que conviene
-configurar `RCLONE_REMOTE` para copiarlo afuera.
 
 ```bash
-crontab -e
+sudo crontab -e
 # 15 3 * * * /opt/hamburgueserias/deploy/backup.sh >> /var/log/hamburguesas-backup.log 2>&1
 ```
 
@@ -226,6 +224,74 @@ Para restaurar, la base y, si se pasan, las fotos del mismo momento:
 ```
 
 **Probalo una vez antes de necesitarlo**, con un backup real, para saber que funciona.
+
+### La copia afuera del servidor
+
+Un backup que vive en el mismo servidor que la base se pierde con él. Con `RCLONE_REMOTE`
+configurado, cada backup deja además una copia en [Backblaze B2](https://www.backblaze.com/cloud-storage),
+que da 10 GB gratis y no pide tarjeta:
+
+- **`db/`**: cada dump, cifrado con [age](https://age-encryption.org) antes de salir del
+  servidor. Tiene el mail y el hash de la contraseña de cada usuario. Se cifra con una
+  clave pública, y la privada, la única que lo abre, no está en el servidor: ni quien
+  entre al servidor ni Backblaze pueden leer los backups. Si `RCLONE_REMOTE` está y falta
+  la clave, el script no sube nada.
+- **`fotos/actuales/`**: una copia de las dos carpetas de fotos, que en cada pasada
+  sube solo lo nuevo. Mandar el `.tar` entero todos los días llenaba los 10 GB en
+  semanas. Van sin cifrar porque son públicas: cualquiera las ve en la web.
+- **`fotos/borradas/<día>/`**: lo que ese día se borró o se reemplazó en el servidor.
+
+Lo que pasa de 14 días se borra también afuera (`REMOTE_RETENTION_DAYS`), porque la
+política de privacidad promete que lo que alguien borra desaparece de las copias en
+ese plazo.
+
+**Configurarla, una vez:**
+
+1. **La clave, en tu compu.** En una terminal de Linux (en Windows sirve la de Ubuntu,
+   en WSL):
+   ```bash
+   sudo apt install -y age
+   age-keygen -o burgometro-backups.key
+   ```
+   Muestra la **clave pública** (`age1...`), que va al `.env`. El archivo tiene la
+   **privada**: guardala en tu gestor de contraseñas y en un segundo lugar (un pendrive,
+   o impresa). Sin ella, los backups de afuera no se pueden abrir.
+2. **El lugar, en Backblaze B2.** Creá una cuenta y después:
+   - en **Buckets → Create a Bucket**, uno privado, con un nombre cualquiera que no
+     esté usado (por ejemplo `burgometro-backups-` con unos números);
+   - en **Application Keys → Add a New Application Key**, una clave con acceso solo
+     a ese bucket y permiso **Read and Write**. El `applicationKey` se muestra una sola
+     vez.
+3. **En el servidor**, con un espacio antes del `sudo` para que la clave no quede en el
+   historial:
+   ```bash
+   sudo apt install -y age rclone
+    sudo rclone config create b2 b2 account=KEY_ID key=APPLICATION_KEY hard_delete=true
+   ```
+   `hard_delete=true` hace falta: sin eso B2 esconde lo que se borra en vez de borrarlo,
+   y la copia de 14 días no se borraría nunca.
+4. **En el `.env`**: `RCLONE_REMOTE=b2:NOMBRE-DEL-BUCKET` y la clave pública en
+   `BACKUP_AGE_RECIPIENT`.
+5. Correr `sudo ./backup.sh` a mano y ver que termine con `Off-server copy done`.
+
+**Restaurar desde afuera**, si se perdió el servidor: con el stack levantado en el
+nuevo y rclone configurado como en el paso 3, desde `deploy/`:
+
+```bash
+# El último dump, y la clave privada copiada al servidor solo por un rato.
+rclone lsf b2:NOMBRE-DEL-BUCKET/db | sort | tail -1
+rclone copy b2:NOMBRE-DEL-BUCKET/db/db-AAAAMMDD-HHMMSS.sql.gz.age .
+age -d -i burgometro-backups.key -o backups/db-AAAAMMDD-HHMMSS.sql.gz db-AAAAMMDD-HHMMSS.sql.gz.age
+shred -u burgometro-backups.key
+
+# Las fotos, en el mismo formato que deja backup.sh. El mkdir es porque B2 no guarda
+# carpetas vacías, y tar falla si falta una.
+mkdir -p fotos-de-afuera/place-photos fotos-de-afuera/rating-photos
+rclone copy b2:NOMBRE-DEL-BUCKET/fotos/actuales fotos-de-afuera
+tar -czf backups/photos-de-afuera.tar.gz -C fotos-de-afuera place-photos rating-photos
+
+./restore.sh backups/db-AAAAMMDD-HHMMSS.sql.gz backups/photos-de-afuera.tar.gz
+```
 
 ## Probar el stack localmente
 
