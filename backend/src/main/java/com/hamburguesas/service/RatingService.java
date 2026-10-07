@@ -20,6 +20,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -106,6 +108,45 @@ public class RatingService {
         rating.setScore(request.score());
         rating.setComment(request.comment());
         return toResponse(rating);
+    }
+
+    /**
+     * Borra la reseña de quien la pide en ese local, con su foto (#180).
+     *
+     * Se busca por quien llama y el local, igual que al editar: no hay forma de nombrar
+     * la reseña de otro, así que no hace falta comprobar de quién es. El feed, el
+     * promedio y el ranking se calculan de las reseñas, así que ahí no queda nada que
+     * limpiar.
+     *
+     * El archivo se borra recién cuando la base confirmó: si la transacción fallara, la
+     * reseña seguiría ahí, y tiene que seguir teniendo su foto.
+     */
+    @Transactional
+    public void borrar(Long userId, Long burgerJointId) {
+        Rating rating = ratingRepository
+            .findByUser_IdAndBurgerJoint_Id(userId, burgerJointId)
+            .orElseThrow(() -> new ResourceNotFoundException("You haven't rated this burger joint yet"));
+
+        ratingRepository.delete(rating);
+
+        String foto = rating.getPhotoUrl();
+        if (foto != null) {
+            despuesDeConfirmar(() -> fotos.borrar(foto));
+        }
+    }
+
+    /** Fuera de una transacción (en un test, por ejemplo) no hay qué esperar: corre ya. */
+    private static void despuesDeConfirmar(Runnable accion) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    accion.run();
+                }
+            });
+        } else {
+            accion.run();
+        }
     }
 
     private byte[] exigir(MultipartFile foto) {

@@ -45,6 +45,7 @@ export function ModalDeResenia({
   const [comment, setComment] = useState(miResenia?.comment ?? '')
   const [foto, setFoto] = useState<File | null>(null)
   const [guardando, setGuardando] = useState(false)
+  const [borrando, setBorrando] = useState(false)
   // Con el campo al que se refiere, si es de uno: el aviso va al lado de ese campo y no
   // al pie del formulario, donde quedaba lejos de lo que había que corregir.
   const [error, setError] = useState<{ texto: string; campo?: 'puntaje' | 'foto' } | null>(null)
@@ -86,7 +87,7 @@ export function ModalDeResenia({
   }
 
   function intentarCerrar() {
-    if (guardando) return
+    if (guardando || borrando) return
     if (hayAlgoEscrito && !confirm('¿Cerrar sin guardar? Vas a perder lo que escribiste.')) return
     onCerrar()
   }
@@ -135,6 +136,34 @@ export function ModalDeResenia({
       }
     } finally {
       setGuardando(false)
+    }
+  }
+
+  /**
+   * Borrar la reseña propia, con su foto (#180).
+   *
+   * Pregunta antes porque no hay vuelta atrás: la foto no se puede recuperar. Después
+   * hace lo mismo que al guardar —quien abrió la ventana vuelve a pedir las reseñas—,
+   * y con eso la ficha vuelve a ofrecer escribir una.
+   */
+  async function borrar() {
+    if (!miResenia) return
+    if (!confirm(`¿Borrar tu reseña de ${nombreDelLocal}? Se pierden la nota, el comentario y la foto, y no se puede deshacer.`)) return
+
+    setBorrando(true)
+    setError(null)
+    try {
+      await apiClient.delete(`/burger-joints/${localId}/ratings`)
+      onGuardada()
+      onCerrar()
+    } catch (err: any) {
+      if (isSessionExpired(err)) {
+        onSesionVencida()
+      } else {
+        setError({ texto: err.response?.data?.error ?? 'No pudimos borrar tu reseña. Probá de nuevo.' })
+      }
+    } finally {
+      setBorrando(false)
     }
   }
 
@@ -219,11 +248,24 @@ export function ModalDeResenia({
 
           {/* El mismo verbo en el botón y mientras trabaja: "Publicar" se vuelve
               "Publicando…", no "Guardando…". */}
-          <button type="submit" disabled={guardando} className="btn btn-primary">
+          <button type="submit" disabled={guardando || borrando} className="btn btn-primary">
             {miResenia
               ? guardando ? 'Guardando…' : 'Guardar cambios'
               : guardando ? 'Publicando…' : 'Publicar reseña'}
           </button>
+
+          {/* Debajo y sin relleno: está a mano para quien la busca, pero no compite con
+              guardar, que es lo que viene a hacer casi todo el que abre la ventana. */}
+          {miResenia && (
+            <button
+              type="button"
+              onClick={borrar}
+              disabled={guardando || borrando}
+              className="btn btn-ghost text-error"
+            >
+              {borrando ? 'Borrando…' : 'Borrar reseña'}
+            </button>
+          )}
         </form>
       </div>
 

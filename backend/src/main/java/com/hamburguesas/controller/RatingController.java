@@ -76,4 +76,11 @@ public class RatingController {
     ) {
         return ratingService.update(CurrentUser.requireId(), burgerJointId, request, foto);
     }
+
+    /** La reseña propia en este local, con su foto. No hay forma de nombrar la de otro. */
+    @DeleteMapping
+    public ResponseEntity<Void> borrar(@PathVariable Long burgerJointId) {
+        ratingService.borrar(CurrentUser.requireId(), burgerJointId);
+        return ResponseEntity.noContent().build();
+    }
 }
