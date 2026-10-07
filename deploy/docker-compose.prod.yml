@@ -82,6 +82,8 @@ services:
       - backend
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS}
+      # Adonde manda Caddy a quien entra por www.
+      SITE_URL: ${SITE_URL}
     ports:
       - "80:80"
       - "443:443"

@@ -74,8 +74,8 @@ app:
     # log instead of failing. Production turns it on, and then refuses to start
     # unless there is a real sender behind it.
     enabled: ${MAIL_ENABLED:false}
-    # Must be the same address as SPRING_MAIL_USERNAME: Gmail rejects a From it
-    # did not authenticate.
+    # An address on a domain the SMTP provider has authenticated (SPF/DKIM):
+    # anything else gets rejected or lands in spam.
     from: ${MAIL_FROM:}
     from-name: ${MAIL_FROM_NAME:Burgómetro}
   auth:
