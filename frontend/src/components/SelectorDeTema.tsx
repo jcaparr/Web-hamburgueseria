@@ -22,7 +22,7 @@ export function SelectorDeTema() {
         {OPCIONES.map((opcion) => (
           <label
             key={opcion.id}
-            className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full text-sm font-semibold transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary ${
+            className={`relative flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full text-sm font-semibold transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary ${
               tema === opcion.id ? 'bg-base-100 shadow-[var(--sombra-tarjeta)]' : 'text-base-content/70 hover:text-base-content'
             }`}
           >

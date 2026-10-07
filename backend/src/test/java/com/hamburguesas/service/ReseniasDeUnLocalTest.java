@@ -186,7 +186,7 @@ class ReseniasDeUnLocalTest {
     @Test
     void lasReseniasDeLosQueSigoLleganTalCual() {
         RatingResponse deUnAmigo = new RatingResponse(
-            9L, 7L, "amigo", 5, "una masa", "/api/rating-photos/x.jpg", Instant.now());
+            9L, 7L, "amigo", "20131", 5, "una masa", "/api/rating-photos/x.jpg", Instant.now());
         when(followRepository.idsQueSigue(YO)).thenReturn(List.of(7L));
         when(ratingRepository.deAutoresEn(LOCAL, List.of(7L))).thenReturn(List.of(deUnAmigo));
 

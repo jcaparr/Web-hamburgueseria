@@ -201,7 +201,7 @@ public class RatingService {
 
     private RatingResponse toResponse(Rating r) {
         return new RatingResponse(
-            r.getId(), r.getUser().getId(), r.getUser().getUsername(),
+            r.getId(), r.getUser().getId(), r.getUser().getUsername(), r.getUser().getHamburguesa(),
             r.getScore(), r.getComment(), r.getPhotoUrl(), r.getCreatedAt()
         );
     }

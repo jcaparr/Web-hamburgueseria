@@ -50,6 +50,14 @@ public class User {
     @Builder.Default
     private boolean emailVerified = false;
 
+    /**
+     * La hamburguesa que eligió para su avatar, en cinco cifras (ver
+     * {@link com.hamburguesas.dto.HamburguesaRequest}). Null mientras no elija ninguna:
+     * el navegador dibuja la que sale de su nombre.
+     */
+    @Column(length = 5)
+    private String hamburguesa;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

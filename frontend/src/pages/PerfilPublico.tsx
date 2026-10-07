@@ -82,6 +82,7 @@ export function PerfilPublico() {
     <div className="flex flex-col gap-6 p-4 md:mx-auto md:max-w-3xl md:p-0 md:pt-6">
       <CabeceraDePerfil
         username={perfil.username}
+        hamburguesa={perfil.hamburguesa}
         bajada={
           <span className="text-sm text-base-content/70">
             {siguiendoEnPalabras(perfil.siguiendo)}

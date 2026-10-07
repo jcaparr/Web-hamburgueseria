@@ -48,6 +48,8 @@ export interface Rating {
   id: number
   userId: number
   username: string
+  /** La hamburguesa de su avatar, en cinco cifras, o null si no eligió ninguna. */
+  hamburguesa: string | null
   score: number
   comment: string | null
   photoUrl: string | null
@@ -134,6 +136,8 @@ export interface User {
   userId: number
   /** El único nombre que tiene una cuenta. Único y siempre en minúsculas. */
   username: string
+  /** La hamburguesa que eligió para su avatar, o null: se dibuja la de su nombre. */
+  hamburguesa: string | null
   email: string
 }
 
@@ -157,6 +161,7 @@ export interface ReseniaDePerfil {
 export interface UsuarioBuscado {
   userId: number
   username: string
+  hamburguesa: string | null
   resenias: number
   loSigo: boolean
 }
@@ -165,6 +170,7 @@ export interface UsuarioBuscado {
 export interface PerfilPublico {
   userId: number
   username: string
+  hamburguesa: string | null
   resenias: number
   promedio: number | null
   seguidores: number
@@ -179,6 +185,7 @@ export interface ItemDeFeed {
   ratingId: number
   autorId: number
   autorUsername: string
+  autorHamburguesa: string | null
   burgerJointId: number
   burgerJointName: string
   photoUrl: string | null

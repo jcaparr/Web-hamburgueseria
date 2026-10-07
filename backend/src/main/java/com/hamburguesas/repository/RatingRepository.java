@@ -141,7 +141,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
      */
     @Query("""
         select new com.hamburguesas.dto.RatingResponse(
-            r.id, u.id, u.username, r.score, r.comment, r.photoUrl, r.createdAt)
+            r.id, u.id, u.username, u.hamburguesa, r.score, r.comment, r.photoUrl, r.createdAt)
         from Rating r join r.user u
         where r.burgerJoint.id = :burgerJointId
           and u.id in :autores
@@ -226,7 +226,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
      */
     @Query("""
         select new com.hamburguesas.dto.ItemDeFeedDto(
-            r.id, u.id, u.username, b.id, b.name, b.photoUrl, b.area,
+            r.id, u.id, u.username, u.hamburguesa, b.id, b.name, b.photoUrl, b.area,
             (select avg(otra.score) from Rating otra where otra.burgerJoint.id = b.id),
             r.score, r.comment, r.photoUrl, r.createdAt,
             case when r.updatedAt is not null then true else false end)
@@ -249,7 +249,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
      */
     @Query("""
         select new com.hamburguesas.dto.ItemDeFeedDto(
-            r.id, u.id, u.username, b.id, b.name, b.photoUrl, b.area,
+            r.id, u.id, u.username, u.hamburguesa, b.id, b.name, b.photoUrl, b.area,
             (select avg(otra.score) from Rating otra where otra.burgerJoint.id = b.id),
             r.score, r.comment, r.photoUrl, r.createdAt,
             case when r.updatedAt is not null then true else false end)

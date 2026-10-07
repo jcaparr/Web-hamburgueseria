@@ -51,7 +51,7 @@ class FeedServiceTest {
     }
 
     private ItemDeFeedDto resenia(long id, Instant cuando) {
-        return new ItemDeFeedDto(id, 9L, "juanca", 5L, "Un local", null, "Palermo",
+        return new ItemDeFeedDto(id, 9L, "juanca", null, 5L, "Un local", null, "Palermo",
             4.2, 4, "buena", null, cuando, false);
     }
 

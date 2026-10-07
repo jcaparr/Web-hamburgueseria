@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { FONDOS, PANES, QUESOS, recetaDe, type Receta } from '../utils/recetas'
+import { FONDOS, PANES, QUESOS, recetaPara, type Receta } from '../utils/recetas'
 
 /**
  * La cara de cada uno: una hamburguesa propia.
@@ -9,18 +9,22 @@ import { FONDOS, PANES, QUESOS, recetaDe, type Receta } from '../utils/recetas'
  * la persona vino a hacer acá, y armada de a capas da para que cada uno tenga la suya.
  *
  * Cinco cosas cambian de una a otra: el fondo, el pan, el queso, lo verde y cuántas
- * carnes. Salen 360 combinaciones, así que dos personas en la misma pantalla casi nunca
- * se ven iguales. El fondo es lo que más se distingue de lejos, y es lo que sigue dejando
+ * carnes. Cada uno arma la suya desde su perfil; mientras no lo haga, ve la que sale de
+ * su nombre, una de 360, así que dos personas en la misma pantalla casi nunca se ven
+ * iguales. El fondo es lo que más se distingue de lejos, y es lo que sigue dejando
  * reconocer de un vistazo que dos publicaciones son de la misma persona.
  */
 export function AvatarDeUsuario({
   username,
+  hamburguesa,
   size = 40,
 }: {
   username: string
+  /** La que eligió, en cinco cifras; sin ella, la que sale de su nombre. */
+  hamburguesa?: string | null
   size?: number
 }) {
-  const receta = recetaDe(username)
+  const receta = recetaPara(username, hamburguesa)
   return (
     <div
       className={`flex-none overflow-hidden rounded-full ${FONDOS[receta.fondo]}`}

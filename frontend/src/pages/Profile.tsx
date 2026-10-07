@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { CabeceraDePerfil } from '../components/CabeceraDePerfil'
 import { CuentasBloqueadas } from '../components/CuentasBloqueadas'
-import { IconChevronRight, IconSearch, IconSettings, IconUser } from '../components/icons'
+import { IconChevronRight, IconPencil, IconSearch, IconSettings, IconUser } from '../components/icons'
 import { LoadError } from '../components/LoadError'
 import { SavedTourCard } from '../components/SavedTourCard'
 import { SelectorDeTema } from '../components/SelectorDeTema'
@@ -105,6 +105,18 @@ export function Profile() {
     <div className="flex flex-col gap-6 p-4 md:mx-auto md:max-w-3xl md:p-0 md:pt-6">
       <CabeceraDePerfil
         username={user.username}
+        hamburguesa={user.hamburguesa}
+        // Debajo del nombre, al lado de la hamburguesa: es donde se la mira y donde se
+        // busca cómo cambiarla.
+        bajada={
+          <Link
+            to="/profile/hamburguesa"
+            className="-my-2 inline-flex min-h-11 w-fit items-center gap-1.5 rounded-field text-sm font-semibold text-primary hover:underline"
+          >
+            <IconPencil size={14} />
+            Cambiar tu hamburguesa
+          </Link>
+        }
         cifras={[
           {
             valor: stats ? String(stats.ratingsCount) : '—',

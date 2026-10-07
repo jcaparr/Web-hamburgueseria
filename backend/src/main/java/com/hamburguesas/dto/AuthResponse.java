@@ -7,5 +7,7 @@ package com.hamburguesas.dto;
 public record AuthResponse(
     Long userId,
     String username,
+    /** La hamburguesa del avatar, en cinco cifras, o null si no eligió ninguna. */
+    String hamburguesa,
     String email
 ) {}

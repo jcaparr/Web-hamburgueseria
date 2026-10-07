@@ -16,6 +16,7 @@ import java.util.List;
 public record PerfilPublicoDto(
     Long userId,
     String username,
+    String hamburguesa,
     long resenias,
     Double promedio,
     long seguidores,
