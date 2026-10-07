@@ -157,7 +157,10 @@ export function Privacidad() {
           <li>borrar tu cuenta y todo lo que publicaste.</li>
         </Lista>
         <p>
-          Escribinos a <Correo /> desde el mail de tu cuenta, para que sepamos que sos vos. Te contestamos dentro de
+          Una reseña la podés borrar vos, con su foto, cuando quieras: en la ficha del local, en «Editar tu reseña».
+        </p>
+        <p>
+          Para lo demás, escribinos a <Correo /> desde el mail de tu cuenta, para que sepamos que sos vos. Te contestamos dentro de
           los plazos de la ley: 10 días corridos para darte acceso a tus datos y 5 días hábiles para corregirlos o
           borrarlos.
         </p>
