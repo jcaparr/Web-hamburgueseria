@@ -10,6 +10,9 @@ COPY . .
 # Public by design; empty simply hides the Google button.
 ARG VITE_GOOGLE_CLIENT_ID=""
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+# El id del sitio en Umami, para contar visitas. Vacío no carga el contador.
+ARG VITE_UMAMI_WEBSITE_ID=""
+ENV VITE_UMAMI_WEBSITE_ID=$VITE_UMAMI_WEBSITE_ID
 ENV VITE_API_URL=/api
 RUN npm run build
 

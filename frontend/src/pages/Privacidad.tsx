@@ -30,7 +30,10 @@ export function Privacidad() {
       </Apartado>
 
       <Apartado titulo="Qué datos guardamos">
-        <p>Para mirar las hamburgueserías, el ranking o armar un recorrido no hace falta cuenta ni guardamos nada tuyo.</p>
+        <p>
+          Para mirar las hamburgueserías, el ranking o armar un recorrido no hace falta cuenta, y no guardamos nada
+          que te identifique: solo contamos la visita, de forma anónima (ver «Estadísticas de visitas», más abajo).
+        </p>
         <p>Si creás una cuenta, guardamos:</p>
         <Lista>
           <li>
@@ -63,6 +66,7 @@ export function Privacidad() {
           <li>Para mostrar tus reseñas y tu perfil a los demás.</li>
           <li>Para mandarte los códigos de verificación y de cambio de contraseña. No mandamos promociones.</li>
           <li>Para cuidar la app: frenar a quien intente adivinar contraseñas o abusar del servicio.</li>
+          <li>Para saber cuánta gente usa Burgómetro y qué pantallas mira, con estadísticas anónimas.</li>
         </Lista>
         <p>No vendemos ni alquilamos tus datos, y no los usamos para publicidad.</p>
       </Apartado>
@@ -90,8 +94,26 @@ export function Privacidad() {
         <p>Solo entregaríamos datos a una autoridad si una ley o un juez nos lo exigen.</p>
       </Apartado>
 
+      <Apartado titulo="Estadísticas de visitas">
+        <p>
+          Contamos las visitas con Umami, una herramienta que corre en nuestro propio servidor: los datos no pasan
+          por ninguna otra empresa. No usa cookies y no guarda tu dirección IP.
+        </p>
+        <p>
+          De cada visita queda la pantalla que se vio (sin lo que hayas escrito en el buscador), desde qué sitio
+          llegaste, el navegador, el sistema, el tipo de dispositivo, el tamaño de la pantalla, el idioma y el país
+          y la ciudad aproximados. Para no contar dos veces a la misma persona usa un identificador anónimo que
+          cambia todos los meses, así que no hay forma de seguir a nadie de un mes a otro ni de saber qué visitas
+          son tuyas.
+        </p>
+        <p>Si tu navegador tiene activado «No rastrear» (Do Not Track), tus visitas no se cuentan.</p>
+      </Apartado>
+
       <Apartado titulo="Cookies y lo que se guarda en tu navegador">
-        <p>Usamos solo lo necesario para que la app funcione. No hay cookies de publicidad ni de seguimiento.</p>
+        <p>
+          Usamos solo lo necesario para que la app funcione. No hay cookies de publicidad, de seguimiento ni de
+          estadísticas.
+        </p>
         <Lista>
           <li>
             <strong>Dos cookies de sesión</strong>, para que no tengas que entrar cada vez: una dura 15 minutos y

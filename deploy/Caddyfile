@@ -27,6 +27,18 @@
 		reverse_proxy backend:8080
 	}
 
+	# Las estadísticas de visitas (Umami): desde internet pasan solo el script y el envío
+	# de cada visita, cada uno por su camino exacto. Todo lo demás de Umami —el panel, su
+	# login, su API— no tiene camino por acá: se entra por un túnel SSH (ver README).
+	handle /e/script.js {
+		rewrite * /script.js
+		reverse_proxy umami:3000
+	}
+	handle /e/api/send {
+		rewrite * /api/send
+		reverse_proxy umami:3000
+	}
+
 	# El mapa del sitio lo arma el backend, porque cambia con los locales. Va en la raíz
 	# porque es donde lo anuncia robots.txt.
 	handle /sitemap.xml {
