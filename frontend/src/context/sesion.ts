@@ -15,6 +15,8 @@ export interface AuthContextValue {
    */
   loginWithGoogle: (credential: string, username?: string) => Promise<void>
   logout: () => Promise<void>
+  /** Guarda la hamburguesa del avatar; con null vuelve a la que sale del nombre. */
+  cambiarHamburguesa: (receta: string | null) => Promise<void>
 }
 
 /**

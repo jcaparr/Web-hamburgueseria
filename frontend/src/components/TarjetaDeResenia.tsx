@@ -34,7 +34,7 @@ export function TarjetaDeResenia({
             alguien que reseñó lo mismo que vos es mejor candidato que cualquiera que
             encuentres buscando a ciegas. */}
         <Link to={`/u/${resenia.username}`} className="-my-1 flex min-w-0 items-center gap-3 rounded-field py-1">
-          <AvatarDeUsuario username={resenia.username} size={36} />
+          <AvatarDeUsuario username={resenia.username} hamburguesa={resenia.hamburguesa} size={36} />
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-semibold hover:text-primary">
               @{resenia.username}

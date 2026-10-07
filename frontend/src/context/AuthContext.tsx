@@ -13,8 +13,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser({
       userId: data.userId,
       username: data.username,
+      hamburguesa: data.hamburguesa ?? null,
       email: data.email,
     })
+  }
+
+  // El servidor contesta quién es, como al entrar, y con eso se reemplaza la sesión: el
+  // avatar cambia en toda la app sin volver a preguntar.
+  async function cambiarHamburguesa(receta: string | null) {
+    const { data } = await apiClient.put('/profile/hamburguesa', { receta })
+    saveSession(data)
   }
 
   async function login(email: string, password: string) {
@@ -79,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, verifyEmail, loginWithGoogle, logout }}
+      value={{ user, loading, login, register, verifyEmail, loginWithGoogle, logout, cambiarHamburguesa }}
     >
       {children}
     </AuthContext.Provider>

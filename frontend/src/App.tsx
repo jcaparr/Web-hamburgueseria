@@ -4,6 +4,7 @@ import { BottomNav } from './components/BottomNav'
 import { RequireAuth } from './components/RequireAuth'
 import { TopBar } from './components/TopBar'
 import { AuthProvider } from './context/AuthContext'
+import { ArmarHamburguesa } from './pages/ArmarHamburguesa'
 import { BurgerJointDetail } from './pages/BurgerJointDetail'
 import { BuscarGente } from './pages/BuscarGente'
 import { Explore } from './pages/Explore'
@@ -49,6 +50,7 @@ export default function App() {
               <Route path="/buscar" element={<RequireAuth><BuscarGente /></RequireAuth>} />
               <Route path="/feed" element={<RequireAuth><Feed /></RequireAuth>} />
               <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+              <Route path="/profile/hamburguesa" element={<RequireAuth><ArmarHamburguesa /></RequireAuth>} />
               <Route path="/reviews" element={<RequireAuth><Reviews /></RequireAuth>} />
               <Route path="/wishlist" element={<RequireAuth><Wishlist /></RequireAuth>} />
               <Route path="/login" element={<Login />} />

@@ -22,11 +22,13 @@ import { AvatarDeUsuario } from './AvatarDeUsuario'
  */
 export function CabeceraDePerfil({
   username,
+  hamburguesa,
   bajada,
   cifras,
   acciones,
 }: {
   username: string
+  hamburguesa: string | null
   bajada?: ReactNode
   cifras: { valor: string; etiqueta: string; a?: string }[]
   acciones?: ReactNode
@@ -35,7 +37,7 @@ export function CabeceraDePerfil({
     <header className="flex flex-col gap-3">
       <div className="flex flex-col gap-4 tarjeta p-4 md:flex-row md:items-center md:gap-6 md:p-5">
         <div className="flex min-w-0 flex-1 items-center gap-4">
-          <AvatarDeUsuario username={username} size={88} />
+          <AvatarDeUsuario username={username} hamburguesa={hamburguesa} size={88} />
           <div className="flex min-w-0 flex-col gap-1">
             {/* El arroba más apagado: es de todos los nombres y no dice nada de este. */}
             <h1 className="truncate titulo-pagina">

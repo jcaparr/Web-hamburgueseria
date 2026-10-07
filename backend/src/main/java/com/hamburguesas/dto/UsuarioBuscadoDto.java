@@ -11,6 +11,7 @@ package com.hamburguesas.dto;
 public record UsuarioBuscadoDto(
     Long userId,
     String username,
+    String hamburguesa,
     long resenias,
     boolean loSigo
 ) {}

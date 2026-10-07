@@ -83,7 +83,7 @@ export function BuscarGente() {
                 to={`/u/${persona.username}`}
                 className="flex min-w-0 flex-1 items-center gap-3"
               >
-                <AvatarDeUsuario username={persona.username} size={40} />
+                <AvatarDeUsuario username={persona.username} hamburguesa={persona.hamburguesa} size={40} />
                 <div className="flex min-w-0 flex-col">
                   <span className="truncate font-semibold">@{persona.username}</span>
                   <span className="text-xs text-base-content/70">

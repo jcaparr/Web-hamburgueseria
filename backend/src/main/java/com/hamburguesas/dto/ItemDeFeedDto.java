@@ -15,6 +15,8 @@ public record ItemDeFeedDto(
     Long ratingId,
     Long autorId,
     String autorUsername,
+    /** La hamburguesa de su avatar, o null si no eligió ninguna. */
+    String autorHamburguesa,
     Long burgerJointId,
     String burgerJointName,
     String photoUrl,
