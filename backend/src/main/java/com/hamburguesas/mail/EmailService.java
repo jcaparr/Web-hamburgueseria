@@ -40,7 +40,7 @@ public class EmailService {
         if (properties.getFrom().isBlank()) {
             throw new IllegalStateException(
                 "app.mail.enabled es true pero falta app.mail.from (MAIL_FROM). "
-                    + "Gmail rechaza un From que no autenticó.");
+                    + "Tiene que ser una dirección del dominio autenticado en el proveedor de SMTP.");
         }
         if (mailSenderProvider.getIfAvailable() == null) {
             throw new IllegalStateException(

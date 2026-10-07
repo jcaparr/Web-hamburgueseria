@@ -88,7 +88,15 @@ export function Privacidad() {
             usar Burgómetro aceptás que tus datos se guarden ahí.
           </li>
           <li>
-            <strong>Google</strong>, si entrás con tu cuenta de Google, y para enviar los mails con los códigos.
+            <strong>Google</strong>, si entrás con tu cuenta de Google.
+          </li>
+          <li>
+            <strong>Brevo</strong>, que envía los mails con los códigos: recibe tu mail y el mensaje que te
+            mandamos, nada más.
+          </li>
+          <li>
+            <strong>Cloudflare</strong>, que maneja la dirección del sitio y reenvía los mails que nos escribís a{' '}
+            <Correo />.
           </li>
         </Lista>
         <p>Solo entregaríamos datos a una autoridad si una ley o un juez nos lo exigen.</p>
