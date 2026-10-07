@@ -120,7 +120,8 @@ Para que Google la empiece a recorrer y avise de problemas:
 3. En **Sitemaps**, enviar `https://tu-dominio/sitemap.xml`.
 
 Las páginas legales (`/terminos` y `/privacidad`) toman el nombre y el domicilio del
-responsable de `frontend/src/utils/legal.ts`: completarlos antes del primer deploy.
+responsable de `frontend/src/utils/legal.ts`: si cambian, se cambian ahí y en la fecha
+de última actualización del mismo archivo.
 
 ## Actualizar
 
