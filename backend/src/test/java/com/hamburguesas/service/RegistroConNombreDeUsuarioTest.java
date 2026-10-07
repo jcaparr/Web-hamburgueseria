@@ -110,6 +110,26 @@ class RegistroConNombreDeUsuarioTest {
         assertThat(aMedioHacer.getUsername()).isEqualTo("juanca2");
     }
 
+    /**
+     * Y vale la contraseña del último que se registró, no la del primero.
+     *
+     * Si quedara la del primero, alguien podía registrar el mail de otro con una
+     * contraseña suya: cuando el dueño se registrara y activara la cuenta con el código
+     * que le llega a él, la cuenta quedaba andando con la contraseña del otro.
+     */
+    @Test
+    void reintentarSinVerificarReemplazaLaContrasenia() {
+        User aMedioHacer = User.builder()
+            .id(1L).username("intruso").email("juan@example.com")
+            .passwordHash("la-del-que-lo-registro-primero")
+            .emailVerified(false).build();
+        when(userRepository.findByEmail("juan@example.com")).thenReturn(Optional.of(aMedioHacer));
+
+        service.register(pidiendo("juanca"));
+
+        assertThat(aMedioHacer.getPasswordHash()).isEqualTo("el-hash");
+    }
+
     /** Reintentar con el mismo no puede chocar contra su propio nombre. */
     @Test
     void reintentarConElMismoNombreNoChocaConsigoMismo() {

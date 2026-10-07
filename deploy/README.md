@@ -37,6 +37,55 @@ Flyway crea el esquema en el primer arranque. Si faltara alguna variable de ento
 el backend no arranca: eso es a propósito, para que nada quede corriendo con un valor
 por defecto.
 
+### Endurecer el servidor
+
+Una vez, antes de levantar nada. La imagen de Ubuntu de Oracle ya viene con SSH solo
+por llave y actualizaciones automáticas de seguridad; esto cierra lo que queda abierto:
+
+```bash
+# Ponerse al día con las actualizaciones pendientes.
+sudo apt update && sudo apt full-upgrade -y
+
+# SSH: sin root, sin reenvío de ventanas y menos intentos por conexión. Empieza con
+# 10- porque en sshd gana el primer valor que lee, y esta carpeta se lee en orden.
+printf 'PermitRootLogin no\nX11Forwarding no\nMaxAuthTries 3\n' | sudo tee /etc/ssh/sshd_config.d/10-burgometro.conf
+sudo systemctl reload ssh
+
+# rpcbind viene prendido y no lo usa nada.
+sudo systemctl disable --now rpcbind.socket rpcbind
+
+# Banea por un rato a las IP que fallan seguido con SSH. Con llaves no pueden entrar
+# igual, pero dejan de llenar el log.
+sudo apt install -y fail2ban
+
+# El iptables local solo deja pasar el 22: sumar el 80 y el 443 y que sobrevivan
+# a un reinicio.
+sudo iptables -I INPUT 5 -p tcp -m state --state NEW --dport 80 -j ACCEPT
+sudo iptables -I INPUT 5 -p tcp -m state --state NEW --dport 443 -j ACCEPT
+sudo netfilter-persistent save
+```
+
+Con Cloudflare delante, el registro del dominio tiene que quedar en **DNS only** (nube
+gris). Con el proxy prendido, todos los pedidos llegarían desde las IP de Cloudflare,
+y el límite de intentos por IP los trataría como si fueran una sola persona.
+
+### Las cuentas que manejan la web
+
+Quien entra a cualquiera de estas cuentas se queda con la web, así que todas con
+verificación en dos pasos: GitHub, Google (Cloud y la cuenta del proyecto), Oracle
+Cloud, Cloudflare, NIC Argentina y el mail al que llegan los avisos de todas.
+
+Mientras el dominio no mande mails, conviene publicar en su DNS que no los manda,
+para que nadie pueda hacerse pasar por `@burgometro.com.ar`:
+
+| Tipo | Nombre | Contenido |
+| --- | --- | --- |
+| TXT | `@` | `v=spf1 -all` |
+| TXT | `_dmarc` | `v=DMARC1; p=reject; adkim=s; aspf=s` |
+
+Cuando se configure el envío desde el dominio, el SPF y el DMARC se cambian por los
+que indique el proveedor de mails.
+
 ### Llevar los datos de desarrollo
 
 La base arranca vacía. Volver a bajar los locales de Google gasta cuota (las fotos tienen

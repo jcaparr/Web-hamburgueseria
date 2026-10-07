@@ -1,9 +1,19 @@
 # The whole stack on one VPS. Run it from this directory:
 #   docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+
+# Los logs de cada contenedor, con tope: cinco archivos de 10 MB. Sin esto Docker los
+# guarda enteros para siempre, y en unos meses llenan el disco y tiran todo abajo.
+x-logs: &logs
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   db:
     image: postgres:17-alpine
     restart: unless-stopped
+    logging: *logs
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -22,6 +32,7 @@ services:
     build:
       context: ../backend
     restart: unless-stopped
+    logging: *logs
     depends_on:
       db:
         condition: service_healthy
@@ -60,6 +71,7 @@ services:
         # an environment variable: the browser needs it, not the container.
         VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     restart: unless-stopped
+    logging: *logs
     depends_on:
       - backend
     environment:
