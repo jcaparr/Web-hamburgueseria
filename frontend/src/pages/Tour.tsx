@@ -163,8 +163,13 @@ export function Tour() {
         </p>
       </div>
 
+      {/* Un solo rojo en la tarjeta: el de "Armar tour". Antes también eran rojos el modo,
+          la barra de paradas, los dos números y el tope elegido, y los interruptores eran
+          amarillos; con todo resaltado no se distinguía qué era lo que había que tocar.
+          Ahora cada control tiene la forma que tiene en el resto de la app: el modo como
+          el selector de tema, los kilómetros como los filtros de Explorar. */}
       <section className="flex flex-col gap-5 tarjeta p-4">
-        <div role="group" aria-label="Cómo vas" className="join w-full">
+        <div role="group" aria-label="Cómo vas" className="flex rounded-full bg-base-200 p-1">
           {(['A_PIE', 'EN_AUTO'] as const).map((opcion) => (
             <button
               key={opcion}
@@ -176,7 +181,11 @@ export function Tour() {
                 setModo(opcion)
                 setTope(null)
               }}
-              className={`btn join-item flex-1 ${modo === opcion ? 'btn-primary' : ''}`}
+              className={`min-h-11 flex-1 cursor-pointer rounded-full text-sm font-semibold transition-colors ${
+                modo === opcion
+                  ? 'bg-base-100 shadow-[var(--sombra-tarjeta)]'
+                  : 'text-base-content/70 hover:text-base-content'
+              }`}
             >
               {opcion === 'A_PIE' ? 'A pie' : 'En auto'}
             </button>
@@ -188,10 +197,12 @@ export function Tour() {
             <label htmlFor="cuantas-paradas" className="text-sm font-semibold">
               Cuántas paradas
             </label>
-            <span aria-hidden="true" className="font-display text-lg font-bold text-primary">
+            <span aria-hidden="true" className="font-display text-lg font-bold tabular-nums">
               {cantidad}
             </span>
           </div>
+          {/* A todo el ancho: daisyUI la corta en 20rem, y el número de arriba quedaba
+              lejos de donde termina la barra. */}
           <input
             id="cuantas-paradas"
             type="range"
@@ -199,7 +210,7 @@ export function Tour() {
             max={MAXIMO_DE_PARADAS}
             value={cantidad}
             onChange={(e) => setCantidad(Number(e.target.value))}
-            className="range range-primary"
+            className="range range-sm w-full"
           />
         </div>
 
@@ -208,9 +219,11 @@ export function Tour() {
             <span id="cuanto-recorrer" className="text-sm font-semibold">
               {modo === 'A_PIE' ? 'Cuánto caminar' : 'Cuánto manejar'}
             </span>
-            <span className="font-display text-lg font-bold text-primary">
-              {tope ? `${tope} km` : 'Sin límite'}
-            </span>
+            {tope ? (
+              <span className="font-display text-lg font-bold tabular-nums">{tope} km</span>
+            ) : (
+              <span className="text-sm text-base-content/70">Sin límite</span>
+            )}
           </div>
           <div role="group" aria-labelledby="cuanto-recorrer" className="flex flex-wrap gap-2">
             {KILOMETROS[modo].map((km) => (
@@ -219,7 +232,7 @@ export function Tour() {
                 type="button"
                 onClick={() => setTope(tope === km ? null : km)}
                 aria-pressed={tope === km}
-                className={`btn btn-sm ${tope === km ? 'btn-primary' : 'btn-outline'}`}
+                className={`btn btn-sm rounded-full tabular-nums ${tope === km ? 'btn-neutral' : 'border-0 bg-base-200'}`}
               >
                 {km} km
               </button>
@@ -287,7 +300,9 @@ export function Tour() {
           type="button"
           onClick={armar}
           disabled={armando}
-          className="btn btn-primary btn-block"
+          // Con un recorrido ya armado, lo que sigue es abrirlo, y ese botón pasa a ser el
+          // rojo: dos rojos en la misma pantalla vuelven a competir entre sí.
+          className={`btn btn-block ${tour ? 'btn-outline' : 'btn-primary'}`}
         >
           {armando ? 'Armando…' : tour ? 'Armar otro' : 'Armar tour'}
         </button>
