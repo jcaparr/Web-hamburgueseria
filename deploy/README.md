@@ -172,6 +172,37 @@ Las páginas legales (`/terminos` y `/privacidad`) toman el nombre y el domicili
 responsable de `frontend/src/utils/legal.ts`: si cambian, se cambian ahí y en la fecha
 de última actualización del mismo archivo.
 
+## Estadísticas de visitas
+
+Las cuenta [Umami](https://umami.is), en el mismo servidor: sin cookies, sin guardar
+IPs y sin ningún tercero de por medio. El panel no está publicado en internet; se entra
+con un túnel SSH desde tu compu.
+
+1. **Antes del primer deploy**, completar `UMAMI_DB_PASSWORD` y `UMAMI_APP_SECRET` en el
+   `.env` y dejar `UMAMI_WEBSITE_ID` vacío. Postgres crea la base de Umami solo, la
+   primera vez que arranca (`postgres-init/10-umami.sh`).
+2. **Con todo levantado**, abrir el túnel y entrar al panel:
+   ```bash
+   ssh -i ~/.ssh/oracle_hamburguesas -L 3001:localhost:3001 ubuntu@IP-DEL-SERVIDOR
+   ```
+   Con el túnel abierto, el panel está en http://localhost:3001. El usuario inicial es
+   `admin` con contraseña `umami`: **cambiarla en el momento**.
+3. **Agregar el sitio** en el panel (Websites → Add website, con el dominio), copiar su
+   *Website ID* a `UMAMI_WEBSITE_ID` en el `.env` y volver a armar Caddy, que es el que
+   lleva el frontend:
+   ```bash
+   docker compose -f docker-compose.prod.yml --env-file .env up -d --build caddy
+   ```
+
+Si la base de Postgres ya existía de antes, el script del paso 1 no corre solo. Se corre
+a mano, una vez (toma la contraseña del `.env`):
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env exec db sh /docker-entrypoint-initdb.d/10-umami.sh
+```
+
+Las estadísticas no entran en el backup: si se pierden, se empieza a contar de nuevo.
+
 ## Actualizar
 
 ```bash

@@ -18,8 +18,12 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Para que postgres-init/ cree la base de Umami la primera vez.
+      UMAMI_DB_PASSWORD: ${UMAMI_DB_PASSWORD}
     volumes:
       - db_data:/var/lib/postgresql/data
+      # Lo que corre una sola vez, cuando la base todavía está vacía.
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
     # Deliberately no published ports: Postgres is only reachable from the other
     # containers, never from the internet.
     healthcheck:
@@ -70,6 +74,8 @@ services:
         # Baked into the bundle at build time, which is why it is a build arg and not
         # an environment variable: the browser needs it, not the container.
         VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+        # El sitio en Umami. Vacío, la web no carga el contador de visitas.
+        VITE_UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
     restart: unless-stopped
     logging: *logs
     depends_on:
@@ -85,6 +91,27 @@ services:
       # one on every restart and hit the rate limit.
       - caddy_data:/data
       - caddy_config:/config
+
+  # Las estadísticas de visitas, en nuestro servidor y no en el de un tercero. Sin
+  # cookies y sin guardar IPs: ver frontend/src/analitica.ts.
+  umami:
+    # Versión fija: una nueva puede cambiar la base, y se sube a propósito.
+    image: docker.umami.is/umami-software/umami:3.4.0
+    restart: unless-stopped
+    logging: *logs
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD}@db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET}
+      DISABLE_TELEMETRY: "1"
+      DISABLE_UPDATES: "1"
+    # El panel queda solo para quien está en el servidor, por un túnel SSH (ver
+    # README). Desde internet llegan únicamente el script y el envío de visitas, que
+    # Caddy deja pasar uno por uno: el login del panel no queda expuesto a nadie.
+    ports:
+      - "127.0.0.1:3001:3000"
 
 volumes:
   db_data:
