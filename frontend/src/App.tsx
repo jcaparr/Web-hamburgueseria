@@ -36,10 +36,14 @@ export default function App() {
           </a>
           <AlCambiarDePagina />
           <TopBar />
+          {/* En el teléfono, lo de abajo deja lugar para la barra de navegación, que flota
+              encima: 59 px de barra, la distancia al borde que usa ella (al menos 10 px, más
+              en un teléfono con barra de gestos) y unos 13 de aire. Con pb-28 fijo sobraban
+              43 px vacíos al final de cada página (#174). */}
           <main
             id="contenido"
             tabIndex={-1}
-            className="mx-auto w-full max-w-[480px] flex-1 pb-28 focus:outline-none md:max-w-5xl md:px-6 md:pb-8 md:pt-6"
+            className="mx-auto w-full max-w-[480px] flex-1 pb-[calc(4.5rem_+_max(0.625rem,env(safe-area-inset-bottom)))] focus:outline-none md:max-w-5xl md:px-6 md:pb-8 md:pt-6"
           >
             <Routes>
               <Route path="/" element={<Explore />} />
