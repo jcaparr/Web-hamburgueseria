@@ -136,8 +136,11 @@ public class VerificationService {
             case PASSWORD_RESET -> "cambiar tu contraseña";
         };
 
-        // Plain text on purpose: an HTML email from a brand-new sender is likelier
-        // to be filtered as spam, and we have no domain to authenticate with yet.
+        // Texto plano a propósito: el dominio es nuevo y todavía no tiene reputación, y un
+        // mail en HTML de un remitente desconocido es más probable que termine en no
+        // deseado. Por lo mismo no dice "spam" en ningún lado: es una de las palabras que
+        // miran los filtros, y adentro del mail no servía, porque quien lo lee ya lo
+        // encontró (#172). El aviso de revisar esa carpeta está en la pantalla del código.
         return """
             ¡Hola, @%s!
 
@@ -147,8 +150,6 @@ public class VerificationService {
 
             Vence en %d minutos. Si no fuiste vos, ignorá este mail: sin el código no
             pasa nada.
-
-            ¿No lo ves? Revisá la carpeta de spam o correo no deseado.
 
             Burgómetro
             """.formatted(username, action, code, ttlMinutes);
