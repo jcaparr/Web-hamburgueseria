@@ -13,7 +13,9 @@ import { useTitulo } from '../hooks/useTitulo'
 import type { BurgerJoint, PageResponse } from '../types'
 import { isSessionExpired } from '../utils/errors'
 
-const PAGE_SIZE = 20
+// Múltiplo de 1, 2 y 3, las columnas que tiene la grilla según el ancho: con 20, en la
+// compu la última fila quedaba con dos fichas y un hueco (#175).
+const PAGE_SIZE = 18
 
 /**
  * Dónde se recuerda si alguien apagó las cadenas.
