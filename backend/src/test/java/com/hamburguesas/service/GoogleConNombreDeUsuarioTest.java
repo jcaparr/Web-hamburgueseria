@@ -4,6 +4,7 @@ import com.hamburguesas.auth.GoogleTokenVerifier;
 import com.hamburguesas.dto.GoogleLoginRequest;
 import com.hamburguesas.exception.NeedsUsernameException;
 import com.hamburguesas.exception.UsernameTakenException;
+import com.hamburguesas.exception.WrongSignInMethodException;
 import com.hamburguesas.model.User;
 import com.hamburguesas.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -100,6 +101,76 @@ class GoogleConNombreDeUsuarioTest {
             .isInstanceOf(UsernameTakenException.class);
 
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    /** Una cuenta con contraseña que alguien registró con este mail y nunca activó. */
+    private User sinActivar() {
+        User cuenta = User.builder()
+            .id(5L).username("intruso").email("juan.perez@gmail.com")
+            .passwordHash("la-que-eligio-quien-la-registro").emailVerified(false).build();
+        when(userRepository.findByEmail("juan.perez@gmail.com")).thenReturn(Optional.of(cuenta));
+        return cuenta;
+    }
+
+    /**
+     * Google prueba que el mail es de quien entra, así que la cuenta sin activar pasa a
+     * ser suya. Antes la entrada con Google quedaba trabada para siempre: bastaba con
+     * registrar el mail de otro y no activarlo.
+     */
+    @Test
+    void unaCuentaSinActivarConEseMailPasaASerLaDeGoogle() {
+        User cuenta = sinActivar();
+
+        User entro = service.login(new GoogleLoginRequest(TOKEN, "JuanCa"));
+
+        assertThat(entro).isSameAs(cuenta);
+        assertThat(entro.getGoogleSub()).isEqualTo("sub-123");
+        assertThat(entro.isEmailVerified()).isTrue();
+        assertThat(entro.getUsername()).isEqualTo("juanca");
+    }
+
+    /** Sin la contraseña que eligió otro: sería una segunda puerta a la cuenta. */
+    @Test
+    void yLaContraseniaDeQuienLaRegistroDejaDeServir() {
+        sinActivar();
+
+        User entro = service.login(new GoogleLoginRequest(TOKEN, "juanca"));
+
+        assertThat(entro.getPasswordHash()).isNull();
+    }
+
+    /** Como cualquier cuenta de Google nueva: primero elige el nombre, y hasta entonces nada cambia. */
+    @Test
+    void laPrimeraVezTambienPideElNombreYNoTocaNada() {
+        User cuenta = sinActivar();
+
+        assertThatThrownBy(() -> service.login(new GoogleLoginRequest(TOKEN, null)))
+            .isInstanceOf(NeedsUsernameException.class);
+
+        assertThat(cuenta.getPasswordHash()).isEqualTo("la-que-eligio-quien-la-registro");
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    /** Elegir el nombre que ya tenía la cuenta no choca contra ella misma. */
+    @Test
+    void puedeQuedarseConElNombreQueYaTeniaLaCuenta() {
+        sinActivar();
+        when(userRepository.existsByUsername("intruso")).thenReturn(true);
+
+        User entro = service.login(new GoogleLoginRequest(TOKEN, "Intruso"));
+
+        assertThat(entro.getUsername()).isEqualTo("intruso");
+    }
+
+    /** Una cuenta con contraseña ya activada sigue siendo de contraseña: no se mezclan. */
+    @Test
+    void unaCuentaActivadaConContraseniaNoSeMezcla() {
+        User cuenta = sinActivar();
+        cuenta.setEmailVerified(true);
+
+        assertThatThrownBy(() -> service.login(new GoogleLoginRequest(TOKEN, "juanca")))
+            .isInstanceOf(WrongSignInMethodException.class);
+        assertThat(cuenta.getGoogleSub()).isNull();
     }
 
     /** Quien ya tiene cuenta entra de una: el nombre lo eligió la primera vez. */

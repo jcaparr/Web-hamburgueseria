@@ -1,3 +1,21 @@
+# El log general, que es donde va cada error (un 502 si el backend no contesta, por
+# ejemplo) con el pedido que lo causó. Lleva el mismo filtro que el log de pedidos de
+# abajo: sin él, la ubicación de "Cerca mío" quedaba escrita cada vez que algo fallaba.
+{
+	log default {
+		output stdout
+		format filter {
+			wrap console
+			fields {
+				request>uri query {
+					delete latitud
+					delete longitud
+				}
+			}
+		}
+	}
+}
+
 # SITE_ADDRESS is the public hostname (for example hamburguesas.duckdns.org).
 # Caddy gets and renews the Let's Encrypt certificate for it on its own.
 # Set it to :80 to serve plain HTTP when testing locally.
@@ -68,8 +86,21 @@
 		Permissions-Policy "camera=(), microphone=(), geolocation=(self), payment=(), usb=()"
 	}
 
+	# Cada pedido queda anotado, con su IP, para investigar abusos y fallas. Las cookies
+	# no: Caddy las tacha solo. La ubicación tampoco: "Cerca mío" la manda en la
+	# dirección del pedido (latitud y longitud), y sin este filtro quedaba escrito en el
+	# log dónde estaba cada persona que armó un recorrido. La política de privacidad dice
+	# que la ubicación no se guarda.
 	log {
 		output stdout
-		format console
+		format filter {
+			wrap console
+			fields {
+				request>uri query {
+					delete latitud
+					delete longitud
+				}
+			}
+		}
 	}
 }

@@ -44,11 +44,15 @@ public class GoogleAuthService {
 
         Optional<User> byEmail = userRepository.findByEmail(account.email());
         if (byEmail.isPresent()) {
+            User existente = byEmail.get();
             // Saying so plainly leaks nothing: getting here means Google already
             // confirmed the caller owns this address, so they are the account's owner.
-            if (byEmail.get().getGoogleSub() != null) {
+            if (existente.getGoogleSub() != null) {
                 log.warn("Google sign-in for an email already tied to a different Google account");
                 throw new BadCredentialsException("No pudimos iniciar sesión con Google");
+            }
+            if (!existente.isEmailVerified()) {
+                return quedarseConLaCuentaSinVerificar(existente, account, request.username());
             }
             throw new WrongSignInMethodException(
                 "Ese email ya tiene una cuenta con contraseña. Entrá con tu contraseña.");
@@ -69,6 +73,33 @@ public class GoogleAuthService {
             .build());
 
         return user;
+    }
+
+    /**
+     * Una cuenta con contraseña que nunca se activó, para un mail que Google acaba de
+     * confirmar que es de quien entra: pasa a ser su cuenta de Google.
+     *
+     * Antes se le contestaba "ese email ya tiene una cuenta con contraseña", y con eso
+     * cualquiera podía dejarle a otro la entrada con Google trabada para siempre: le
+     * bastaba con registrar su mail y no activarlo nunca. Tampoco se puede conservar la
+     * contraseña: la eligió quien la registró, que no probó nunca ser el dueño del mail,
+     * y quedarían dos puertas a la misma cuenta.
+     *
+     * No pierde nada: una cuenta sin activar no pudo entrar nunca, así que no tiene
+     * reseñas ni nada colgado. El nombre de usuario se elige de nuevo, como cualquier
+     * cuenta de Google nueva.
+     */
+    private User quedarseConLaCuentaSinVerificar(User existente, GoogleTokenVerifier.GoogleAccount account,
+                                                 String pedido) {
+        boolean pidioElQueYaTenia = pedido != null && !pedido.isBlank()
+            && Usernames.normalizar(pedido).equals(existente.getUsername());
+        // Reservar el que ya tenía chocaría contra la propia cuenta. Sin nombre pedido,
+        // elegirNombre contesta como a cualquier cuenta nueva: que elija uno.
+        existente.setUsername(pidioElQueYaTenia ? existente.getUsername() : elegirNombre(pedido, account.email()));
+        existente.setGoogleSub(account.subject());
+        existente.setEmailVerified(true);
+        existente.setPasswordHash(null);
+        return userRepository.save(existente);
     }
 
     /** @throws NeedsUsernameException en la primera vuelta, cuando todavía no eligió. */

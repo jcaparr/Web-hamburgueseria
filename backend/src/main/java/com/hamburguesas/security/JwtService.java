@@ -18,7 +18,10 @@ public class JwtService {
 
     public JwtService(
         @Value("${app.jwt.secret}") String secret,
-        @Value("${app.jwt.expiration-minutes}") long expirationMinutes
+        // La misma duración que la cookie que lo lleva. Antes era aparte, de 60 minutos
+        // contra 15 de la cookie: un token robado servía cuatro veces más de lo pensado,
+        // y un JWT no se puede revocar.
+        @Value("${app.auth.session.access-token-minutes}") long expirationMinutes
     ) {
         byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
         if (secretBytes.length < 32) {

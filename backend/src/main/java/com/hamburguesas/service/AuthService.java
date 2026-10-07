@@ -73,6 +73,12 @@ public class AuthService {
                 // Es la misma cuenta a medio hacer, así que vale el último que eligió:
                 // de lo contrario escribiría uno y le quedaría otro, sin explicación.
                 renameIfChanged(user, request.username());
+                // La contraseña también: vale la de quien se registró último. Si quedara
+                // la de la primera vuelta, cualquiera podía registrar el mail de otro con
+                // una contraseña suya y esperar: cuando el dueño se registrara y activara
+                // la cuenta con el código que le llega, la cuenta quedaba andando con la
+                // contraseña del otro, que entraba cuando quisiera.
+                user.setPasswordHash(passwordEncoder.encode(request.password()));
                 issueQuietly(user, VerificationPurpose.EMAIL_VERIFICATION);
                 return new MessageResponse(CODE_SENT);
             }
