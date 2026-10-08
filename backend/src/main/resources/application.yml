@@ -48,11 +48,12 @@ spring:
   # Una foto de celular ronda los 3 MB, y las de gama alta pasan los 8; 12 entra sin
   # que nadie tenga que achicarla antes, y sigue lejos de que una subida cualquiera
   # pueda ocupar memoria a voluntad. Lo que queda en disco pesa mucho menos: al entrar
-  # se achica a 2048 de lado y se reescribe.
+  # se achica a 2048 de lado y se reescribe. El pedido entero lleva hasta cuatro fotos
+  # de una reseña (#185), más los campos de texto.
   servlet:
     multipart:
       max-file-size: 12MB
-      max-request-size: 14MB
+      max-request-size: 50MB
 
 app:
   # La dirección pública del sitio, para armar enlaces absolutos como los del mapa del

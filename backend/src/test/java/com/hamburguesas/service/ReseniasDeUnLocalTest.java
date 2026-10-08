@@ -184,15 +184,21 @@ class ReseniasDeUnLocalTest {
     }
 
     @Test
-    void lasReseniasDeLosQueSigoLleganTalCual() {
-        RatingResponse deUnAmigo = new RatingResponse(
-            9L, 7L, "amigo", "20131", 5, "una masa", "/api/rating-photos/x.jpg", Instant.now());
+    void lasReseniasDeLosQueSigoLleganConSusFotos() {
+        Instant cuando = Instant.now();
+        Rating deUnAmigo = Rating.builder().id(9L).score(5).comment("una masa").createdAt(cuando)
+            .user(User.builder().id(7L).username("amigo").hamburguesa("20131").build())
+            .burgerJoint(BurgerJoint.builder().id(LOCAL).name("Un local").build())
+            .build();
+        deUnAmigo.ponerFotos(List.of("/api/rating-photos/x.jpg", "/api/rating-photos/y.jpg"));
         when(followRepository.idsQueSigue(YO)).thenReturn(List.of(7L));
         when(ratingRepository.deAutoresEn(LOCAL, List.of(7L))).thenReturn(List.of(deUnAmigo));
 
         ResumenDeReseniasDto resumen = service.resumen(LOCAL, YO);
 
-        assertThat(resumen.deQuienesSigo()).containsExactly(deUnAmigo);
+        assertThat(resumen.deQuienesSigo()).containsExactly(new RatingResponse(
+            9L, 7L, "amigo", "20131", 5, "una masa",
+            List.of("/api/rating-photos/x.jpg", "/api/rating-photos/y.jpg"), cuando));
     }
 
     // ---- de qué hablan las reseñas ----

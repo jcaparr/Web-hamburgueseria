@@ -1,6 +1,7 @@
 package com.hamburguesas.dto;
 
 import java.time.Instant;
+import java.util.List;
 
 public record RatingResponse(
     Long id,
@@ -10,7 +11,7 @@ public record RatingResponse(
     String hamburguesa,
     Integer score,
     String comment,
-    /** La foto que sacó quien la escribió, o null. */
-    String photoUrl,
+    /** Las fotos que sacó quien la escribió, en orden: la primera es la portada. */
+    List<String> fotos,
     Instant createdAt
 ) {}

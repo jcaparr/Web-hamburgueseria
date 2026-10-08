@@ -35,6 +35,9 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class RatingService {
 
+    /** Cuántas fotos puede llevar una reseña (#185). */
+    public static final int MAXIMO_DE_FOTOS = 4;
+
     private final RatingRepository ratingRepository;
     private final BurgerJointRepository burgerJointRepository;
     private final UserRepository userRepository;
@@ -43,7 +46,7 @@ public class RatingService {
     private final Bloqueos bloqueos;
 
     /**
-     * La foto es parte de la reseña, no un agregado posterior.
+     * Las fotos son parte de la reseña, no un agregado posterior.
      *
      * Antes se guardaba el texto primero y la foto después, para que un problema con la
      * foto no se llevara puesto lo escrito. Con la foto obligatoria ese razonamiento se
@@ -52,7 +55,7 @@ public class RatingService {
      */
     @Transactional
     public RatingResponse rate(Long userId, Long burgerJointId, RatingRequest request,
-                               MultipartFile foto) {
+                               List<MultipartFile> fotosSubidas) {
         if (ratingRepository.findByUser_IdAndBurgerJoint_Id(userId, burgerJointId).isPresent()) {
             throw new ConflictException("You already rated this burger joint. Update it instead of creating a new one.");
         }
@@ -62,47 +65,65 @@ public class RatingService {
         BurgerJoint burgerJoint = burgerJointRepository.findById(burgerJointId)
             .orElseThrow(() -> new ResourceNotFoundException("Burger joint not found"));
 
-        // Se guarda antes de tocar la base: si la foto no sirve, la transacción no
-        // llegó a escribir nada y no hay archivo que limpiar.
-        String rutaDeLaFoto = fotos.guardar(exigir(foto));
+        List<byte[]> nuevas = leerTodas(fotosSubidas);
+        if (nuevas.isEmpty()) {
+            throw new ConflictException("Toda reseña lleva una foto de lo que comiste");
+        }
+        exigirQueEntren(nuevas.size());
+
+        // Se guardan antes de tocar la base: si una foto no sirve, la transacción no
+        // llegó a escribir nada.
+        List<String> rutas = guardarTodas(nuevas);
 
         Rating rating = Rating.builder()
             .user(user)
             .burgerJoint(burgerJoint)
             .score(request.score())
             .comment(request.comment())
-            .photoUrl(rutaDeLaFoto)
             .build();
+        rating.ponerFotos(rutas);
 
         rating = ratingRepository.save(rating);
         return toResponse(rating);
     }
 
     /**
-     * Al editar, la foto solo hace falta si la reseña todavía no tiene.
+     * Al editar se dice cuáles de las fotos que ya tenía se quedan, y cuáles se suman.
      *
-     * Cambiar una coma no puede obligar a volver a sacar la foto. Pero las reseñas de
-     * antes de esta regla no tienen ninguna, y esas sí la piden: es la forma de que el
-     * "toda reseña tiene foto" termine siendo cierto sin borrarle la reseña a nadie.
+     * Cambiar una coma no puede obligar a volver a sacar las fotos. Pero las reseñas de
+     * antes de que la foto fuera obligatoria no tienen ninguna, y esas sí la piden: es
+     * la forma de que el "toda reseña tiene foto" termine siendo cierto sin borrarle la
+     * reseña a nadie.
+     *
+     * @param quedan las que ya tenía y se quedan, en el orden en que se muestran; las
+     *   nuevas van después. Null es lo que manda la versión de la app de antes de #185,
+     *   que tenía una sola foto: si trae una nueva, reemplaza a la que había.
      */
     @Transactional
     public RatingResponse update(Long userId, Long burgerJointId, RatingRequest request,
-                                 MultipartFile foto) {
+                                 List<MultipartFile> fotosSubidas, List<String> quedan) {
         Rating rating = ratingRepository
             .findByUser_IdAndBurgerJoint_Id(userId, burgerJointId)
             .orElseThrow(() -> new ResourceNotFoundException("You haven't rated this burger joint yet"));
 
-        boolean mandaFoto = foto != null && !foto.isEmpty();
-        if (!mandaFoto && rating.getPhotoUrl() == null) {
+        List<byte[]> nuevas = leerTodas(fotosSubidas);
+        List<String> actuales = rating.todasLasFotos();
+        List<String> siguen = queSiguen(actuales, quedan, !nuevas.isEmpty());
+
+        if (siguen.isEmpty() && nuevas.isEmpty()) {
             throw new ConflictException("Tu reseña necesita una foto");
         }
+        exigirQueEntren(siguen.size() + nuevas.size());
 
-        if (mandaFoto) {
-            String anterior = rating.getPhotoUrl();
-            rating.setPhotoUrl(fotos.guardar(leer(foto)));
-            if (anterior != null) {
-                fotos.borrar(anterior);
-            }
+        if (!nuevas.isEmpty() || !siguen.equals(actuales)) {
+            List<String> todas = new ArrayList<>(siguen);
+            todas.addAll(guardarTodas(nuevas));
+            rating.ponerFotos(todas);
+
+            // Recién cuando la base confirmó: si fallara, la reseña seguiría apuntándolas.
+            actuales.stream()
+                .filter(foto -> !siguen.contains(foto))
+                .forEach(sacada -> despuesDeConfirmar(() -> fotos.borrar(sacada)));
         }
 
         rating.setScore(request.score());
@@ -111,15 +132,15 @@ public class RatingService {
     }
 
     /**
-     * Borra la reseña de quien la pide en ese local, con su foto (#180).
+     * Borra la reseña de quien la pide en ese local, con sus fotos (#180).
      *
      * Se busca por quien llama y el local, igual que al editar: no hay forma de nombrar
      * la reseña de otro, así que no hace falta comprobar de quién es. El feed, el
      * promedio y el ranking se calculan de las reseñas, así que ahí no queda nada que
      * limpiar.
      *
-     * El archivo se borra recién cuando la base confirmó: si la transacción fallara, la
-     * reseña seguiría ahí, y tiene que seguir teniendo su foto.
+     * Los archivos se borran recién cuando la base confirmó: si la transacción fallara,
+     * la reseña seguiría ahí, y tiene que seguir teniendo sus fotos.
      */
     @Transactional
     public void borrar(Long userId, Long burgerJointId) {
@@ -127,12 +148,57 @@ public class RatingService {
             .findByUser_IdAndBurgerJoint_Id(userId, burgerJointId)
             .orElseThrow(() -> new ResourceNotFoundException("You haven't rated this burger joint yet"));
 
+        List<String> suyas = rating.todasLasFotos();
         ratingRepository.delete(rating);
 
-        String foto = rating.getPhotoUrl();
-        if (foto != null) {
-            despuesDeConfirmar(() -> fotos.borrar(foto));
+        suyas.forEach(foto -> despuesDeConfirmar(() -> fotos.borrar(foto)));
+    }
+
+    /**
+     * Las que se quedan, de las que ya tenía.
+     *
+     * Solo pueden ser suyas: una ruta que no está en la reseña podría ser la foto de
+     * otra persona, y aceptarla dejaría que la próxima edición le borre el archivo.
+     */
+    private List<String> queSiguen(List<String> actuales, List<String> quedan, boolean mandaNuevas) {
+        if (quedan == null) {
+            return mandaNuevas ? List.of() : actuales;
         }
+        List<String> pedidas = quedan.stream()
+            .filter(foto -> foto != null && !foto.isBlank())
+            .distinct()
+            .toList();
+        if (!actuales.containsAll(pedidas)) {
+            throw new ConflictException("Esa foto no es de tu reseña");
+        }
+        return pedidas;
+    }
+
+    private void exigirQueEntren(int cuantas) {
+        if (cuantas > MAXIMO_DE_FOTOS) {
+            throw new ConflictException("Una reseña lleva hasta " + MAXIMO_DE_FOTOS + " fotos");
+        }
+    }
+
+    /**
+     * Guarda las nuevas en disco y devuelve sus rutas, en el mismo orden.
+     *
+     * Si la tercera no sirve, las dos primeras ya quedaron escritas y ninguna reseña las
+     * va a apuntar: se borran antes de avisar. Y si después es la base la que falla, se
+     * borran también, por lo mismo.
+     */
+    private List<String> guardarTodas(List<byte[]> nuevas) {
+        List<String> rutas = new ArrayList<>();
+        try {
+            for (byte[] foto : nuevas) {
+                rutas.add(fotos.guardar(foto));
+            }
+        } catch (RuntimeException ex) {
+            rutas.forEach(fotos::borrar);
+            throw ex;
+        }
+        siSeDeshace(() -> rutas.forEach(fotos::borrar));
+        return rutas;
     }
 
     /** Fuera de una transacción (en un test, por ejemplo) no hay qué esperar: corre ya. */
@@ -149,11 +215,29 @@ public class RatingService {
         }
     }
 
-    private byte[] exigir(MultipartFile foto) {
-        if (foto == null || foto.isEmpty()) {
-            throw new ConflictException("Toda reseña lleva una foto de lo que comiste");
+    /** Al revés: solo si la base no llegó a confirmar. Fuera de una transacción, nunca. */
+    private static void siSeDeshace(Runnable accion) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int estado) {
+                    if (estado == STATUS_ROLLED_BACK) {
+                        accion.run();
+                    }
+                }
+            });
         }
-        return leer(foto);
+    }
+
+    /** Los archivos que llegaron, sin los vacíos: un campo de archivo sin elegir llega así. */
+    private List<byte[]> leerTodas(List<MultipartFile> subidas) {
+        if (subidas == null) {
+            return List.of();
+        }
+        return subidas.stream()
+            .filter(foto -> foto != null && !foto.isEmpty())
+            .map(this::leer)
+            .toList();
     }
 
     /**
@@ -226,7 +310,9 @@ public class RatingService {
             return List.of();
         }
 
-        return ratingRepository.deAutoresEn(burgerJointId, seguidos);
+        return ratingRepository.deAutoresEn(burgerJointId, seguidos).stream()
+            .map(this::toResponse)
+            .toList();
     }
 
     private byte[] leer(MultipartFile foto) {
@@ -243,7 +329,7 @@ public class RatingService {
     private RatingResponse toResponse(Rating r) {
         return new RatingResponse(
             r.getId(), r.getUser().getId(), r.getUser().getUsername(), r.getUser().getHamburguesa(),
-            r.getScore(), r.getComment(), r.getPhotoUrl(), r.getCreatedAt()
+            r.getScore(), r.getComment(), r.todasLasFotos(), r.getCreatedAt()
         );
     }
 }

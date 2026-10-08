@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/burger-joints/{burgerJointId}/ratings")
 @RequiredArgsConstructor
@@ -45,36 +47,43 @@ public class RatingController {
     }
 
     /**
-     * Texto y foto viajan juntos, en multipart.
+     * Texto y fotos viajan juntos, en multipart.
      *
-     * La foto es parte de la reseña, no un agregado: mandarlos en dos llamadas dejaría
-     * abierta la ventana en que el texto ya está guardado y la foto no, que es
+     * Las fotos son parte de la reseña, no un agregado: mandarlas en otra llamada dejaría
+     * abierta la ventana en que el texto ya está guardado y las fotos no, que es
      * exactamente la reseña sin foto que no queremos que exista.
      *
      * Los campos van sueltos y no como un JSON adentro del multipart: un formulario con
      * un archivo ya manda todo lo demás como campos, y meter JSON en el medio obligaría
      * a quien llama a armar dos codificaciones distintas en el mismo pedido.
+     *
+     * Cada foto va en un campo "foto", repetido: el mismo nombre que cuando había una
+     * sola, así que la versión de la app de antes sigue andando.
      */
     @PostMapping
     public ResponseEntity<RatingResponse> rate(
         @PathVariable Long burgerJointId,
         @Valid @ModelAttribute RatingRequest request,
-        @RequestParam(value = "foto", required = false) MultipartFile foto
+        @RequestParam(value = "foto", required = false) List<MultipartFile> fotos
     ) {
         RatingResponse response = ratingService.rate(
-            CurrentUser.requireId(), burgerJointId, request, foto
+            CurrentUser.requireId(), burgerJointId, request, fotos
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /** La foto solo hace falta si la reseña todavía no tiene: editar no es refotografiar. */
+    /**
+     * Las fotos que ya tenía y se quedan van en "queda", repetido y en orden; las nuevas,
+     * en "foto". Editar no es refotografiar: sin fotos nuevas, quedan las de antes.
+     */
     @PutMapping
     public RatingResponse update(
         @PathVariable Long burgerJointId,
         @Valid @ModelAttribute RatingRequest request,
-        @RequestParam(value = "foto", required = false) MultipartFile foto
+        @RequestParam(value = "foto", required = false) List<MultipartFile> fotos,
+        @RequestParam(value = "queda", required = false) List<String> quedan
     ) {
-        return ratingService.update(CurrentUser.requireId(), burgerJointId, request, foto);
+        return ratingService.update(CurrentUser.requireId(), burgerJointId, request, fotos, quedan);
     }
 
     /** La reseña propia en este local, con su foto. No hay forma de nombrar la de otro. */

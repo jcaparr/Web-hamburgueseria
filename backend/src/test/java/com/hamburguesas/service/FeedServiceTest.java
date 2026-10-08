@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,7 +53,7 @@ class FeedServiceTest {
 
     private ItemDeFeedDto resenia(long id, Instant cuando) {
         return new ItemDeFeedDto(id, 9L, "juanca", null, 5L, "Un local", null, "Palermo",
-            4.2, 4, "buena", null, cuando, false);
+            4.2, 4, "buena", List.of("/api/rating-photos/portada.jpg"), cuando, false);
     }
 
     /** Tantas como para que sobre una y haya página siguiente. */
@@ -74,6 +75,24 @@ class FeedServiceTest {
         verify(ratingRepository).feedDeTodos(
             any(), id.capture(), anyCollection(), any(Pageable.class));
         return id.getValue();
+    }
+
+    /**
+     * La consulta trae solo la portada: las demás fotos se completan con una consulta
+     * para toda la página, y la que no tiene más se queda con la suya (#185).
+     */
+    @Test
+    void cadaTarjetaLlegaConTodasSusFotos() {
+        when(ratingRepository.feedDeTodos(any(), any(), anyCollection(), any(Pageable.class)))
+            .thenReturn(List.of(resenia(1L, CUANDO), resenia(2L, CUANDO.minusSeconds(1))));
+        when(ratingRepository.fotosPorResenia(List.of(1L, 2L))).thenReturn(Map.of(
+            1L, List.of("/api/rating-photos/portada.jpg", "/api/rating-photos/otra.jpg")));
+
+        var pagina = service.ver(FuenteDelFeed.TODOS, null, YO);
+
+        assertThat(pagina.items()).extracting(ItemDeFeedDto::fotosDeLaResenia).containsExactly(
+            List.of("/api/rating-photos/portada.jpg", "/api/rating-photos/otra.jpg"),
+            List.of("/api/rating-photos/portada.jpg"));
     }
 
     @Test

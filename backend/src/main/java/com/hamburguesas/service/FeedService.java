@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Las últimas reseñas, de todos o solo de quienes seguís.
@@ -45,9 +46,24 @@ public class FeedService {
         };
 
         boolean hayMas = traidos.size() > POR_PAGINA;
-        List<ItemDeFeedDto> items = hayMas ? traidos.subList(0, POR_PAGINA) : traidos;
+        List<ItemDeFeedDto> items = conTodasLasFotos(hayMas ? traidos.subList(0, POR_PAGINA) : traidos);
 
         return new PaginaDeFeedDto(items, hayMas ? cursorDe(items.get(items.size() - 1)) : null);
+    }
+
+    /**
+     * La consulta del feed trae solo la portada de cada reseña: las demás fotos se
+     * buscan acá, de una vez para toda la página (#185).
+     */
+    private List<ItemDeFeedDto> conTodasLasFotos(List<ItemDeFeedDto> items) {
+        if (items.isEmpty()) {
+            return items;
+        }
+        Map<Long, List<String>> fotos = ratingRepository.fotosPorResenia(
+            items.stream().map(ItemDeFeedDto::ratingId).toList());
+        return items.stream()
+            .map(item -> item.conFotos(fotos.getOrDefault(item.ratingId(), item.fotosDeLaResenia())))
+            .toList();
     }
 
     private List<ItemDeFeedDto> deQuienesSigue(Corte corte, PageRequest pagina,
