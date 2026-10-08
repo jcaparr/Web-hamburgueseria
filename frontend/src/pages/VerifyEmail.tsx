@@ -79,16 +79,24 @@ export function VerifyEmail() {
     <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-sm md:p-0 md:pt-8">
       <div className="card card-border md:p-2">
         <div className="card-body gap-3">
-          <h1 className="card-title font-display">Revisá tu email</h1>
+          {/* Más grande que en las otras pantallas de la cuenta (#197): acá se llega
+              yendo y viniendo de la app del mail, con el teléfono en la mano, y lo que
+              hay que hacer tiene que leerse de un vistazo. */}
+          <h1 className="card-title font-display text-3xl">Revisá tu email</h1>
           {/* Plain again: registration now refuses an address that already has an
               account, so everyone who reaches this screen really does have a code
               on the way. */}
-          <p className="text-sm text-base-content/70">
-            Te mandamos un código de 6 dígitos a <span className="font-medium">{email}</span>.
+          <p className="text-base text-base-content/80">
+            Te mandamos un código de 6 dígitos a{' '}
+            <span className="font-medium wrap-break-word text-base-content">{email}</span>.
             Si no lo ves, fijate en la carpeta de spam.
           </p>
 
           <form onSubmit={onSubmit} noValidate className="flex flex-col gap-3">
+            {/* El "!" del tamaño hace falta: en el celular, index.css pone todo campo en
+                16 px para que iOS no haga zoom, y esa regla le ganaba a cualquier tamaño
+                de acá. Los números quedaban chicos justo en el teléfono, que es donde
+                más se usa esta pantalla. Más grande que 16 tampoco dispara el zoom. */}
             <Campo etiqueta="Código de 6 dígitos">
               {(campo) => (
                 <input
@@ -103,21 +111,21 @@ export function VerifyEmail() {
                   value={code}
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                   placeholder="000000"
-                  className="input input-bordered w-full text-center font-display text-2xl tracking-[0.5em] focus:border-primary"
+                  className="input input-bordered input-xl w-full text-center font-display text-3xl! tracking-[0.5em] indent-[0.5em] focus:border-primary"
                 />
               )}
             </Campo>
             {error && (
-              <p role="alert" className="text-sm text-error">
+              <p role="alert" className="text-base text-error">
                 {error}
               </p>
             )}
             {notice && (
-              <p role="status" className="text-sm text-base-content/70">
+              <p role="status" className="text-base text-base-content/80">
                 {notice}
               </p>
             )}
-            <button type="submit" disabled={submitting} className="btn btn-primary">
+            <button type="submit" disabled={submitting} className="btn btn-primary btn-lg">
               {submitting ? 'Activando…' : 'Activar cuenta'}
             </button>
           </form>

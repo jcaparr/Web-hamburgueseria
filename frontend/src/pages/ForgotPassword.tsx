@@ -110,8 +110,10 @@ export function ForgotPassword() {
             </>
           ) : (
             <>
-              {/* The server message already mentions checking spam. */}
-              <p role="status" className="text-sm text-base-content/70">
+              {/* El mensaje del servidor ya dice que se fije en spam. Del tamaño de
+                  "Revisá tu email" (#197): es el mismo momento, con el mail abierto
+                  al lado. */}
+              <p role="status" className="text-base text-base-content/80">
                 {notice}
               </p>
               <form ref={formulario} onSubmit={onReset} noValidate className="flex flex-col gap-3">
@@ -128,7 +130,7 @@ export function ForgotPassword() {
                       value={code}
                       onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                       placeholder="000000"
-                      className="input input-bordered w-full text-center font-display text-2xl tracking-[0.5em] focus:border-primary"
+                      className="input input-bordered input-xl w-full text-center font-display text-3xl! tracking-[0.5em] indent-[0.5em] focus:border-primary"
                     />
                   )}
                 </Campo>
