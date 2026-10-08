@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { apiClient } from '../api/client'
-import { SelectorDeFoto } from './SelectorDeFoto'
+import { SelectorDeFotos, type FotosElegidas } from './SelectorDeFotos'
 import { Stars } from './Stars'
 import type { Rating } from '../types'
 import { isSessionExpired } from '../utils/errors'
@@ -43,7 +43,7 @@ export function ModalDeResenia({
   // a llenar desde un efecto al abrirse, un dibujo de más (#109).
   const [score, setScore] = useState(miResenia?.score ?? 0)
   const [comment, setComment] = useState(miResenia?.comment ?? '')
-  const [foto, setFoto] = useState<File | null>(null)
+  const [fotos, setFotos] = useState<FotosElegidas>({ quedan: miResenia?.fotos ?? [], nuevas: [] })
   const [guardando, setGuardando] = useState(false)
   const [borrando, setBorrando] = useState(false)
   // Con el campo al que se refiere, si es de uno: el aviso va al lado de ese campo y no
@@ -70,7 +70,8 @@ export function ModalDeResenia({
    * que mientras haya algo puesto se pregunta.
    */
   const hayAlgoEscrito =
-    foto !== null ||
+    fotos.nuevas.length > 0 ||
+    fotos.quedan.length !== (miResenia?.fotos.length ?? 0) ||
     score !== (miResenia?.score ?? 0) ||
     comment !== (miResenia?.comment ?? '')
 
@@ -81,9 +82,11 @@ export function ModalDeResenia({
     setError((previo) => (previo?.campo === 'puntaje' ? null : previo))
   }
 
-  function elegirFoto(nueva: File | null) {
-    setFoto(nueva)
-    if (nueva) setError((previo) => (previo?.campo === 'foto' ? null : previo))
+  function elegirFotos(elegidas: FotosElegidas) {
+    setFotos(elegidas)
+    if (elegidas.quedan.length + elegidas.nuevas.length > 0) {
+      setError((previo) => (previo?.campo === 'foto' ? null : previo))
+    }
   }
 
   function intentarCerrar() {
@@ -102,8 +105,8 @@ export function ModalDeResenia({
     }
     // El servidor lo exige igual; avisarlo acá evita mandar el formulario entero para
     // que vuelva rechazado por algo que ya se sabía antes de salir.
-    if (!foto && !miResenia?.photoUrl) {
-      setError({ texto: 'Falta la foto: toda reseña lleva una de lo que comiste.', campo: 'foto' })
+    if (fotos.quedan.length + fotos.nuevas.length === 0) {
+      setError({ texto: 'Falta la foto: toda reseña lleva al menos una de lo que comiste.', campo: 'foto' })
       zonaDeLaFoto.current?.querySelector<HTMLElement>('input')?.focus()
       return
     }
@@ -111,12 +114,15 @@ export function ModalDeResenia({
     setGuardando(true)
     setError(null)
     try {
-      // Texto y foto en el mismo pedido: si la foto no sirve, no se guarda una reseña a
-      // medias esperando que alguien vuelva a completarla.
+      // Texto y fotos en el mismo pedido: si una foto no sirve, no se guarda una reseña
+      // a medias esperando que alguien vuelva a completarla.
       const cuerpo = new FormData()
       cuerpo.append('score', String(score))
       cuerpo.append('comment', comment)
-      if (foto) cuerpo.append('foto', foto)
+      fotos.nuevas.forEach((nueva) => cuerpo.append('foto', nueva))
+      // Al editar, las que ya tenía y se quedan, en orden. Si no queda ninguna no va el
+      // campo, y el servidor entiende que las nuevas reemplazan a todas.
+      if (miResenia) fotos.quedan.forEach((url) => cuerpo.append('queda', url))
 
       if (miResenia) {
         await apiClient.put(`/burger-joints/${localId}/ratings`, cuerpo)
@@ -142,13 +148,13 @@ export function ModalDeResenia({
   /**
    * Borrar la reseña propia, con su foto (#180).
    *
-   * Pregunta antes porque no hay vuelta atrás: la foto no se puede recuperar. Después
+   * Pregunta antes porque no hay vuelta atrás: las fotos no se pueden recuperar. Después
    * hace lo mismo que al guardar —quien abrió la ventana vuelve a pedir las reseñas—,
    * y con eso la ficha vuelve a ofrecer escribir una.
    */
   async function borrar() {
     if (!miResenia) return
-    if (!confirm(`¿Borrar tu reseña de ${nombreDelLocal}? Se pierden la nota, el comentario y la foto, y no se puede deshacer.`)) return
+    if (!confirm(`¿Borrar tu reseña de ${nombreDelLocal}? Se pierden la nota, el comentario y las fotos, y no se puede deshacer.`)) return
 
     setBorrando(true)
     setError(null)
@@ -198,7 +204,7 @@ export function ModalDeResenia({
           </button>
         </div>
 
-        {/* Las tres partes de reseñar, cada una con su lugar: la nota, la foto y lo que
+        {/* Las tres partes de reseñar, cada una con su lugar: la nota, las fotos y lo que
             se quiera contar. Separadas se entiende de un vistazo qué falta. */}
         <form onSubmit={guardar} className="flex flex-col gap-4">
           <div ref={zonaDelPuntaje} className="flex flex-col gap-1">
@@ -214,11 +220,8 @@ export function ModalDeResenia({
           </div>
 
           <div ref={zonaDeLaFoto} className="flex flex-col gap-1.5">
-            <span className="text-sm font-semibold">La foto</span>
-            <SelectorDeFoto
-              yaSubida={miResenia?.photoUrl ?? null}
-              onElegir={elegirFoto}
-            />
+            <span className="text-sm font-semibold">Las fotos</span>
+            <SelectorDeFotos yaSubidas={miResenia?.fotos ?? []} onCambio={elegirFotos} />
             {error?.campo === 'foto' && (
               <p role="alert" className="text-sm text-error">
                 {error.texto}

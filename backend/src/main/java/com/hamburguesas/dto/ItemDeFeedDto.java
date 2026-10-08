@@ -1,6 +1,7 @@
 package com.hamburguesas.dto;
 
 import java.time.Instant;
+import java.util.List;
 
 /**
  * Una reseña como se lee en el feed.
@@ -31,8 +32,30 @@ public record ItemDeFeedDto(
     Double promedioDelLocal,
     Integer score,
     String comment,
-    /** La foto que sacó quien la escribió, o null. */
-    String fotoDeLaResenia,
+    /** Las fotos que sacó quien la escribió, en orden: la primera es la portada. */
+    List<String> fotosDeLaResenia,
     Instant createdAt,
     boolean editada
-) {}
+) {
+
+    /**
+     * El que usa la consulta del feed, que trae solo la portada.
+     *
+     * Una consulta que arma objetos no puede traer una lista por fila. Las demás fotos
+     * las agrega después {@link #conFotos}, con una sola consulta para toda la página.
+     */
+    public ItemDeFeedDto(Long ratingId, Long autorId, String autorUsername, String autorHamburguesa,
+                         Long burgerJointId, String burgerJointName, String photoUrl, String area,
+                         Double promedioDelLocal, Integer score, String comment, String portada,
+                         Instant createdAt, boolean editada) {
+        this(ratingId, autorId, autorUsername, autorHamburguesa, burgerJointId, burgerJointName,
+            photoUrl, area, promedioDelLocal, score, comment,
+            portada == null ? List.of() : List.of(portada), createdAt, editada);
+    }
+
+    public ItemDeFeedDto conFotos(List<String> fotos) {
+        return new ItemDeFeedDto(ratingId, autorId, autorUsername, autorHamburguesa, burgerJointId,
+            burgerJointName, photoUrl, area, promedioDelLocal, score, comment, fotos, createdAt,
+            editada);
+    }
+}

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 /**
- * La foto de una reseña, que se esconde sola si no está.
+ * Una foto de una reseña, que se esconde sola si no está.
  *
  * Un archivo puede faltar: una limpieza de disco, una restauración a medias, una
  * reseña vieja de antes de que las fotos se guardaran acá. Sin esto el navegador
@@ -11,10 +11,16 @@ import { useState } from 'react'
 export function FotoDeResenia({
   src,
   autorUsername,
+  alt,
+  onFallo,
   className,
 }: {
   src: string
   autorUsername: string
+  /** Si no viene, dice de quién es la reseña. */
+  alt?: string
+  /** Avisa que no cargó, para que un carrusel no deje un hueco donde iba. */
+  onFallo?: () => void
   className?: string
 }) {
   const [fallo, setFallo] = useState(false)
@@ -24,8 +30,11 @@ export function FotoDeResenia({
   return (
     <img
       src={src}
-      alt={`La hamburguesa que reseñó @${autorUsername}`}
-      onError={() => setFallo(true)}
+      alt={alt ?? `La hamburguesa que reseñó @${autorUsername}`}
+      onError={() => {
+        setFallo(true)
+        onFallo?.()
+      }}
       // Perezosa porque el feed baja de a veinte: cargar veinte fotos que nadie llegó a
       // ver todavía es gastar datos del teléfono de otro.
       loading="lazy"

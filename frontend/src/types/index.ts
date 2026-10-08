@@ -52,7 +52,8 @@ export interface Rating {
   hamburguesa: string | null
   score: number
   comment: string | null
-  photoUrl: string | null
+  /** Las fotos, en orden: la primera es la portada. */
+  fotos: string[]
   createdAt: string
 }
 
@@ -194,7 +195,8 @@ export interface ItemDeFeed {
   promedioDelLocal: number | null
   score: number
   comment: string | null
-  fotoDeLaResenia: string | null
+  /** Las fotos de quien la escribió, en orden: la primera es la portada. */
+  fotosDeLaResenia: string[]
   /** Cuándo se escribió, no cuándo se editó. */
   createdAt: string
   editada: boolean

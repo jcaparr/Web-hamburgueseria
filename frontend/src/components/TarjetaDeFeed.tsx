@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
-import { FotoDeResenia } from './FotoDeResenia'
+import { FotosDeResenia } from './FotosDeResenia'
 import { IconPin } from './icons'
 import { ScoreBadge } from './ScoreBadge'
 import { Stars } from './Stars'
@@ -64,13 +64,8 @@ export function TarjetaDeFeed({ item, esMia }: { item: ItemDeFeed; esMia: boolea
         </div>
       </header>
 
-      {item.fotoDeLaResenia && (
-        // Lleva al mismo lugar que el nombre del local de arriba: fuera del Tab y del
-        // lector de pantalla, para no pasar dos veces por el mismo enlace.
-        <Link to={aLaFicha} tabIndex={-1} aria-hidden="true" className="block">
-          <FotoDeResenia src={item.fotoDeLaResenia} autorUsername={item.autorUsername} />
-        </Link>
-      )}
+      {/* Tocar una foto lleva al mismo lugar que el nombre del local de arriba. */}
+      <FotosDeResenia fotos={item.fotosDeLaResenia} autorUsername={item.autorUsername} enlace={aLaFicha} />
 
       <div className="flex flex-col gap-2 px-4 py-3">
         <div className="flex items-center justify-between gap-3">

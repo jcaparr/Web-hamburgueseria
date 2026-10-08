@@ -175,4 +175,36 @@ class FeedQueryTest {
 
         assertThat(soloDeOtro).extracting(ItemDeFeedDto::autorUsername).containsExactly("otrofeed");
     }
+
+    // ---- varias fotos por reseña (#185) ----
+
+    private Rating conFotos(Rating resenia, String... fotos) {
+        resenia.ponerFotos(List.of(fotos));
+        return ratingRepository.saveAndFlush(resenia);
+    }
+
+    /** La consulta del feed trae la portada sola: las demás se agregan aparte. */
+    @Test
+    void elFeedTraeLaPortada() {
+        conFotos(resenia(autor, 4, Instant.parse("2026-09-20T15:00:00Z")),
+            "/api/rating-photos/a.jpg", "/api/rating-photos/b.jpg");
+
+        assertThat(desdeArriba()).singleElement()
+            .extracting(ItemDeFeedDto::fotosDeLaResenia)
+            .isEqualTo(List.of("/api/rating-photos/a.jpg"));
+    }
+
+    @Test
+    void lasFotosDeVariasReseniasVienenEnOrdenYPorResenia() {
+        Rating una = conFotos(resenia(autor, 4, Instant.parse("2026-09-20T15:00:00Z")),
+            "/api/rating-photos/c.jpg", "/api/rating-photos/a.jpg", "/api/rating-photos/b.jpg");
+        Rating otra = conFotos(resenia(otro, 3, Instant.parse("2026-09-19T15:00:00Z")),
+            "/api/rating-photos/z.jpg");
+
+        var fotos = ratingRepository.fotosPorResenia(List.of(una.getId(), otra.getId()));
+
+        assertThat(fotos.get(una.getId())).containsExactly(
+            "/api/rating-photos/c.jpg", "/api/rating-photos/a.jpg", "/api/rating-photos/b.jpg");
+        assertThat(fotos.get(otra.getId())).containsExactly("/api/rating-photos/z.jpg");
+    }
 }
