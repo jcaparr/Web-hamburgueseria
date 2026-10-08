@@ -10,78 +10,90 @@ import type { ItemDeFeed } from '../types'
 /**
  * Una reseña en el feed, como una publicación.
  *
- * Cuatro partes, en este orden y separadas a propósito: quién la escribió, la foto,
- * dónde fue y qué puntaje puso, y recién al final lo que dijo.
+ * Arriba, en un solo renglón, quién y dónde: "@juanca en Café Martínez". Es como se
+ * cuenta una salida —fui a tal lado— y como lo muestran las redes que la gente ya usa.
+ * Antes el lugar iba en una franja propia debajo de la foto, y había que pasar la foto
+ * entera para saber de qué local se estaba hablando (#187).
  *
- * La foto va arriba de todo, apenas abajo del nombre, porque es lo que hace parar el
- * scroll. El lugar y la nota van juntos en una franja propia: son el dato duro de la
- * tarjeta —a dónde ir y si estuvo buena— y mezclados con el comentario se pierden.
+ * Después la foto, que es lo que hace parar el scroll, y debajo la nota y lo que dijo.
  *
  * Los enlaces son dos y separados: al perfil de quien la escribió y a la
  * hamburguesería. Son las dos cosas que uno quiere hacer después de leerla, y una
  * tarjeta que lleve a un solo lado obliga a volver atrás para la otra.
  */
 export function TarjetaDeFeed({ item, esMia }: { item: ItemDeFeed; esMia: boolean }) {
+  const aLaFicha = `/burger-joints/${item.burgerJointId}`
+  const alPerfil = `/u/${item.autorUsername}`
+
   return (
     <article className="overflow-hidden tarjeta">
       <header className="flex items-center gap-3 px-4 py-3">
-        <Link to={`/u/${item.autorUsername}`} className="-my-1 flex min-w-0 items-center gap-3 rounded-field py-1">
+        {/* Lleva al mismo perfil que el nombre de al lado: fuera del Tab y del lector de
+            pantalla, para no pasar dos veces por el mismo enlace. */}
+        <Link to={alPerfil} tabIndex={-1} aria-hidden="true" className="flex-none rounded-full">
           <AvatarDeUsuario username={item.autorUsername} hamburguesa={item.autorHamburguesa} size={38} />
-          <div className="flex min-w-0 flex-col">
-            <span className="truncate text-sm font-semibold hover:text-primary">
+        </Link>
+        <div className="flex min-w-0 flex-1 flex-col">
+          {/* Un renglón que se corta al final con puntos suspensivos: con un nombre de
+              local largo se pierde la cola del local, que es lo que menos falta hace
+              para reconocerlo. */}
+          <p className="truncate text-sm">
+            <Link to={alPerfil} className="font-semibold hover:text-primary">
               @{item.autorUsername}
-              {esMia && <span className="font-normal text-base-content/70"> (vos)</span>}
-            </span>
-            <span className="text-xs text-base-content/70">
+            </Link>
+            {esMia && <span className="text-base-content/70"> (vos)</span>}
+            <span className="text-base-content/70"> en </span>
+            <Link to={aLaFicha} className="font-semibold hover:text-primary">
+              {item.burgerJointName}
+            </Link>
+          </p>
+          <span className="flex min-w-0 items-center gap-2 text-xs text-base-content/70">
+            <span className="flex-none">
               {relativeDate(item.createdAt)}
               {/* La fecha sigue siendo la de cuando se escribió: esto solo avisa que lo
                   que se está leyendo ya no es lo de ese día. */}
               {item.editada && ' (editada)'}
             </span>
-          </div>
-        </Link>
+            {item.area && (
+              <span className="flex min-w-0 items-center gap-0.5">
+                <IconPin size={11} className="flex-none" />
+                <span className="truncate">{item.area}</span>
+              </span>
+            )}
+          </span>
+        </div>
       </header>
 
       {item.fotoDeLaResenia && (
-        // Lleva al mismo lugar que el nombre del local, justo abajo: fuera del Tab y del
+        // Lleva al mismo lugar que el nombre del local de arriba: fuera del Tab y del
         // lector de pantalla, para no pasar dos veces por el mismo enlace.
-        <Link to={`/burger-joints/${item.burgerJointId}`} tabIndex={-1} aria-hidden="true" className="block">
+        <Link to={aLaFicha} tabIndex={-1} aria-hidden="true" className="block">
           <FotoDeResenia src={item.fotoDeLaResenia} autorUsername={item.autorUsername} />
         </Link>
       )}
 
-      <Link
-        to={`/burger-joints/${item.burgerJointId}`}
-        className="flex items-center gap-3 border-b border-base-content/10 bg-base-200/40 px-4 py-3"
-      >
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="flex min-w-0 items-center gap-2">
-            <span className="truncate font-display font-bold">{item.burgerJointName}</span>
-            {/* El promedio de la hamburguesería, al lado de su nombre. Es otra cosa que
-                las estrellas de la derecha, que son la nota de esta persona: juntas
-                dejan ver si lo que se está leyendo se sale de la norma. */}
-            {item.promedioDelLocal !== null && (
+      <div className="flex flex-col gap-2 px-4 py-3">
+        <div className="flex items-center justify-between gap-3">
+          {/* Las estrellas y no el ScoreBadge: acá la nota es la que puso esta persona,
+              y el badge se usa en toda la app para el promedio de la hamburguesería.
+              El mismo dibujo para dos cosas distintas se lee como la equivocada. */}
+          <Stars value={item.score} size={17} />
+          {/* El promedio del local, enfrente de la nota de esta persona: juntos dejan
+              ver si lo que se está leyendo se sale de la norma. */}
+          {item.promedioDelLocal !== null && (
+            <span className="flex items-center gap-2 text-xs text-base-content/70">
+              Promedio del local
               <ScoreBadge score={item.promedioDelLocal} size="sm" />
-            )}
-          </span>
-          {item.area && (
-            <span className="flex items-center gap-1 text-xs text-base-content/70">
-              <IconPin size={12} />
-              {item.area}
             </span>
           )}
         </div>
-        {/* Las estrellas y no el ScoreBadge: acá la nota es la que puso esta persona,
-            y el badge se usa en toda la app para el promedio de la hamburguesería.
-            El mismo dibujo para dos cosas distintas se lee como la equivocada. */}
-        <Stars value={item.score} size={16} />
-      </Link>
 
-      {item.comment && (
-        <p className="whitespace-pre-line px-4 py-3 text-sm leading-relaxed text-base-content/80">
-          {item.comment}
-        </p>
-      )}
+        {item.comment && (
+          <p className="whitespace-pre-line text-sm leading-relaxed text-base-content/80">
+            {item.comment}
+          </p>
+        )}
+      </div>
     </article>
   )
 }
