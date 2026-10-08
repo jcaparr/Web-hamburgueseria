@@ -41,6 +41,10 @@ class TiposDeLlamadaEnLaBaseTest {
     private static final Pattern RESTRICCION =
         Pattern.compile("check\\s*\\(\\s*call_type\\s+in\\s*\\(([^)]*)\\)", Pattern.CASE_INSENSITIVE);
 
+    /**
+     * Puede aceptar de más, y no al revés: DETAILS ya no está en el enum (#199), pero los
+     * meses que se contaron así siguen en la tabla y la restricción tiene que dejarlos.
+     */
     @Test
     void laBaseAceptaTodosLosTiposQueElCodigoCuenta() throws IOException {
         List<String> aceptados = tiposQueAceptaLaBase();
@@ -48,8 +52,7 @@ class TiposDeLlamadaEnLaBaseTest {
         assertThat(aceptados)
             .describedAs("la restricción de places_api_usage tiene que nombrar todos los "
                 + "valores de PlacesCallType; si agregaste uno, falta la migración")
-            .containsExactlyInAnyOrderElementsOf(
-                Arrays.stream(PlacesCallType.values()).map(Enum::name).toList());
+            .containsAll(Arrays.stream(PlacesCallType.values()).map(Enum::name).toList());
     }
 
     /**

@@ -15,6 +15,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -77,7 +78,7 @@ class CensoDeFichasTest {
     @Test
     void noBajaNingunaFoto() {
         when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(sinFoto(1, "Con fotos")));
-        when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(TIENE_FOTOS);
 
         service.revisarFichas();
 
@@ -98,7 +99,7 @@ class CensoDeFichasTest {
         when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(
             BurgerJoint.builder().id(9L).placeId("ChIJ9").name("Mostaza Lanús")
                 .address("Otra").area("Lanús").photoUrl("/api/place-photos/mostaza.jpg").build()));
-        when(placesClient.fotosDe(anyString())).thenReturn(List.of());
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(List.of());
 
         service.revisarFichas();
 
@@ -110,9 +111,9 @@ class CensoDeFichasTest {
     void cuentaDeCuantosGoogleNoTieneNingunaFoto() {
         when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(
             sinFoto(1, "Tiene"), sinFoto(2, "No tiene"), sinFoto(3, "Tiene también")));
-        when(placesClient.fotosDe("ChIJ1")).thenReturn(TIENE_FOTOS);
-        when(placesClient.fotosDe("ChIJ2")).thenReturn(List.of());
-        when(placesClient.fotosDe("ChIJ3")).thenReturn(TIENE_FOTOS);
+        when(placesClient.fotosDe(eq("ChIJ1"), any())).thenReturn(TIENE_FOTOS);
+        when(placesClient.fotosDe(eq("ChIJ2"), any())).thenReturn(List.of());
+        when(placesClient.fotosDe(eq("ChIJ3"), any())).thenReturn(TIENE_FOTOS);
 
         CensoDeFichas censo = service.revisarFichas();
 
@@ -126,7 +127,7 @@ class CensoDeFichasTest {
     @Test
     void anotaAlQueNoTieneNinguna() {
         when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(sinFoto(1, "Sin nada")));
-        when(placesClient.fotosDe(anyString())).thenReturn(List.of());
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(List.of());
 
         service.revisarFichas();
 
@@ -144,7 +145,7 @@ class CensoDeFichasTest {
         BurgerJoint local = sinFoto(1, "Ya tiene");
         local.setSinFotosEnGoogle(true);
         when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(local));
-        when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(TIENE_FOTOS);
 
         service.revisarFichas();
 
@@ -157,7 +158,7 @@ class CensoDeFichasTest {
         BurgerJoint alDia = sinFoto(1, "Tiene");
         alDia.setFotosEnGoogle(TIENE_FOTOS.size());
         when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(alDia));
-        when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(TIENE_FOTOS);
 
         service.revisarFichas();
 
@@ -173,7 +174,7 @@ class CensoDeFichasTest {
         BurgerJoint conOtraCuenta = sinFoto(1, "Tiene más");
         conOtraCuenta.setFotosEnGoogle(99);
         when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(conOtraCuenta));
-        when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(TIENE_FOTOS);
 
         service.revisarFichas();
 
@@ -184,7 +185,7 @@ class CensoDeFichasTest {
     @Test
     void anotaCuantasFotosTiene() {
         when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(sinFoto(1, "Nuevo")));
-        when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(TIENE_FOTOS);
 
         service.revisarFichas();
 
@@ -196,8 +197,8 @@ class CensoDeFichasTest {
     void avisaCuantosQuedaronSinPreguntar() {
         when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(
             sinFoto(1, "Uno"), sinFoto(2, "Dos"), sinFoto(3, "Tres")));
-        when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
-        when(quotaGuard.canCall(PlacesCallType.DETAILS)).thenReturn(true, true, false);
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(TIENE_FOTOS);
+        when(quotaGuard.canCall(PlacesCallType.LISTA_DE_FOTOS)).thenReturn(true, true, false);
 
         CensoDeFichas censo = service.revisarFichas();
 
@@ -216,7 +217,7 @@ class CensoDeFichasTest {
             new FastFoodMarker(repository, sinClave));
 
         assertThat(servicio.revisarFichas().warning()).contains("GOOGLE_MAPS_API_KEY");
-        verify(placesClient, never()).fotosDe(anyString());
+        verify(placesClient, never()).fotosDe(anyString(), any());
     }
 
     private BurgerJoint guardado() {
@@ -236,7 +237,7 @@ class CensoDeFichasTest {
         BurgerJoint conPortada = sinFoto(1, "Con portada pero pocas fotos");
         conPortada.setPhotoUrl("/api/place-photos/x.jpg");
         when(repository.sinSaberCuantasFotosTiene()).thenReturn(List.of(conPortada));
-        when(placesClient.fotosDe(anyString())).thenReturn(TIENE_FOTOS);
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(TIENE_FOTOS);
 
         CensoDeFichas censo = service.revisarFichas();
 
@@ -256,6 +257,6 @@ class CensoDeFichasTest {
         CensoDeFichas censo = service.revisarFichas();
 
         assertThat(censo.preguntados()).isZero();
-        verify(placesClient, never()).fotosDe(anyString());
+        verify(placesClient, never()).fotosDe(anyString(), any());
     }
 }

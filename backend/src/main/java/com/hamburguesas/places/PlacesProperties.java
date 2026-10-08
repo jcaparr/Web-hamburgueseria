@@ -135,8 +135,12 @@ public class PlacesProperties {
          * bien: el resto lo completa el mes siguiente.
          */
         private int monthlyHorarioCalls = 950;
-        /** Fichas sueltas, para los locales que ninguna búsqueda devuelve. Gratis hasta 5.000. */
-        private int monthlyDetailsCalls = 4000;
+        /**
+         * Las fichas que se piden para saber qué fotos tiene un local. Google no las
+         * cobra, así que el tope no es por plata: es el tramo gratuito de las fichas Pro,
+         * por si alguna vez se le agrega un campo pago a la consulta sin darse cuenta.
+         */
+        private int monthlyListaDeFotosCalls = 5000;
     }
 
     @Data

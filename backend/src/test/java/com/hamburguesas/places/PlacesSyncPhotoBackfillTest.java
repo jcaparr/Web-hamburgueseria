@@ -14,6 +14,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -124,13 +125,13 @@ class PlacesSyncPhotoBackfillTest {
             .id(9L).placeId("ChIJ-BK").name("Burger King").address("Av. Corrientes 1").area(AREA)
             .build();
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(invisible));
-        when(placesClient.fotosDe("ChIJ-BK")).thenReturn(java.util.List.of(new FotoElegida("places/ChIJ-BK/photos/abc", "huella-de-places/ChIJ-BK/photos/abc")));
+        when(placesClient.fotosDe(eq("ChIJ-BK"), any())).thenReturn(java.util.List.of(new FotoElegida("places/ChIJ-BK/photos/abc", "huella-de-places/ChIJ-BK/photos/abc")));
 
         PlacesSyncReport report = service.sync();
 
         assertThat(invisible.getPhotoUrl()).isEqualTo("/api/place-photos/abc.jpg");
         assertThat(report.photosDownloaded()).isEqualTo(1);
-        verify(quotaGuard).record(PlacesCallType.DETAILS);
+        verify(quotaGuard).record(PlacesCallType.LISTA_DE_FOTOS);
         verify(quotaGuard).record(PlacesCallType.PHOTO);
     }
 
@@ -149,7 +150,7 @@ class PlacesSyncPhotoBackfillTest {
             .id(9L).placeId("ChIJ-F").name("Con Fotos").address("Calle 1").area(AREA)
             .build();
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(conFotos));
-        when(placesClient.fotosDe("ChIJ-F")).thenReturn(List.of(
+        when(placesClient.fotosDe(eq("ChIJ-F"), any())).thenReturn(List.of(
             new FotoElegida("places/ChIJ-F/photos/a", "huella-a"),
             new FotoElegida("places/ChIJ-F/photos/b", "huella-b")));
 
@@ -172,7 +173,7 @@ class PlacesSyncPhotoBackfillTest {
             .id(9L).placeId("ChIJ-X").name("Sin Fotos").address("Calle 1").area(AREA)
             .build();
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(sinFotos));
-        when(placesClient.fotosDe("ChIJ-X")).thenReturn(java.util.List.of());
+        when(placesClient.fotosDe(eq("ChIJ-X"), any())).thenReturn(java.util.List.of());
 
         PlacesSyncReport report = service.sync();
 
@@ -202,7 +203,7 @@ class PlacesSyncPhotoBackfillTest {
 
         when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(conFoto));
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(nueva));
-        when(placesClient.fotosDe("ChIJ-BK2")).thenReturn(java.util.List.of());
+        when(placesClient.fotosDe(eq("ChIJ-BK2"), any())).thenReturn(java.util.List.of());
 
         PlacesSyncReport report = service.sync();
 
@@ -211,7 +212,7 @@ class PlacesSyncPhotoBackfillTest {
         // Prestarla no cuesta una llamada a Google, que es medio punto del asunto.
         assertThat(report.photosDownloaded()).isZero();
         verify(placesClient, never()).downloadPhoto(anyString());
-        verify(placesClient, never()).fotosDe(anyString());
+        verify(placesClient, never()).fotosDe(anyString(), any());
     }
 
     /**
@@ -234,7 +235,7 @@ class PlacesSyncPhotoBackfillTest {
 
         when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(deMerlo));
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(dePontevedra));
-        when(placesClient.fotosDe("ChIJ-BB2")).thenReturn(List.of());
+        when(placesClient.fotosDe(eq("ChIJ-BB2"), any())).thenReturn(List.of());
 
         PlacesSyncReport report = service.sync();
 
@@ -258,7 +259,7 @@ class PlacesSyncPhotoBackfillTest {
 
         when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of(otro));
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(solitario));
-        when(placesClient.fotosDe("ChIJ-B")).thenReturn(java.util.List.of());
+        when(placesClient.fotosDe(eq("ChIJ-B"), any())).thenReturn(java.util.List.of());
 
         PlacesSyncReport report = service.sync();
 
@@ -282,7 +283,7 @@ class PlacesSyncPhotoBackfillTest {
             .photoUrl("/api/place-photos/vieja.jpg")
             .build();
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(vieja));
-        when(placesClient.fotosDe("ChIJ-V")).thenReturn(java.util.List.of(new FotoElegida("places/ChIJ-V/photos/mejor", "huella-de-places/ChIJ-V/photos/mejor")));
+        when(placesClient.fotosDe(eq("ChIJ-V"), any())).thenReturn(java.util.List.of(new FotoElegida("places/ChIJ-V/photos/mejor", "huella-de-places/ChIJ-V/photos/mejor")));
 
         service.sync();
 
@@ -309,7 +310,7 @@ class PlacesSyncPhotoBackfillTest {
             .photoRule(2)
             .build();
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(vieja));
-        when(placesClient.fotosDe("ChIJ-V")).thenReturn(java.util.List.of(new FotoElegida("places/ChIJ-V/photos/la-misma", "huella-de-places/ChIJ-V/photos/la-misma")));
+        when(placesClient.fotosDe(eq("ChIJ-V"), any())).thenReturn(java.util.List.of(new FotoElegida("places/ChIJ-V/photos/la-misma", "huella-de-places/ChIJ-V/photos/la-misma")));
 
         service.sync();
 
@@ -327,7 +328,7 @@ class PlacesSyncPhotoBackfillTest {
 
         service.sync();
 
-        verify(placesClient, never()).fotosDe(anyString());
+        verify(placesClient, never()).fotosDe(anyString(), any());
         verify(placesClient, never()).downloadPhoto(anyString());
     }
 

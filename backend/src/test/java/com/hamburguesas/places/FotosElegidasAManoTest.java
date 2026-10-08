@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
@@ -187,7 +188,7 @@ class FotosElegidasAManoTest {
     void seAplicaAunqueElLocalYaEsteAlDiaConLaRegla() {
         properties.getSync().setFotosElegidas(Map.of("ChIJkeke", HUELLA_DE_LA_HAMBURGUESA));
         when(repository.findByPlaceIdIn(any())).thenReturn(List.of(keke()));
-        when(placesClient.fotosDe("ChIJkeke")).thenReturn(List.of(
+        when(placesClient.fotosDe(eq("ChIJkeke"), any())).thenReturn(List.of(
             new FotoElegida("places/ChIJkeke/photos/hamburguesa", HUELLA_DE_LA_HAMBURGUESA)));
         when(placesClient.downloadPhoto(anyString())).thenReturn(new byte[] {1, 2, 3});
 
@@ -211,7 +212,7 @@ class FotosElegidasAManoTest {
 
         service.revisarFotos();
 
-        verify(placesClient, never()).fotosDe(anyString());
+        verify(placesClient, never()).fotosDe(anyString(), any());
     }
 
     /**
@@ -226,7 +227,7 @@ class FotosElegidasAManoTest {
     void unaElegidaAManoNoSeDescartaPorParecerUnLogo() {
         properties.getSync().setFotosElegidas(Map.of("ChIJkeke", HUELLA_DE_LA_HAMBURGUESA));
         when(repository.findByPlaceIdIn(any())).thenReturn(List.of(keke()));
-        when(placesClient.fotosDe("ChIJkeke")).thenReturn(List.of(
+        when(placesClient.fotosDe(eq("ChIJkeke"), any())).thenReturn(List.of(
             new FotoElegida("places/ChIJkeke/photos/hamburguesa", HUELLA_DE_LA_HAMBURGUESA)));
         when(placesClient.downloadPhoto(anyString())).thenReturn(unLogo());
 
@@ -241,7 +242,7 @@ class FotosElegidasAManoTest {
         BurgerJoint local = keke();
         local.setPhotoRule(1);
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(local));
-        when(placesClient.fotosDe("ChIJkeke")).thenReturn(List.of(
+        when(placesClient.fotosDe(eq("ChIJkeke"), any())).thenReturn(List.of(
             new FotoElegida("places/ChIJkeke/photos/otra", "999x999|Otro")));
         when(placesClient.downloadPhoto(anyString())).thenReturn(unLogo());
 

@@ -20,9 +20,9 @@ import java.util.stream.Stream;
  * Las portadas de los locales: conseguirlas, mejorarlas y compartirlas entre sucursales.
  *
  * Todo lo que toca la cuota de fotos pasa por acá, que es el tramo gratuito más chico de
- * la API —mil por mes contra cinco mil fichas—. Por eso el orden importa en cada método:
- * primero lo que no cuesta nada, después lo que cuesta una ficha y recién al final lo que
- * cuesta una foto.
+ * la API: mil por mes. Por eso el orden importa en cada método: primero lo que no cuesta
+ * nada —prestar entre sucursales, preguntar qué fotos tiene un local (#199)— y recién al
+ * final lo que cuesta una foto.
  */
 @Component
 @Slf4j
@@ -40,8 +40,7 @@ public class FotosDeLocales {
     /**
      * Pregunta, sin bajar nada, de qué locales Google no tiene ninguna foto.
      *
-     * Las dos cuotas son muy desparejas: preguntar sale una ficha —cuatro mil gratis por
-     * mes— y bajar sale una foto, de las que hay mil. Con mil doscientos locales sin
+     * Preguntar es gratis (#199) y bajar sale una foto, de las que hay mil. Con mil doscientos locales sin
      * portada, bajar mientras se pregunta gasta la cuota chica entera en el orden en que
      * los locales aparecen en la base, y parte de esa cuota se va en locales que la
      * limpieza va a borrar igual porque Google no tiene ni una foto de ellos.
@@ -64,21 +63,21 @@ public class FotosDeLocales {
         // hay que poder ver para decidir si corresponde que esté en la lista.
         //
         // Vienen ordenados por sospecha: primero los que Google no clasifica como
-        // hamburguesería, al final las cadenas. Preguntar cuesta una ficha por local y el
-        // tramo del mes es finito, así que el orden decide qué se alcanza a saber.
+        // hamburguesería, al final las cadenas. Preguntar ya no se paga, pero el tope del
+        // mes sigue estando, así que el orden decide qué se alcanza a saber.
         //
         // Y como se eligen por no tener el número anotado, cada corrida sigue donde quedó
         // la anterior sin volver a preguntar por los mismos.
         List<BurgerJoint> sinFoto = burgerJointRepository.sinSaberCuantasFotosTiene();
         for (BurgerJoint joint : sinFoto) {
-            if (!google.quedan(PlacesCallType.DETAILS)) {
+            if (!google.quedan(PlacesCallType.LISTA_DE_FOTOS)) {
                 sinPreguntar = sinFoto.size() - preguntados;
                 log.warn("Cuota mensual de fichas alcanzada, quedan {} locales sin preguntar",
                     sinPreguntar);
                 break;
             }
 
-            Optional<List<FotoElegida>> ficha = google.fotosDe(joint.getPlaceId());
+            Optional<List<FotoElegida>> ficha = google.fotosDe(joint);
             if (ficha.isEmpty()) {
                 continue;
             }
@@ -120,10 +119,25 @@ public class FotosDeLocales {
      * afuera cualquiera que no entre en los 60 resultados de su barrio. Esos se
      * quedaban sin foto para siempre.
      *
-     * Acá se les pide la ficha por su place_id, que es una llamada aparte y con su
-     * propio límite gratuito.
+     * Acá se les pide la ficha por su place_id, que es una llamada aparte y gratuita
+     * (#199).
      */
     Completadas completarFaltantes() {
+        return completarFaltantes(0);
+    }
+
+    /**
+     * Lo mismo, pudiendo pagar algunas fotos más allá del tramo gratuito del mes.
+     *
+     * Para no esperar al mes siguiente cuando faltan pocas: en octubre de 2026 quedaron
+     * 302 locales sin portada con la cuota gastada, y completarlos salía unos dos
+     * dólares. Las pagas sirven solo para esto, que es poner la primera foto a un local
+     * que no tiene ninguna. Recambiar una foto que ya está no las usa nunca.
+     *
+     * @param pagas cuántas fotos se pueden pagar este mes por encima del tramo gratuito;
+     *              cero es lo de siempre
+     */
+    Completadas completarFaltantes(int pagas) {
         int bajadas = 0;
         int prestadas = 0;
         List<String> marcas = marcasQueComparten();
@@ -160,12 +174,12 @@ public class FotosDeLocales {
             // pedir las dos acá arriba frenaba todo el trabajo cuando se agotaba la de
             // fotos, incluso averiguar de qué locales no hay ninguna, que no cuesta una
             // sola foto y es lo que decide si se los esconde.
-            if (!google.quedan(PlacesCallType.DETAILS)) {
-                log.warn("Cuota mensual de fichas alcanzada, quedan locales sin revisar");
+            if (!google.quedan(PlacesCallType.LISTA_DE_FOTOS)) {
+                log.warn("Tope mensual de fichas de fotos alcanzado, quedan locales sin revisar");
                 break;
             }
 
-            Optional<List<FotoElegida>> ficha = google.fotosDe(joint.getPlaceId());
+            Optional<List<FotoElegida>> ficha = google.fotosDe(joint);
             if (ficha.isEmpty()) {
                 continue;
             }
@@ -188,11 +202,11 @@ public class FotosDeLocales {
             if (!candidatas.isEmpty()) {
                 // Tiene fotos pero no hay cuota para bajarlas. No se le presta la de
                 // otra sucursal: tener la propia es mejor, y va a estar el mes que viene.
-                if (!google.quedan(PlacesCallType.PHOTO)) {
+                if (!google.quedanFotos(pagas)) {
                     continue;
                 }
 
-                String puesta = probarHastaQueUnaSirva(joint, candidatas);
+                String puesta = probarHastaQueUnaSirva(joint, candidatas, pagas);
                 if (puesta != null) {
                     // Las sucursales que vienen después ya la pueden usar.
                     String marca = FastFoodMarker.marcaDe(joint.getName(), marcas);
@@ -228,12 +242,12 @@ public class FotosDeLocales {
             // Igual que arriba: acá solo hace falta la ficha. La mayoría de las fotos
             // no cambia de una regla a la otra, y esas se revisan sin bajar nada; pedir
             // también la cuota de fotos frenaba a todas por las pocas que sí cambian.
-            if (!google.quedan(PlacesCallType.DETAILS)) {
-                log.info("Cuota mensual de fichas alcanzada, quedan fotos por revisar");
+            if (!google.quedan(PlacesCallType.LISTA_DE_FOTOS)) {
+                log.info("Tope mensual de fichas de fotos alcanzado, quedan fotos por revisar");
                 break;
             }
 
-            Optional<List<FotoElegida>> ficha = google.fotosDe(joint.getPlaceId());
+            Optional<List<FotoElegida>> ficha = google.fotosDe(joint);
             if (ficha.isEmpty() || ficha.get().isEmpty()) {
                 continue;
             }
@@ -259,11 +273,14 @@ public class FotosDeLocales {
 
             // La regla nueva eligió otra, pero no hay cuota para bajarla. Se deja sin
             // anotar la regla, así vuelve a caer en esta lista el mes que viene.
+            //
+            // Nunca con fotos pagas: el local ya tiene una portada, y mejorarla puede
+            // esperar al tramo gratuito del mes que viene.
             if (!google.quedan(PlacesCallType.PHOTO)) {
                 continue;
             }
 
-            if (probarHastaQueUnaSirva(joint, candidatas) != null) {
+            if (probarHastaQueUnaSirva(joint, candidatas, 0) != null) {
                 cambiadas++;
             }
         }
@@ -276,7 +293,7 @@ public class FotosDeLocales {
      *
      * Aparte de la revisión de fotos porque son dos cosas de costo muy distinto. Esto no
      * le pide nada a Google —la foto ya está bajada, se le apunta la misma a la hermana—
-     * y la revisión gasta una ficha por local y una foto por cada uno que cambie.
+     * y la revisión gasta una foto por cada local que cambie.
      *
      * No pisa ninguna portada: solo mira los locales que no tienen. Una sucursal con
      * foto propia se la queda, que para eso se la bajamos.
@@ -330,11 +347,12 @@ public class FotosDeLocales {
      * Cada intento cuesta una llamada, así que son pocas y solo se llega a la segunda
      * cuando hace falta.
      *
+     * @param pagas las fotos que se pueden pagar este mes encima del tramo gratuito
      * @return la ruta de la que quedó puesta, o null si ninguna sirvió o se acabó la cuota
      */
-    private String probarHastaQueUnaSirva(BurgerJoint joint, List<FotoElegida> candidatas) {
+    private String probarHastaQueUnaSirva(BurgerJoint joint, List<FotoElegida> candidatas, int pagas) {
         for (FotoElegida candidata : EleccionDeFoto.aProbar(candidatas)) {
-            if (!google.quedan(PlacesCallType.PHOTO)) {
+            if (!google.quedanFotos(pagas)) {
                 return null;
             }
             String ruta = bajar(joint.getPlaceId(), candidata.name(),

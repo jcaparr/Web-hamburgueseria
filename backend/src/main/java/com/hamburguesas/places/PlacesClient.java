@@ -46,6 +46,16 @@ public class PlacesClient {
         "places.id,places.displayName,places.formattedAddress,places.location,places.photos,"
         + "places.primaryType,places.types,nextPageToken";
 
+    /**
+     * Lo que se pide para saber qué fotos tiene un local: nada más que esto.
+     *
+     * Los dos campos son del tramo "Essentials IDs Only", que Google no cobra ni limita.
+     * Con un solo campo de otro tramo la llamada entera se cobra a ese precio: hasta #199
+     * se pedía también el nombre, que es Pro, y en octubre eso agotó las 5.000 fichas
+     * gratis. Hay un test que no deja agregar ninguno que se pague.
+     */
+    static final String CAMPOS_DE_LAS_FOTOS = "id,photos";
+
     private final PlacesProperties properties;
 
     /**
@@ -131,13 +141,18 @@ public class PlacesClient {
      * clasifica como hamburguesería, como Burger King—, que si no se quedarían sin foto
      * para siempre.
      *
+     * Se pide sin el nombre (#199): con él la llamada era Pro, y sin él es gratis. El
+     * nombre lo pone quien pregunta, que ya lo tiene guardado.
+     *
+     * @param nombreDelLocal el nombre guardado, para reconocer las fotos que subió el local
      * @return todas las fotos que tiene, o una lista vacía si no tiene ninguna. El largo
      *         dice cuántas fotos tiene el local, y saberlo no cuesta nada más.
      */
-    public List<FotoElegida> fotosDe(String placeId) {
-        JsonNode place = fichaDe(placeId, "id,displayName,photos");
+    public List<FotoElegida> fotosDe(String placeId, String nombreDelLocal) {
+        JsonNode place = fichaDe(placeId, CAMPOS_DE_LAS_FOTOS);
         return place == null ? List.of()
-            : EleccionDeFoto.mejoresFotos(place, properties.getSync().getFotosElegidas().get(placeId));
+            : EleccionDeFoto.mejoresFotos(place, nombreDelLocal,
+                properties.getSync().getFotosElegidas().get(placeId));
     }
 
     /**

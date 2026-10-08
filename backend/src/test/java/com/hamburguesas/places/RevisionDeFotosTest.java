@@ -111,7 +111,7 @@ class RevisionDeFotosTest {
     @Test
     void anotaAlLocalDelQueGoogleNoTieneNingunaFoto() {
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(local("Sin nada", null, null)));
-        when(placesClient.fotosDe(anyString())).thenReturn(java.util.List.of());
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(java.util.List.of());
 
         service.revisarFotos();
 
@@ -124,7 +124,7 @@ class RevisionDeFotosTest {
         BurgerJoint local = local("Ya tiene", null, null);
         local.setSinFotosEnGoogle(true);
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(local));
-        when(placesClient.fotosDe(anyString())).thenReturn(java.util.List.of(new FotoElegida("places/x/photos/nueva", "huella-de-places/x/photos/nueva")));
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(java.util.List.of(new FotoElegida("places/x/photos/nueva", "huella-de-places/x/photos/nueva")));
         when(placesClient.downloadPhoto(anyString())).thenReturn(new byte[] {1, 2, 3});
         when(photoStorage.save(anyString(), any())).thenReturn("/api/place-photos/x.jpg");
 
@@ -143,7 +143,7 @@ class RevisionDeFotosTest {
     void siLaReglaNuevaEligeLaMismaFotoNoLaVuelveABajar() {
         BurgerJoint local = local("Igual", "/api/place-photos/vieja.jpg", 2);
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(local));
-        when(placesClient.fotosDe(anyString())).thenReturn(java.util.List.of(new FotoElegida("places/x/photos/vieja", "huella-de-places/x/photos/vieja")));
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(java.util.List.of(new FotoElegida("places/x/photos/vieja", "huella-de-places/x/photos/vieja")));
 
         service.revisarFotos();
 
@@ -163,7 +163,7 @@ class RevisionDeFotosTest {
     void sinCuotaDeFotosIgualAveriguaCualesNoTienenNinguna() {
         when(quotaGuard.canCall(com.hamburguesas.model.PlacesCallType.PHOTO)).thenReturn(false);
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(local("Sin nada", null, null)));
-        when(placesClient.fotosDe(anyString())).thenReturn(java.util.List.of());
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(java.util.List.of());
 
         service.revisarFotos();
 
@@ -181,7 +181,7 @@ class RevisionDeFotosTest {
         when(quotaGuard.canCall(com.hamburguesas.model.PlacesCallType.PHOTO)).thenReturn(false);
         BurgerJoint local = local("Igual", "/api/place-photos/vieja.jpg", 2);
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(local));
-        when(placesClient.fotosDe(anyString())).thenReturn(java.util.List.of(new FotoElegida("places/x/photos/vieja", "huella-de-places/x/photos/vieja")));
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(java.util.List.of(new FotoElegida("places/x/photos/vieja", "huella-de-places/x/photos/vieja")));
 
         service.revisarFotos();
 
@@ -199,7 +199,7 @@ class RevisionDeFotosTest {
         when(quotaGuard.canCall(com.hamburguesas.model.PlacesCallType.PHOTO)).thenReturn(false);
         BurgerJoint local = local("Cambia", "/api/place-photos/vieja.jpg", 2);
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(local));
-        when(placesClient.fotosDe(anyString())).thenReturn(java.util.List.of(new FotoElegida("places/x/photos/mejor", "huella-de-places/x/photos/mejor")));
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(java.util.List.of(new FotoElegida("places/x/photos/mejor", "huella-de-places/x/photos/mejor")));
 
         service.revisarFotos();
 
@@ -219,7 +219,7 @@ class RevisionDeFotosTest {
     void siLaPrimeraEsUnLogoSeQuedaConLaSiguiente() throws Exception {
         BurgerJoint local = local("Con logo", null, null);
         when(repository.findByPhotoUrlIsNull()).thenReturn(List.of(local));
-        when(placesClient.fotosDe(anyString())).thenReturn(List.of(
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(List.of(
             new FotoElegida("places/x/photos/logo", "600x600|El local"),
             new FotoElegida("places/x/photos/la-buena", "4800x3600|Un cliente")));
         when(placesClient.downloadPhoto("places/x/photos/logo")).thenReturn(unLogo());
@@ -272,7 +272,7 @@ class RevisionDeFotosTest {
     void siLaReglaNuevaEligeOtraFotoLaReemplaza() {
         BurgerJoint local = local("Cambia", "/api/place-photos/vieja.jpg", 2);
         when(repository.conFotoElegidaConUnaReglaVieja(anyInt())).thenReturn(List.of(local));
-        when(placesClient.fotosDe(anyString())).thenReturn(java.util.List.of(new FotoElegida("places/x/photos/mejor", "huella-de-places/x/photos/mejor")));
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(java.util.List.of(new FotoElegida("places/x/photos/mejor", "huella-de-places/x/photos/mejor")));
         when(placesClient.downloadPhoto(anyString())).thenReturn(new byte[] {1, 2, 3});
         when(photoStorage.save(anyString(), any())).thenReturn("/api/place-photos/mejor.jpg");
 

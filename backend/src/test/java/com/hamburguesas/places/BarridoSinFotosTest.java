@@ -132,7 +132,7 @@ class BarridoSinFotosTest {
 
         service.sync(false);
 
-        verify(placesClient, never()).fotosDe(anyString());
+        verify(placesClient, never()).fotosDe(anyString(), any());
         verify(placesClient, never()).downloadPhoto(anyString());
     }
 
@@ -148,7 +148,7 @@ class BarridoSinFotosTest {
 
         service.sync(false);
 
-        verify(placesClient, never()).fotosDe(anyString());
+        verify(placesClient, never()).fotosDe(anyString(), any());
         verify(placesClient, never()).downloadPhoto(anyString());
     }
 

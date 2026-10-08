@@ -47,13 +47,13 @@ class EstadoDeCuotasTest {
 
     @Test
     void unaCuotaAgotadaDiceQueNoQuedaNinguna() {
-        when(cuotas.used(PlacesCallType.DETAILS)).thenReturn(4800);
-        when(cuotas.limitFor(PlacesCallType.DETAILS)).thenReturn(4800);
+        when(cuotas.used(PlacesCallType.LISTA_DE_FOTOS)).thenReturn(4800);
+        when(cuotas.limitFor(PlacesCallType.LISTA_DE_FOTOS)).thenReturn(4800);
 
         PlacesSyncStatus estado = (PlacesSyncStatus) controlador.status("secreto").getBody();
 
         assertThat(estado.cuotas())
-            .filteredOn(cuota -> cuota.tipo() == PlacesCallType.DETAILS)
+            .filteredOn(cuota -> cuota.tipo() == PlacesCallType.LISTA_DE_FOTOS)
             .singleElement()
             .satisfies(fichas -> {
                 assertThat(fichas.usadas()).isEqualTo(4800);

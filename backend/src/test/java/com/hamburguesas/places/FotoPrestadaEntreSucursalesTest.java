@@ -15,6 +15,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
@@ -98,7 +99,7 @@ class FotoPrestadaEntreSucursalesTest {
 
         service.revisarFotos();
 
-        verify(placesClient, never()).fotosDe(anyString());
+        verify(placesClient, never()).fotosDe(anyString(), any());
         verify(placesClient, never()).downloadPhoto(anyString());
     }
 
@@ -124,13 +125,13 @@ class FotoPrestadaEntreSucursalesTest {
     void unLocalIndependienteSigueRecibiendoSuPropiaFoto() {
         when(repository.findByPhotoUrlIsNull())
             .thenReturn(List.of(sinFoto("La Birra Bar", false)));
-        when(placesClient.fotosDe(anyString())).thenReturn(List.of(
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(List.of(
             new FotoElegida("places/x/photos/propia", "1200x900|Alguien")));
         when(placesClient.downloadPhoto(anyString())).thenReturn(new byte[] {1, 2, 3});
 
         service.revisarFotos();
 
-        verify(placesClient).fotosDe("ChIJ1");
+        verify(placesClient).fotosDe(eq("ChIJ1"), any());
         assertThat(guardado().getPhotoUrl()).isEqualTo("/api/place-photos/propia.jpg");
     }
 
@@ -140,13 +141,13 @@ class FotoPrestadaEntreSucursalesTest {
         when(repository.findByPhotoUrlIsNotNull()).thenReturn(List.of());
         when(repository.findByPhotoUrlIsNull())
             .thenReturn(List.of(sinFoto("Mostaza - Quilmes", true)));
-        when(placesClient.fotosDe(anyString())).thenReturn(List.of(
+        when(placesClient.fotosDe(anyString(), any())).thenReturn(List.of(
             new FotoElegida("places/x/photos/propia", "1200x900|Alguien")));
         when(placesClient.downloadPhoto(anyString())).thenReturn(new byte[] {1, 2, 3});
 
         service.revisarFotos();
 
-        verify(placesClient).fotosDe("ChIJ1");
+        verify(placesClient).fotosDe(eq("ChIJ1"), any());
         assertThat(guardado().getPhotoUrl()).isEqualTo("/api/place-photos/propia.jpg");
     }
 
@@ -172,7 +173,7 @@ class FotoPrestadaEntreSucursalesTest {
         servicio.revisarFotos();
 
         verify(quotaGuard, never()).record(PlacesCallType.PHOTO);
-        verify(quotaGuard, never()).record(PlacesCallType.DETAILS);
+        verify(quotaGuard, never()).record(PlacesCallType.LISTA_DE_FOTOS);
     }
 
     // ---- la marca, y no el nombre entero, es lo que junta a las sucursales ----
@@ -252,7 +253,7 @@ class FotoPrestadaEntreSucursalesTest {
 
         service.prestarFotos();
 
-        verify(placesClient, never()).fotosDe(anyString());
+        verify(placesClient, never()).fotosDe(anyString(), any());
         verify(placesClient, never()).downloadPhoto(anyString());
     }
 
