@@ -62,21 +62,25 @@ public class PlacesSyncController {
      * sincronización entera gasta hasta mil búsquedas recorriendo los 48 barrios; esto
      * no busca nada, y es lo único que hace falta cuando lo que cambió es la regla de
      * elección de foto.
+     *
+     * @param pagas fotos que se pueden pagar este mes, encima del tramo gratuito, para
+     *              los locales que no tienen ninguna. Cero por omisión: sin pedirlo
+     *              explícitamente no se paga nada. El servicio lo recorta a 500.
      */
     @PostMapping("/fotos")
     public ResponseEntity<?> revisarFotos(
-        @RequestHeader(name = TOKEN_HEADER, required = false) String token
+        @RequestHeader(name = TOKEN_HEADER, required = false) String token,
+        @RequestParam(name = "pagas", defaultValue = "0") int pagas
     ) {
-        return siEstaAutorizado(token, syncService::revisarFotos);
+        return siEstaAutorizado(token, () -> syncService.revisarFotos(pagas));
     }
 
     /**
      * Solo pregunta: de qué locales Google no tiene ninguna foto.
      *
-     * Aparte del de fotos porque son dos cuotas muy desparejas —cuatro mil fichas contra
-     * mil fotos— y conviene poder gastar la barata sola. Preguntar por los mil doscientos
-     * locales sin portada entra holgado en las fichas del mes y dice cuántos quedan en
-     * pie una vez que la limpieza borre los que Google no tiene fotografiados.
+     * Aparte del de fotos porque preguntar no se paga (#199) y bajar sí: conviene poder
+     * hacer lo gratis solo. Dice cuántos locales quedan en pie una vez que la limpieza
+     * borre los que Google no tiene fotografiados.
      */
     @PostMapping("/fichas")
     public ResponseEntity<?> revisarFichas(
@@ -90,7 +94,7 @@ public class PlacesSyncController {
      *
      * Aparte de la revisión de fotos porque no le pide nada a Google: la foto ya está
      * bajada y se le apunta la misma a la hermana que no tiene. La revisión, en cambio,
-     * gasta una ficha por local y una foto por cada uno que cambie.
+     * gasta una foto por cada local que cambie.
      *
      * No pisa ninguna portada: solo mira los locales que no tienen.
      */

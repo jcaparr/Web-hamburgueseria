@@ -32,7 +32,7 @@ public class PlacesQuotaGuard {
     public int limitFor(PlacesCallType callType) {
         return switch (callType) {
             case SEARCH -> properties.getQuota().getMonthlySearchCalls();
-            case DETAILS -> properties.getQuota().getMonthlyDetailsCalls();
+            case LISTA_DE_FOTOS -> properties.getQuota().getMonthlyListaDeFotosCalls();
             case PHOTO -> properties.getQuota().getMonthlyPhotoCalls();
             case RESUMEN -> properties.getQuota().getMonthlyResumenCalls();
             case HORARIO -> properties.getQuota().getMonthlyHorarioCalls();

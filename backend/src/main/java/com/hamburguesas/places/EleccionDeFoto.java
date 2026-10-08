@@ -92,12 +92,24 @@ final class EleccionDeFoto {
      * @param huellaElegida la huella anotada en la configuración, o null si no hay
      */
     static List<FotoElegida> mejoresFotos(JsonNode place, String huellaElegida) {
+        return mejoresFotos(place, place.path("displayName").path("text").asText(""), huellaElegida);
+    }
+
+    /**
+     * Lo mismo, con el nombre del local dicho aparte en vez de leído de la respuesta.
+     *
+     * Para la ficha que se pide solo por las fotos (#199). El nombre sirve para reconocer
+     * las fotos que subió el propio local, pero pedírselo a Google pasa la llamada al
+     * tramo Pro, y sin él es gratis. El nombre que tenemos guardado vino de Google cuando
+     * se cargó el local, así que es el mismo.
+     */
+    static List<FotoElegida> mejoresFotos(JsonNode place, String nombreDelLocal, String huellaElegida) {
         JsonNode photos = place.path("photos");
         if (!photos.isArray() || photos.isEmpty()) {
             return List.of();
         }
 
-        String placeName = place.path("displayName").path("text").asText("");
+        String placeName = nombreDelLocal == null ? "" : nombreDelLocal;
 
         List<JsonNode> ordenadas = new ArrayList<>();
         for (JsonNode photo : photos) {

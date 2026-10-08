@@ -112,9 +112,9 @@ class LimpiezaSinBarridoTest {
         service.limpiar();
 
         verify(placesClient, never()).downloadPhoto(anyString());
-        verify(placesClient, never()).fotosDe(anyString());
+        verify(placesClient, never()).fotosDe(anyString(), any());
         verify(quotaGuard, never()).record(PlacesCallType.PHOTO);
-        verify(quotaGuard, never()).record(PlacesCallType.DETAILS);
+        verify(quotaGuard, never()).record(PlacesCallType.LISTA_DE_FOTOS);
     }
 
     /**

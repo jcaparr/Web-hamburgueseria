@@ -1,5 +1,6 @@
 package com.hamburguesas.places;
 
+import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.PlacesCallType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,24 @@ public class LlamadasAGoogle {
         return quotaGuard.canCall(tipo);
     }
 
+    /**
+     * Si queda alguna foto para bajar, contando además las pagas que se autorizaron.
+     *
+     * Primero el tramo gratuito, como siempre. Las pagas se suman arriba del tope y
+     * cuentan sobre el mismo contador del mes, así que pedirlas dos veces no las duplica:
+     * con un tope de mil y cuatrocientas pagas, la foto mil cuatrocientas uno no se baja
+     * aunque se lo pida en otra corrida.
+     *
+     * @param pagas cuántas fotos se pueden pagar este mes por encima del tramo gratuito
+     */
+    boolean quedanFotos(int pagas) {
+        if (quotaGuard.canCall(PlacesCallType.PHOTO)) {
+            return true;
+        }
+        return pagas > 0
+            && quotaGuard.used(PlacesCallType.PHOTO) < quotaGuard.limitFor(PlacesCallType.PHOTO) + pagas;
+    }
+
     /** El tope mensual de este tipo, para los mensajes. */
     int limiteDe(PlacesCallType tipo) {
         return quotaGuard.limitFor(tipo);
@@ -64,15 +83,15 @@ public class LlamadasAGoogle {
      *
      * @return vacío si Google no contestó: quien pregunta sigue con el próximo local
      */
-    Optional<List<FotoElegida>> fotosDe(String placeId) {
+    Optional<List<FotoElegida>> fotosDe(BurgerJoint joint) {
         try {
             pausa();
-            List<FotoElegida> fotos = placesClient.fotosDe(placeId);
-            quotaGuard.record(PlacesCallType.DETAILS);
+            List<FotoElegida> fotos = placesClient.fotosDe(joint.getPlaceId(), joint.getName());
+            quotaGuard.record(PlacesCallType.LISTA_DE_FOTOS);
             return Optional.of(fotos);
         } catch (RestClientResponseException ex) {
             log.warn("No se pudo pedir la ficha de {} (HTTP {})",
-                placeId, ex.getStatusCode().value());
+                joint.getPlaceId(), ex.getStatusCode().value());
             return Optional.empty();
         }
     }

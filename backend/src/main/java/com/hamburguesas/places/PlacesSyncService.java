@@ -41,6 +41,15 @@ public class PlacesSyncService {
 
     private static final String SIN_CLAVE = "Falta configurar GOOGLE_MAPS_API_KEY";
 
+    /**
+     * Cuántas fotos se pueden pagar en un mes, como mucho, por encima del tramo gratuito.
+     *
+     * Google cobra siete dólares cada mil, así que quinientas son tres dólares y medio.
+     * Está fijo en el código y no en la configuración a propósito: el presupuesto es
+     * cero, y gastar más que esto tiene que ser un cambio que alguien revise.
+     */
+    static final int FOTOS_PAGAS_POR_MES = 500;
+
     private final PlacesProperties properties;
     private final LlamadasAGoogle google;
     private final ClasificadorDeLocales clasificador;
@@ -60,20 +69,33 @@ public class PlacesSyncService {
      * sincronización completa, que es donde vivía esa revisión, gasta además hasta mil
      * búsquedas por los 48 barrios, que es la parte cara y la que acá no hace falta.
      *
-     * Cuesta una ficha por local —el tramo gratis es de 5.000 por mes— y una foto solo
-     * por los que efectivamente cambian.
+     * Preguntar qué fotos tiene cada local no se paga (#199). Cuesta una foto por cada
+     * local que no tenía y por cada uno que cambia.
      */
     public PlacesSyncReport revisarFotos() {
+        return revisarFotos(0);
+    }
+
+    /**
+     * Lo mismo, pudiendo pagar fotos para los locales que no tienen ninguna.
+     *
+     * Lo que se pide se recorta a {@link #FOTOS_PAGAS_POR_MES}, y como se cuenta sobre el
+     * contador del mes, pedirlo de nuevo no suma: en un mes nunca se pagan más que esas.
+     *
+     * @param pagas cuántas fotos se pueden pagar este mes por encima del tramo gratuito
+     */
+    public PlacesSyncReport revisarFotos(int pagas) {
         if (!properties.hasApiKey()) {
             log.warn("Revisión de fotos salteada: falta la clave de Google");
             return PlacesSyncReport.skipped(SIN_CLAVE);
         }
 
-        FotosDeLocales.Completadas faltantes = fotos.completarFaltantes();
+        int autorizadas = Math.max(0, Math.min(pagas, FOTOS_PAGAS_POR_MES));
+        FotosDeLocales.Completadas faltantes = fotos.completarFaltantes(autorizadas);
         int recambiadas = fotos.recambiarViejas();
 
-        log.info("Revisión de fotos: {} bajadas, {} prestadas de otra sucursal, {} recambiadas",
-            faltantes.bajadas(), faltantes.prestadas(), recambiadas);
+        log.info("Revisión de fotos: {} bajadas, {} prestadas de otra sucursal, {} recambiadas, {} pagas autorizadas",
+            faltantes.bajadas(), faltantes.prestadas(), recambiadas, autorizadas);
 
         return PlacesSyncReport.soloFotos(
             faltantes.bajadas() + recambiadas, faltantes.prestadas());

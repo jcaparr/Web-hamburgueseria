@@ -132,16 +132,17 @@ class PlacesConfiguracionTest {
      * freno existe porque pasado el tope no se llama más, y un número de más acá adentro
      * lo desactiva sin que falle nada: las llamadas salen igual y se cobran.
      *
-     * Los tramos son 5.000 búsquedas, 5.000 fichas, 1.000 fotos, 1.000 resúmenes y 1.000
-     * horarios por mes. Los tres últimos son los chicos, y el resumen además es el caro:
-     * veinticinco dólares cada mil pasado el tramo.
+     * Los tramos son 5.000 búsquedas, 1.000 fotos, 1.000 resúmenes y 1.000 horarios por
+     * mes. Los tres últimos son los chicos, y el resumen además es el caro: veinticinco
+     * dólares cada mil pasado el tramo. Las fichas de fotos no se pagan (#199), pero su
+     * tope es el de las fichas Pro, por si alguna vez se les agrega un campo pago.
      */
     @Test
     void ningunTopeSePasaDelTramoGratuito() {
         var quota = properties.getQuota();
 
         assertThat(quota.getMonthlySearchCalls()).isLessThanOrEqualTo(5000);
-        assertThat(quota.getMonthlyDetailsCalls()).isLessThanOrEqualTo(5000);
+        assertThat(quota.getMonthlyListaDeFotosCalls()).isLessThanOrEqualTo(5000);
         assertThat(quota.getMonthlyPhotoCalls()).isLessThanOrEqualTo(1000);
         assertThat(quota.getMonthlyResumenCalls()).isLessThanOrEqualTo(1000);
         assertThat(quota.getMonthlyHorarioCalls()).isLessThanOrEqualTo(1000);
@@ -158,7 +159,7 @@ class PlacesConfiguracionTest {
     void lasFichasAlcanzanParaGastarTodasLasFotos() {
         var quota = properties.getQuota();
 
-        assertThat(quota.getMonthlyDetailsCalls())
+        assertThat(quota.getMonthlyListaDeFotosCalls())
             .isGreaterThanOrEqualTo(quota.getMonthlyPhotoCalls());
     }
 
