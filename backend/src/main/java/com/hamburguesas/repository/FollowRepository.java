@@ -1,6 +1,7 @@
 package com.hamburguesas.repository;
 
 import com.hamburguesas.model.Follow;
+import com.hamburguesas.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -36,4 +37,28 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
     /** A quiénes sigue, para armarle el feed. */
     @Query("select f.followed.id from Follow f where f.follower.id = :seguidor")
     List<Long> idsQueSigue(@Param("seguidor") Long seguidorId);
+
+    /**
+     * Quiénes siguen a alguien, los más recientes primero (#183).
+     *
+     * En "ocultos" va la gente con la que quien mira tiene un bloqueo, por lo mismo que
+     * en el feed y el buscador: un bloqueado no puede reaparecer por una lista de
+     * seguidores. Nunca llega vacía, porque "not in ()" no es SQL válido.
+     */
+    @Query("""
+        select f.follower from Follow f
+        where f.followed.id = :userId
+          and f.follower.id not in :ocultos
+        order by f.createdAt desc
+        """)
+    List<User> seguidoresDe(@Param("userId") Long userId, @Param("ocultos") Collection<Long> ocultos);
+
+    /** A quiénes sigue alguien, los más recientes primero, con el mismo filtro. */
+    @Query("""
+        select f.followed from Follow f
+        where f.follower.id = :userId
+          and f.followed.id not in :ocultos
+        order by f.createdAt desc
+        """)
+    List<User> seguidosPor(@Param("userId") Long userId, @Param("ocultos") Collection<Long> ocultos);
 }

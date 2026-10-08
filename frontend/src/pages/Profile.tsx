@@ -130,6 +130,8 @@ export function Profile() {
           {
             valor: stats ? String(stats.seguidores) : '—',
             etiqueta: stats?.seguidores === 1 ? 'seguidor' : 'seguidores',
+            // Quiénes son, y desde ahí a quiénes seguís (#183).
+            a: `/u/${user.username}/seguidores`,
           },
         ]}
         acciones={
