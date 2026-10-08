@@ -1,7 +1,10 @@
 package com.hamburguesas.service;
 
+import com.hamburguesas.dto.CuantasReaccionesDto;
 import com.hamburguesas.dto.ItemDeFeedDto;
+import com.hamburguesas.dto.ReaccionesDto;
 import com.hamburguesas.model.FuenteDelFeed;
+import com.hamburguesas.model.TipoDeReaccion;
 import com.hamburguesas.repository.FollowRepository;
 import com.hamburguesas.repository.RatingRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +35,7 @@ class FeedServiceTest {
     private RatingRepository ratingRepository;
     private FollowRepository followRepository;
     private Bloqueos bloqueos;
+    private Reacciones reacciones;
     private FeedService service;
 
     @BeforeEach
@@ -48,12 +52,13 @@ class FeedServiceTest {
         bloqueos = mock(Bloqueos.class);
         when(bloqueos.queNoPuedeVer(any())).thenReturn(List.of(-1L));
 
-        service = new FeedService(ratingRepository, followRepository, bloqueos);
+        reacciones = mock(Reacciones.class);
+        service = new FeedService(ratingRepository, followRepository, bloqueos, reacciones);
     }
 
     private ItemDeFeedDto resenia(long id, Instant cuando) {
         return new ItemDeFeedDto(id, 9L, "juanca", null, 5L, "Un local", null, "Palermo",
-            4.2, 4, "buena", List.of("/api/rating-photos/portada.jpg"), cuando, false);
+            4.2, 4, "buena", "/api/rating-photos/portada.jpg", cuando, false);
     }
 
     /** Tantas como para que sobre una y haya página siguiente. */
@@ -93,6 +98,21 @@ class FeedServiceTest {
         assertThat(pagina.items()).extracting(ItemDeFeedDto::fotosDeLaResenia).containsExactly(
             List.of("/api/rating-photos/portada.jpg", "/api/rating-photos/otra.jpg"),
             List.of("/api/rating-photos/portada.jpg"));
+    }
+
+    /** Las reacciones de la página se piden de una vez, con quien mira para marcar la suya. */
+    @Test
+    void cadaTarjetaLlegaConSusReacciones() {
+        when(ratingRepository.feedDeTodos(any(), any(), anyCollection(), any(Pageable.class)))
+            .thenReturn(List.of(resenia(1L, CUANDO), resenia(2L, CUANDO.minusSeconds(1))));
+        ReaccionesDto deLaPrimera = new ReaccionesDto(
+            List.of(new CuantasReaccionesDto(TipoDeReaccion.FUEGO, 3)), TipoDeReaccion.FUEGO);
+        when(reacciones.de(List.of(1L, 2L), YO)).thenReturn(Map.of(1L, deLaPrimera));
+
+        var pagina = service.ver(FuenteDelFeed.TODOS, null, YO);
+
+        assertThat(pagina.items()).extracting(ItemDeFeedDto::reacciones)
+            .containsExactly(deLaPrimera, ReaccionesDto.NINGUNA);
     }
 
     @Test

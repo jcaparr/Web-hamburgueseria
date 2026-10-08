@@ -3,6 +3,7 @@ package com.hamburguesas.service;
 import com.hamburguesas.dto.NotaYComentarioDto;
 import com.hamburguesas.dto.NotaYCuantasDto;
 import com.hamburguesas.dto.RatingResponse;
+import com.hamburguesas.dto.ReaccionesDto;
 import com.hamburguesas.dto.ResumenDeReseniasDto;
 import com.hamburguesas.fotos.FotosDeResenias;
 import com.hamburguesas.model.BurgerJoint;
@@ -66,7 +67,7 @@ class ReseniasDeUnLocalTest {
 
         service = new RatingService(
             ratingRepository, mock(BurgerJointRepository.class), mock(UserRepository.class),
-            mock(FotosDeResenias.class), followRepository, bloqueos
+            mock(FotosDeResenias.class), followRepository, bloqueos, mock(Reacciones.class)
         );
     }
 
@@ -198,7 +199,7 @@ class ReseniasDeUnLocalTest {
 
         assertThat(resumen.deQuienesSigo()).containsExactly(new RatingResponse(
             9L, 7L, "amigo", "20131", 5, "una masa",
-            List.of("/api/rating-photos/x.jpg", "/api/rating-photos/y.jpg"), cuando));
+            List.of("/api/rating-photos/x.jpg", "/api/rating-photos/y.jpg"), cuando, ReaccionesDto.NINGUNA));
     }
 
     // ---- de qué hablan las reseñas ----

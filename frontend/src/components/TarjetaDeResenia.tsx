@@ -3,6 +3,7 @@ import { AvatarDeUsuario } from './AvatarDeUsuario'
 import { FotosDeResenia } from './FotosDeResenia'
 import { Stars } from './Stars'
 import { IconPencil } from './icons'
+import { ReaccionesDeResenia } from './ReaccionesDeResenia'
 import type { Rating } from '../types'
 import { relativeDate } from '../utils/relativeDate'
 
@@ -20,10 +21,13 @@ import { relativeDate } from '../utils/relativeDate'
 export function TarjetaDeResenia({
   resenia,
   esMia,
+  puedeReaccionar,
   onEditar,
 }: {
   resenia: Rating
   esMia: boolean
+  /** Falso en la propia y sin sesión: las reacciones se ven, pero no se tocan. */
+  puedeReaccionar: boolean
   /** Si viene, se muestra el lápiz para editarla. Solo tiene sentido en la propia. */
   onEditar?: () => void
 }) {
@@ -61,10 +65,15 @@ export function TarjetaDeResenia({
 
       <FotosDeResenia fotos={resenia.fotos} autorUsername={resenia.username} />
 
-      {resenia.comment && (
-        <p className="whitespace-pre-line px-4 py-3 text-sm leading-relaxed text-base-content/80">
-          {resenia.comment}
-        </p>
+      {(resenia.comment || puedeReaccionar || resenia.reacciones.cuantas.length > 0) && (
+        <div className="flex flex-col gap-2 px-4 py-3">
+          {resenia.comment && (
+            <p className="whitespace-pre-line text-sm leading-relaxed text-base-content/80">
+              {resenia.comment}
+            </p>
+          )}
+          <ReaccionesDeResenia ratingId={resenia.id} reacciones={resenia.reacciones} puedeReaccionar={puedeReaccionar} />
+        </div>
       )}
     </article>
   )

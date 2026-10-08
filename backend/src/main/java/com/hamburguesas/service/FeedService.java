@@ -2,6 +2,7 @@ package com.hamburguesas.service;
 
 import com.hamburguesas.dto.ItemDeFeedDto;
 import com.hamburguesas.dto.PaginaDeFeedDto;
+import com.hamburguesas.dto.ReaccionesDto;
 import com.hamburguesas.model.FuenteDelFeed;
 import com.hamburguesas.repository.FollowRepository;
 import com.hamburguesas.repository.RatingRepository;
@@ -31,6 +32,7 @@ public class FeedService {
     private final RatingRepository ratingRepository;
     private final FollowRepository followRepository;
     private final Bloqueos bloqueos;
+    private final Reacciones reacciones;
 
     public PaginaDeFeedDto ver(FuenteDelFeed fuente, String cursor, Long quienMira) {
         Corte corte = Corte.de(cursor);
@@ -46,7 +48,8 @@ public class FeedService {
         };
 
         boolean hayMas = traidos.size() > POR_PAGINA;
-        List<ItemDeFeedDto> items = conTodasLasFotos(hayMas ? traidos.subList(0, POR_PAGINA) : traidos);
+        List<ItemDeFeedDto> items = conReacciones(
+            conTodasLasFotos(hayMas ? traidos.subList(0, POR_PAGINA) : traidos), quienMira);
 
         return new PaginaDeFeedDto(items, hayMas ? cursorDe(items.get(items.size() - 1)) : null);
     }
@@ -63,6 +66,18 @@ public class FeedService {
             items.stream().map(ItemDeFeedDto::ratingId).toList());
         return items.stream()
             .map(item -> item.conFotos(fotos.getOrDefault(item.ratingId(), item.fotosDeLaResenia())))
+            .toList();
+    }
+
+    /** Las reacciones de toda la página, en dos consultas y no dos por tarjeta (#186). */
+    private List<ItemDeFeedDto> conReacciones(List<ItemDeFeedDto> items, Long quienMira) {
+        if (items.isEmpty()) {
+            return items;
+        }
+        Map<Long, ReaccionesDto> deCadaUna = reacciones.de(
+            items.stream().map(ItemDeFeedDto::ratingId).toList(), quienMira);
+        return items.stream()
+            .map(item -> item.conReacciones(deCadaUna.getOrDefault(item.ratingId(), ReaccionesDto.NINGUNA)))
             .toList();
     }
 

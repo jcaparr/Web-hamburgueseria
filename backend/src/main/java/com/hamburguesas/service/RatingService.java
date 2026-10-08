@@ -3,6 +3,7 @@ package com.hamburguesas.service;
 import com.hamburguesas.dto.NotaYCuantasDto;
 import com.hamburguesas.dto.RatingRequest;
 import com.hamburguesas.dto.RatingResponse;
+import com.hamburguesas.dto.ReaccionesDto;
 import com.hamburguesas.dto.ResumenDeReseniasDto;
 import com.hamburguesas.dto.TemaDeReseniasDto;
 import com.hamburguesas.exception.ConflictException;
@@ -17,6 +18,7 @@ import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +46,7 @@ public class RatingService {
     private final FotosDeResenias fotos;
     private final FollowRepository followRepository;
     private final Bloqueos bloqueos;
+    private final Reacciones reacciones;
 
     /**
      * Las fotos son parte de la reseña, no un agregado posterior.
@@ -84,7 +87,7 @@ public class RatingService {
         rating.ponerFotos(rutas);
 
         rating = ratingRepository.save(rating);
-        return toResponse(rating);
+        return toResponse(rating, ReaccionesDto.NINGUNA);
     }
 
     /**
@@ -128,7 +131,7 @@ public class RatingService {
 
         rating.setScore(request.score());
         rating.setComment(request.comment());
-        return toResponse(rating);
+        return conReacciones(List.of(rating), userId).get(0);
     }
 
     /**
@@ -255,9 +258,10 @@ public class RatingService {
      */
     @Transactional(readOnly = true)
     public Page<RatingResponse> list(Long burgerJointId, Long userId, Pageable pageable) {
-        return ratingRepository
-            .deUnLocalSalvo(burgerJointId, bloqueos.queNoPuedeVer(userId), pageable)
-            .map(this::toResponse);
+        Page<Rating> pagina = ratingRepository
+            .deUnLocalSalvo(burgerJointId, bloqueos.queNoPuedeVer(userId), pageable);
+        List<RatingResponse> conTodo = conReacciones(pagina.getContent(), userId);
+        return new PageImpl<>(conTodo, pagina.getPageable(), pagina.getTotalElements());
     }
 
     /**
@@ -310,9 +314,7 @@ public class RatingService {
             return List.of();
         }
 
-        return ratingRepository.deAutoresEn(burgerJointId, seguidos).stream()
-            .map(this::toResponse)
-            .toList();
+        return conReacciones(ratingRepository.deAutoresEn(burgerJointId, seguidos), userId);
     }
 
     private byte[] leer(MultipartFile foto) {
@@ -326,10 +328,22 @@ public class RatingService {
         }
     }
 
-    private RatingResponse toResponse(Rating r) {
+    /** Las reacciones de todas juntas, en dos consultas y no dos por reseña (#186). */
+    private List<RatingResponse> conReacciones(List<Rating> resenias, Long quienMira) {
+        if (resenias.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, ReaccionesDto> deCadaUna = reacciones.de(
+            resenias.stream().map(Rating::getId).toList(), quienMira);
+        return resenias.stream()
+            .map(r -> toResponse(r, deCadaUna.getOrDefault(r.getId(), ReaccionesDto.NINGUNA)))
+            .toList();
+    }
+
+    private RatingResponse toResponse(Rating r, ReaccionesDto susReacciones) {
         return new RatingResponse(
             r.getId(), r.getUser().getId(), r.getUser().getUsername(), r.getUser().getHamburguesa(),
-            r.getScore(), r.getComment(), r.todasLasFotos(), r.getCreatedAt()
+            r.getScore(), r.getComment(), r.todasLasFotos(), r.getCreatedAt(), susReacciones
         );
     }
 }

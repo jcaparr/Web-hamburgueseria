@@ -35,14 +35,17 @@ public record ItemDeFeedDto(
     /** Las fotos que sacó quien la escribió, en orden: la primera es la portada. */
     List<String> fotosDeLaResenia,
     Instant createdAt,
-    boolean editada
+    boolean editada,
+    /** Las reacciones que le pusieron los demás, y la de quien mira (#186). */
+    ReaccionesDto reacciones
 ) {
 
     /**
      * El que usa la consulta del feed, que trae solo la portada.
      *
      * Una consulta que arma objetos no puede traer una lista por fila. Las demás fotos
-     * las agrega después {@link #conFotos}, con una sola consulta para toda la página.
+     * y las reacciones las agregan después {@link #conFotos} y {@link #conReacciones},
+     * con una consulta para toda la página.
      */
     public ItemDeFeedDto(Long ratingId, Long autorId, String autorUsername, String autorHamburguesa,
                          Long burgerJointId, String burgerJointName, String photoUrl, String area,
@@ -50,12 +53,19 @@ public record ItemDeFeedDto(
                          Instant createdAt, boolean editada) {
         this(ratingId, autorId, autorUsername, autorHamburguesa, burgerJointId, burgerJointName,
             photoUrl, area, promedioDelLocal, score, comment,
-            portada == null ? List.of() : List.of(portada), createdAt, editada);
+            portada == null ? List.of() : List.of(portada), createdAt, editada,
+            ReaccionesDto.NINGUNA);
     }
 
     public ItemDeFeedDto conFotos(List<String> fotos) {
         return new ItemDeFeedDto(ratingId, autorId, autorUsername, autorHamburguesa, burgerJointId,
             burgerJointName, photoUrl, area, promedioDelLocal, score, comment, fotos, createdAt,
-            editada);
+            editada, reacciones);
+    }
+
+    public ItemDeFeedDto conReacciones(ReaccionesDto nuevas) {
+        return new ItemDeFeedDto(ratingId, autorId, autorUsername, autorHamburguesa, burgerJointId,
+            burgerJointName, photoUrl, area, promedioDelLocal, score, comment, fotosDeLaResenia,
+            createdAt, editada, nuevas);
     }
 }
