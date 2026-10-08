@@ -33,7 +33,8 @@ public class AuthRateLimitFilter extends OncePerRequestFilter {
      *
      * Ninguno sirve para adivinar una contraseña ni hace mandar un mail, que es lo que
      * el límite existe para frenar, y cuestan lo mismo que cualquier otra llamada de la
-     * API, que no tiene límite. Contarlos no protegía nada y dejaba gente afuera: /me se
+     * API, que tiene su propio tope, mucho más amplio ({@link
+     * com.hamburguesas.config.ApiRateLimitFilter}). Contarlos acá no protegía nada y dejaba gente afuera: /me se
      * pide en cada carga de página, y detrás de una misma IP —las redes de celular
      * comparten una entre muchos— unas pocas recargas gastaban el cupo de todos, que
      * pasaban a verse desconectados y tampoco podían volver a entrar (#148).

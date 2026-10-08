@@ -37,7 +37,7 @@ public class BurgerJointController {
         @RequestParam(required = false, defaultValue = "true") boolean conCadenas,
         @PageableDefault(size = 20) Pageable pageable
     ) {
-        return burgerJointService.search(q, areas, conCadenas, CurrentUser.idOrNull(), pageable);
+        return burgerJointService.search(q, areas, conCadenas, CurrentUser.idOrNull(), Paginas.sinOrden(pageable));
     }
 
     /**
