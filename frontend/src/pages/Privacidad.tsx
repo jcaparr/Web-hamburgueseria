@@ -45,9 +45,9 @@ export function Privacidad() {
             nosotros podemos leerla.
           </li>
           <li>
-            <strong>Lo que hacés en la app:</strong> tus reseñas (la nota, el comentario y la foto), las
-            hamburgueserías que guardás, tus recorridos, a quién seguís, a quién bloqueás y la hamburguesa de tu
-            avatar.
+            <strong>Lo que hacés en la app:</strong> tus reseñas (la nota, el comentario y las fotos), las
+            reacciones que les ponés a las reseñas de otros, las hamburgueserías que guardás, tus recorridos, a quién
+            seguís, a quién bloqueás y la hamburguesa de tu avatar.
           </li>
         </Lista>
         <p>
@@ -74,8 +74,12 @@ export function Privacidad() {
       <Apartado titulo="Qué ven los demás">
         <p>
           Cualquiera que entre a Burgómetro puede ver tu nombre de usuario, tu avatar y tus reseñas. Quienes tienen
-          cuenta además pueden ver tu perfil: cuántas reseñas tenés, tu promedio, a cuánta gente seguís y quiénes te
+          cuenta además pueden ver tu perfil: cuántas reseñas tenés, tu promedio, a quiénes seguís y quiénes te
           siguen.
+        </p>
+        <p>
+          Tus reacciones a las reseñas de otros se cuentan junto con las de los demás, sin tu nombre: se ve cuántas
+          hay de cada una, no quién las puso.
         </p>
         <p>Tu mail, las hamburgueserías que guardaste y tus recorridos no los ve nadie más que vos.</p>
       </Apartado>
@@ -92,11 +96,17 @@ export function Privacidad() {
           </li>
           <li>
             <strong>Brevo</strong>, que envía los mails con los códigos: recibe tu mail y el mensaje que te
-            mandamos, nada más.
+            mandamos, nada más. Cuenta si el mail se abrió, con una imagen invisible, pero en forma anónima: no
+            guarda tu dirección IP ni desde qué dispositivo lo abriste.
           </li>
           <li>
             <strong>Cloudflare</strong>, que maneja la dirección del sitio y reenvía los mails que nos escribís a{' '}
             <Correo />.
+          </li>
+          <li>
+            <strong>Backblaze</strong>, que guarda las copias de seguridad en Estados Unidos, para no perder nada si
+            el servidor falla. La base de datos va cifrada con una clave que Backblaze no tiene, así que no la puede
+            leer. Las fotos van como están, porque ya son públicas.
           </li>
         </Lista>
         <p>Solo entregaríamos datos a una autoridad si una ley o un juez nos lo exigen.</p>
@@ -141,7 +151,8 @@ export function Privacidad() {
       <Apartado titulo="Cuánto tiempo los guardamos">
         <p>
           Mientras tengas la cuenta. Si pedís borrarla, borramos tu cuenta, tus reseñas y tus fotos. Las copias de
-          seguridad se pisan solas a los 14 días, así que ahí desaparece también cualquier resto.
+          seguridad, en el servidor y en Backblaze, se pisan solas a los 14 días, así que ahí desaparece también
+          cualquier resto.
         </p>
         <p>
           El servidor anota cada pedido que recibe, con su dirección IP, para poder investigar abusos y fallas.
@@ -157,7 +168,8 @@ export function Privacidad() {
           <li>borrar tu cuenta y todo lo que publicaste.</li>
         </Lista>
         <p>
-          Una reseña la podés borrar vos, con su foto, cuando quieras: en la ficha del local, en «Editar tu reseña».
+          Una reseña la podés borrar vos, con sus fotos, cuando quieras: en la ficha del local, en «Editar tu
+          reseña». Lo mismo una reacción: tocándola de nuevo.
         </p>
         <p>
           Para lo demás, escribinos a <Correo /> desde el mail de tu cuenta, para que sepamos que sos vos. Te contestamos dentro de
@@ -177,7 +189,8 @@ export function Privacidad() {
       <Apartado titulo="Cómo los cuidamos">
         <p>
           Toda la comunicación con Burgómetro va cifrada (HTTPS), las contraseñas se guardan con un cifrado que no
-          se puede revertir y la base de datos no es accesible desde internet. Ningún sistema es infalible: si
+          se puede revertir, la base de datos no es accesible desde internet y sus copias de seguridad salen del
+          servidor cifradas. Ningún sistema es infalible: si
           alguna vez hubiera un problema que afecte tus datos, te vamos a avisar.
         </p>
       </Apartado>
