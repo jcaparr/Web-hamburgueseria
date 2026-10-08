@@ -11,4 +11,4 @@ export const DOMICILIO = 'Emilio Mitre 53, Chivilcoy, provincia de Buenos Aires'
 export const CONTACTO = 'hola@burgometro.com.ar'
 
 /** Cambiarla cada vez que cambie el texto de cualquiera de las dos páginas. */
-export const ULTIMA_ACTUALIZACION = '7 de octubre de 2026'
+export const ULTIMA_ACTUALIZACION = '8 de octubre de 2026'
