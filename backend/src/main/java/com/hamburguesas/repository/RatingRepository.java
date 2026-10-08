@@ -5,7 +5,6 @@ import com.hamburguesas.dto.NotaDeLocalDto;
 import com.hamburguesas.dto.NotaYComentarioDto;
 import com.hamburguesas.dto.NotaYCuantasDto;
 import com.hamburguesas.dto.RankingItemDto;
-import com.hamburguesas.dto.RatingResponse;
 import com.hamburguesas.dto.ReseniaDePerfilDto;
 import com.hamburguesas.dto.ReseniasPorUsuarioDto;
 import com.hamburguesas.model.Rating;
@@ -16,8 +15,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface RatingRepository extends JpaRepository<Rating, Long> {
@@ -140,15 +142,39 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
      * seguidos, y el filtro iría contra una lista que ya está limpia.
      */
     @Query("""
-        select new com.hamburguesas.dto.RatingResponse(
-            r.id, u.id, u.username, u.hamburguesa, r.score, r.comment, r.photoUrl, r.createdAt)
-        from Rating r join r.user u
+        select r from Rating r join fetch r.user u
         where r.burgerJoint.id = :burgerJointId
           and u.id in :autores
         order by r.createdAt desc
         """)
-    List<RatingResponse> deAutoresEn(@Param("burgerJointId") Long burgerJointId,
-                                     @Param("autores") Collection<Long> autores);
+    List<Rating> deAutoresEn(@Param("burgerJointId") Long burgerJointId,
+                             @Param("autores") Collection<Long> autores);
+
+    /**
+     * Las fotos de varias reseñas, en orden, en una sola consulta.
+     *
+     * Es para el feed, que arma sus tarjetas con una consulta que solo puede traer la
+     * portada: las demás se buscan acá de una vez para toda la página, en vez de una
+     * consulta por tarjeta. Cada fila es el id de la reseña y la ruta de una foto.
+     */
+    @Query("""
+        select r.id, f from Rating r join r.fotos f
+        where r.id in :ids
+        order by r.id, index(f)
+        """)
+    List<Object[]> fotosDe(@Param("ids") Collection<Long> ids);
+
+    /** Las mismas, agrupadas por reseña. Las que no tienen fotos no vienen. */
+    default Map<Long, List<String>> fotosPorResenia(Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, List<String>> porResenia = new HashMap<>();
+        for (Object[] fila : fotosDe(ids)) {
+            porResenia.computeIfAbsent((Long) fila[0], id -> new ArrayList<>()).add((String) fila[1]);
+        }
+        return porResenia;
+    }
 
     /**
      * La nota promedio y cuántas reseñas tiene cada uno de estos locales, en una sola

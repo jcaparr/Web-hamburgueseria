@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
-import { FotoDeResenia } from './FotoDeResenia'
+import { FotosDeResenia } from './FotosDeResenia'
 import { Stars } from './Stars'
 import { IconPencil } from './icons'
 import type { Rating } from '../types'
@@ -59,9 +59,7 @@ export function TarjetaDeResenia({
         </div>
       </header>
 
-      {resenia.photoUrl && (
-        <FotoDeResenia src={resenia.photoUrl} autorUsername={resenia.username} />
-      )}
+      <FotosDeResenia fotos={resenia.fotos} autorUsername={resenia.username} />
 
       {resenia.comment && (
         <p className="whitespace-pre-line px-4 py-3 text-sm leading-relaxed text-base-content/80">

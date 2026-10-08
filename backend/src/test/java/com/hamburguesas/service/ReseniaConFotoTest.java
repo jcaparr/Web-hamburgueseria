@@ -16,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,9 +75,9 @@ class ReseniaConFotoTest {
 
     @Test
     void unaReseniaNuevaSeGuardaConSuFoto() {
-        var respuesta = service.rate(YO, LOCAL, loEscrito(), unaFoto());
+        var respuesta = service.rate(YO, LOCAL, loEscrito(), List.of(unaFoto()));
 
-        assertThat(respuesta.photoUrl()).isEqualTo("/api/rating-photos/nueva.jpg");
+        assertThat(respuesta.fotos()).containsExactly("/api/rating-photos/nueva.jpg");
     }
 
     @Test
@@ -106,7 +107,7 @@ class ReseniaConFotoTest {
     void unArchivoVacioNoCuentaComoFoto() {
         var vacio = new MockMultipartFile("foto", "vacia.jpg", "image/jpeg", new byte[0]);
 
-        assertThatThrownBy(() -> service.rate(YO, LOCAL, loEscrito(), vacio))
+        assertThatThrownBy(() -> service.rate(YO, LOCAL, loEscrito(), List.of(vacio)))
             .isInstanceOf(ConflictException.class);
     }
 
@@ -120,7 +121,7 @@ class ReseniaConFotoTest {
     void siLaFotoNoSirveNoSeGuardaLaResenia() {
         when(fotos.guardar(any())).thenThrow(new ConflictException("Eso no es una imagen"));
 
-        assertThatThrownBy(() -> service.rate(YO, LOCAL, loEscrito(), unaFoto()))
+        assertThatThrownBy(() -> service.rate(YO, LOCAL, loEscrito(), List.of(unaFoto())))
             .isInstanceOf(ConflictException.class);
 
         verify(ratingRepository, never()).save(any());
@@ -131,7 +132,7 @@ class ReseniaConFotoTest {
     void editarSinMandarFotoDejaLaQueYaTenia() {
         Rating mia = laMiaCon("/api/rating-photos/vieja.jpg");
 
-        service.update(YO, LOCAL, new RatingRequest(5, "mejoró"), null);
+        service.update(YO, LOCAL, new RatingRequest(5, "mejoró"), null, null);
 
         assertThat(mia.getPhotoUrl()).isEqualTo("/api/rating-photos/vieja.jpg");
         assertThat(mia.getComment()).isEqualTo("mejoró");
@@ -147,7 +148,7 @@ class ReseniaConFotoTest {
     void editarUnaReseniaSinFotoPideUna() {
         laMiaCon(null);
 
-        assertThatThrownBy(() -> service.update(YO, LOCAL, loEscrito(), null))
+        assertThatThrownBy(() -> service.update(YO, LOCAL, loEscrito(), null, null))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("necesita una foto");
     }
@@ -157,7 +158,7 @@ class ReseniaConFotoTest {
     void cambiarLaFotoBorraLaAnterior() {
         Rating mia = laMiaCon("/api/rating-photos/vieja.jpg");
 
-        service.update(YO, LOCAL, loEscrito(), unaFoto());
+        service.update(YO, LOCAL, loEscrito(), List.of(unaFoto()), null);
 
         assertThat(mia.getPhotoUrl()).isEqualTo("/api/rating-photos/nueva.jpg");
         ArgumentCaptor<String> borrada = ArgumentCaptor.forClass(String.class);
@@ -170,7 +171,7 @@ class ReseniaConFotoTest {
     void ponerleFotoAUnaViejaNoBorraNada() {
         laMiaCon(null);
 
-        service.update(YO, LOCAL, loEscrito(), unaFoto());
+        service.update(YO, LOCAL, loEscrito(), List.of(unaFoto()), null);
 
         verify(fotos, never()).borrar(any());
     }
