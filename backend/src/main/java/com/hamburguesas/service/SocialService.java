@@ -67,25 +67,12 @@ public class SocialService {
             "%" + buscado + "%", buscado + "%",
             bloqueos.queNoPuedeVerNiASiMismo(quienBusca), PageRequest.of(0, RESULTADOS));
 
-        Set<Long> sigue = aCualesSigue(quienBusca, encontrados.stream().map(User::getId).toList());
-        Map<Long, Long> resenias = reseniasDe(encontrados);
-
-        return encontrados.stream()
-            .map(u -> new UsuarioBuscadoDto(u.getId(), u.getUsername(), u.getHamburguesa(),
-                resenias.getOrDefault(u.getId(), 0L), sigue.contains(u.getId())))
-            .toList();
+        return comoResultados(encontrados, quienBusca);
     }
 
     public PerfilPublicoDto perfil(String username, Long quienMira) {
-        User persona = porNombre(username);
+        User persona = visiblePara(username, quienMira);
         boolean soyYo = persona.getId().equals(quienMira);
-
-        // Con un bloqueo de por medio se contesta lo mismo que si no existiera, y no un
-        // "está bloqueado": decirlo le confirmaría al bloqueado que lo bloquearon, que
-        // es justo el tipo de aviso que hace que insista por otro lado.
-        if (!soyYo && hayBloqueo(quienMira, persona.getId())) {
-            throw new ResourceNotFoundException("No encontramos a esa persona");
-        }
 
         return new PerfilPublicoDto(
             persona.getId(),
@@ -99,6 +86,28 @@ public class SocialService {
                 && followRepository.existsByFollower_IdAndFollowed_Id(quienMira, persona.getId()),
             soyYo,
             ratingRepository.ultimasDe(persona.getId(), PageRequest.of(0, RESENIAS_EN_EL_PERFIL)));
+    }
+
+    /**
+     * Quiénes siguen a esta persona (#183), con lo mismo que muestra el buscador: su
+     * hamburguesa, cuántas reseñas tiene y si quien mira ya la sigue. Desde una lista de
+     * seguidores es natural seguir a alguien que todavía no seguías.
+     *
+     * Sin la gente con la que quien mira tiene un bloqueo. Por eso el número del perfil
+     * puede ser uno más que la lista: el número es de la persona, la lista es lo que
+     * quien mira puede ver.
+     */
+    public List<UsuarioBuscadoDto> seguidores(String username, Long quienMira) {
+        User persona = visiblePara(username, quienMira);
+        return comoResultados(
+            followRepository.seguidoresDe(persona.getId(), bloqueos.queNoPuedeVer(quienMira)), quienMira);
+    }
+
+    /** A quiénes sigue esta persona, con el mismo criterio que {@link #seguidores}. */
+    public List<UsuarioBuscadoDto> siguiendo(String username, Long quienMira) {
+        User persona = visiblePara(username, quienMira);
+        return comoResultados(
+            followRepository.seguidosPor(persona.getId(), bloqueos.queNoPuedeVer(quienMira)), quienMira);
     }
 
     /** Seguir de nuevo a quien ya seguís no es un error: ya estabas donde querías estar. */
@@ -177,6 +186,32 @@ public class SocialService {
 
     private boolean hayBloqueo(Long quienMira, Long otro) {
         return bloqueos.hayEntre(quienMira, otro);
+    }
+
+    /**
+     * La persona, si quien mira la puede ver.
+     *
+     * Con un bloqueo de por medio se contesta lo mismo que si no existiera, y no un
+     * "está bloqueado": decirlo le confirmaría al bloqueado que lo bloquearon, que es
+     * justo el tipo de aviso que hace que insista por otro lado.
+     */
+    private User visiblePara(String username, Long quienMira) {
+        User persona = porNombre(username);
+        if (!persona.getId().equals(quienMira) && hayBloqueo(quienMira, persona.getId())) {
+            throw new ResourceNotFoundException("No encontramos a esa persona");
+        }
+        return persona;
+    }
+
+    /** Una lista de gente como la muestra el buscador, en dos consultas para toda la lista. */
+    private List<UsuarioBuscadoDto> comoResultados(List<User> gente, Long quienMira) {
+        Set<Long> sigue = aCualesSigue(quienMira, gente.stream().map(User::getId).toList());
+        Map<Long, Long> resenias = reseniasDe(gente);
+
+        return gente.stream()
+            .map(u -> new UsuarioBuscadoDto(u.getId(), u.getUsername(), u.getHamburguesa(),
+                resenias.getOrDefault(u.getId(), 0L), sigue.contains(u.getId())))
+            .toList();
     }
 
     private User porNombre(String username) {

@@ -84,14 +84,27 @@ export function PerfilPublico() {
         username={perfil.username}
         hamburguesa={perfil.hamburguesa}
         bajada={
-          <span className="text-sm text-base-content/70">
-            {siguiendoEnPalabras(perfil.siguiendo)}
-          </span>
+          perfil.siguiendo > 0 ? (
+            // A quiénes sigue (#183): dice mucho de qué le gusta, y es de donde sale
+            // gente nueva para seguir.
+            <Link
+              to={`/u/${perfil.username}/siguiendo`}
+              className="-my-2 inline-flex min-h-11 w-fit items-center rounded-field text-sm text-base-content/70 hover:text-primary hover:underline"
+            >
+              {siguiendoEnPalabras(perfil.siguiendo)}
+            </Link>
+          ) : (
+            <span className="text-sm text-base-content/70">{siguiendoEnPalabras(perfil.siguiendo)}</span>
+          )
         }
         cifras={[
           { valor: String(perfil.resenias), etiqueta: perfil.resenias === 1 ? 'reseña' : 'reseñas' },
           { valor: perfil.promedio ? nota(perfil.promedio) : '—', etiqueta: 'promedio' },
-          { valor: String(perfil.seguidores), etiqueta: perfil.seguidores === 1 ? 'seguidor' : 'seguidores' },
+          {
+            valor: String(perfil.seguidores),
+            etiqueta: perfil.seguidores === 1 ? 'seguidor' : 'seguidores',
+            a: `/u/${perfil.username}/seguidores`,
+          },
         ]}
         acciones={
           perfil.soyYo ? (

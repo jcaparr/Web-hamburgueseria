@@ -9,6 +9,7 @@ import { BurgerJointDetail } from './pages/BurgerJointDetail'
 import { BuscarGente } from './pages/BuscarGente'
 import { Explore } from './pages/Explore'
 import { Feed } from './pages/Feed'
+import { GenteDeUnPerfil } from './pages/GenteDeUnPerfil'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { Login } from './pages/Login'
 import { NoEncontrada } from './pages/NoEncontrada'
@@ -53,6 +54,8 @@ export default function App() {
               {/* Bajo /u/ para que un nombre de usuario no pueda chocar nunca con una
                   pantalla de la app: alguien que se llame "tour" no rompe nada. */}
               <Route path="/u/:username" element={<RequireAuth><PerfilPublico /></RequireAuth>} />
+              <Route path="/u/:username/seguidores" element={<RequireAuth><GenteDeUnPerfil lista="seguidores" /></RequireAuth>} />
+              <Route path="/u/:username/siguiendo" element={<RequireAuth><GenteDeUnPerfil lista="siguiendo" /></RequireAuth>} />
               <Route path="/buscar" element={<RequireAuth><BuscarGente /></RequireAuth>} />
               <Route path="/feed" element={<RequireAuth><Feed /></RequireAuth>} />
               <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />

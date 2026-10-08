@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { apiClient } from '../api/client'
-import { AvatarDeUsuario } from '../components/AvatarDeUsuario'
-import { BotonSeguir } from '../components/BotonSeguir'
+import { FilaDePersona } from '../components/FilaDePersona'
 import { IconSearch } from '../components/icons'
 import { LoadError } from '../components/LoadError'
 import { usePedido } from '../hooks/usePedido'
@@ -75,29 +73,11 @@ export function BuscarGente() {
       ) : (
         <ul className="flex flex-col gap-2">
           {resultados.map((persona) => (
-            <li
+            <FilaDePersona
               key={persona.userId}
-              className="flex items-center gap-3 tarjeta p-3"
-            >
-              <Link
-                to={`/u/${persona.username}`}
-                className="flex min-w-0 flex-1 items-center gap-3"
-              >
-                <AvatarDeUsuario username={persona.username} hamburguesa={persona.hamburguesa} size={40} />
-                <div className="flex min-w-0 flex-col">
-                  <span className="truncate font-semibold">@{persona.username}</span>
-                  <span className="text-xs text-base-content/70">
-                    {persona.resenias === 1 ? '1 reseña' : `${persona.resenias} reseñas`}
-                  </span>
-                </div>
-              </Link>
-              <BotonSeguir
-                chico
-                username={persona.username}
-                loSigo={persona.loSigo}
-                onCambio={(loSigo) => cambioDeSeguimiento(persona.username, loSigo)}
-              />
-            </li>
+              persona={persona}
+              onCambio={(loSigo) => cambioDeSeguimiento(persona.username, loSigo)}
+            />
           ))}
         </ul>
       )}

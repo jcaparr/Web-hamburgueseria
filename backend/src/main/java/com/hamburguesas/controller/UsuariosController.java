@@ -41,6 +41,18 @@ public class UsuariosController {
         return socialService.perfil(username, CurrentUser.requireId());
     }
 
+    /** Quiénes siguen a esta persona (#183). */
+    @GetMapping("/{username}/seguidores")
+    public List<UsuarioBuscadoDto> seguidores(@PathVariable String username) {
+        return socialService.seguidores(username, CurrentUser.requireId());
+    }
+
+    /** A quiénes sigue (#183). */
+    @GetMapping("/{username}/siguiendo")
+    public List<UsuarioBuscadoDto> siguiendo(@PathVariable String username) {
+        return socialService.siguiendo(username, CurrentUser.requireId());
+    }
+
     @PostMapping("/{username}/seguir")
     public ResponseEntity<Void> seguir(@PathVariable String username) {
         socialService.seguir(username, CurrentUser.requireId());
