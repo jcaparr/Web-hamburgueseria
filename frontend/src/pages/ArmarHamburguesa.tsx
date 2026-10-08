@@ -10,9 +10,10 @@ import { FONDOS, codigoDe, recetaPara, type Receta } from '../utils/recetas'
 /**
  * Los nombres de los fondos, para el lector de pantalla: en pantalla son círculos de
  * color y nada más. Van por lo que se ve en una hamburguesería y no por el nombre del
- * color del tema, que en el oscuro es otro tono.
+ * color del tema. El último era "Tinta" cuando en el tema claro salía marrón; desde
+ * #195 es crema en los dos.
  */
-const NOMBRES_DE_FONDOS = ['Kétchup', 'Mostaza', 'Pepino', 'Azul', 'Tinta']
+const NOMBRES_DE_FONDOS = ['Kétchup', 'Mostaza', 'Pepino', 'Azul', 'Crema']
 
 /**
  * Donde cada uno arma la hamburguesa de su avatar (#151).
