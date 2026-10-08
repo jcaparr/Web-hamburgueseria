@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
 import { FotosDeResenia } from './FotosDeResenia'
 import { IconPin } from './icons'
+import { ReaccionesDeResenia } from './ReaccionesDeResenia'
 import { ScoreBadge } from './ScoreBadge'
 import { Stars } from './Stars'
 import { relativeDate } from '../utils/relativeDate'
@@ -88,6 +89,9 @@ export function TarjetaDeFeed({ item, esMia }: { item: ItemDeFeed; esMia: boolea
             {item.comment}
           </p>
         )}
+
+        {/* Al final, como en cualquier publicación: se reacciona después de leer. */}
+        <ReaccionesDeResenia ratingId={item.ratingId} reacciones={item.reacciones} puedeReaccionar={!esMia} />
       </div>
     </article>
   )

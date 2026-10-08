@@ -13,5 +13,7 @@ public record RatingResponse(
     String comment,
     /** Las fotos que sacó quien la escribió, en orden: la primera es la portada. */
     List<String> fotos,
-    Instant createdAt
+    Instant createdAt,
+    /** Las reacciones que le pusieron los demás, y la de quien mira (#186). */
+    ReaccionesDto reacciones
 ) {}

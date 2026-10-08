@@ -258,7 +258,12 @@ export function BurgerJointDetail() {
         <section className="flex flex-col gap-3">
           <h2 className="font-display text-lg font-bold">Lo que dijeron los que seguís</h2>
           {resumen.deQuienesSigo.map((r) => (
-            <TarjetaDeResenia key={r.id} resenia={r} esMia={r.userId === user?.userId} />
+            <TarjetaDeResenia
+              key={r.id}
+              resenia={r}
+              esMia={r.userId === user?.userId}
+              puedeReaccionar={user !== null && r.userId !== user.userId}
+            />
           ))}
         </section>
       )}
@@ -277,6 +282,7 @@ export function BurgerJointDetail() {
                 key={r.id}
                 resenia={r}
                 esMia={esMia}
+                puedeReaccionar={user !== null && !esMia}
                 onEditar={esMia ? abrirOpinion : undefined}
               />
             )

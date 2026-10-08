@@ -42,7 +42,8 @@ class BorrarReseniaTest {
         fotos = mock(FotosDeResenias.class);
         when(ratingRepository.findByUser_IdAndBurgerJoint_Id(any(), any())).thenReturn(Optional.empty());
         service = new RatingService(ratingRepository, mock(BurgerJointRepository.class),
-            mock(UserRepository.class), fotos, mock(FollowRepository.class), mock(Bloqueos.class));
+            mock(UserRepository.class), fotos, mock(FollowRepository.class), mock(Bloqueos.class),
+            mock(Reacciones.class));
     }
 
     @AfterEach

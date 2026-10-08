@@ -53,7 +53,7 @@ class ReseniaConFotoTest {
         when(fotos.guardar(any())).thenReturn("/api/rating-photos/nueva.jpg");
 
         service = new RatingService(ratingRepository, burgerJointRepository, userRepository, fotos,
-            mock(FollowRepository.class), mock(Bloqueos.class));
+            mock(FollowRepository.class), mock(Bloqueos.class), mock(Reacciones.class));
     }
 
     private MultipartFile unaFoto() {

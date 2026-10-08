@@ -55,6 +55,18 @@ export interface Rating {
   /** Las fotos, en orden: la primera es la portada. */
   fotos: string[]
   createdAt: string
+  reacciones: Reacciones
+}
+
+/** Las reacciones que se le pueden poner a una reseña (#186). */
+export type TipoDeReaccion = 'HAMBRE' | 'FUEGO' | 'APLAUSO' | 'RISA' | 'SORPRESA'
+
+/** Las reacciones de una reseña: cuántas de cada una, y la de quien mira. */
+export interface Reacciones {
+  /** Solo las que alguien usó, de la más usada a la menos. */
+  cuantas: { tipo: TipoDeReaccion; cuantas: number }[]
+  /** La tuya, o null si no reaccionaste o no tenés sesión. */
+  mia: TipoDeReaccion | null
 }
 
 /** Cuántas reseñas tiene una nota. */
@@ -200,6 +212,7 @@ export interface ItemDeFeed {
   /** Cuándo se escribió, no cuándo se editó. */
   createdAt: string
   editada: boolean
+  reacciones: Reacciones
 }
 
 /** Un tramo del feed. `siguiente` viene en null cuando no hay más. */

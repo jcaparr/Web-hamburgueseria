@@ -149,3 +149,16 @@ export function IconExternal({ size = 14, className }: IconProps) {
     </svg>
   )
 }
+
+/** Reaccionar: una cara sonriente con un más, como en los mensajes. */
+export function IconReaccionar({ size = 18, className }: IconProps) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" className={className}>
+      <path d="M16.6 9.4A7 7 0 1 1 10.6 3.4" />
+      <path d="M6.8 11.6c.8 1.2 1.9 1.8 3.2 1.8s2.4-.6 3.2-1.8" />
+      <circle cx="7.4" cy="8" r=".6" fill="currentColor" />
+      <circle cx="12.4" cy="8" r=".6" fill="currentColor" />
+      <path d="M16 1.8v4.4M13.8 4h4.4" />
+    </svg>
+  )
+}
