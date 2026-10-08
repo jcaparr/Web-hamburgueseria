@@ -13,6 +13,7 @@ import javax.imageio.stream.ImageInputStream;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -96,7 +97,7 @@ public class FotosDeResenias {
         }
 
         BufferedImage imagen = decodificar(subido);
-        byte[] jpeg = aJpeg(achicar(imagen));
+        byte[] jpeg = aJpeg(achicarYEnderezar(imagen, OrientacionExif.de(subido)));
 
         String nombre = UUID.randomUUID() + ".jpg";
         try {
@@ -179,30 +180,49 @@ public class FotosDeResenias {
         }
     }
 
-    private BufferedImage achicar(BufferedImage original) {
+    /**
+     * La achica a {@link #LADO_MAXIMO} y la pone derecha, en un solo dibujo (#196).
+     *
+     * Derecha quiere decir como la vio quien la sacó. El celular guarda los píxeles como
+     * salen del sensor —de costado, si el teléfono estaba vertical— y anota en el EXIF
+     * cuánto hay que girarlos. El navegador hace caso a esa nota, y por eso la vista
+     * previa se veía bien. Acá la nota se borra con el resto de los metadatos, así que el
+     * giro hay que aplicarlo antes: si no, la foto queda acostada para siempre.
+     *
+     * Las dos cosas van en el mismo dibujo porque cada copia de una foto grande ocupa
+     * decenas de megas: girar y después achicar serían dos copias en vez de una.
+     */
+    private BufferedImage achicarYEnderezar(BufferedImage original, int orientacion) {
         int lado = Math.max(original.getWidth(), original.getHeight());
-        if (lado <= LADO_MAXIMO) {
+        boolean derecha = orientacion == OrientacionExif.DERECHA;
+        if (lado <= LADO_MAXIMO && derecha) {
             return original;
         }
 
-        double escala = (double) LADO_MAXIMO / lado;
+        double escala = Math.min(1.0, (double) LADO_MAXIMO / lado);
         int ancho = Math.max(1, (int) Math.round(original.getWidth() * escala));
         int alto = Math.max(1, (int) Math.round(original.getHeight() * escala));
+        // De la 5 a la 8 hay un cuarto de giro: el ancho y el alto se cambian de lugar.
+        boolean deCostado = OrientacionExif.cambiaLosLados(orientacion);
 
-        BufferedImage achicada = new BufferedImage(ancho, alto, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = achicada.createGraphics();
+        BufferedImage lista = new BufferedImage(
+            deCostado ? alto : ancho, deCostado ? ancho : alto, BufferedImage.TYPE_INT_RGB);
+        AffineTransform transformacion = OrientacionExif.transformacion(orientacion, ancho, alto);
+        transformacion.scale(escala, escala);
+
+        Graphics2D g = lista.createGraphics();
         try {
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
                 RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             // Sobre blanco: un PNG con transparencia, pasado a JPEG sin esto, queda con
             // el fondo negro.
             g.setColor(Color.WHITE);
-            g.fillRect(0, 0, ancho, alto);
-            g.drawImage(original, 0, 0, ancho, alto, null);
+            g.fillRect(0, 0, lista.getWidth(), lista.getHeight());
+            g.drawImage(original, transformacion, null);
         } finally {
             g.dispose();
         }
-        return achicada;
+        return lista;
     }
 
     private byte[] aJpeg(BufferedImage imagen) {
