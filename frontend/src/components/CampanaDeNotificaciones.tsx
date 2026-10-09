@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import type { Buzon, Notificacion } from '../types'
 import { reaccion } from '../utils/reacciones'
-import { relativeDate } from '../utils/relativeDate'
+import { fechaYHora } from '../utils/fechaYHora'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
 import { BotonSeguir } from './BotonSeguir'
 import { IconBell } from './icons'
@@ -200,7 +200,7 @@ function Grupo({ titulo, avisos, onCambioDeSeguimiento }: {
               ) : (
                 <ReaccionA aviso={aviso} />
               )}
-              <span className="block text-xs text-base-content/70">{relativeDate(aviso.cuando)}</span>
+              <span className="block text-xs text-base-content/70">{fechaYHora(aviso.cuando)}</span>
             </p>
             {aviso.tipo === 'SEGUIMIENTO' && (
               <BotonSeguir

@@ -11,7 +11,7 @@ import { usePedido } from '../hooks/usePedido'
 import { useTitulo } from '../hooks/useTitulo'
 import { isNotFound } from '../utils/errors'
 import { nota } from '../utils/numeros'
-import { relativeDate } from '../utils/relativeDate'
+import { fechaYHora } from '../utils/fechaYHora'
 import type { PerfilPublico as Perfil } from '../types'
 
 /**
@@ -144,7 +144,7 @@ export function PerfilPublico() {
                     />
                     <span className="flex min-w-0 flex-1 flex-col">
                       <span className="truncate font-semibold">{r.burgerJointName}</span>
-                      <span className="text-xs text-base-content/70">{relativeDate(r.createdAt)}</span>
+                      <span className="text-xs text-base-content/70">{fechaYHora(r.createdAt)}</span>
                     </span>
                     <ScoreBadge score={r.score} size="sm" />
                   </span>

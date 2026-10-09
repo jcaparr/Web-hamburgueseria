@@ -5,7 +5,7 @@ import { Stars } from './Stars'
 import { IconPencil } from './icons'
 import { ReaccionesDeResenia } from './ReaccionesDeResenia'
 import type { Rating } from '../types'
-import { relativeDate } from '../utils/relativeDate'
+import { fechaYHora } from '../utils/fechaYHora'
 
 /**
  * Una reseña de un local, como se ve en la ficha del local.
@@ -44,7 +44,7 @@ export function TarjetaDeResenia({
               @{resenia.username}
               {esMia && <span className="font-normal text-base-content/70"> (vos)</span>}
             </span>
-            <span className="text-xs text-base-content/70">{relativeDate(resenia.createdAt)}</span>
+            <span className="text-xs text-base-content/70">{fechaYHora(resenia.createdAt)}</span>
           </div>
         </Link>
 

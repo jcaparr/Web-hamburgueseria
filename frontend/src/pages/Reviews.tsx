@@ -9,7 +9,7 @@ import { useAuth } from '../context/useAuth'
 import { useTitulo } from '../hooks/useTitulo'
 import type { ReseniaDePerfil } from '../types'
 import { isSessionExpired } from '../utils/errors'
-import { relativeDate } from '../utils/relativeDate'
+import { fechaYHora } from '../utils/fechaYHora'
 
 export function Reviews() {
   const { user } = useAuth()
@@ -54,7 +54,7 @@ export function Reviews() {
               />
               <div className="flex flex-1 flex-col overflow-hidden">
                 <span className="truncate font-medium">{r.burgerJointName}</span>
-                <span className="text-xs text-base-content/70">{relativeDate(r.createdAt)}</span>
+                <span className="text-xs text-base-content/70">{fechaYHora(r.createdAt)}</span>
               </div>
               <ScoreBadge score={r.score} size="sm" />
             </Link>

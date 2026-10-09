@@ -14,7 +14,7 @@ import { useTitulo } from '../hooks/useTitulo'
 import type { BurgerJoint, ReseniaDePerfil, ProfileStats, SavedTour } from '../types'
 import { isSessionExpired } from '../utils/errors'
 import { nota } from '../utils/numeros'
-import { relativeDate } from '../utils/relativeDate'
+import { fechaYHora } from '../utils/fechaYHora'
 
 /** Cuántas reseñas y guardadas se asoman en el perfil; el resto, en "Ver todas". */
 const CUANTAS_EN_LA_GRILLA = 6
@@ -213,7 +213,7 @@ export function Profile() {
                         nombre={r.burgerJointName}
                         foto={r.photoUrl}
                         nota={r.score}
-                        detalle={relativeDate(r.createdAt)}
+                        detalle={fechaYHora(r.createdAt)}
                       />
                     </li>
                   ))}
