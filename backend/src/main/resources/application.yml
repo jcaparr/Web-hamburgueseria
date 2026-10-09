@@ -30,6 +30,11 @@ spring:
     web:
       pageable:
         serialization-mode: via-dto
+        # Lo más que se devuelve por página, pida lo que pida el cliente (#201). Sin esto
+        # el tope era 2.000, más que todos los locales juntos: "?size=5000" traía la base
+        # entera en un pedido, y repetirlo era la forma más barata de cargar el servidor.
+        # La web pide 20 como mucho.
+        max-page-size: 50
   mail:
     # host/username/password come from the environment only (SPRING_MAIL_HOST and
     # friends). With no host set, Spring creates no mail sender and EmailService

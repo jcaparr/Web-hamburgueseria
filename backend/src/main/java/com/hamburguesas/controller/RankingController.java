@@ -22,11 +22,11 @@ public class RankingController {
         @RequestParam(required = false, defaultValue = "score") String order,
         @PageableDefault(size = 20) Pageable pageable
     ) {
-        return rankingService.generalRanking(area, order, pageable);
+        return rankingService.generalRanking(area, order, Paginas.sinOrden(pageable));
     }
 
     @GetMapping("/mine")
     public Page<RankingItemDto> mine(@PageableDefault(size = 20) Pageable pageable) {
-        return rankingService.personalRanking(CurrentUser.requireId(), pageable);
+        return rankingService.personalRanking(CurrentUser.requireId(), Paginas.sinOrden(pageable));
     }
 }
