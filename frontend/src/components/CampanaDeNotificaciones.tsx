@@ -113,9 +113,11 @@ export function CampanaDeNotificaciones() {
   const lasAnteriores = avisos.filter((n) => !n.nueva)
 
   return (
+    // En el teléfono, details deja de ser la referencia (static) y el panel se ubica
+    // contra la barra de arriba, que es sticky: así arranca justo en su borde.
     <details
       ref={desplegable}
-      className="dropdown dropdown-end"
+      className="dropdown dropdown-end max-md:static"
       onToggle={(evento) => setAbierto(evento.currentTarget.open)}
     >
       <summary
@@ -123,6 +125,17 @@ export function CampanaDeNotificaciones() {
         className="btn btn-ghost btn-square relative list-none [&::-webkit-details-marker]:hidden"
       >
         <IconBell size={21} />
+        {/* El pico que dice de dónde sale el panel (#217). Un cuadrado girado, con el
+            centro en el borde de arriba del panel y por detrás de él: se ve solo la
+            mitad de arriba, apuntando a la campana. Debajo de la campana quedan 11 px
+            hasta el borde de la barra (8 de relleno y 3 de la tira a cuadros); el
+            cuadrado, de 16 px, arranca 8 antes: la mitad de su lado. */}
+        {abierto && (
+          <span
+            aria-hidden="true"
+            className="absolute left-1/2 top-[calc(100%+3px)] z-[29] size-4 -translate-x-1/2 rotate-45 rounded-[3px] bg-base-100 shadow-[var(--sombra-alzada)]"
+          />
+        )}
         {nuevas > 0 && (
           <span
             aria-hidden="true"
@@ -133,9 +146,12 @@ export function CampanaDeNotificaciones() {
         )}
       </summary>
 
-      {/* En el teléfono, de borde a borde debajo de la barra: anclado a la campana se
-          salía por la izquierda. En la compu, colgado de la campana. */}
-      <div className="dropdown-content z-30 mt-2 flex max-h-[70vh] flex-col overflow-hidden rounded-box bg-base-100 shadow-[var(--sombra-alzada)] max-md:fixed max-md:inset-x-4 max-md:top-16 md:w-96">
+      {/* En el teléfono, de borde a borde y pegado al borde de la barra: anclado a la
+          campana se salía por la izquierda, y con un hueco arriba se asomaba lo de atrás.
+          En la compu, colgado de la campana, bajado los 11 px que faltan hasta el borde
+          de la barra y corrido a la derecha para que el pico no caiga en la esquina
+          redondeada. */}
+      <div className="dropdown-content z-30 flex max-h-[70vh] flex-col overflow-hidden rounded-box bg-base-100 shadow-[var(--sombra-alzada)] max-md:inset-x-4 max-md:top-full md:-right-4 md:mt-[11px] md:w-96">
         <h2 className="px-4 pb-2 pt-3 font-display text-lg font-bold">Notificaciones</h2>
         <div className="overflow-y-auto px-2 pb-2">
           {fallo ? (
