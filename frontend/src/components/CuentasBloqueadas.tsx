@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiClient } from '../api/client'
-import { relativeDate } from '../utils/relativeDate'
+import { fechaYHora } from '../utils/fechaYHora'
 import type { UsuarioBloqueado } from '../types'
 
 /**
@@ -66,7 +66,7 @@ export function CuentasBloqueadas() {
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="truncate text-sm font-semibold">@{b.username}</span>
               <span className="text-xs text-base-content/70">
-                Bloqueada {relativeDate(b.bloqueadoEl).toLowerCase()}
+                Bloqueada {fechaYHora(b.bloqueadoEl).toLowerCase()}
               </span>
             </div>
             <button
