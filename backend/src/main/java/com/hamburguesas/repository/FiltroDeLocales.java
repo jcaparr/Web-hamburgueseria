@@ -1,7 +1,12 @@
 package com.hamburguesas.repository;
 
 import com.hamburguesas.model.BurgerJoint;
+import com.hamburguesas.model.Rating;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
@@ -59,9 +64,51 @@ final class FiltroDeLocales {
                 condiciones.add(cb.isFalse(local.get("fastFood")));
             }
 
+            ordenar(local, consulta, cb);
+
             // Sin ninguna condición esto da "1 = 1", que es el listado completo.
             return cb.and(condiciones.toArray(new Predicate[0]));
         };
+    }
+
+    /**
+     * El orden de Explorar (#207): primero los de mejor puntaje, después los que tienen
+     * más reseñas, después por nombre, y el id al final.
+     *
+     * No tenía ninguno, y Postgres los devolvía en el orden en que estaban guardados en
+     * el disco, que cambia cada vez que se actualiza un local. La lista se reacomodaba
+     * sola, y entre una página y la siguiente podía repetir o saltear locales. El id del
+     * final es lo que hace que el orden sea uno solo: dos locales sin reseñas y con el
+     * mismo nombre, que los hay, salen siempre en el mismo lugar.
+     *
+     * Los que no tienen reseñas van al final porque su promedio cuenta como cero, que
+     * ninguna nota real alcanza. El nombre es el que se usa para buscar, sin acentos ni
+     * mayúsculas: "Átiko" va con las de la A.
+     *
+     * No se ordena la consulta que cuenta cuántos hay. Spring le saca el orden igual,
+     * pero armar las subconsultas para nada es gasto.
+     */
+    private static void ordenar(Root<BurgerJoint> local, CriteriaQuery<?> consulta, CriteriaBuilder cb) {
+        Class<?> tipo = consulta.getResultType();
+        if (tipo == Long.class || tipo == long.class) {
+            return;
+        }
+
+        Subquery<Double> promedio = consulta.subquery(Double.class);
+        Root<Rating> resenia = promedio.from(Rating.class);
+        promedio.select(cb.avg(resenia.get("score")))
+            .where(cb.equal(resenia.get("burgerJoint"), local));
+
+        Subquery<Long> cuantas = consulta.subquery(Long.class);
+        Root<Rating> otra = cuantas.from(Rating.class);
+        cuantas.select(cb.count(otra))
+            .where(cb.equal(otra.get("burgerJoint"), local));
+
+        consulta.orderBy(
+            cb.desc(cb.coalesce(promedio, 0.0)),
+            cb.desc(cuantas),
+            cb.asc(local.get("nombreParaBuscar")),
+            cb.asc(local.get("id")));
     }
 
     private static boolean tieneAlgo(String valor) {

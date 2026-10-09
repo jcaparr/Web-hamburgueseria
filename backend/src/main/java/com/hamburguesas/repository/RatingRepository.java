@@ -48,6 +48,11 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
                                 Pageable pagina);
 
 
+    /**
+     * Los tres rankings terminan en el nombre y el id (#207). Ordenaban solo por el
+     * puntaje o por la cantidad, y entre dos empatados Postgres elegía cualquiera: con
+     * tantos locales en 5 y una reseña, cambiaban de lugar entre una página y la otra.
+     */
     @Query("""
         select new com.hamburguesas.dto.RankingItemDto(
             b.id, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude,
@@ -55,7 +60,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
         from Rating r join r.burgerJoint b
         where (:area is null or b.area = :area)
         group by b.id, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude
-        order by avg(r.score) desc
+        order by avg(r.score) desc, count(r) desc, b.name, b.id
         """)
     Page<RankingItemDto> rankingByScore(@Param("area") String area, Pageable pageable);
 
@@ -66,7 +71,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
         from Rating r join r.burgerJoint b
         where (:area is null or b.area = :area)
         group by b.id, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude
-        order by count(r) desc
+        order by count(r) desc, avg(r.score) desc, b.name, b.id
         """)
     Page<RankingItemDto> rankingByPopularity(@Param("area") String area, Pageable pageable);
 
@@ -79,7 +84,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
             select r2.burgerJoint.id from Rating r2 where r2.user.id = :userId
         )
         group by b.id, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude
-        order by max(case when r.user.id = :userId then r.score else null end) desc
+        order by max(case when r.user.id = :userId then r.score else null end) desc, b.name, b.id
         """)
     Page<RankingItemDto> personalRanking(@Param("userId") Long userId, Pageable pageable);
 
