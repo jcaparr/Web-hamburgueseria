@@ -4,6 +4,8 @@ import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.Rating;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
@@ -31,7 +33,8 @@ final class FiltroDeLocales {
     private FiltroDeLocales() {
     }
 
-    static Specification<BurgerJoint> con(String nombre, List<String> barrios, boolean conCadenas) {
+    static Specification<BurgerJoint> con(String nombre, List<String> barrios, boolean conCadenas,
+                                          OrdenDeLocales orden) {
         return (local, consulta, cb) -> {
             List<Predicate> condiciones = new ArrayList<>();
 
@@ -64,7 +67,7 @@ final class FiltroDeLocales {
                 condiciones.add(cb.isFalse(local.get("fastFood")));
             }
 
-            ordenar(local, consulta, cb);
+            ordenar(local, consulta, cb, orden);
 
             // Sin ninguna condición esto da "1 = 1", que es el listado completo.
             return cb.and(condiciones.toArray(new Predicate[0]));
@@ -72,23 +75,28 @@ final class FiltroDeLocales {
     }
 
     /**
-     * El orden de Explorar (#207): primero los de mejor puntaje, después los que tienen
-     * más reseñas, después por nombre, y el id al final.
+     * El orden de Explorar (#207), según la opción elegida: los de más reseñas, los
+     * mejores valorados o los peores. Ver {@link OrdenDeLocales}.
      *
      * No tenía ninguno, y Postgres los devolvía en el orden en que estaban guardados en
      * el disco, que cambia cada vez que se actualiza un local. La lista se reacomodaba
-     * sola, y entre una página y la siguiente podía repetir o saltear locales. El id del
-     * final es lo que hace que el orden sea uno solo: dos locales sin reseñas y con el
-     * mismo nombre, que los hay, salen siempre en el mismo lugar.
+     * sola, y entre una página y la siguiente podía repetir o saltear locales.
      *
-     * Los que no tienen reseñas van al final porque su promedio cuenta como cero, que
-     * ninguna nota real alcanza. El nombre es el que se usa para buscar, sin acentos ni
-     * mayúsculas: "Átiko" va con las de la A.
+     * En las tres:
+     * <ul>
+     *   <li>Primero, si tiene reseñas. Los que no tienen van al final siempre, también en
+     *   "peores valoradas", que si no arrancaría con los mil que nadie probó.</li>
+     *   <li>Al final, el nombre y el id. El nombre es el que se usa para buscar, sin
+     *   acentos ni mayúsculas: "Átiko" va con las de la A. El id hace que el orden sea
+     *   uno solo: dos locales sin reseñas y con el mismo nombre, que los hay, salen
+     *   siempre en el mismo lugar.</li>
+     * </ul>
      *
      * No se ordena la consulta que cuenta cuántos hay. Spring le saca el orden igual,
      * pero armar las subconsultas para nada es gasto.
      */
-    private static void ordenar(Root<BurgerJoint> local, CriteriaQuery<?> consulta, CriteriaBuilder cb) {
+    private static void ordenar(Root<BurgerJoint> local, CriteriaQuery<?> consulta, CriteriaBuilder cb,
+                                OrdenDeLocales orden) {
         Class<?> tipo = consulta.getResultType();
         if (tipo == Long.class || tipo == long.class) {
             return;
@@ -104,11 +112,29 @@ final class FiltroDeLocales {
         cuantas.select(cb.count(otra))
             .where(cb.equal(otra.get("burgerJoint"), local));
 
-        consulta.orderBy(
-            cb.desc(cb.coalesce(promedio, 0.0)),
-            cb.desc(cuantas),
-            cb.asc(local.get("nombreParaBuscar")),
-            cb.asc(local.get("id")));
+        Expression<Integer> sinResenias = cb.<Integer>selectCase()
+            .when(cb.equal(cuantas, 0L), 1)
+            .otherwise(0);
+
+        List<Order> criterios = new ArrayList<>();
+        criterios.add(cb.asc(sinResenias));
+        switch (orden) {
+            case RELEVANTES -> {
+                criterios.add(cb.desc(cuantas));
+                criterios.add(cb.desc(promedio));
+            }
+            case MEJORES -> {
+                criterios.add(cb.desc(promedio));
+                criterios.add(cb.desc(cuantas));
+            }
+            case PEORES -> {
+                criterios.add(cb.asc(promedio));
+                criterios.add(cb.desc(cuantas));
+            }
+        }
+        criterios.add(cb.asc(local.get("nombreParaBuscar")));
+        criterios.add(cb.asc(local.get("id")));
+        consulta.orderBy(criterios);
     }
 
     private static boolean tieneAlgo(String valor) {

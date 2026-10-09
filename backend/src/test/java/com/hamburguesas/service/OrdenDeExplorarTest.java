@@ -6,6 +6,7 @@ import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.Rating;
 import com.hamburguesas.model.User;
 import com.hamburguesas.repository.BurgerJointRepository;
+import com.hamburguesas.repository.OrdenDeLocales;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -22,7 +23,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Explorar y el ranking en un orden fijo (#207).
+ * Explorar y el ranking en un orden fijo (#207), y en Explorar las tres opciones para
+ * elegirlo: más relevantes, mejores valoradas y peores valoradas.
  *
  * Explorar no pedía ningún orden, y Postgres devolvía los locales como estaban guardados
  * en el disco: la lista cambiaba sola y paginarla podía repetir o saltear locales.
@@ -47,6 +49,7 @@ class OrdenDeExplorarTest {
     void setUp() {
         User ana = alguien("anaorden");
         User beto = alguien("betoorden");
+        User caro = alguien("caroorden");
 
         // Creados a propósito en otro orden que el esperado.
         BurgerJoint mismoNombreUno = local("Mismo nombre");
@@ -55,11 +58,15 @@ class OrdenDeExplorarTest {
         BurgerJoint alfa = local("Alfa");
         BurgerJoint mismoNombreDos = local("Mismo nombre");
         BurgerJoint zeta = local("Zeta");
+        BurgerJoint gamma = local("Gamma");
 
         resenia(ana, zeta, 5);
         resenia(beto, zeta, 5);
         resenia(ana, alfa, 5);
         resenia(ana, beta, 3);
+        resenia(ana, gamma, 2);
+        resenia(beto, gamma, 2);
+        resenia(caro, gamma, 2);
         assertThat(mismoNombreUno.getId()).isLessThan(mismoNombreDos.getId());
         assertThat(atomo.getId()).isNotNull();
     }
@@ -90,35 +97,63 @@ class OrdenDeExplorarTest {
             .user(de).burgerJoint(local).score(nota).comment("algo").build());
     }
 
-    private List<BurgerJointDto> pagina(int numero, int tamanio) {
-        return service.search(null, List.of(BARRIO), true, null, PageRequest.of(numero, tamanio))
+    private List<BurgerJointDto> pagina(OrdenDeLocales orden, int numero, int tamanio) {
+        return service.search(null, List.of(BARRIO), true, orden, null, PageRequest.of(numero, tamanio))
             .getContent();
     }
 
-    /**
-     * Mejor puntaje primero; a igual puntaje, más reseñas; sin reseñas, al final y por
-     * nombre sin acentos; y el id desempata lo que queda.
-     */
-    @Test
-    void explorarVaPorPuntajeReseniasYNombre() {
-        List<BurgerJointDto> todos = pagina(0, 20);
-
-        assertThat(todos).extracting(BurgerJointDto::name)
-            .containsExactly("Zeta", "Alfa", "Beta", "Átomo", "Mismo nombre", "Mismo nombre");
-        assertThat(todos.get(4).id()).isLessThan(todos.get(5).id());
+    private List<String> nombres(OrdenDeLocales orden) {
+        return pagina(orden, 0, 20).stream().map(BurgerJointDto::name).toList();
     }
 
-    /** De a dos, las tres páginas juntas son la lista entera, sin repetir ni saltear. */
+    /**
+     * Por omisión, los que más reseñas tienen; a igual cantidad, el mejor puntaje. Sin
+     * reseñas, al final y por nombre sin acentos; el id desempata lo que queda.
+     */
+    @Test
+    void masRelevantesVaPorCantidadDeResenias() {
+        assertThat(nombres(OrdenDeLocales.RELEVANTES))
+            .containsExactly("Gamma", "Zeta", "Alfa", "Beta", "Átomo", "Mismo nombre", "Mismo nombre");
+
+        List<BurgerJointDto> todos = pagina(OrdenDeLocales.RELEVANTES, 0, 20);
+        assertThat(todos.get(5).id()).isLessThan(todos.get(6).id());
+    }
+
+    @Test
+    void mejoresValoradasVaPorPuntaje() {
+        assertThat(nombres(OrdenDeLocales.MEJORES))
+            .containsExactly("Zeta", "Alfa", "Beta", "Gamma", "Átomo", "Mismo nombre", "Mismo nombre");
+    }
+
+    /** Los que nadie probó quedan al final también acá: no son los peores, no se sabe. */
+    @Test
+    void peoresValoradasVaAlReves() {
+        assertThat(nombres(OrdenDeLocales.PEORES))
+            .containsExactly("Gamma", "Beta", "Zeta", "Alfa", "Átomo", "Mismo nombre", "Mismo nombre");
+    }
+
+    /** De a dos, las páginas juntas son la lista entera, sin repetir ni saltear. */
     @Test
     void paginarNoRepiteNiSalteaNinguno() {
-        List<Long> deAPartes = new ArrayList<>();
-        for (int numero = 0; numero < 3; numero++) {
-            pagina(numero, 2).forEach(local -> deAPartes.add(local.id()));
-        }
+        for (OrdenDeLocales orden : OrdenDeLocales.values()) {
+            List<Long> deAPartes = new ArrayList<>();
+            for (int numero = 0; numero < 4; numero++) {
+                pagina(orden, numero, 2).forEach(local -> deAPartes.add(local.id()));
+            }
 
-        assertThat(deAPartes)
-            .doesNotHaveDuplicates()
-            .containsExactlyElementsOf(pagina(0, 20).stream().map(BurgerJointDto::id).toList());
+            assertThat(deAPartes).as("orden %s", orden)
+                .doesNotHaveDuplicates()
+                .containsExactlyElementsOf(pagina(orden, 0, 20).stream().map(BurgerJointDto::id).toList());
+        }
+    }
+
+    /** Lo que llega en la dirección: sin importar mayúsculas, y lo que no existe es el de siempre. */
+    @Test
+    void laOpcionSeLeeDeLaDireccion() {
+        assertThat(OrdenDeLocales.de("mejores")).isEqualTo(OrdenDeLocales.MEJORES);
+        assertThat(OrdenDeLocales.de(" PEORES ")).isEqualTo(OrdenDeLocales.PEORES);
+        assertThat(OrdenDeLocales.de(null)).isEqualTo(OrdenDeLocales.RELEVANTES);
+        assertThat(OrdenDeLocales.de("cualquiera")).isEqualTo(OrdenDeLocales.RELEVANTES);
     }
 
     @Test
@@ -128,7 +163,7 @@ class OrdenDeExplorarTest {
         List<RankingItemDto> porCantidad =
             ratingRepository.rankingByPopularity(BARRIO, PageRequest.of(0, 10)).getContent();
 
-        assertThat(porPuntaje).extracting(RankingItemDto::name).containsExactly("Zeta", "Alfa", "Beta");
-        assertThat(porCantidad).extracting(RankingItemDto::name).containsExactly("Zeta", "Alfa", "Beta");
+        assertThat(porPuntaje).extracting(RankingItemDto::name).containsExactly("Zeta", "Alfa", "Beta", "Gamma");
+        assertThat(porCantidad).extracting(RankingItemDto::name).containsExactly("Gamma", "Zeta", "Alfa", "Beta");
     }
 }
