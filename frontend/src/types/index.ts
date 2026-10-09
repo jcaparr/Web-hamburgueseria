@@ -82,6 +82,30 @@ export interface Rating {
 /** Las reacciones que se le pueden poner a una reseña (#186). */
 export type TipoDeReaccion = 'HAMBRE' | 'FUEGO' | 'APLAUSO' | 'RISA' | 'SORPRESA'
 
+/**
+ * Un aviso del buzón (#210): alguien te siguió, o alguien reaccionó a una reseña tuya.
+ * Los campos de cada tipo vienen vacíos en el otro.
+ */
+export interface Notificacion {
+  tipo: 'SEGUIMIENTO' | 'REACCION'
+  cuando: string
+  /** Si llegó después de la última vez que se abrió el buzón. */
+  nueva: boolean
+  userId: number
+  username: string
+  hamburguesa: string | null
+  /** Solo en un seguimiento: si ya la seguís, para el botón de seguir de vuelta. */
+  loSigo: boolean
+  reaccion: TipoDeReaccion | null
+  localId: number | null
+  localNombre: string | null
+}
+
+export interface Buzon {
+  notificaciones: Notificacion[]
+  nuevas: number
+}
+
 /** Las reacciones de una reseña: cuántas de cada una, y la de quien mira. */
 export interface Reacciones {
   /** Solo las que alguien usó, de la más usada a la menos. */
