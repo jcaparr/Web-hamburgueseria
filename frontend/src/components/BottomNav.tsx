@@ -19,21 +19,20 @@ export function BottomNav() {
   const items = ITEMS.filter((item) => user || !item.soloConSesion)
 
   return (
-    // Flota sobre la página, separada de los bordes: antes era un bloque marrón de borde
-    // a borde que pesaba más que todo lo que había arriba. La distancia al borde de
-    // abajo respeta la barra de gestos del teléfono.
+    // Apoyada en el borde de abajo, de lado a lado (#216): cuando flotaba separada de los
+    // bordes, por el hueco de abajo se veía pasar la página. Las puntas de arriba
+    // redondeadas la siguen despegando de lo que tiene encima, y el relleno de abajo
+    // corre la barra de gestos del teléfono sin dejar ver nada detrás.
     <nav
       aria-label="Principal"
-      className="fixed inset-x-0 bottom-0 z-20 px-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] md:hidden"
+      className={`fixed inset-x-0 bottom-0 z-20 rounded-t-[1.375rem] pb-[env(safe-area-inset-bottom)] shadow-[var(--sombra-de-la-barra)] backdrop-blur-md transition-colors duration-300 md:hidden ${
+        hidden ? 'bg-base-100/80' : 'bg-base-100/95'
+      }`}
     >
       {/* Cada pestaña ocupa su columna entera, de borde a borde y de arriba abajo: antes
           el blanco era el ícono con su palabra, unos 25 px de ancho, y entre una y otra
           quedaba un hueco que no hacía nada. */}
-      <div
-        className={`flex rounded-[1.375rem] shadow-[var(--sombra-alzada)] backdrop-blur-md transition-colors duration-300 ${
-          hidden ? 'bg-base-100/80' : 'bg-base-100/95'
-        }`}
-      >
+      <div className="flex px-1">
         {items.map(({ to, label, Icon }) => (
           <NavLink
             key={to}

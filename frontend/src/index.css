@@ -211,15 +211,19 @@
   --root-bg: var(--color-base-200);
   --sombra-tarjeta: 0 1px 2px rgb(58 42 30 / 0.06), 0 10px 24px -16px rgb(58 42 30 / 0.4);
   --sombra-alzada: 0 2px 4px rgb(58 42 30 / 0.08), 0 16px 32px -16px rgb(58 42 30 / 0.5);
+  /* La de la barra de abajo del teléfono, que está apoyada en el borde: va hacia arriba. */
+  --sombra-de-la-barra: 0 -1px 3px rgb(58 42 30 / 0.06), 0 -12px 24px -14px rgb(58 42 30 / 0.4);
 }
 [data-theme="burger-noche"] {
   --sombra-tarjeta: inset 0 0 0 1px rgb(243 232 207 / 0.07);
   --sombra-alzada: inset 0 0 0 1px rgb(243 232 207 / 0.16);
+  --sombra-de-la-barra: inset 0 0 0 1px rgb(243 232 207 / 0.16);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     --sombra-tarjeta: inset 0 0 0 1px rgb(243 232 207 / 0.07);
     --sombra-alzada: inset 0 0 0 1px rgb(243 232 207 / 0.16);
+    --sombra-de-la-barra: inset 0 0 0 1px rgb(243 232 207 / 0.16);
   }
 }
 
