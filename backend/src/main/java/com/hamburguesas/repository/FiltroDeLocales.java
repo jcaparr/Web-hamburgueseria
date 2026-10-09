@@ -33,8 +33,7 @@ final class FiltroDeLocales {
     private FiltroDeLocales() {
     }
 
-    static Specification<BurgerJoint> con(String nombre, List<String> barrios, boolean conCadenas,
-                                          OrdenDeLocales orden) {
+    static Specification<BurgerJoint> con(String nombre, List<String> barrios, OrdenDeLocales orden) {
         return (local, consulta, cb) -> {
             List<Predicate> condiciones = new ArrayList<>();
 
@@ -61,15 +60,15 @@ final class FiltroDeLocales {
                 condiciones.add(local.get("area").in(conNombre));
             }
 
-            // Quién es cadena lo decide FastFoodMarker al arrancar, así que acá alcanza
-            // con mirar la columna.
-            if (!conCadenas) {
-                condiciones.add(cb.isFalse(local.get("fastFood")));
-            }
+            // Las cadenas no salen nunca en Explorar, ni buscándolas por nombre: eso lo
+            // contesta /api/cadenas, con una tarjeta por cadena y no una por sucursal
+            // (#206). Quién es cadena lo decide FastFoodMarker al arrancar, así que acá
+            // alcanza con mirar la columna.
+            condiciones.add(cb.isFalse(local.get("fastFood")));
 
             ordenar(local, consulta, cb, orden);
 
-            // Sin ninguna condición esto da "1 = 1", que es el listado completo.
+            // Sin nombre ni barrio queda solo la de las cadenas: todas las hamburgueserías.
             return cb.and(condiciones.toArray(new Predicate[0]));
         };
     }

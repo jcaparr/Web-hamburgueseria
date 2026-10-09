@@ -89,6 +89,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/burger-joints/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/ranking/general").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/cadenas", "/api/cadenas/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/sitemap.xml").permitAll()
                 // Armar un tour y ver los barrios funciona sin sesión. Lo que cuelga del
                 // perfil —los recorridos guardados— no: va por abajo, a authenticated().

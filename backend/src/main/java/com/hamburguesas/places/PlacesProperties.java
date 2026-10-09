@@ -14,11 +14,21 @@ public class PlacesProperties {
     private String apiKey = "";
 
     /**
-     * Las cadenas de comida rápida, para poder sacarlas del listado. Se reconocen por
-     * el principio del nombre, sin mayúsculas ni puntuación: "burgerking" abarca a
-     * "Burger King - Sucursal P.Italia".
+     * Las cadenas de comida rápida, que no aparecen en Explorar salvo buscándolas por
+     * nombre (#206). Se reconocen por el principio del nombre, sin mayúsculas ni
+     * puntuación: "burgerking" abarca a "Burger King - Sucursal P.Italia".
      */
     private List<String> fastFoodBrands = List.of();
+
+    /**
+     * Cómo se escribe cada cadena de {@link #fastFoodBrands}, para su tarjeta y su
+     * página: la clave es la misma de esa lista, "mcdonalds", y el valor "McDonald's".
+     *
+     * Escrito a mano y no sacado de las sucursales porque cada una se llama distinto
+     * —"McDonald's Abasto Patio de Comidas", "BURGER KING"— y no hay una que sirva de
+     * nombre para todas. Un test pide que no falte ninguna.
+     */
+    private Map<String, String> nombresDeCadenas = Map.of();
 
     /**
      * Marcas con varias sucursales que no son cadenas de comida rápida.

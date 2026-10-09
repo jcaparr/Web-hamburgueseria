@@ -21,8 +21,10 @@ public class BurgerJointController {
     private final BurgerJointService burgerJointService;
 
     /**
-     * @param conCadenas si incluir las cadenas de comida rápida. Por omisión sí, que es
-     *                   lo que se veía antes: apagarlas es una decisión de quien mira.
+     * El listado de Explorar, siempre sin las cadenas de comida rápida (#206): se ven
+     * buscándolas por nombre, en /api/cadenas. Una dirección vieja con "?conCadenas=true"
+     * sigue andando, porque el parámetro se ignora.
+     *
      * @param area uno o varios barrios, tal como los devuelve /barrios, repitiendo el
      *             parámetro: "?area=Palermo&area=Belgrano". Varios se leen como "o".
      *             Sin ninguno se ve todo, que es como estaba.
@@ -37,11 +39,10 @@ public class BurgerJointController {
     public Page<BurgerJointDto> search(
         @RequestParam(required = false) String q,
         @RequestParam(name = "area", required = false) List<String> areas,
-        @RequestParam(required = false, defaultValue = "true") boolean conCadenas,
         @RequestParam(required = false) String orden,
         @PageableDefault(size = 20) Pageable pageable
     ) {
-        return burgerJointService.search(q, areas, conCadenas, OrdenDeLocales.de(orden),
+        return burgerJointService.search(q, areas, OrdenDeLocales.de(orden),
             CurrentUser.idOrNull(), Paginas.sinOrden(pageable));
     }
 

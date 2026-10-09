@@ -7,24 +7,17 @@ import { MejorCalificadas } from '../components/MejorCalificadas'
 import { AvisoVacio } from '../components/Seccion'
 import { SelectorDeBarrios } from '../components/SelectorDeBarrios'
 import { SelectorDeOrden } from '../components/SelectorDeOrden'
+import { TarjetaDeCadena } from '../components/TarjetaDeCadena'
 import { TarjetaDeLocal, TarjetaDeLocalCargando } from '../components/TarjetaDeLocal'
 import { useAuth } from '../context/useAuth'
 import { useBarrios } from '../hooks/useBarrios'
 import { useTitulo } from '../hooks/useTitulo'
-import type { BurgerJoint, PageResponse } from '../types'
+import type { BurgerJoint, Cadena, PageResponse } from '../types'
 import { isSessionExpired } from '../utils/errors'
 
 // Múltiplo de 1, 2 y 3, las columnas que tiene la grilla según el ancho: con 20, en la
 // compu la última fila quedaba con dos fichas y un hueco (#175).
 const PAGE_SIZE = 18
-
-/**
- * Dónde se recuerda si alguien apagó las cadenas.
- *
- * Va en el navegador de cada visitante y no en su cuenta, para que también funcione
- * sin haberse registrado, que es como la mayoría entra a mirar.
- */
-const CLAVE_CADENAS = 'explorar.conCadenas'
 
 /**
  * Cómo se puede ordenar la lista (#207). Por omisión, las más relevantes: las que más
@@ -42,16 +35,6 @@ type Orden = (typeof ORDENES)[number]['valor']
 
 /** Dónde estaba mirando la lista, para volver al mismo lugar al apretar atrás. */
 const CLAVE_SCROLL = 'explorar.scroll'
-
-function leerPreferencia(): boolean {
-  // En una ventana de incógnito, o con el almacenamiento bloqueado, esto tira error en
-  // vez de devolver vacío. Ante la duda se muestran todas, que es lo que había antes.
-  try {
-    return window.localStorage.getItem(CLAVE_CADENAS) !== 'false'
-  } catch {
-    return true
-  }
-}
 
 export function Explore() {
   // Los filtros viven en la dirección y no en memoria.
@@ -79,11 +62,6 @@ export function Explore() {
   const claveDeBarrios = JSON.stringify(barriosElegidos)
   const page = paginaDe(parametros.get('pagina'))
   const orden = ordenDe(parametros.get('orden'))
-  // El interruptor de cadenas sigue recordándose en el navegador cuando la dirección no
-  // dice nada: es una preferencia de quien mira, no parte de esta búsqueda.
-  const conCadenas = parametros.has('cadenas')
-    ? parametros.get('cadenas') !== 'no'
-    : leerPreferencia()
 
   /**
    * Cambia un filtro y vuelve a la primera página.
@@ -134,21 +112,11 @@ export function Explore() {
       { replace: true })
   }
 
-  /** Prende o apaga las cadenas, y se acuerda de la elección para la próxima visita. */
-  /** Saca el nombre y los barrios, que son lo que deja la lista vacía. Las cadenas no: son una preferencia. */
+  /** Saca el nombre y los barrios, que son lo que deja la lista vacía. */
   function borrarFiltros() {
     const nuevos = conBarrios(new URLSearchParams(window.location.search), [])
     nuevos.delete('q')
     setParametros(nuevos, { replace: true })
-  }
-
-  function cambiarCadenas(valor: boolean) {
-    cambiar({ cadenas: valor ? null : 'no', pagina: null })
-    try {
-      window.localStorage.setItem(CLAVE_CADENAS, String(valor))
-    } catch {
-      // Sin almacenamiento la preferencia dura lo que dure la visita, nada más.
-    }
   }
 
   const barrios = useBarrios()
@@ -176,7 +144,6 @@ export function Explore() {
             // Axios repite el parámetro por cada elemento del arreglo, que es lo que
             // espera el servidor. Vacío se omite, y eso quiere decir "todos".
             area: elegidos.length > 0 ? elegidos : undefined,
-            conCadenas,
             orden,
             page,
             size: PAGE_SIZE,
@@ -215,7 +182,36 @@ export function Explore() {
       vigente = false
       clearTimeout(timeout)
     }
-  }, [query, claveDeBarrios, conCadenas, orden, page, attempt, setParametros])
+  }, [query, claveDeBarrios, orden, page, attempt, setParametros])
+
+  // Las cadenas, que en la lista no salen nunca (#206): buscándolas por nombre aparecen
+  // acá, una tarjeta por cadena. Con menos de dos letras el servidor no busca, así que
+  // tampoco se le pregunta. Si falla no se muestra nada: la lista de abajo es lo que
+  // importa, y ya tiene su propio aviso de error.
+  const [cadenasEncontradas, setCadenas] = useState<Cadena[]>([])
+  const buscado = query.trim()
+  const cadenas = buscado.length >= 2 ? cadenasEncontradas : []
+  useEffect(() => {
+    if (buscado.length < 2) return
+    const elegidos: string[] = JSON.parse(claveDeBarrios)
+    let vigente = true
+    const timeout = setTimeout(() => {
+      apiClient
+        .get<Cadena[]>('/cadenas', {
+          params: { q: buscado, area: elegidos.length > 0 ? elegidos : undefined },
+        })
+        .then(({ data }) => {
+          if (vigente) setCadenas(data)
+        })
+        .catch(() => {
+          if (vigente) setCadenas([])
+        })
+    }, 300)
+    return () => {
+      vigente = false
+      clearTimeout(timeout)
+    }
+  }, [buscado, claveDeBarrios])
 
   // Al cambiar de página la lista se renueva entera, pero el navegador conserva el
   // scroll: quedabas a mitad de la página nueva, empezando a leer por el medio.
@@ -326,9 +322,9 @@ export function Explore() {
           no sabe adónde ir.
 
           Las sucursales de cadenas son cientos, y entre McDonald's, Burger King y
-          Hamburguesas Extremas ocupan páginas enteras de la lista. Quien busca dónde
-          comer algo distinto las quiere fuera del medio; quien busca la más cercana, no.
-          Por eso es una decisión de quien mira, y arranca mostrándolas. */}
+          Hamburguesas Extremas ocupaban páginas enteras de la lista. No salen nunca: quien
+          busca una por su nombre recibe una tarjeta por cadena, arriba de los resultados
+          (#206). */}
       {/* El título va pegado al buscador, que es su respuesta: la pregunta y donde se
           contesta forman un solo bloque, separado de la lista por más aire. */}
       <header className="flex flex-col gap-3 md:pt-2">
@@ -354,9 +350,6 @@ export function Explore() {
               className="w-full bg-transparent text-base outline-none placeholder:text-base-content/70"
             />
           </label>
-          {/* Los dos filtros como pastillas en una fila: antes el de cadenas era un
-              interruptor con su renglón propio, y el encabezado tenía cuatro pisos. La
-              pastilla apretada es el filtro puesto, igual que el barrio elegido. */}
           <div className="flex flex-wrap items-center gap-2">
             <SelectorDeBarrios
               barrios={barrios}
@@ -370,17 +363,6 @@ export function Explore() {
               valor={orden}
               onCambiar={(valor) => cambiar({ orden: valor === 'relevantes' ? null : valor, pagina: null })}
             />
-            <button
-              type="button"
-              aria-pressed={!conCadenas}
-              aria-label="Sin cadenas de comida rápida"
-              onClick={() => cambiarCadenas(!conCadenas)}
-              className={`btn btn-sm rounded-full ${
-                conCadenas ? 'border-0 bg-base-100 shadow-[var(--sombra-tarjeta)]' : 'btn-neutral'
-              }`}
-            >
-              Sin cadenas
-            </button>
             {barriosElegidos.length > 0 && (
               <button type="button" onClick={limpiarBarrios} className="btn btn-ghost btn-sm">
                 Ver todos los barrios
@@ -406,6 +388,16 @@ export function Explore() {
           </p>
         </div>
 
+        {cadenas.length > 0 && (
+          <ul aria-label="Cadenas" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {cadenas.map((cadena) => (
+              <li key={cadena.marca}>
+                <TarjetaDeCadena cadena={cadena} barrios={barriosElegidos} />
+              </li>
+            ))}
+          </ul>
+        )}
+
         {error ? (
           <LoadError error={error} onRetry={() => setAttempt((n) => n + 1)} />
         ) : items.length > 0 ? (
@@ -427,7 +419,9 @@ export function Explore() {
             ))}
           </ul>
         ) : (
-          pageData && (
+          // Si lo que se buscó es una cadena, su tarjeta ya está arriba: decir que no hay
+          // hamburgueserías con ese nombre sonaría a que no se encontró nada.
+          pageData && cadenas.length === 0 && (
             // Decir qué filtro dejó la lista vacía, que es lo que hay que aflojar: con
             // el barrio puesto, "con ese nombre" mandaba a cambiar lo que no era. Con
             // varios se nombran todos: si no, no se sabe en cuál no hay nada.

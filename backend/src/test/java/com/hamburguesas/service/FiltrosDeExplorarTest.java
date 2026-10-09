@@ -16,14 +16,14 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Cubre los filtros de Explorar: el nombre, el barrio y las cadenas.
+ * Cubre los filtros de Explorar: el nombre y el barrio, y que las cadenas no salgan.
  *
- * De los 442 locales, 109 son sucursales de cadenas, y entre McDonald's y Burger King
- * ocupan tres páginas enteras de la lista. El barrio es la otra forma de achicarla: la
- * Ciudad tiene 48 y uno come en el suyo.
+ * Las cadenas eran un filtro más, que se podía apagar. Desde #206 no salen nunca: son
+ * 295 sucursales de siete marcas, y se ven buscándolas por nombre en /api/cadenas, con
+ * una tarjeta por cadena.
  *
- * Lo que más importa acá es que los tres se combinen. Eran consultas separadas, una por
- * combinación, y sumar un filtro más multiplicaba la cuenta.
+ * Lo que más importa acá es que el nombre y el barrio se combinen. Eran consultas
+ * separadas, una por combinación, y sumar un filtro más multiplicaba la cuenta.
  *
  * Contra una base de verdad, porque lo que se prueba son las consultas.
  */
@@ -51,8 +51,8 @@ class FiltrosDeExplorarTest {
             .build());
     }
 
-    private List<String> nombres(String query, List<String> barrios, boolean conCadenas) {
-        return service.search(query, barrios, conCadenas, OrdenDeLocales.RELEVANTES, null, PageRequest.of(0, 20))
+    private List<String> nombres(String query, List<String> barrios) {
+        return service.search(query, barrios, OrdenDeLocales.RELEVANTES, null, PageRequest.of(0, 20))
             .map(BurgerJointDto::name)
             .toList();
     }
@@ -60,25 +60,24 @@ class FiltrosDeExplorarTest {
     // ---- las cadenas ----
 
     @Test
-    void conLasCadenasPrendidasEstanTodos() {
-        assertThat(nombres(null, (List<String>) null, true)).containsExactlyInAnyOrder(
-            "McDonald's", "Burger King", "The Burger Company", "Voraz", "Burger de Boedo");
+    void lasCadenasNoSalenNunca() {
+        assertThat(nombres(null, (List<String>) null))
+            .containsExactlyInAnyOrder("The Burger Company", "Voraz", "Burger de Boedo");
     }
 
+    /** Ni buscándolas por nombre: eso lo contesta /api/cadenas, con una tarjeta por cadena. */
     @Test
-    void apagadasQuedanSoloLasQueNoSonCadena() {
-        assertThat(nombres(null, (List<String>) null, false))
-            .containsExactlyInAnyOrder("The Burger Company", "Voraz", "Burger de Boedo");
+    void niBuscandolasPorNombre() {
+        assertThat(nombres("mcdonald", (List<String>) null)).isEmpty();
+        assertThat(nombres("burger", List.of("Palermo"))).containsExactly("The Burger Company");
     }
 
     /** El total de la paginación también tiene que bajar, o la lista queda con huecos. */
     @Test
     void elTotalReflejaElFiltro() {
-        assertThat(service.search(null, (List<String>) null, true, OrdenDeLocales.RELEVANTES, null, PageRequest.of(0, 20)).getTotalElements())
-            .isEqualTo(5);
-        assertThat(service.search(null, (List<String>) null, false, OrdenDeLocales.RELEVANTES, null, PageRequest.of(0, 20)).getTotalElements())
+        assertThat(service.search(null, (List<String>) null, OrdenDeLocales.RELEVANTES, null, PageRequest.of(0, 20)).getTotalElements())
             .isEqualTo(3);
-        assertThat(service.search(null, List.of("Boedo"), true, OrdenDeLocales.RELEVANTES, null, PageRequest.of(0, 20)).getTotalElements())
+        assertThat(service.search(null, List.of("Boedo"), OrdenDeLocales.RELEVANTES, null, PageRequest.of(0, 20)).getTotalElements())
             .isEqualTo(2);
     }
 
@@ -86,35 +85,33 @@ class FiltrosDeExplorarTest {
 
     @Test
     void elBarrioDejaSoloLosDeEseBarrio() {
-        assertThat(nombres(null, List.of("Boedo"), true))
+        assertThat(nombres(null, List.of("Boedo")))
             .containsExactlyInAnyOrder("Voraz", "Burger de Boedo");
     }
 
     @Test
     void sinBarrioSeVeLaCiudadEntera() {
-        assertThat(nombres(null, (List<String>) null, true)).hasSize(5);
-        assertThat(nombres(null, List.of(""), true)).hasSize(5);
+        assertThat(nombres(null, (List<String>) null)).hasSize(3);
+        assertThat(nombres(null, List.of(""))).hasSize(3);
     }
 
     @Test
     void unBarrioSinLocalesNoDevuelveNada() {
-        assertThat(nombres(null, List.of("Mataderos"), true)).isEmpty();
+        assertThat(nombres(null, List.of("Mataderos"))).isEmpty();
     }
 
-    // ---- los tres juntos ----
+    // ---- los dos juntos ----
 
     /**
-     * Los tres filtros se aplican a la vez, que es lo que hace un listado usable: "una
-     * hamburguesería que se llame burger, en Boedo, que no sea una cadena".
+     * El nombre y el barrio se aplican a la vez, que es lo que hace un listado usable:
+     * "una hamburguesería que se llame burger, en Boedo".
      */
     @Test
-    void losTresFiltrosSeCombinan() {
-        assertThat(nombres("burger", (List<String>) null, true))
-            .containsExactlyInAnyOrder("Burger King", "The Burger Company", "Burger de Boedo");
-        assertThat(nombres("burger", List.of("Boedo"), true))
+    void elNombreYElBarrioSeCombinan() {
+        assertThat(nombres("burger", (List<String>) null))
+            .containsExactlyInAnyOrder("The Burger Company", "Burger de Boedo");
+        assertThat(nombres("burger", List.of("Boedo")))
             .containsExactly("Burger de Boedo");
-        assertThat(nombres("burger", List.of("Palermo"), false))
-            .containsExactly("The Burger Company");
     }
 
     /**
@@ -125,8 +122,8 @@ class FiltrosDeExplorarTest {
      */
     @Test
     void losComodinesDelBuscadorSonTextoYNoComodines() {
-        assertThat(nombres("%", (List<String>) null, true)).isEmpty();
-        assertThat(nombres("_", (List<String>) null, true)).isEmpty();
+        assertThat(nombres("%", (List<String>) null)).isEmpty();
+        assertThat(nombres("_", (List<String>) null)).isEmpty();
     }
 
     /**
@@ -139,9 +136,9 @@ class FiltrosDeExplorarTest {
     void buscarSinAcentosEncuentraLoQueLosTiene() {
         guardar("Átiko - Agronomía", "Palermo", false);
 
-        assertThat(nombres("atiko", (List<String>) null, true)).containsExactly("Átiko - Agronomía");
-        assertThat(nombres("Atiko", (List<String>) null, true)).containsExactly("Átiko - Agronomía");
-        assertThat(nombres("agronomia", (List<String>) null, true)).containsExactly("Átiko - Agronomía");
+        assertThat(nombres("atiko", (List<String>) null)).containsExactly("Átiko - Agronomía");
+        assertThat(nombres("Atiko", (List<String>) null)).containsExactly("Átiko - Agronomía");
+        assertThat(nombres("agronomia", (List<String>) null)).containsExactly("Átiko - Agronomía");
     }
 
     /** Y al revés: escribirlos con acento también tiene que encontrar. */
@@ -149,7 +146,7 @@ class FiltrosDeExplorarTest {
     void buscarConAcentosTambienEncuentra() {
         guardar("Átiko - Agronomía", "Palermo", false);
 
-        assertThat(nombres("Átiko", (List<String>) null, true)).containsExactly("Átiko - Agronomía");
+        assertThat(nombres("Átiko", (List<String>) null)).containsExactly("Átiko - Agronomía");
     }
 
     /** Cambiarle el nombre a un local tiene que dejarlo encontrable por el nuevo. */
@@ -162,7 +159,7 @@ class FiltrosDeExplorarTest {
         local.setName("Ñandú Burger");
         repository.saveAndFlush(local);
 
-        assertThat(nombres("nandu", (List<String>) null, true)).containsExactly("Ñandú Burger");
+        assertThat(nombres("nandu", (List<String>) null)).containsExactly("Ñandú Burger");
     }
 
     /** Los barrios que se ofrecen en el selector son los que tienen algún local. */
@@ -176,9 +173,8 @@ class FiltrosDeExplorarTest {
     /** Dos barrios traen los de los dos, que es lo que quiere quien marca dos. */
     @Test
     void dosBarriosTraenLosDeLosDos() {
-        assertThat(nombres(null, List.of("Boedo", "Palermo"), true))
-            .containsExactlyInAnyOrder("McDonald's", "Burger King", "The Burger Company",
-                "Voraz", "Burger de Boedo");
+        assertThat(nombres(null, List.of("Boedo", "Palermo")))
+            .containsExactlyInAnyOrder("The Burger Company", "Voraz", "Burger de Boedo");
     }
 
     /**
@@ -190,7 +186,7 @@ class FiltrosDeExplorarTest {
      */
     @Test
     void variosBarriosSeLeenComoO() {
-        assertThat(nombres(null, List.of("Boedo", "Palermo"), false))
+        assertThat(nombres(null, List.of("Boedo", "Palermo")))
             .containsExactlyInAnyOrder("The Burger Company", "Voraz", "Burger de Boedo");
     }
 
@@ -202,26 +198,26 @@ class FiltrosDeExplorarTest {
      */
     @Test
     void elTotalCreceAlSumarUnBarrio() {
-        long soloBoedo = service.search(null, List.of("Boedo"), true, OrdenDeLocales.RELEVANTES, null,
+        long soloBoedo = service.search(null, List.of("Boedo"), OrdenDeLocales.RELEVANTES, null,
             PageRequest.of(0, 20)).getTotalElements();
-        long boedoYPalermo = service.search(null, List.of("Boedo", "Palermo"), true, OrdenDeLocales.RELEVANTES, null,
+        long boedoYPalermo = service.search(null, List.of("Boedo", "Palermo"), OrdenDeLocales.RELEVANTES, null,
             PageRequest.of(0, 20)).getTotalElements();
 
         assertThat(soloBoedo).isEqualTo(2);
-        assertThat(boedoYPalermo).isEqualTo(5);
+        assertThat(boedoYPalermo).isEqualTo(3);
     }
 
     /** Los filtros se siguen cruzando: barrios y nombre a la vez. */
     @Test
     void losBarriosSeCruzanConElNombre() {
-        assertThat(nombres("burger", List.of("Boedo", "Palermo"), true))
-            .containsExactlyInAnyOrder("Burger King", "The Burger Company", "Burger de Boedo");
+        assertThat(nombres("burger", List.of("Boedo", "Palermo")))
+            .containsExactlyInAnyOrder("The Burger Company", "Burger de Boedo");
     }
 
     /** Un barrio que no existe no trae nada, y no rompe. */
     @Test
     void unBarrioQueNoExisteNoTraeNada() {
-        assertThat(nombres(null, List.of("Marte"), true)).isEmpty();
+        assertThat(nombres(null, List.of("Marte"))).isEmpty();
     }
 
     /**
@@ -232,6 +228,6 @@ class FiltrosDeExplorarTest {
      */
     @Test
     void unBarrioVacioMuestraTodo() {
-        assertThat(nombres(null, List.of(""), true)).hasSize(5);
+        assertThat(nombres(null, List.of(""))).hasSize(3);
     }
 }

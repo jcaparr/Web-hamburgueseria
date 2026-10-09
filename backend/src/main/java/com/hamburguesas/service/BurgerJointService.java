@@ -26,12 +26,12 @@ public class BurgerJointService {
     /**
      * El listado de Explorar.
      *
-     * Los tres filtros son independientes y se combinan: se puede buscar un nombre
-     * dentro de un barrio, con las cadenas apagadas. El que no viene no filtra.
+     * El nombre y los barrios se combinan: se puede buscar un nombre dentro de un
+     * barrio. El que no viene no filtra. Las cadenas no salen nunca (#206).
      */
-    public Page<BurgerJointDto> search(String query, List<String> areas, boolean conCadenas,
-                                       OrdenDeLocales orden, Long userId, Pageable pageable) {
-        Page<BurgerJoint> pagina = burgerJointRepository.buscar(query, areas, conCadenas, orden, pageable);
+    public Page<BurgerJointDto> search(String query, List<String> areas, OrdenDeLocales orden,
+                                       Long userId, Pageable pageable) {
+        Page<BurgerJoint> pagina = burgerJointRepository.buscar(query, areas, orden, pageable);
         // Las fichas de toda la página juntas: de a una eran dos o tres consultas por
         // local (#101).
         List<BurgerJointDto> fichas = fichaDeLocal.para(pagina.getContent(), userId);

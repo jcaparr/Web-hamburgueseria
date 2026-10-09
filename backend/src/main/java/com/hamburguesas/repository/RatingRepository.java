@@ -49,6 +49,9 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
 
 
     /**
+     * El general, por puntaje y por cantidad, deja afuera las cadenas (#206): se ven
+     * solo buscándolas por nombre. El propio no, porque son las reseñas de cada uno.
+     *
      * Los tres rankings terminan en el nombre y el id (#207). Ordenaban solo por el
      * puntaje o por la cantidad, y entre dos empatados Postgres elegía cualquiera: con
      * tantos locales en 5 y una reseña, cambiaban de lugar entre una página y la otra.
@@ -59,6 +62,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
             avg(r.score), count(r), null)
         from Rating r join r.burgerJoint b
         where (:area is null or b.area = :area)
+          and b.fastFood = false
         group by b.id, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude
         order by avg(r.score) desc, count(r) desc, b.name, b.id
         """)
@@ -70,6 +74,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
             avg(r.score), count(r), null)
         from Rating r join r.burgerJoint b
         where (:area is null or b.area = :area)
+          and b.fastFood = false
         group by b.id, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude
         order by count(r) desc, avg(r.score) desc, b.name, b.id
         """)

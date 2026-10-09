@@ -98,7 +98,7 @@ class OrdenDeExplorarTest {
     }
 
     private List<BurgerJointDto> pagina(OrdenDeLocales orden, int numero, int tamanio) {
-        return service.search(null, List.of(BARRIO), true, orden, null, PageRequest.of(numero, tamanio))
+        return service.search(null, List.of(BARRIO), orden, null, PageRequest.of(numero, tamanio))
             .getContent();
     }
 

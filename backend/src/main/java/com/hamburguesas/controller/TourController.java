@@ -61,14 +61,13 @@ public class TourController {
         @RequestParam(required = false) Double latitud,
         @RequestParam(required = false) Double longitud,
         @RequestParam(defaultValue = "true") boolean incluirVisitadas,
-        @RequestParam(defaultValue = "false") boolean conCadenas,
         @RequestParam(defaultValue = "A_PIE") ModoDeViaje modo,
         @RequestParam(defaultValue = "true") boolean excluirLasDeMisTours,
         @RequestParam(required = false) List<String> distintoDe,
         @RequestParam(required = false) Long semilla
     ) {
         var pedido = new TourService.Pedido(cantidad, kilometrosMaximos, barrios,
-            latitud, longitud, incluirVisitadas, conCadenas, modo,
+            latitud, longitud, incluirVisitadas, modo,
             excluirLasDeMisTours, comoCombinaciones(distintoDe), semilla);
 
         return tourService.armar(pedido, CurrentUser.idOrNull());

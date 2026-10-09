@@ -45,7 +45,6 @@ export function Tour() {
   const [tope, setTope] = useState<number | null>(null)
   const [modo, setModo] = useState<Modo>('A_PIE')
   const [incluirVisitadas, setIncluirVisitadas] = useState(true)
-  const [conCadenas, setConCadenas] = useState(false)
 
   const [ubicacion, setUbicacion] = useState<Ubicacion | null>(null)
   const [buscandoUbicacion, setBuscandoUbicacion] = useState(false)
@@ -108,7 +107,6 @@ export function Tour() {
           latitud: desde?.lat,
           longitud: desde?.lon,
           incluirVisitadas,
-          conCadenas,
           modo,
           excluirLasDeMisTours: user ? excluirLasDeMisTours : false,
           distintoDe: propuestos,
@@ -279,24 +277,20 @@ export function Tour() {
           )}
         </div>
 
-        {/* Juntos y sin hueco entre uno y otro: cada fila ya mide 44 px de alto. */}
-        <div className="flex flex-col">
-          <Interruptor activo={conCadenas} onCambiar={setConCadenas}>
-            Incluir cadenas de comida rápida
-          </Interruptor>
+        {/* Juntos y sin hueco entre uno y otro: cada fila ya mide 44 px de alto. Sin
+            sesión no queda ninguno: el de las cadenas se sacó, porque desde #206 no
+            entran nunca en un recorrido. */}
+        {user && (
+          <div className="flex flex-col">
+            <Interruptor activo={incluirVisitadas} onCambiar={setIncluirVisitadas}>
+              Incluir las que ya puntuaste
+            </Interruptor>
 
-          {user && (
-            <>
-              <Interruptor activo={incluirVisitadas} onCambiar={setIncluirVisitadas}>
-                Incluir las que ya puntuaste
-              </Interruptor>
-
-              <Interruptor activo={excluirLasDeMisTours} onCambiar={setExcluirLasDeMisTours}>
-                No repetir hamburgueserías de mis recorridos
-              </Interruptor>
-            </>
-          )}
-        </div>
+            <Interruptor activo={excluirLasDeMisTours} onCambiar={setExcluirLasDeMisTours}>
+              No repetir hamburgueserías de mis recorridos
+            </Interruptor>
+          </div>
+        )}
 
         <button
           type="button"

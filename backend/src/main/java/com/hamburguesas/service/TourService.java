@@ -87,7 +87,6 @@ public class TourService {
         Double latitud,
         Double longitud,
         boolean incluirVisitadas,
-        boolean conCadenas,
         ModoDeViaje modo,
         /**
          * Dejar afuera las hamburgueserías por las que esta persona ya pasó en sus
@@ -223,11 +222,15 @@ public class TourService {
         return paradas.stream().map(BurgerJoint::getId).collect(Collectors.toSet());
     }
 
-    /** Lo que se puede visitar: con coordenadas, del barrio pedido y no dejado afuera. */
+    /**
+     * Lo que se puede visitar: con coordenadas, del barrio pedido y no dejado afuera.
+     *
+     * Nunca una cadena. Un recorrido de cuatro McDonald's no es un recorrido, y desde
+     * #206 las cadenas se ven solo buscándolas por nombre: el interruptor que había para
+     * sumarlas se sacó.
+     */
     private List<BurgerJoint> candidatos(Pedido pedido, Set<Long> afuera) {
-        List<BurgerJoint> todos = pedido.conCadenas()
-            ? burgerJointRepository.findAll()
-            : burgerJointRepository.findByFastFoodFalse();
+        List<BurgerJoint> todos = burgerJointRepository.findByFastFoodFalse();
 
         Set<String> barrios = pedido.barrios() == null ? Set.of() : new HashSet<>(pedido.barrios());
 
