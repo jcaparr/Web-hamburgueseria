@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { CabeceraDePerfil } from '../components/CabeceraDePerfil'
 import { CuentasBloqueadas } from '../components/CuentasBloqueadas'
-import { IconChevronRight, IconPencil, IconSearch, IconSettings, IconUser } from '../components/icons'
+import { IconChevronRight, IconPencil, IconSearch, IconSettings } from '../components/icons'
 import { LoadError } from '../components/LoadError'
 import { SavedTourCard } from '../components/SavedTourCard'
 import { SelectorDeTema } from '../components/SelectorDeTema'
@@ -135,24 +135,13 @@ export function Profile() {
           },
         ]}
         acciones={
-          // Accesos y no botones grandes: se usan de vez en cuando, y dos botones de
-          // ancho completo pesaban más que el perfil mismo. Buscar gente está también en
-          // el Feed, que es donde más se busca.
-          <div className="-my-2 flex flex-wrap gap-x-5">
-            <Link to="/buscar" className="inline-flex min-h-11 items-center gap-1.5 rounded-field text-sm font-semibold text-primary hover:underline">
-              <IconSearch size={16} />
-              Buscar gente
-            </Link>
-            {/* El perfil que ven los demás no muestra tus guardadas ni tus recorridos:
-                acá se puede ver qué queda a la vista. */}
-            <Link
-              to={`/u/${user.username}`}
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-field text-sm font-semibold text-primary hover:underline"
-            >
-              <IconUser size={16} />
-              Cómo te ven los demás
-            </Link>
-          </div>
+          // Un acceso y no un botón grande: se usa de vez en cuando, y un botón de ancho
+          // completo pesaba más que el perfil mismo. Buscar gente está también en el
+          // Feed, que es donde más se busca.
+          <Link to="/buscar" className="-my-2 inline-flex min-h-11 w-fit items-center gap-1.5 rounded-field text-sm font-semibold text-primary hover:underline">
+            <IconSearch size={16} />
+            Buscar gente
+          </Link>
         }
       />
 
