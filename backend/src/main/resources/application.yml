@@ -101,22 +101,31 @@ app:
       max-attempts: 5
       resend-cooldown-seconds: 60
   places:
-    # Las cadenas de comida rápida, que en Explorar se pueden apagar. Se reconocen por
-    # el principio del nombre, sin mayúsculas ni puntuación: "burgerking" abarca a
-    # "Burger King - Sucursal P.Italia", y "wendys" a "Wendy's" y a "Wendys", que en
-    # Google están escritas de las dos formas.
+    # Las cadenas de comida rápida, que no aparecen en Explorar salvo buscándolas por
+    # nombre (#206). Se reconocen por el principio del nombre, sin mayúsculas ni
+    # puntuación: "burgerking" abarca a "Burger King - Sucursal P.Italia", y "wendys" a
+    # "Wendy's" y a "Wendys", que en Google están escritas de las dos formas.
     fast-food-brands:
       - burgerking
       - mcdonalds
       - wendys
       - mostaza
       # Las tres de abajo son cadenas locales, con más sucursales que varias de las de
-      # arriba: Mr Tasty tiene trece en la base, Dean & Dennys ocho y Hamburguesas
-      # Extremas once. Sin esto, apagar las cadenas en Explorar dejaba treinta y dos
-      # sucursales de tres marcas en el listado.
+      # arriba: Mr Tasty tiene treinta y seis en la base, Dean & Dennys diecisiete y
+      # Hamburguesas Extremas cuarenta y seis.
       - hamburguesasextremas
       - deandennys
       - mrtasty
+    # Cómo se escribe cada una, para su tarjeta y su página. Una por cada marca de arriba,
+    # con la misma clave.
+    nombres-de-cadenas:
+      burgerking: "Burger King"
+      mcdonalds: "McDonald's"
+      wendys: "Wendy's"
+      mostaza: "Mostaza"
+      hamburguesasextremas: "Hamburguesas Extremas"
+      deandennys: "Dean & Dennys"
+      mrtasty: "Mr Tasty"
     # Marcas con varias sucursales que no son cadenas de comida rápida. Están aparte de
     # fast-food-brands a propósito: esa lista decide qué se esconde al apagar las cadenas
     # en Explorar, y meter acá a Big Pons o a Mi Barrio las haría desaparecer del listado

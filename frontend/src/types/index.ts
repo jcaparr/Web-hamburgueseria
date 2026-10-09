@@ -16,6 +16,27 @@ export interface BurgerJoint {
   inWishlist: boolean
 }
 
+/**
+ * Una cadena de comida rápida en el buscador de Explorar (#206): una tarjeta por cadena,
+ * no una por sucursal.
+ */
+export interface Cadena {
+  /** La clave, "mcdonalds": es la que va en la dirección de su página. */
+  marca: string
+  /** Cómo se escribe, "McDonald's". */
+  nombre: string
+  /** Cuántas hay en los barrios elegidos, o en total si no hay ninguno. */
+  sucursales: number
+  fotoUrl: string | null
+}
+
+/** La página de una cadena: todas sus sucursales, por barrio y después por nombre. */
+export interface SucursalesDeCadena {
+  marca: string
+  nombre: string
+  sucursales: BurgerJoint[]
+}
+
 /** Una parada de un recorrido, con lo que hay que caminar para llegar. */
 export interface TourStop {
   orden: number

@@ -13,6 +13,7 @@ import { GenteDeUnPerfil } from './pages/GenteDeUnPerfil'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { Login } from './pages/Login'
 import { NoEncontrada } from './pages/NoEncontrada'
+import { PaginaDeCadena } from './pages/PaginaDeCadena'
 import { PerfilPublico } from './pages/PerfilPublico'
 import { Privacidad } from './pages/Privacidad'
 import { Profile } from './pages/Profile'
@@ -49,6 +50,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Explore />} />
               <Route path="/burger-joints/:id" element={<BurgerJointDetail />} />
+              <Route path="/cadenas/:marca" element={<PaginaDeCadena />} />
               <Route path="/ranking" element={<Ranking />} />
               <Route path="/tour" element={<Tour />} />
               {/* Bajo /u/ para que un nombre de usuario no pueda chocar nunca con una

@@ -25,7 +25,7 @@ export function MasEnElBarrio({ barrio, sinEste }: { barrio: string | null; sinE
     let vigente = true
     apiClient
       .get<PageResponse<BurgerJoint>>('/burger-joints', {
-        params: { area: barrio, conCadenas: false, size: CUANTAS + 1 },
+        params: { area: barrio, size: CUANTAS + 1 },
       })
       .then(({ data }) => {
         if (vigente) setLocales({ de: barrio, lista: data.content })

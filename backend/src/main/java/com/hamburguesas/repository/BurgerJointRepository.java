@@ -61,16 +61,16 @@ public interface BurgerJointRepository
     List<BurgerJoint> conFotoElegidaConUnaReglaVieja(@Param("regla") int regla);
 
     /**
-     * El listado de Explorar, con los filtros que hayan puesto: el nombre, los barrios y
-     * si se muestran las cadenas.
+     * El listado de Explorar, con los filtros que hayan puesto: el nombre y los barrios.
+     * Las cadenas no salen nunca (#206).
      *
      * Eran cuatro consultas derivadas, una por combinación de nombre y cadenas, porque
      * escribir los filtros como opcionales rompía contra Postgres. Con el barrio serían
      * ocho. El porqué de armar la condición en vez de escribirla está en FiltroDeLocales.
      */
-    default Page<BurgerJoint> buscar(String nombre, List<String> barrios, boolean conCadenas,
-                                     OrdenDeLocales orden, Pageable pagina) {
-        return findAll(FiltroDeLocales.con(nombre, barrios, conCadenas, orden), pagina);
+    default Page<BurgerJoint> buscar(String nombre, List<String> barrios, OrdenDeLocales orden,
+                                     Pageable pagina) {
+        return findAll(FiltroDeLocales.con(nombre, barrios, orden), pagina);
     }
 
     Optional<BurgerJoint> findByPlaceId(String placeId);
@@ -85,6 +85,9 @@ public interface BurgerJointRepository
      * recorrido se arma en memoria, comparando cada uno contra la última parada.
      */
     List<BurgerJoint> findByFastFoodFalse();
+
+    /** Las sucursales de cadenas, para su tarjeta y su página (#206). Son trescientas. */
+    List<BurgerJoint> findByFastFoodTrue();
 
     /** Los barrios que tienen al menos una hamburguesería, para el selector del tour. */
     @Query("select distinct b.area from BurgerJoint b where b.area is not null order by b.area")

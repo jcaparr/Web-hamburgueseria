@@ -117,6 +117,15 @@ class PlacesConfiguracionTest {
             .allSatisfy(marca -> assertThat(marca).matches("[a-z0-9]+"));
     }
 
+    /**
+     * Cada cadena tiene cómo escribirse en su tarjeta y su página (#206). Sin nombre se
+     * mostraría la clave, "hamburguesasextremas", que se lee mal.
+     */
+    @Test
+    void cadaCadenaTieneSuNombre() {
+        assertThat(properties.getNombresDeCadenas()).containsOnlyKeys(properties.getFastFoodBrands());
+    }
+
     /** Un mismo local anotado de los dos lados sería una regla que se contradice. */
     @Test
     void ningunLocalEstaAnotadoParaEntrarYParaSalir() {

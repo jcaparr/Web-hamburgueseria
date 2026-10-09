@@ -81,7 +81,7 @@ public class FastFoodMarker {
      * igual que otra —"burger" y "burgerking"— no se lleve puestas a las sucursales de
      * la otra.
      */
-    static String marcaDe(String nombre, List<String> marcas) {
+    public static String marcaDe(String nombre, List<String> marcas) {
         String limpio = Texto.soloLetrasYNumeros(nombre);
         return marcas.stream()
             .filter(limpio::startsWith)
