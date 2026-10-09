@@ -84,6 +84,16 @@ export function IconSettings({ size = 18, className }: IconProps) {
   )
 }
 
+/** La campana del buzón de notificaciones (#210). */
+export function IconBell({ size = 20, className }: IconProps) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinejoin="round" className={className}>
+      <path d="M5 13.5V9a5 5 0 0 1 10 0v4.5l1.5 2h-13Z" />
+      <path d="M8.2 17.2a2 2 0 0 0 3.6 0" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function IconChevronRight({ size = 16, className }: IconProps) {
   return (
     <svg aria-hidden="true" viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.8} className={className}>

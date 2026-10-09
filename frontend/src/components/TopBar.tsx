@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { useHideOnScroll } from '../hooks/useScrollDirection'
+import { CampanaDeNotificaciones } from './CampanaDeNotificaciones'
 import { MarcaBurgometro } from './MarcaBurgometro'
 
 const NAV_LINKS = [
@@ -75,6 +76,9 @@ export function TopBar() {
         <div className="flex flex-none items-center gap-1 text-sm sm:gap-2">
           {user ? (
             <>
+              {/* La campana del buzón (#210): arriba y no en la barra de abajo del
+                  teléfono, que ya tiene cinco botones. */}
+              <CampanaDeNotificaciones />
               <span className="hidden font-medium sm:inline">@{user.username}</span>
               <button type="button" onClick={handleLogout} className="btn btn-ghost px-3">
                 <span className="sm:hidden">Salir</span>

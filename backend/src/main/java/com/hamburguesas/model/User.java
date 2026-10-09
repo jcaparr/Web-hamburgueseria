@@ -61,6 +61,14 @@ public class User {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    /**
+     * Cuándo abrió el buzón de notificaciones por última vez (#210): lo que llegó después
+     * es lo nuevo, y es lo que cuenta la campana. Nulo mientras no lo abra nunca, y
+     * entonces todo cuenta como nuevo.
+     */
+    @Column(name = "notificaciones_vistas_el")
+    private Instant notificacionesVistasEl;
+
     @PrePersist
     void prePersist() {
         if (createdAt == null) {

@@ -2,14 +2,36 @@ package com.hamburguesas.repository;
 
 import com.hamburguesas.model.Follow;
 import com.hamburguesas.model.User;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 
 public interface FollowRepository extends JpaRepository<Follow, Long> {
+
+    /**
+     * Quiénes empezaron a seguir a esta persona, de lo más nuevo a lo más viejo, para su
+     * buzón de notificaciones (#210). Sin la gente con la que hay un bloqueo.
+     */
+    @Query("""
+        select f from Follow f join fetch f.follower
+        where f.followed.id = :yo and f.follower.id not in :ocultos
+        order by f.createdAt desc, f.id desc
+        """)
+    List<Follow> seguimientosA(@Param("yo") Long yo, @Param("ocultos") Collection<Long> ocultos,
+                               Pageable pagina);
+
+    /** Cuántos de esos llegaron después de una fecha: lo que cuenta la campana. */
+    @Query("""
+        select count(f) from Follow f
+        where f.followed.id = :yo and f.follower.id not in :ocultos and f.createdAt > :desde
+        """)
+    long seguimientosNuevosA(@Param("yo") Long yo, @Param("ocultos") Collection<Long> ocultos,
+                             @Param("desde") Instant desde);
 
     boolean existsByFollower_IdAndFollowed_Id(Long followerId, Long followedId);
 
