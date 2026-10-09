@@ -12,14 +12,24 @@
  * el kétchup del tema claro, marrón sobre el kétchup más claro del oscuro. Así cada capa
  * se despega del fondo en los dos temas, aunque el pan y el fondo se parezcan.
  */
+/**
+ * El fondo del avatar y el color del trazo, fijos: los del tema oscuro (#195).
+ *
+ * Salían de los colores del tema, así que la hamburguesa de cada uno cambiaba al pasar
+ * de oscuro a claro: el kétchup se oscurecía, el pepino pasaba a verde botella y la de
+ * fondo crema se volvía marrón, con el trazo de otro color. Es la cara de alguien, y
+ * tiene que ser la misma en los dos temas. Se quedó la del oscuro, que es como la
+ * armó la mayoría.
+ */
 export const FONDOS = [
-  'bg-primary text-primary-content',
-  'bg-secondary text-secondary-content',
-  'bg-accent text-accent-content',
-  'bg-info text-info-content',
-  // El color del texto como fondo: marrón en el tema claro y crema en el oscuro. El
-  // neutral del tema oscuro es casi el de la página, y el círculo se perdía.
-  'bg-base-content text-base-100',
+  'bg-[#e5674f] text-[#17110d]',
+  'bg-[#f2b705] text-[#17110d]',
+  'bg-[#8fb56a] text-[#17110d]',
+  'bg-[#8cc0c9] text-[#17110d]',
+  // Crema. Sobre la página del tema claro, que es casi del mismo color, el círculo se
+  // perdía: el borde, fijo, lo marca igual en los dos temas. Borde y no anillo, porque
+  // el anillo es lo que marca el elegido en "Armá tu hamburguesa".
+  'bg-[#f3e8cf] text-[#241a13] border border-[#241a13]/20',
 ] as const
 
 /** El pan va fijo y no sale del tema, igual que en el logo: es pan, no un color de la marca. */
