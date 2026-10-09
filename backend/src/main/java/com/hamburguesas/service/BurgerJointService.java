@@ -5,6 +5,7 @@ import com.hamburguesas.dto.HorarioDto;
 import com.hamburguesas.exception.ResourceNotFoundException;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.repository.BurgerJointRepository;
+import com.hamburguesas.repository.OrdenDeLocales;
 import com.hamburguesas.repository.FranjaHorariaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,8 +30,8 @@ public class BurgerJointService {
      * dentro de un barrio, con las cadenas apagadas. El que no viene no filtra.
      */
     public Page<BurgerJointDto> search(String query, List<String> areas, boolean conCadenas,
-                                       Long userId, Pageable pageable) {
-        Page<BurgerJoint> pagina = burgerJointRepository.buscar(query, areas, conCadenas, pageable);
+                                       OrdenDeLocales orden, Long userId, Pageable pageable) {
+        Page<BurgerJoint> pagina = burgerJointRepository.buscar(query, areas, conCadenas, orden, pageable);
         // Las fichas de toda la página juntas: de a una eran dos o tres consultas por
         // local (#101).
         List<BurgerJointDto> fichas = fichaDeLocal.para(pagina.getContent(), userId);

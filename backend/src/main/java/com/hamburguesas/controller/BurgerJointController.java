@@ -2,6 +2,7 @@ package com.hamburguesas.controller;
 
 import com.hamburguesas.dto.BurgerJointDto;
 import com.hamburguesas.dto.HorarioDto;
+import com.hamburguesas.repository.OrdenDeLocales;
 import com.hamburguesas.security.CurrentUser;
 import com.hamburguesas.service.BurgerJointService;
 import lombok.RequiredArgsConstructor;
@@ -29,15 +30,19 @@ public class BurgerJointController {
      *             Sigue llamándose "area" en singular aunque ahora acepte varios: es lo
      *             que hay escrito en las direcciones que la gente dejó en favoritos y en
      *             el historial del navegador, y uno solo sigue funcionando igual.
+     * @param orden "relevantes" (por omisión), "mejores" o "peores"; ver OrdenDeLocales.
+     *              Uno que no existe es el de por omisión, no un error.
      */
     @GetMapping
     public Page<BurgerJointDto> search(
         @RequestParam(required = false) String q,
         @RequestParam(name = "area", required = false) List<String> areas,
         @RequestParam(required = false, defaultValue = "true") boolean conCadenas,
+        @RequestParam(required = false) String orden,
         @PageableDefault(size = 20) Pageable pageable
     ) {
-        return burgerJointService.search(q, areas, conCadenas, CurrentUser.idOrNull(), Paginas.sinOrden(pageable));
+        return burgerJointService.search(q, areas, conCadenas, OrdenDeLocales.de(orden),
+            CurrentUser.idOrNull(), Paginas.sinOrden(pageable));
     }
 
     /**

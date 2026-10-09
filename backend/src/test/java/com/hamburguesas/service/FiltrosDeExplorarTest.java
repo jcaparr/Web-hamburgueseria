@@ -3,6 +3,7 @@ package com.hamburguesas.service;
 import com.hamburguesas.dto.BurgerJointDto;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.repository.BurgerJointRepository;
+import com.hamburguesas.repository.OrdenDeLocales;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +52,7 @@ class FiltrosDeExplorarTest {
     }
 
     private List<String> nombres(String query, List<String> barrios, boolean conCadenas) {
-        return service.search(query, barrios, conCadenas, null, PageRequest.of(0, 20))
+        return service.search(query, barrios, conCadenas, OrdenDeLocales.RELEVANTES, null, PageRequest.of(0, 20))
             .map(BurgerJointDto::name)
             .toList();
     }
@@ -73,11 +74,11 @@ class FiltrosDeExplorarTest {
     /** El total de la paginación también tiene que bajar, o la lista queda con huecos. */
     @Test
     void elTotalReflejaElFiltro() {
-        assertThat(service.search(null, (List<String>) null, true, null, PageRequest.of(0, 20)).getTotalElements())
+        assertThat(service.search(null, (List<String>) null, true, OrdenDeLocales.RELEVANTES, null, PageRequest.of(0, 20)).getTotalElements())
             .isEqualTo(5);
-        assertThat(service.search(null, (List<String>) null, false, null, PageRequest.of(0, 20)).getTotalElements())
+        assertThat(service.search(null, (List<String>) null, false, OrdenDeLocales.RELEVANTES, null, PageRequest.of(0, 20)).getTotalElements())
             .isEqualTo(3);
-        assertThat(service.search(null, List.of("Boedo"), true, null, PageRequest.of(0, 20)).getTotalElements())
+        assertThat(service.search(null, List.of("Boedo"), true, OrdenDeLocales.RELEVANTES, null, PageRequest.of(0, 20)).getTotalElements())
             .isEqualTo(2);
     }
 
@@ -201,9 +202,9 @@ class FiltrosDeExplorarTest {
      */
     @Test
     void elTotalCreceAlSumarUnBarrio() {
-        long soloBoedo = service.search(null, List.of("Boedo"), true, null,
+        long soloBoedo = service.search(null, List.of("Boedo"), true, OrdenDeLocales.RELEVANTES, null,
             PageRequest.of(0, 20)).getTotalElements();
-        long boedoYPalermo = service.search(null, List.of("Boedo", "Palermo"), true, null,
+        long boedoYPalermo = service.search(null, List.of("Boedo", "Palermo"), true, OrdenDeLocales.RELEVANTES, null,
             PageRequest.of(0, 20)).getTotalElements();
 
         assertThat(soloBoedo).isEqualTo(2);

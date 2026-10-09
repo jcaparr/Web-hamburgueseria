@@ -69,8 +69,8 @@ public interface BurgerJointRepository
      * ocho. El porqué de armar la condición en vez de escribirla está en FiltroDeLocales.
      */
     default Page<BurgerJoint> buscar(String nombre, List<String> barrios, boolean conCadenas,
-                                     Pageable pagina) {
-        return findAll(FiltroDeLocales.con(nombre, barrios, conCadenas), pagina);
+                                     OrdenDeLocales orden, Pageable pagina) {
+        return findAll(FiltroDeLocales.con(nombre, barrios, conCadenas, orden), pagina);
     }
 
     Optional<BurgerJoint> findByPlaceId(String placeId);

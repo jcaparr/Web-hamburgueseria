@@ -6,6 +6,7 @@ import { LoadError } from '../components/LoadError'
 import { MejorCalificadas } from '../components/MejorCalificadas'
 import { AvisoVacio } from '../components/Seccion'
 import { SelectorDeBarrios } from '../components/SelectorDeBarrios'
+import { SelectorDeOrden } from '../components/SelectorDeOrden'
 import { TarjetaDeLocal, TarjetaDeLocalCargando } from '../components/TarjetaDeLocal'
 import { useAuth } from '../context/useAuth'
 import { useBarrios } from '../hooks/useBarrios'
@@ -24,6 +25,20 @@ const PAGE_SIZE = 18
  * sin haberse registrado, que es como la mayoría entra a mirar.
  */
 const CLAVE_CADENAS = 'explorar.conCadenas'
+
+/**
+ * Cómo se puede ordenar la lista (#207). Por omisión, las más relevantes: las que más
+ * reseñas tienen, que es lo que más dice de un lugar. Con "mejores valoradas", una
+ * con una sola reseña de 5 quedaría arriba de una con veinte y 4,8.
+ *
+ * En las tres, las que nadie reseñó van al final y por nombre.
+ */
+const ORDENES = [
+  { valor: 'relevantes', texto: 'Más relevantes' },
+  { valor: 'mejores', texto: 'Mejores valoradas' },
+  { valor: 'peores', texto: 'Peores valoradas' },
+] as const
+type Orden = (typeof ORDENES)[number]['valor']
 
 /** Dónde estaba mirando la lista, para volver al mismo lugar al apretar atrás. */
 const CLAVE_SCROLL = 'explorar.scroll'
@@ -63,6 +78,7 @@ export function Explore() {
   // mientras los barrios sean los mismos es este texto.
   const claveDeBarrios = JSON.stringify(barriosElegidos)
   const page = paginaDe(parametros.get('pagina'))
+  const orden = ordenDe(parametros.get('orden'))
   // El interruptor de cadenas sigue recordándose en el navegador cuando la dirección no
   // dice nada: es una preferencia de quien mira, no parte de esta búsqueda.
   const conCadenas = parametros.has('cadenas')
@@ -161,6 +177,7 @@ export function Explore() {
             // espera el servidor. Vacío se omite, y eso quiere decir "todos".
             area: elegidos.length > 0 ? elegidos : undefined,
             conCadenas,
+            orden,
             page,
             size: PAGE_SIZE,
           },
@@ -198,7 +215,7 @@ export function Explore() {
       vigente = false
       clearTimeout(timeout)
     }
-  }, [query, claveDeBarrios, conCadenas, page, attempt, setParametros])
+  }, [query, claveDeBarrios, conCadenas, orden, page, attempt, setParametros])
 
   // Al cambiar de página la lista se renueva entera, pero el navegador conserva el
   // scroll: quedabas a mitad de la página nueva, empezando a leer por el medio.
@@ -347,6 +364,12 @@ export function Explore() {
               onAlternar={alternarBarrio}
               onLimpiar={limpiarBarrios}
             />
+            {/* El de por omisión no se escribe en la dirección. */}
+            <SelectorDeOrden
+              opciones={ORDENES}
+              valor={orden}
+              onCambiar={(valor) => cambiar({ orden: valor === 'relevantes' ? null : valor, pagina: null })}
+            />
             <button
               type="button"
               aria-pressed={!conCadenas}
@@ -478,6 +501,11 @@ function conBarrios(previos: URLSearchParams, barrios: string[]) {
   barrios.forEach((barrio) => nuevos.append('area', barrio))
   nuevos.delete('pagina')
   return nuevos
+}
+
+/** El orden que trae la dirección; uno que no existe es el de por omisión. */
+function ordenDe(valor: string | null): Orden {
+  return ORDENES.find((opcion) => opcion.valor === valor)?.valor ?? 'relevantes'
 }
 
 /**
