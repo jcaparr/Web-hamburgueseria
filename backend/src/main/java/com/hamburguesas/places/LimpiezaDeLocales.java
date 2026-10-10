@@ -77,7 +77,7 @@ public class LimpiezaDeLocales {
                     continue;
                 }
                 log.info("Se borra {} ({}): {}", joint.getName(), joint.getAddress(),
-                    barrio.isEmpty() ? "fuera del radio de búsqueda"
+                    barrio.isEmpty() ? "sin zona: la dirección no es de Argentina"
                         : sinNadaQueMostrar ? "Google no tiene ninguna foto"
                         : "no es una hamburguesería");
                 burgerJointRepository.delete(joint);

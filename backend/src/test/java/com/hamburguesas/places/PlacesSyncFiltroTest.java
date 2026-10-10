@@ -54,7 +54,7 @@ class PlacesSyncFiltroTest {
         properties.setApiKey("clave-de-prueba");
         properties.getSync().setAreas(List.of("Villa Real"));
         properties.getSync().setMaxPagesPerArea(1);
-        properties.getSync().setQueryTemplates(List.of("hamburguesería en {barrio}, Buenos Aires"));
+        properties.getSync().setQueryTemplates(List.of("hamburguesería en {barrio}"));
         properties.getSync().setDelayBetweenCallsMs(0);
 
         placesClient = mock(PlacesClient.class);
@@ -263,15 +263,47 @@ class PlacesSyncFiltroTest {
         verify(repository).save(mal);
     }
 
-    /** Los 29 de Mar del Plata, San Nicolás y el conurbano tienen que salir de la base. */
+    /** Lo guardado sin una dirección de Argentina no tiene zona, y sale de la base. */
     @Test
-    void borraLoQueQuedoGuardadoFueraDeLaCiudad() {
+    void borraLoGuardadoSinUnaDireccionDeArgentina() {
         googleDevuelve();
         BurgerJoint lejos = guardado("Hamburgo", -37.9619722, -57.5602536, "Constitución");
 
         service.sync();
 
         verify(repository).delete(lejos);
+    }
+
+    /**
+     * Pero uno de Mar del Plata con su dirección se queda (#222). Antes la limpieza
+     * borraba todo lo que estuviera a más de 75 km, y un local que se fue a buscar a
+     * propósito no duraba hasta la limpieza siguiente.
+     */
+    @Test
+    void noBorraUnLocalLejanoSiLaDireccionEsDeArgentina() {
+        googleDevuelve();
+        BurgerJoint lejos = guardado("Hamburgo", -37.9619722, -57.5602536, "Constitución");
+        lejos.setAddress("Av. Constitución 4205, B7600 Mar del Plata, Provincia de Buenos Aires, Argentina");
+
+        service.sync();
+
+        verify(repository, never()).delete(lejos);
+        assertThat(lejos.getArea()).isEqualTo("Mar del Plata");
+    }
+
+    /**
+     * El barrido general sí sigue con su radio: pregunta por nombres de barrio y Google
+     * contesta con lo que le parece, como San Nicolás de los Arroyos por "San Nicolás".
+     */
+    @Test
+    void elBarridoGeneralNoTraeLoQueQuedaLejos() {
+        googleDevuelve(new PlacesSearchResult.Place(
+            "ChIJ-sn", "Burger San Nicolás", "Bartolomé Mitre 452, S2900 San Nicolás de los Arroyos, Santa Fe, Argentina",
+            -33.3317, -60.2189, null, null, "hamburger_restaurant", java.util.Set.of("hamburger_restaurant")));
+
+        service.sync();
+
+        verify(repository, never()).save(any());
     }
 
     /**
@@ -550,8 +582,8 @@ class PlacesSyncFiltroTest {
     @Test
     void preguntaDeTodasLasFormasConfiguradas() {
         properties.getSync().setQueryTemplates(List.of(
-            "hamburguesería en {barrio}, Buenos Aires",
-            "smash burger en {barrio}, Buenos Aires"));
+            "hamburguesería en {barrio}",
+            "smash burger en {barrio}"));
         googleDevuelve();
 
         service.sync();

@@ -134,6 +134,37 @@ public class PlacesSyncController {
     }
 
     /**
+     * Barre una zona sola: un barrio, una ciudad, una provincia o un radio (#222).
+     *
+     * Unas 21 búsquedas como mucho, contra las mil doscientas del barrido general, y sin
+     * la limpieza de toda la base.
+     *
+     * @param lugar   lo que se le pregunta a Google, tal cual: "Mar del Plata, Buenos Aires"
+     * @param lat     el centro del radio, si se quiere barrer un radio
+     * @param lng     el centro del radio
+     * @param radioKm el radio; con los tres, entra solo lo que cae adentro
+     */
+    @PostMapping("/zona")
+    public ResponseEntity<?> barrerZona(
+        @RequestHeader(name = TOKEN_HEADER, required = false) String token,
+        @RequestParam("lugar") String lugar,
+        @RequestParam(name = "lat", required = false) Double lat,
+        @RequestParam(name = "lng", required = false) Double lng,
+        @RequestParam(name = "radioKm", required = false) Double radioKm,
+        @RequestParam(name = "conFotos", defaultValue = "true") boolean conFotos
+    ) {
+        return siEstaAutorizado(token, () -> {
+            boolean conAlguno = lat != null || lng != null || radioKm != null;
+            boolean conTodos = lat != null && lng != null && radioKm != null;
+            if (conAlguno && !conTodos) {
+                return PlacesSyncReport.skipped("Para barrer un radio hacen falta lat, lng y radioKm");
+            }
+            Circulo circulo = conTodos ? new Circulo(lat, lng, radioKm) : null;
+            return syncService.barrerZona(lugar, circulo, conFotos);
+        });
+    }
+
+    /**
      * Agrega un local puntual buscándolo por su nombre.
      *
      * Para las hamburgueserías que el barrido no encuentra nunca: Google no les pone el

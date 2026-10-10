@@ -64,8 +64,15 @@ public class LlamadasAGoogle {
      * según el código, porque un 429 y un 503 no se resuelven igual.
      */
     PlacesSearchResult buscar(String consulta, String pageToken) {
+        return buscar(consulta, pageToken, null);
+    }
+
+    /** Lo mismo, priorizando un círculo si lo hay: para barrer un radio (#222). */
+    PlacesSearchResult buscar(String consulta, String pageToken, Circulo circulo) {
         pausa();
-        PlacesSearchResult resultado = placesClient.searchText(consulta, pageToken);
+        PlacesSearchResult resultado = circulo == null
+            ? placesClient.searchText(consulta, pageToken)
+            : placesClient.searchText(consulta, pageToken, true, circulo);
         quotaGuard.record(PlacesCallType.SEARCH);
         return resultado;
     }
