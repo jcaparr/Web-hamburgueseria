@@ -289,6 +289,52 @@ public class FotosDeLocales {
     }
 
     /**
+     * La portada de un solo local: la elegida a mano si hay una, y si no la mejor según la
+     * regla (#224).
+     *
+     * Para agregar un local con su foto, o cambiarle la portada por una elegida, sin la
+     * revisión de toda la base: esa recorre centenares de locales, tarda minutos, y el
+     * permiso de pagar se cuenta sobre todo el mes, así que una foto suelta no se podía
+     * pagar sin hacer la cuenta de las pagadas antes.
+     *
+     * @param pagas las fotos que se pueden pagar este mes encima del tramo gratuito, contadas
+     *              como en {@link LlamadasAGoogle#quedanFotos}; quien llama decide cuántas
+     */
+    FotoDeUnLocal portadaDe(BurgerJoint joint, int pagas) {
+        if (!google.quedan(PlacesCallType.LISTA_DE_FOTOS)) {
+            return FotoDeUnLocal.sinCambios(joint, "Se acabó el tope mensual de fichas de fotos");
+        }
+
+        Optional<List<FotoElegida>> ficha = google.fotosDe(joint);
+        if (ficha.isEmpty()) {
+            return FotoDeUnLocal.sinCambios(joint, "Google no contestó");
+        }
+        List<FotoElegida> candidatas = ficha.get();
+        joint.setFotosEnGoogle(candidatas.size());
+        joint.setSinFotosEnGoogle(candidatas.isEmpty());
+        burgerJointRepository.save(joint);
+
+        if (candidatas.isEmpty()) {
+            return FotoDeUnLocal.sinCambios(joint, "Google no tiene ninguna foto de este local");
+        }
+        if (candidatas.get(0).huella().equals(joint.getPhotoFingerprint())) {
+            return FotoDeUnLocal.sinCambios(joint, "Ya tenía puesta esa foto");
+        }
+        if (!google.quedanFotos(pagas)) {
+            return FotoDeUnLocal.sinCambios(joint,
+                "Se acabaron las fotos gratis del mes y no se autorizó pagar");
+        }
+
+        boolean gratis = google.quedan(PlacesCallType.PHOTO);
+        String puesta = probarHastaQueUnaSirva(joint, candidatas, pagas);
+        if (puesta == null) {
+            return FotoDeUnLocal.sinCambios(joint, "Ninguna foto sirvió: eran logos");
+        }
+        return new FotoDeUnLocal(joint.getPlaceId(), joint.getName(),
+            gratis ? "Puesta" : "Puesta, paga", puesta, joint.getPhotoFingerprint(), !gratis);
+    }
+
+    /**
      * Solo el préstamo entre sucursales: completa las que faltan y no toca nada más.
      *
      * Aparte de la revisión de fotos porque son dos cosas de costo muy distinto. Esto no

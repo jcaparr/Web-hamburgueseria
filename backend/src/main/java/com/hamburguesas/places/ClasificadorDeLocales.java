@@ -93,6 +93,23 @@ public class ClasificadorDeLocales {
      * @param anotada la prueba con la que entró, si ya está guardado; vale solo cuando
      *                ninguna prueba barata alcanza, y evita pagar el resumen de reseñas
      */
+    /**
+     * Lo que diría el clasificador de un local que se está revisando, con el resumen que
+     * ya se pidió para mostrarlo (#225). No vuelve a pagarlo: es un dato más para quien
+     * revisa, que decide.
+     */
+    Veredicto evaluarConResumen(PlacesSearchResult.Place place, Set<String> cadenas, String resumen) {
+        var sync = properties.getSync();
+        if (sync.getExcludedPlaceIds().contains(place.placeId())) {
+            return Veredicto.no(Veredicto.Prueba.A_MANO);
+        }
+        if (sync.getIncludedPlaceIds().contains(place.placeId())) {
+            return Veredicto.si(Veredicto.Prueba.A_MANO);
+        }
+        return VendeHamburguesas.evaluar(place.name(), rubrosDe(place), resumen,
+            new HashSet<>(sync.getExcludedPrimaryTypes()), cadenas);
+    }
+
     Veredicto evaluar(PlacesSearchResult.Place place, Set<String> cadenas, Veredicto.Prueba anotada) {
         var sync = properties.getSync();
 

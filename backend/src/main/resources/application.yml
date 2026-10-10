@@ -510,7 +510,9 @@ app:
       #
       # Ejemplo:
       #   ChIJ1wMsjJe1vJURjHbgtBrHg6A: "1200x900|Un cliente"
-      fotos-elegidas: {}
+      fotos-elegidas:
+        # Ácido, Charlone 999: la cocina abierta con el cartel (#226).
+        ChIJRcGmcSm1vJURQaSeqM3qx9A: "3600x4800|gabriella villaça"
       # 3 es el máximo que devuelve Google por consulta (60 resultados); pedir más
       # no trae nada nuevo.
       # Cuántas fotos tiene que tener en Google un local que Google NO clasifica como

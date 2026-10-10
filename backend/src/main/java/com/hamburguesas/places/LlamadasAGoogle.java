@@ -52,6 +52,12 @@ public class LlamadasAGoogle {
             && quotaGuard.used(PlacesCallType.PHOTO) < quotaGuard.limitFor(PlacesCallType.PHOTO) + pagas;
     }
 
+    /** Cuántas fotos se pagaron este mes: las que pasaron el tramo gratuito. */
+    int fotosPagasEsteMes() {
+        return Math.max(0,
+            quotaGuard.used(PlacesCallType.PHOTO) - quotaGuard.limitFor(PlacesCallType.PHOTO));
+    }
+
     /** El tope mensual de este tipo, para los mensajes. */
     int limiteDe(PlacesCallType tipo) {
         return quotaGuard.limitFor(tipo);
@@ -115,6 +121,18 @@ public class LlamadasAGoogle {
         String resumen = placesClient.resumenDeResenias(placeId);
         quotaGuard.record(PlacesCallType.RESUMEN);
         return resumen;
+    }
+
+    /**
+     * Lo que hace falta para revisar a mano un local antes de agregarlo (#225): fotos,
+     * opiniones, puntaje y resumen. Es la misma llamada que el resumen, al mismo precio,
+     * así que se cuenta en esa cuota.
+     */
+    RevisionDeGoogle revisionDe(String placeId) {
+        pausa();
+        RevisionDeGoogle revision = placesClient.revisionDe(placeId);
+        quotaGuard.record(PlacesCallType.RESUMEN);
+        return revision;
     }
 
     /**

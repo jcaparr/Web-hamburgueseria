@@ -6,11 +6,15 @@ import com.hamburguesas.repository.BurgerJointRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -181,6 +185,19 @@ public class PlacesSyncService {
      * esto se usa de a uno, así que la portada la completa la próxima pasada de fotos.
      */
     public LocalAgregado agregar(String texto) {
+        return agregar(texto, null);
+    }
+
+    /**
+     * Lo mismo, asegurando que se guarda el local que se revisó (#224).
+     *
+     * Entre mostrar qué local devuelve Google y agregarlo pasan dos búsquedas, y Google no
+     * promete contestar igual las dos veces. Con el identificador esperado, si la segunda
+     * trae otro local no se guarda nada: agregar uno por otro es peor que no agregar.
+     *
+     * @param placeIdEsperado el que se revisó, o null para guardar el primero que venga
+     */
+    public LocalAgregado agregar(String texto, String placeIdEsperado) {
         if (!properties.hasApiKey()) {
             return new LocalAgregado(null, texto, null, null, SIN_CLAVE);
         }
@@ -208,6 +225,11 @@ public class PlacesSyncService {
         if (place.placeId() == null || place.name() == null) {
             return new LocalAgregado(null, texto, null, null, "La ficha vino incompleta");
         }
+        if (placeIdEsperado != null && !placeIdEsperado.isBlank()
+            && !placeIdEsperado.equals(place.placeId())) {
+            return new LocalAgregado(place.placeId(), place.name(), place.address(), null,
+                "Google devolvió otro local, no se agregó nada");
+        }
 
         var yaEsta = burgerJointRepository.findByPlaceId(place.placeId());
         if (yaEsta.isPresent()) {
@@ -228,6 +250,147 @@ public class PlacesSyncService {
         log.info("Agregado a mano: {} ({}) — {}", place.name(), zona.get(), place.placeId());
         return new LocalAgregado(place.placeId(), place.name(), place.address(), zona.get(),
             "Agregado");
+    }
+
+    /**
+     * La portada de un solo local (#224): para agregarlo con foto, o para ponerle la que
+     * se eligió a mano en la configuración.
+     *
+     * @param pagar si se acabaron las fotos gratis del mes, pagar una. Una sola, y nunca
+     *              por encima de {@link #FOTOS_PAGAS_POR_MES}.
+     */
+    public FotoDeUnLocal portadaDeUnLocal(String placeId, boolean pagar) {
+        if (!properties.hasApiKey()) {
+            return new FotoDeUnLocal(placeId, null, SIN_CLAVE, null, null, false);
+        }
+        var joint = burgerJointRepository.findByPlaceId(placeId);
+        if (joint.isEmpty()) {
+            return new FotoDeUnLocal(placeId, null, "No está en la base", null, null, false);
+        }
+
+        // El permiso de pagar se cuenta sobre el mes (ver LlamadasAGoogle.quedanFotos):
+        // las pagadas hasta ahora más una. Si ya se llegó al tope del mes, ninguna.
+        int pagadas = google.fotosPagasEsteMes();
+        int pagas = pagar && pagadas < FOTOS_PAGAS_POR_MES ? pagadas + 1 : 0;
+
+        FotoDeUnLocal resultado = fotos.portadaDe(joint.get(), pagas);
+        log.info("Portada de {}: {}", joint.get().getName(), resultado.resultado());
+        return resultado;
+    }
+
+    /**
+     * Barre una zona sin guardar nada, para revisar a mano qué se agrega (#225).
+     *
+     * Hace las mismas búsquedas que {@link #barrerZona}, y de cada local que todavía no
+     * está en la web pide fotos, opiniones, puntaje y resumen de reseñas. Con eso se ven los
+     * falsos: el kiosco que vende hamburguesas sueltas, la fábrica de medallones, el local
+     * que cerró. Los que se aprueban se agregan después con {@link #agregar(String, String)}.
+     *
+     * Cuesta hasta 21 búsquedas y una ficha de resumen por candidato. Si se acaba la cuota
+     * de resúmenes, los que faltan vienen sin esos datos, y el aviso lo dice.
+     */
+    public CandidatosDeZona candidatosDeZona(String lugar, Circulo circulo) {
+        if (!properties.hasApiKey()) {
+            return CandidatosDeZona.salteado(lugar, SIN_CLAVE);
+        }
+        if (lugar == null || lugar.isBlank()) {
+            return CandidatosDeZona.salteado(lugar, "Falta decir qué zona barrer");
+        }
+        if (circulo != null && circulo.radioKm() <= 0) {
+            return CandidatosDeZona.salteado(lugar, "El radio tiene que ser mayor que cero");
+        }
+
+        List<BurgerJoint> yaEstan = new ArrayList<>(burgerJointRepository.findAll());
+        Map<String, PlacesSearchResult.Place> vistos = new LinkedHashMap<>();
+        Map<String, String> zonaDe = new HashMap<>();
+        int busquedas = 0;
+        int yaEstaban = 0;
+        int fueraDeLaZona = 0;
+        String aviso = null;
+
+        buscar:
+        for (String plantilla : properties.getSync().getQueryTemplates()) {
+            String consulta = plantilla.replace("{barrio}", lugar.trim());
+            String pageToken = null;
+            for (int page = 0; page < properties.getSync().getMaxPagesPerArea(); page++) {
+                if (!google.quedan(PlacesCallType.SEARCH)) {
+                    aviso = "Se acabó la cuota mensual de búsquedas a mitad del barrido";
+                    break buscar;
+                }
+                PlacesSearchResult result;
+                try {
+                    result = google.buscar(consulta, pageToken, circulo);
+                    busquedas++;
+                } catch (RestClientResponseException ex) {
+                    busquedas++;
+                    int codigo = ex.getStatusCode().value();
+                    if (esDefinitivo(codigo)) {
+                        aviso = "Google respondió " + codigo + ", se frenó el barrido";
+                        break buscar;
+                    }
+                    aviso = "Algunas búsquedas quedaron sin respuesta de Google";
+                    break;
+                }
+
+                for (PlacesSearchResult.Place place : result.places()) {
+                    if (place.placeId() == null || place.name() == null
+                        || vistos.containsKey(place.placeId()) || zonaDe.containsKey(place.placeId())) {
+                        continue;
+                    }
+                    var zona = zonas.zonaDe(place.latitude(), place.longitude(), place.address());
+                    if (zona.isEmpty()
+                        || (circulo != null && !circulo.contiene(place.latitude(), place.longitude()))) {
+                        zonaDe.put(place.placeId(), "");
+                        fueraDeLaZona++;
+                        continue;
+                    }
+                    if (burgerJointRepository.findByPlaceId(place.placeId()).isPresent()
+                        || Duplicados.elMismoLocalEntre(yaEstan, comoJoint(place, zona.get())) != null) {
+                        zonaDe.put(place.placeId(), "");
+                        yaEstaban++;
+                        continue;
+                    }
+                    vistos.put(place.placeId(), place);
+                    zonaDe.put(place.placeId(), zona.get());
+                }
+
+                pageToken = result.nextPageToken();
+                if (pageToken == null || pageToken.isBlank()) {
+                    break;
+                }
+            }
+        }
+
+        Set<String> cadenas = clasificador.cadenasDeHamburguesas();
+        List<CandidatosDeZona.Candidato> candidatos = new ArrayList<>();
+        for (PlacesSearchResult.Place place : vistos.values()) {
+            RevisionDeGoogle revision = null;
+            if (google.quedan(PlacesCallType.RESUMEN)) {
+                try {
+                    revision = google.revisionDe(place.placeId());
+                } catch (RestClientException ex) {
+                    log.warn("No se pudo revisar {}: {}", place.placeId(), ex.getMessage());
+                }
+            } else if (aviso == null) {
+                aviso = "Se acabó la cuota de resúmenes: algunos vienen sin fotos, opiniones ni resumen";
+            }
+
+            Veredicto veredicto = clasificador.evaluarConResumen(place, cadenas,
+                revision == null ? null : revision.resumen());
+            candidatos.add(new CandidatosDeZona.Candidato(
+                place.placeId(), place.name(), place.address(), zonaDe.get(place.placeId()),
+                place.primaryType(),
+                revision == null ? null : revision.fotos(),
+                revision == null ? null : revision.opiniones(),
+                revision == null ? null : revision.puntaje(),
+                revision == null ? null : revision.resumen(),
+                veredicto.vendeHamburguesas(), veredicto.prueba().name(),
+                "https://www.google.com/maps/place/?q=place_id:" + place.placeId()));
+        }
+
+        log.info("Candidatos de {}: {} para revisar, {} ya estaban, {} fuera de la zona, {} búsquedas",
+            lugar, candidatos.size(), yaEstaban, fueraDeLaZona, busquedas);
+        return new CandidatosDeZona(lugar, busquedas, yaEstaban, fueraDeLaZona, candidatos, aviso);
     }
 
     public PlacesSyncReport sync() {
