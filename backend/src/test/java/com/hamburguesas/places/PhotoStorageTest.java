@@ -33,8 +33,30 @@ class PhotoStorageTest {
     void guardaUnaImagenYDevuelveSuRuta(@TempDir Path dir) {
         String url = storageEn(dir).save("ChIJ123", JPEG_MINIMO);
 
-        assertThat(url).isEqualTo("/api/place-photos/ChIJ123.jpg");
+        assertThat(url).matches("/api/place-photos/ChIJ123\\.jpg\\?v=[0-9a-f]{10}");
         assertThat(dir.resolve("ChIJ123.jpg")).exists();
+    }
+
+    /**
+     * Una foto nueva para el mismo local es una dirección nueva (#229): el archivo se llama
+     * igual y se sirve con 30 días de caché, así que sin esto quien ya la había visto
+     * seguía viendo la vieja hasta un mes.
+     */
+    @Test
+    void otraFotoDelMismoLocalTieneOtraDireccion(@TempDir Path dir) {
+        PhotoStorage storage = storageEn(dir);
+        byte[] otra = JPEG_MINIMO.clone();
+        otra[otra.length - 1] = 9;
+
+        assertThat(storage.save("ChIJ123", otra)).isNotEqualTo(storage.save("ChIJ123", JPEG_MINIMO));
+    }
+
+    /** Y la misma foto bajada dos veces da la misma: nadie tiene que volver a bajarla. */
+    @Test
+    void laMismaFotoDosVecesDaLaMismaDireccion(@TempDir Path dir) {
+        PhotoStorage storage = storageEn(dir);
+
+        assertThat(storage.save("ChIJ123", JPEG_MINIMO)).isEqualTo(storage.save("ChIJ123", JPEG_MINIMO));
     }
 
     /**
@@ -49,7 +71,7 @@ class PhotoStorageTest {
 
         String url = storageEn(dir).save("ChIJ456", png);
 
-        assertThat(url).isEqualTo("/api/place-photos/ChIJ456.png");
+        assertThat(url).matches("/api/place-photos/ChIJ456\\.png\\?v=[0-9a-f]{10}");
         assertThat(dir.resolve("ChIJ456.png")).exists();
         assertThat(dir.resolve("ChIJ456.jpg")).doesNotExist();
     }

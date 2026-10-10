@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.Optional;
 
 /**
@@ -45,7 +48,7 @@ public class PhotoStorage {
             Path directory = Paths.get(properties.getPhotos().getDirectory());
             Files.createDirectories(directory);
             Files.write(directory.resolve(fileName), bytes);
-            return "/api/place-photos/" + fileName;
+            return "/api/place-photos/" + fileName + "?v=" + version(bytes);
         } catch (IOException ex) {
             log.warn("Could not store photo for place {}: {}", placeId, ex.getMessage());
             return null;
@@ -75,6 +78,28 @@ public class PhotoStorage {
             return Optional.empty();
         }
         return Optional.of(archivo);
+    }
+
+    /**
+     * Una marca de esta foto en particular, para la dirección (#229).
+     *
+     * El archivo se llama siempre igual, el identificador del local, y se sirve con 30
+     * días de caché. Cuando se cambiaba la portada, quien ya había visto el local seguía
+     * viendo la vieja hasta un mes: el navegador no tenía por qué volver a pedirla. Con
+     * la marca, una foto nueva es una dirección nueva, y la caché larga sigue sirviendo
+     * para las que no cambian.
+     *
+     * Sale de los bytes y no de la fecha: la misma foto bajada dos veces da la misma
+     * dirección, y no obliga a nadie a volver a bajarla.
+     */
+    private static String version(byte[] bytes) {
+        try {
+            byte[] hash = MessageDigest.getInstance("SHA-256").digest(bytes);
+            return HexFormat.of().formatHex(hash, 0, 5);
+        } catch (NoSuchAlgorithmException ex) {
+            // SHA-256 está en toda JVM: esto no pasa.
+            throw new IllegalStateException(ex);
+        }
     }
 
     /** Place ids are opaque Google strings, so strip anything that could escape the directory. */
