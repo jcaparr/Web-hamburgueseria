@@ -27,7 +27,8 @@ public class ProfileService {
         long ratingsCount = ratingRepository.countByUser_Id(userId);
         Double averageScore = ratingRepository.averageScoreByUser(userId);
         return new ProfileStatsDto(
-            ratingsCount, followRepository.countByFollowed_Id(userId), averageScore);
+            ratingsCount, followRepository.countByFollowed_Id(userId),
+            followRepository.countByFollower_Id(userId), averageScore);
     }
 
     public List<ReseniaDePerfilDto> myRatings(Long userId) {

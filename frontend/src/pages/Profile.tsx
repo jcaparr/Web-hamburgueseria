@@ -13,7 +13,7 @@ import { useAuth } from '../context/useAuth'
 import { useTitulo } from '../hooks/useTitulo'
 import type { BurgerJoint, ReseniaDePerfil, ProfileStats, SavedTour } from '../types'
 import { isSessionExpired } from '../utils/errors'
-import { nota } from '../utils/numeros'
+import { cantidad, nota } from '../utils/numeros'
 import { fechaYHora } from '../utils/fechaYHora'
 
 /** Cuántas reseñas y guardadas se asoman en el perfil; el resto, en "Ver todas". */
@@ -119,7 +119,7 @@ export function Profile() {
         }
         cifras={[
           {
-            valor: stats ? String(stats.ratingsCount) : '—',
+            valor: stats ? cantidad(stats.ratingsCount) : '—',
             etiqueta: stats?.ratingsCount === 1 ? 'reseña' : 'reseñas',
             a: '/reviews',
           },
@@ -128,10 +128,16 @@ export function Profile() {
             etiqueta: 'promedio',
           },
           {
-            valor: stats ? String(stats.seguidores) : '—',
+            valor: stats ? cantidad(stats.seguidores) : '—',
             etiqueta: stats?.seguidores === 1 ? 'seguidor' : 'seguidores',
-            // Quiénes son, y desde ahí a quiénes seguís (#183).
+            // Quiénes son (#183).
             a: `/u/${user.username}/seguidores`,
+          },
+          {
+            // A quiénes seguís (#232), al lado de quiénes te siguen.
+            valor: stats ? cantidad(stats.siguiendo) : '—',
+            etiqueta: 'siguiendo',
+            a: `/u/${user.username}/siguiendo`,
           },
         ]}
         acciones={
