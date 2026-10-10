@@ -19,3 +19,10 @@ export function nota(valor: number): string {
 export function kilometros(valor: number): string {
   return HASTA_UN_DECIMAL.format(valor)
 }
+
+const ENTERO = new Intl.NumberFormat('es-AR')
+
+/** Una cantidad, con punto de miles: "1.234" se lee de un vistazo y "1234" no. */
+export function cantidad(valor: number): string {
+  return ENTERO.format(valor)
+}

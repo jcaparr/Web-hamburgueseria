@@ -202,6 +202,7 @@ export interface User {
 export interface ProfileStats {
   ratingsCount: number
   seguidores: number
+  siguiendo: number
   averageScore: number | null
 }
 

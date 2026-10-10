@@ -16,7 +16,7 @@ import { AvatarDeUsuario } from './AvatarDeUsuario'
  * otro. Sigue siendo compacta: en el teléfono son dos filas, no los ocho bloques que
  * tenía la versión de antes de #144.
  *
- * @param bajada   la línea de debajo del nombre, como a cuántos sigue
+ * @param bajada   la línea de debajo del nombre, como el enlace para cambiar la hamburguesa
  * @param cifras   los números; los que llevan a algún lado son enlaces
  * @param acciones lo que se puede hacer, debajo de la tarjeta
  */
@@ -56,17 +56,22 @@ export function CabeceraDePerfil({
 
 /**
  * Los números en una franja hundida, un poco más oscura que la tarjeta, partida en
- * casillas iguales. Hundida y no en tarjetas propias: son parte de la cabecera, y tres
+ * casillas iguales. Hundida y no en tarjetas propias: son parte de la cabecera, y cuatro
  * tarjetas chicas adentro de otra se ven como una grilla de botones.
+ *
+ * Son cuatro desde que "siguiendo" dejó de ser una línea debajo del nombre (#232). En el
+ * teléfono, cada casilla queda en unos 78 px: "seguidores" entra justo, y la etiqueta no
+ * se parte nunca, porque una cifra con la palabra en dos renglones deja de leerse como
+ * par. En la compu la franja se ensancha para que entren con aire.
  */
 function CifrasDePerfil({ cifras }: { cifras: { valor: string; etiqueta: string; a?: string }[] }) {
   return (
-    <ul className="grid auto-cols-fr grid-flow-col divide-x divide-base-content/10 rounded-field bg-base-200 md:w-80 md:flex-none">
+    <ul className="grid auto-cols-fr grid-flow-col divide-x divide-base-content/10 rounded-field bg-base-200 md:w-96 md:flex-none">
       {cifras.map(({ valor, etiqueta, a }) => {
         const contenido = (
           <>
             <span className="text-lg font-bold leading-none tabular-nums">{valor}</span>
-            <span className="text-xs text-base-content/70">{etiqueta}</span>
+            <span className="whitespace-nowrap text-xs text-base-content/70">{etiqueta}</span>
           </>
         )
         // La casilla entera es lo que se toca: con el relleno pasa los 44 px que pide el dedo.

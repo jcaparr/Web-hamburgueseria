@@ -10,7 +10,7 @@ import { AvisoVacio, Seccion } from '../components/Seccion'
 import { usePedido } from '../hooks/usePedido'
 import { useTitulo } from '../hooks/useTitulo'
 import { isNotFound } from '../utils/errors'
-import { nota } from '../utils/numeros'
+import { cantidad, nota } from '../utils/numeros'
 import { fechaYHora } from '../utils/fechaYHora'
 import type { PerfilPublico as Perfil } from '../types'
 
@@ -83,27 +83,21 @@ export function PerfilPublico() {
       <CabeceraDePerfil
         username={perfil.username}
         hamburguesa={perfil.hamburguesa}
-        bajada={
-          perfil.siguiendo > 0 ? (
-            // A quiénes sigue (#183): dice mucho de qué le gusta, y es de donde sale
-            // gente nueva para seguir.
-            <Link
-              to={`/u/${perfil.username}/siguiendo`}
-              className="-my-2 inline-flex min-h-11 w-fit items-center rounded-field text-sm text-base-content/70 hover:text-primary hover:underline"
-            >
-              {siguiendoEnPalabras(perfil.siguiendo)}
-            </Link>
-          ) : (
-            <span className="text-sm text-base-content/70">{siguiendoEnPalabras(perfil.siguiendo)}</span>
-          )
-        }
         cifras={[
-          { valor: String(perfil.resenias), etiqueta: perfil.resenias === 1 ? 'reseña' : 'reseñas' },
+          { valor: cantidad(perfil.resenias), etiqueta: perfil.resenias === 1 ? 'reseña' : 'reseñas' },
           { valor: perfil.promedio ? nota(perfil.promedio) : '—', etiqueta: 'promedio' },
           {
-            valor: String(perfil.seguidores),
+            valor: cantidad(perfil.seguidores),
             etiqueta: perfil.seguidores === 1 ? 'seguidor' : 'seguidores',
             a: `/u/${perfil.username}/seguidores`,
+          },
+          {
+            // A quiénes sigue (#183): dice mucho de qué le gusta, y es de donde sale gente
+            // nueva para seguir. Una cifra más y no una línea aparte debajo del nombre
+            // (#232): junto a los seguidores se lee de un vistazo.
+            valor: cantidad(perfil.siguiendo),
+            etiqueta: 'siguiendo',
+            a: `/u/${perfil.username}/siguiendo`,
           },
         ]}
         acciones={
@@ -178,10 +172,4 @@ export function PerfilPublico() {
       )}
     </div>
   )
-}
-
-/** "Sigue a 3 personas"; con cero, "Sigue a 0 personas" se leía como un error. */
-function siguiendoEnPalabras(cuantos: number) {
-  if (cuantos === 0) return 'Todavía no sigue a nadie'
-  return cuantos === 1 ? 'Sigue a 1 persona' : `Sigue a ${cuantos} personas`
 }
