@@ -176,4 +176,26 @@ class PocasFotosYOtroRubroTest {
     void sinRubroCuentaComoOtroRubro() {
         assertThat(borradosCon(local("Sin rubro Burger", 2, null, false))).isEqualTo(1);
     }
+
+    /**
+     * El que está en la lista de incluidos se queda (#227). Es justo el caso de agregar a
+     * mano: Google lo tiene como "restaurant", y si además tiene pocas fotos, esta regla lo
+     * borraba en la limpieza siguiente aunque una persona hubiera decidido que va.
+     */
+    @Test
+    void elIncluidoAManoSeQuedaAunqueTengaPocasFotos() {
+        BurgerJoint acido = local("Ácido", 4, "restaurant", false);
+        properties.getSync().setIncludedPlaceIds(List.of(acido.getPlaceId()));
+
+        assertThat(borradosCon(acido)).isZero();
+    }
+
+    /** Lo mismo con el que entró por el endpoint de agregar, aunque no esté en la lista. */
+    @Test
+    void elAgregadoAManoSeQuedaAunqueTengaPocasFotos() {
+        BurgerJoint agregado = local("Ácido", 4, "restaurant", false);
+        agregado.setPruebaDeHamburguesas(Veredicto.Prueba.A_MANO.name());
+
+        assertThat(borradosCon(agregado)).isZero();
+    }
 }

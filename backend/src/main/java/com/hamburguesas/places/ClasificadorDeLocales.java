@@ -192,14 +192,25 @@ public class ClasificadorDeLocales {
      * Las cadenas quedan afuera: una sucursal de Mostaza con siete fotos sigue siendo un
      * Mostaza. Y los locales a los que todavía no se les preguntó cuántas fotos tienen
      * también: nulo no es cero, y no saber no es motivo para borrar.
+     *
+     * Y los que se agregaron a mano, que son justamente los que Google no llama
+     * hamburguesería (#227): una persona miró el local y decidió que va, y eso vale más
+     * que esta regla, igual que la lista de incluidos ya le gana al rubro.
      */
     boolean casiSinFotosYNoEsHamburgueseria(BurgerJoint joint) {
         int minimas = properties.getSync().getFotosMinimasSiNoEsHamburgueseria();
         return minimas > 0
+            && !seAgregoAMano(joint)
             && !joint.isFastFood()
             && joint.getFotosEnGoogle() != null
             && joint.getFotosEnGoogle() < minimas
             && !"hamburger_restaurant".equals(joint.getGooglePrimaryType());
+    }
+
+    /** Anotado en la lista de incluidos, o agregado con el endpoint de agregar a mano. */
+    private boolean seAgregoAMano(BurgerJoint joint) {
+        return properties.getSync().getIncludedPlaceIds().contains(joint.getPlaceId())
+            || Veredicto.Prueba.A_MANO.name().equals(joint.getPruebaDeHamburguesas());
     }
 
     /**
