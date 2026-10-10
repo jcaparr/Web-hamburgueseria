@@ -26,9 +26,13 @@ import java.util.regex.Pattern;
  * El anteúltimo tramo antes de la provincia es la localidad, con el código postal
  * pegado adelante.
  *
- * El radio es lo que decide hasta dónde se busca. Con 75 km desde el Obelisco entran
- * La Plata, San Vicente, Cañuelas, Luján y Belén de Escobar, que son los bordes que
- * queríamos cubrir.
+ * Cualquier dirección de Argentina tiene zona, esté donde esté (#222). Antes lo que
+ * quedaba a más de 75 km del Obelisco no tenía, y eso lo dejaba afuera de todo: no
+ * entraba ni agregado a mano, y la limpieza lo borraba. Ahora los locales se suman
+ * pidiendo una zona puntual, y si se pide Mar del Plata es porque se quiere llegar ahí.
+ * El radio sigue existiendo para el barrido general ({@link #estaCercaDelObelisco}),
+ * que pregunta por nombres de barrio y Google contesta con lo que le parece: "San
+ * Nicolás" trae San Nicolás de los Arroyos.
  */
 @Component
 @RequiredArgsConstructor
@@ -44,8 +48,8 @@ public class Zonas {
     private final PlacesProperties properties;
 
     /**
-     * @return el barrio o la localidad, o vacío si el local queda fuera del radio o no
-     *         se le puede sacar una zona a la dirección
+     * @return el barrio o la localidad, o vacío si la dirección no es de Argentina o no
+     *         se le puede sacar una zona
      */
     public Optional<String> zonaDe(Double latitud, Double longitud, String direccion) {
         Optional<String> barrio = barrios.barrioDe(latitud, longitud);
@@ -53,15 +57,35 @@ public class Zonas {
             return barrio;
         }
 
-        if (latitud == null || longitud == null) {
-            return Optional.empty();
-        }
-
-        if (kilometrosDesdeElCentro(latitud, longitud) > properties.getSync().getRadioEnKm()) {
+        if (latitud == null || longitud == null || !esDeArgentina(direccion)) {
             return Optional.empty();
         }
 
         return localidadDe(direccion);
+    }
+
+    /**
+     * Si queda dentro del radio del barrido general, contado desde el Obelisco.
+     *
+     * Solo lo usa ese barrido: con 75 km entran La Plata, San Vicente, Cañuelas, Luján y
+     * Belén de Escobar, que son los bordes que se quisieron cubrir, y queda afuera lo que
+     * Google trae de más lejos por un nombre parecido.
+     */
+    public boolean estaCercaDelObelisco(Double latitud, Double longitud) {
+        return latitud != null && longitud != null
+            && kilometrosDesdeElCentro(latitud, longitud) <= properties.getSync().getRadioEnKm();
+    }
+
+    /**
+     * El último tramo de la dirección es el país. "Versalles" trae uno de Colombia, y
+     * "Córdoba" sin más, uno de España.
+     */
+    static boolean esDeArgentina(String direccion) {
+        if (direccion == null || direccion.isBlank()) {
+            return false;
+        }
+        String[] tramos = direccion.split(",");
+        return tramos[tramos.length - 1].trim().equalsIgnoreCase("Argentina");
     }
 
     /**
@@ -82,7 +106,7 @@ public class Zonas {
             return Optional.empty();
         }
 
-        String tramo = tramos[tramos.length - 3].trim();
+        String tramo = tramoDeLaLocalidad(tramos);
         String localidad = sinCodigoPostal(tramo);
 
         // A veces Google no manda localidad y ese tramo es el código postal solo:
@@ -90,13 +114,32 @@ public class Zonas {
         // Sacarle el código postal dejaba "AAT" de nombre de zona, y eso terminaba en el
         // selector de Explorar como si fuera un lugar.
         //
-        // No se devuelve vacío: el local existe y está dentro del radio, y vacío lo
+        // No se devuelve vacío: el local existe, y vacío lo
         // borraría. Va a una zona genérica, que es lo poco cierto que se puede decir.
         if (localidad.isBlank() || esLoQueQuedaDeUnCodigoPostal(localidad)) {
             return Optional.of(SIN_LOCALIDAD);
         }
 
         return Optional.of(comoSeLlamaDeVerdad(localidad));
+    }
+
+    /**
+     * El tramo con la localidad: el que arranca con el código postal.
+     *
+     * En la Provincia es siempre el anterior a la provincia, pero no en todo el país: una
+     * capital de provincia puede venir sin provincia, "Av. Colón 1234, X5000 Córdoba,
+     * Argentina", y ahí el anterior al anterior es la calle. Así que se busca el código
+     * postal, de atrás para adelante y sin mirar la calle, y si ninguno lo tiene vale el
+     * de siempre.
+     */
+    private static String tramoDeLaLocalidad(String[] tramos) {
+        for (int i = tramos.length - 2; i >= 1; i--) {
+            String tramo = tramos[i].trim();
+            if (pareceCodigoPostal(tramo.split(" ", 2)[0])) {
+                return tramo;
+            }
+        }
+        return tramos[tramos.length - 3].trim();
     }
 
     /**
@@ -245,10 +288,14 @@ public class Zonas {
      * llamada: las coordenadas ya vienen con el local.
      */
     static double kilometrosDesdeElCentro(double latitud, double longitud) {
-        double dLat = Math.toRadians(latitud - LATITUD_DEL_CENTRO);
-        double dLon = Math.toRadians(longitud - LONGITUD_DEL_CENTRO);
+        return kilometrosEntre(LATITUD_DEL_CENTRO, LONGITUD_DEL_CENTRO, latitud, longitud);
+    }
+
+    static double kilometrosEntre(double latitud1, double longitud1, double latitud2, double longitud2) {
+        double dLat = Math.toRadians(latitud2 - latitud1);
+        double dLon = Math.toRadians(longitud2 - longitud1);
         double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-            + Math.cos(Math.toRadians(LATITUD_DEL_CENTRO)) * Math.cos(Math.toRadians(latitud))
+            + Math.cos(Math.toRadians(latitud1)) * Math.cos(Math.toRadians(latitud2))
             * Math.sin(dLon / 2) * Math.sin(dLon / 2);
         return RADIO_DE_LA_TIERRA_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }

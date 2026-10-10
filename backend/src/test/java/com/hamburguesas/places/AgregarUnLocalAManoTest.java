@@ -63,9 +63,13 @@ class AgregarUnLocalAManoTest {
 
     /** Un local de Palermo con un rubro que el clasificador rechazaría. */
     private void googleDevuelve(String nombre, double lat, double lon, String rubro) {
+        googleDevuelve(nombre, "Costa Rica 5827, CABA", lat, lon, rubro);
+    }
+
+    private void googleDevuelve(String nombre, String direccion, double lat, double lon, String rubro) {
         when(placesClient.searchText(anyString(), any(), eq(false))).thenReturn(new PlacesSearchResult(
             List.of(new PlacesSearchResult.Place(
-                "ChIJ-austin", nombre, "Costa Rica 5827, CABA", lat, lon,
+                "ChIJ-austin", nombre, direccion, lat, lon,
                 "places/x/photos/una", "1200x900|Alguien", rubro, Set.of(rubro))),
             null));
     }
@@ -117,14 +121,31 @@ class AgregarUnLocalAManoTest {
         verify(quotaGuard, never()).record(PlacesCallType.PHOTO);
     }
 
-    /** El radio sí se respeta: fuera de los 75 km la app no lo podría ubicar. */
+    /**
+     * Entra aunque quede lejos (#222). Antes lo que estaba a más de 75 km del Obelisco no
+     * entraba ni a mano: si se lo pide, es porque se quiere llegar ahí.
+     */
     @Test
-    void noEntraSiEstaFueraDelRadio() {
-        googleDevuelve("Burger de Mar del Plata", -37.9619, -57.5602, "hamburger_restaurant");
+    void entraAunqueQuedeLejos() {
+        googleDevuelve("Burger de Mar del Plata",
+            "Av. Constitución 4205, B7600 Mar del Plata, Provincia de Buenos Aires, Argentina",
+            -37.9619, -57.5602, "hamburger_restaurant");
 
         LocalAgregado resultado = service.agregar("Burger de Mar del Plata");
 
-        assertThat(resultado.resultado()).contains("fuera del radio");
+        assertThat(resultado.resultado()).isEqualTo("Agregado");
+        assertThat(guardado().getArea()).isEqualTo("Mar del Plata");
+    }
+
+    /** Lo que no es de Argentina sigue sin entrar: no hay zona donde ponerlo. */
+    @Test
+    void noEntraSiNoEsDeArgentina() {
+        googleDevuelve("Versalles Burguer", "Cra. 8 #4-12, Floridablanca, Santander, Colombia",
+            7.0625, -73.0978, "hamburger_restaurant");
+
+        LocalAgregado resultado = service.agregar("Versalles Burguer");
+
+        assertThat(resultado.resultado()).contains("no es de Argentina");
         verify(repository, never()).save(any(BurgerJoint.class));
     }
 

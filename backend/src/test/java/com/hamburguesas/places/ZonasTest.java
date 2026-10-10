@@ -51,6 +51,32 @@ class ZonasTest {
             .contains("Belén de Escobar");
     }
 
+    /**
+     * De otras provincias también (#222), aunque la dirección no traiga la provincia: una
+     * capital puede venir como "X5000 Córdoba, Argentina", y el anteúltimo tramo antes de
+     * la provincia sería la calle.
+     */
+    @Test
+    void sacaLaLocalidadDeOtrasProvincias() {
+        assertThat(Zonas.localidadDe("Av. Rafael Núñez 4624, X5009 Córdoba, Argentina"))
+            .contains("Córdoba");
+        assertThat(Zonas.localidadDe(
+            "Bartolomé Mitre 452, S2900 San Nicolás de los Arroyos, Santa Fe, Argentina"))
+            .contains("San Nicolás de los Arroyos");
+        assertThat(Zonas.localidadDe(
+            "Av. Constitución 4205, B7600 Mar del Plata, Provincia de Buenos Aires, Argentina"))
+            .contains("Mar del Plata");
+    }
+
+    /** El país es el último tramo: "Versalles" trajo uno de Colombia. */
+    @Test
+    void reconoceLasDireccionesDeArgentina() {
+        assertThat(Zonas.esDeArgentina("Av. Rafael Núñez 4624, X5009 Córdoba, Argentina")).isTrue();
+        assertThat(Zonas.esDeArgentina("Cra. 8 #4-12, Floridablanca, Santander, Colombia")).isFalse();
+        assertThat(Zonas.esDeArgentina("Una dirección")).isFalse();
+        assertThat(Zonas.esDeArgentina(null)).isFalse();
+    }
+
     @Test
     void unaDireccionSinLaFormaEsperadaNoInventaLocalidad() {
         assertThat(Zonas.localidadDe("Una calle sin nada")).isEmpty();

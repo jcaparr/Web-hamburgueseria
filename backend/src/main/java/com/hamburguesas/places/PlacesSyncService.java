@@ -50,6 +50,19 @@ public class PlacesSyncService {
      */
     static final int FOTOS_PAGAS_POR_MES = 500;
 
+    /**
+     * Lo que va detrás de cada zona de la lista en el barrido general: "hamburguesería en
+     * Palermo, Buenos Aires". El barrido de una zona sola usa la zona tal cual se la
+     * escribe, que puede ser de cualquier provincia.
+     */
+    static final String PROVINCIA_DEL_BARRIDO_GENERAL = ", Buenos Aires";
+
+    /** Hasta dónde llega un barrido: lo que cae afuera se descarta sin mirarlo. */
+    @FunctionalInterface
+    private interface Alcance {
+        boolean llegaA(PlacesSearchResult.Place place);
+    }
+
     private final PlacesProperties properties;
     private final LlamadasAGoogle google;
     private final ClasificadorDeLocales clasificador;
@@ -133,7 +146,7 @@ public class PlacesSyncService {
      * Revisa lo guardado sin salir a buscar nada nuevo.
      *
      * Es la primera mitad del barrido, suelta. Borra los locales que ya no corresponden
-     * —los que quedaron fuera del radio, los repetidos y los que Google no tiene
+     * —los que no tienen una dirección de Argentina, los repetidos y los que Google no tiene
      * fotografiados— y les recalcula la zona a los demás.
      *
      * Existe porque esa mitad no cuesta ninguna búsqueda y la otra cuesta mil novecientas.
@@ -161,8 +174,8 @@ public class PlacesSyncService {
      *
      * Entra sin pasar por el clasificador, a propósito: lo agrega una persona que ya
      * sabe que el local existe y vende hamburguesas, y esa decisión vale más que
-     * cualquier regla nuestra. Lo que sí se respeta es el radio: un local fuera de los
-     * 75 km no entra, porque la app no lo podría ubicar en ninguna zona.
+     * cualquier regla nuestra. Entra esté donde esté, mientras sea de Argentina: si se
+     * lo pidió es porque se lo quiere (#222).
      *
      * Cuesta una búsqueda. No baja la foto: la cuota de fotos es el tramo más chico y
      * esto se usa de a uno, así que la portada la completa la próxima pasada de fotos.
@@ -206,7 +219,7 @@ public class PlacesSyncService {
         var zona = zonas.zonaDe(place.latitude(), place.longitude(), place.address());
         if (zona.isEmpty()) {
             return new LocalAgregado(place.placeId(), place.name(), place.address(), null,
-                "Queda fuera del radio de búsqueda");
+                "La dirección no es de Argentina, o no se le puede sacar una zona");
         }
 
         create(place, zona.get(), false, Veredicto.Prueba.A_MANO);
@@ -260,8 +273,9 @@ public class PlacesSyncService {
                     break;
                 }
 
-                String consulta = plantilla.replace("{barrio}", area);
-                String motivoParaFrenar = recorrer(consulta, cadenas, yaEstan, conFotos, recuento);
+                String consulta = plantilla.replace("{barrio}", area + PROVINCIA_DEL_BARRIDO_GENERAL);
+                String motivoParaFrenar = recorrer(consulta, null, cercaDelObelisco(),
+                    cadenas, yaEstan, conFotos, recuento);
                 if (motivoParaFrenar != null) {
                     return new PlacesSyncReport(recuento.creados, recuento.actualizados,
                         recuento.fotos, 0, motivoParaFrenar);
@@ -299,6 +313,71 @@ public class PlacesSyncService {
             faltantes.prestadas(), aviso);
     }
 
+    /**
+     * Barre una zona sola, la que se pida: un barrio, una ciudad, una provincia, o un radio
+     * alrededor de un punto (#222).
+     *
+     * Es como se suman locales ahora que la página está poblada: el barrido general era
+     * para llenarla, y repetirlo trae casi siempre lo mismo. Pregunta de las mismas siete
+     * formas, con hasta tres páginas cada una: 21 búsquedas como mucho.
+     *
+     * No pasa por la limpieza general ni por el radio de 75 km. Para sumar un barrio no
+     * hace falta revisar toda la base, y si se pide Mar del Plata es porque se quiere
+     * llegar ahí.
+     *
+     * @param lugar   lo que se le pregunta a Google, tal cual: "Mar del Plata, Buenos
+     *                Aires", "Córdoba, Argentina", "Palermo, Buenos Aires"
+     * @param circulo si no es null, solo entra lo que cae adentro
+     */
+    public PlacesSyncReport barrerZona(String lugar, Circulo circulo, boolean conFotos) {
+        if (!properties.hasApiKey()) {
+            return PlacesSyncReport.skipped(SIN_CLAVE);
+        }
+        if (lugar == null || lugar.isBlank()) {
+            return PlacesSyncReport.skipped("Falta decir qué zona barrer");
+        }
+        if (circulo != null && circulo.radioKm() <= 0) {
+            return PlacesSyncReport.skipped("El radio tiene que ser mayor que cero");
+        }
+
+        Recuento recuento = new Recuento();
+        Set<String> cadenas = clasificador.cadenasDeHamburguesas();
+        List<BurgerJoint> yaEstan = new ArrayList<>(burgerJointRepository.findAll());
+        Alcance alcance = circulo == null
+            ? place -> true
+            : place -> circulo.contiene(place.latitude(), place.longitude());
+
+        for (String plantilla : properties.getSync().getQueryTemplates()) {
+            if (!google.quedan(PlacesCallType.SEARCH)) {
+                log.warn("Se acabó la cuota de búsquedas barriendo {}", lugar);
+                return new PlacesSyncReport(recuento.creados, recuento.actualizados,
+                    recuento.fotos, 0, "Se acabó la cuota mensual de búsquedas a mitad del barrido");
+            }
+            String consulta = plantilla.replace("{barrio}", lugar.trim());
+            String motivoParaFrenar = recorrer(consulta, circulo, alcance, cadenas, yaEstan,
+                conFotos, recuento);
+            if (motivoParaFrenar != null) {
+                return new PlacesSyncReport(recuento.creados, recuento.actualizados,
+                    recuento.fotos, 0, motivoParaFrenar);
+            }
+        }
+
+        fastFoodMarker.marcar();
+
+        log.info("Barrido de {}: {} nuevos, {} actualizados, {} fotos, {} descartados, {} consultas salteadas",
+            lugar, recuento.creados, recuento.actualizados, recuento.fotos, recuento.descartados,
+            recuento.saltadas);
+
+        String aviso = recuento.saltadas == 0 ? null
+            : recuento.saltadas + " consultas quedaron sin respuesta de Google y se saltearon";
+        return new PlacesSyncReport(recuento.creados, recuento.actualizados, recuento.fotos, 0, aviso);
+    }
+
+    /** El barrido general llega hasta el radio de siempre desde el Obelisco. */
+    private Alcance cercaDelObelisco() {
+        return place -> zonas.estaCercaDelObelisco(place.latitude(), place.longitude());
+    }
+
     /** Lo que va sumando el barrido mientras recorre las zonas. */
     private static final class Recuento {
         int creados;
@@ -317,13 +396,13 @@ public class PlacesSyncService {
      * @return null para seguir con la próxima consulta, o el motivo para frenar el
      *         barrido entero
      */
-    private String recorrer(String consulta, Set<String> cadenas, List<BurgerJoint> yaEstan,
-                            boolean conFotos, Recuento recuento) {
+    private String recorrer(String consulta, Circulo circulo, Alcance alcance, Set<String> cadenas,
+                            List<BurgerJoint> yaEstan, boolean conFotos, Recuento recuento) {
         String pageToken = null;
         for (int page = 0; page < properties.getSync().getMaxPagesPerArea(); page++) {
             PlacesSearchResult result;
             try {
-                result = google.buscar(consulta, pageToken);
+                result = google.buscar(consulta, pageToken, circulo);
                 recuento.fallasSeguidas = 0;
             } catch (RestClientResponseException ex) {
                 int codigo = ex.getStatusCode().value();
@@ -355,7 +434,7 @@ public class PlacesSyncService {
             }
 
             for (PlacesSearchResult.Place place : result.places()) {
-                incorporar(place, cadenas, yaEstan, conFotos, recuento);
+                incorporar(place, alcance, cadenas, yaEstan, conFotos, recuento);
             }
 
             pageToken = result.nextPageToken();
@@ -375,9 +454,18 @@ public class PlacesSyncService {
     }
 
     /** Un local que devolvió la búsqueda: se descarta, se actualiza o entra. */
-    private void incorporar(PlacesSearchResult.Place place, Set<String> cadenas,
+    private void incorporar(PlacesSearchResult.Place place, Alcance alcance, Set<String> cadenas,
                             List<BurgerJoint> yaEstan, boolean conFotos, Recuento recuento) {
         if (place.placeId() == null || place.name() == null) {
+            return;
+        }
+
+        // Lo que Google trae de más lejos de lo que se pidió no entra. Se mira antes que
+        // nada porque es gratis, y el clasificador puede tener que pagar un resumen.
+        if (!alcance.llegaA(place)) {
+            log.debug("{} queda fuera de lo que se pidió barrer ({}), se descarta",
+                place.name(), place.address());
+            recuento.descartados++;
             return;
         }
 
@@ -395,11 +483,10 @@ public class PlacesSyncService {
 
         // El barrio sale de las coordenadas, no de la búsqueda que lo trajo: Google
         // devuelve lo que le parece cerca y se pasa de largo del barrio que se le pidió.
-        // Y si el punto no está en la Ciudad, el local no va: "hamburguesería en San
-        // Nicolás" trae San Nicolás de los Arroyos y "Versalles" trae uno de Colombia.
+        // Sin zona es que no es de Argentina: "Versalles" trae uno de Colombia.
         var barrio = zonas.zonaDe(place.latitude(), place.longitude(), place.address());
         if (barrio.isEmpty()) {
-            log.debug("{} queda fuera de la Ciudad ({}), se descarta",
+            log.debug("{} no tiene una dirección de Argentina ({}), se descarta",
                 place.name(), place.address());
             recuento.descartados++;
             return;

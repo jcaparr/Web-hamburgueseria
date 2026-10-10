@@ -90,7 +90,21 @@ public class PlacesClient {
      */
     public PlacesSearchResult searchText(String query, String pageToken,
                                          boolean soloHamburgueserias) {
+        return searchText(query, pageToken, soloHamburgueserias, null);
+    }
+
+    /**
+     * @param circulo si no es null, Google prioriza lo que cae adentro (#222); es una
+     *                preferencia, así que quien llama igual descarta lo de afuera
+     */
+    public PlacesSearchResult searchText(String query, String pageToken,
+                                         boolean soloHamburgueserias, Circulo circulo) {
         Map<String, Object> body = new HashMap<>();
+        if (circulo != null) {
+            body.put("locationBias", Map.of("circle", Map.of(
+                "center", Map.of("latitude", circulo.latitud(), "longitude", circulo.longitud()),
+                "radius", circulo.radioParaGoogleEnMetros())));
+        }
         body.put("textQuery", query);
         body.put("languageCode", "es");
         if (soloHamburgueserias) {
