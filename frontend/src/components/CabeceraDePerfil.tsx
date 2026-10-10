@@ -31,14 +31,19 @@ export function CabeceraDePerfil({
   cifras: { valor: string; etiqueta: string; a?: string }[]
   acciones?: ReactNode
 }) {
+  // En el teléfono, la persona arriba y centrada, como el encabezado de una ficha, y las
+  // cifras debajo con aire: en una fila, la hamburguesa, el nombre y las capas quedaban
+  // pegados y se leían como un solo bloque apretado. En la compu, una al lado de la
+  // otra, con la hamburguesa y el nombre grandes para que la persona pese tanto como las
+  // cifras, que son cuatro capas de alto.
   return (
     <header className="flex flex-col gap-3">
-      <div className="flex flex-col gap-4 tarjeta p-4 md:flex-row md:items-center md:gap-6 md:p-5">
-        <div className="flex min-w-0 flex-1 items-center gap-4">
-          <AvatarDeUsuario username={username} hamburguesa={hamburguesa} size={88} />
-          <div className="flex min-w-0 flex-col gap-1">
+      <div className="flex flex-col gap-6 tarjeta p-5 md:flex-row md:items-center md:gap-10 md:p-6">
+        <div className="flex min-w-0 flex-1 flex-col items-center gap-3 text-center md:flex-row md:gap-6 md:text-left">
+          <AvatarDeUsuario username={username} hamburguesa={hamburguesa} className="size-24 md:size-36" />
+          <div className="flex min-w-0 max-w-full flex-col items-center gap-1.5 md:items-start">
             {/* El arroba más apagado: es de todos los nombres y no dice nada de este. */}
-            <h1 className="truncate titulo-pagina">
+            <h1 className="max-w-full truncate titulo-pagina md:text-[2.25rem]">
               <span className="text-base-content/60">@</span>
               {username}
             </h1>
@@ -85,7 +90,7 @@ const CAPAS = [
  */
 function CifrasDePerfil({ cifras }: { cifras: { valor: string; etiqueta: string; a?: string }[] }) {
   return (
-    <ul className="flex flex-col gap-[3px] md:w-72 md:flex-none">
+    <ul className="flex flex-col gap-[3px] md:w-64 md:flex-none">
       {cifras.map(({ valor, etiqueta, a }, i) => {
         const capa = CAPAS[i] ?? CAPAS[1]
         const contenido = (

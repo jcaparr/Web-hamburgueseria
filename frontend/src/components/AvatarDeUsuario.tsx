@@ -18,17 +18,23 @@ export function AvatarDeUsuario({
   username,
   hamburguesa,
   size = 40,
+  className,
 }: {
   username: string
   /** La que eligió, en cinco cifras; sin ella, la que sale de su nombre. */
   hamburguesa?: string | null
   size?: number
+  /**
+   * Clases de tamaño en vez de `size`, para que cambie con la pantalla: la cabecera del
+   * perfil la quiere más grande en la compu que en el teléfono. Con esto, `size` no se usa.
+   */
+  className?: string
 }) {
   const receta = recetaPara(username, hamburguesa)
   return (
     <div
-      className={`flex-none overflow-hidden rounded-full ${FONDOS[receta.fondo]}`}
-      style={{ width: size, height: size }}
+      className={`flex-none overflow-hidden rounded-full ${FONDOS[receta.fondo]} ${className ?? ''}`}
+      style={className ? undefined : { width: size, height: size }}
       aria-hidden
     >
       <Hamburguesa receta={receta} />
