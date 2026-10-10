@@ -175,9 +175,49 @@ public class PlacesSyncController {
     @PostMapping("/agregar")
     public ResponseEntity<?> agregar(
         @RequestHeader(name = TOKEN_HEADER, required = false) String token,
-        @RequestParam("texto") String texto
+        @RequestParam("texto") String texto,
+        // El local que se revisó (#224): si Google devuelve otro, no se agrega nada.
+        @RequestParam(name = "placeId", required = false) String placeId
     ) {
-        return siEstaAutorizado(token, () -> syncService.agregar(texto));
+        return siEstaAutorizado(token, () -> syncService.agregar(texto, placeId));
+    }
+
+    /**
+     * La portada de un solo local (#224): la elegida a mano si hay, o la mejor según la
+     * regla.
+     *
+     * @param pagar si se acabaron las fotos gratis del mes, pagar una sola. Falso por
+     *              omisión: sin pedirlo no se paga nada.
+     */
+    @PostMapping("/fotos/local")
+    public ResponseEntity<?> portadaDeUnLocal(
+        @RequestHeader(name = TOKEN_HEADER, required = false) String token,
+        @RequestParam("placeId") String placeId,
+        @RequestParam(name = "pagar", defaultValue = "false") boolean pagar
+    ) {
+        return siEstaAutorizado(token, () -> syncService.portadaDeUnLocal(placeId, pagar));
+    }
+
+    /**
+     * Barre una zona sin guardar nada y devuelve los locales que no están, para revisarlos
+     * a mano antes de agregarlos (#225). Los mismos parámetros que {@link #barrerZona}.
+     */
+    @PostMapping("/zona/candidatos")
+    public ResponseEntity<?> candidatosDeZona(
+        @RequestHeader(name = TOKEN_HEADER, required = false) String token,
+        @RequestParam("lugar") String lugar,
+        @RequestParam(name = "lat", required = false) Double lat,
+        @RequestParam(name = "lng", required = false) Double lng,
+        @RequestParam(name = "radioKm", required = false) Double radioKm
+    ) {
+        return siEstaAutorizado(token, () -> {
+            boolean conAlguno = lat != null || lng != null || radioKm != null;
+            boolean conTodos = lat != null && lng != null && radioKm != null;
+            if (conAlguno && !conTodos) {
+                return CandidatosDeZona.salteado(lugar, "Para barrer un radio hacen falta lat, lng y radioKm");
+            }
+            return syncService.candidatosDeZona(lugar, conTodos ? new Circulo(lat, lng, radioKm) : null);
+        });
     }
 
     /**

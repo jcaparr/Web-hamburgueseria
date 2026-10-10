@@ -149,6 +149,24 @@ public class PlacesClient {
     }
 
     /**
+     * Fotos, opiniones, puntaje y resumen de un local, para revisarlo antes de agregarlo.
+     *
+     * Google cobra la llamada al precio del campo más caro, y el resumen es el más caro de
+     * todos (Enterprise + Atmosphere): los otros tres vienen sin costo extra.
+     */
+    public RevisionDeGoogle revisionDe(String placeId) {
+        JsonNode place = fichaDe(placeId, "photos,rating,userRatingCount,reviewSummary");
+        if (place == null) {
+            return new RevisionDeGoogle(0, null, null, null);
+        }
+        return new RevisionDeGoogle(
+            place.path("photos").size(),
+            place.hasNonNull("userRatingCount") ? place.get("userRatingCount").asInt() : null,
+            place.hasNonNull("rating") ? place.get("rating").asDouble() : null,
+            place.path("reviewSummary").path("text").path("text").asText(null));
+    }
+
+    /**
      * Las fotos de un local puntual, de la mejor a la peor según {@link EleccionDeFoto}.
      *
      * Existe para los locales que ninguna búsqueda por barrio devuelve —los que Google no
