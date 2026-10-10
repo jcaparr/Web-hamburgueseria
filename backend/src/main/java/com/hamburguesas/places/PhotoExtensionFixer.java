@@ -116,9 +116,12 @@ public class PhotoExtensionFixer {
         }
     }
 
+    /** Sin la marca de versión de la dirección (#229): "x.jpg?v=a1b2" es el archivo "x.jpg". */
     private static String nombreDeArchivo(String photoUrl) {
-        int barra = photoUrl.lastIndexOf('/');
-        return barra < 0 ? null : photoUrl.substring(barra + 1);
+        int pregunta = photoUrl.indexOf('?');
+        String sinVersion = pregunta < 0 ? photoUrl : photoUrl.substring(0, pregunta);
+        int barra = sinVersion.lastIndexOf('/');
+        return barra < 0 ? null : sinVersion.substring(barra + 1);
     }
 
     private static String sinExtension(String fileName) {
