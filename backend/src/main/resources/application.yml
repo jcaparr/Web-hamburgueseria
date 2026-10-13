@@ -486,6 +486,8 @@ app:
         - ChIJm1VdjT-1vJUR-QBpgx3eg0I
         # "Ácido", Charlone 999: figura como restaurant (#220).
         - ChIJRcGmcSm1vJURQaSeqM3qx9A
+        # "Aci2 Bar", Cucha Cucha 2595: figura como bar_and_grill (#237).
+        - ChIJ96JLf5i3vJURMgf-h-YH-rM
       # La foto de portada elegida a mano, para los locales donde la regla no acierta.
       #
       # La regla sabe elegir una foto bien sacada —apaisada, grande, no una captura de
@@ -513,6 +515,9 @@ app:
       fotos-elegidas:
         # Ácido, Charlone 999: la cocina abierta con el cartel (#226).
         ChIJRcGmcSm1vJURQaSeqM3qx9A: "3600x4800|gabriella villaça"
+        # Aci2 Bar, Cucha Cucha 2595: la fachada con el cartel «El Bar» (#237). Es la primera
+        # foto del local en Google, la que subió el propio bar.
+        ChIJ96JLf5i3vJURMgf-h-YH-rM: "3024x1702|Aci2 Bar"
       # 3 es el máximo que devuelve Google por consulta (60 resultados); pedir más
       # no trae nada nuevo.
       # Cuántas fotos tiene que tener en Google un local que Google NO clasifica como
