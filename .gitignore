@@ -33,8 +33,8 @@ Thumbs.db
 
 # Herramientas locales / clones sueltos. De .claude/ se versionan solo los
 # subagentes: las skills locales y los .local.env quedan afuera.
-.claude/*
-!.claude/agents/
+**/.claude/*
+!/.claude/agents/
 /auth/
 tools/
 /.vite/
