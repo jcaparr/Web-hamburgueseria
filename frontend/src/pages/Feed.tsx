@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useRef, useState } from 'react'
 import { apiClient } from '../api/client'
 import { IconSearch } from '../components/icons'
 import { LoadError } from '../components/LoadError'
+import { ResultadosDeGente } from '../components/ResultadosDeGente'
 import { TarjetaDeFeed } from '../components/TarjetaDeFeed'
 import { useAuth } from '../context/useAuth'
+import { useBuscarGente } from '../hooks/useBuscarGente'
 import { usePedido } from '../hooks/usePedido'
 import { useTitulo } from '../hooks/useTitulo'
 import type { ItemDeFeed, PaginaDeFeed } from '../types'
@@ -32,6 +33,9 @@ export function Feed() {
   const [fuente, setFuente] = useState<Fuente>('TODOS')
   const [trayendoMas, setTrayendoMas] = useState(false)
   const [errorAlTraerMas, setErrorAlTraerMas] = useState<unknown>(null)
+  const busqueda = useBuscarGente()
+  const buscandoGente = busqueda.texto !== ''
+  const campo = useRef<HTMLInputElement>(null)
 
   // Al cambiar de pestaña se vuelve a empezar: el cursor de una no sirve para la otra,
   // porque apunta a una reseña que en la otra lista puede no estar. La página lleva de
@@ -83,72 +87,113 @@ export function Feed() {
       {/* Sin título a la vista, porque la pestaña de abajo ya dice dónde se está; pero
           el lector de pantalla necesita uno para saber en qué página cayó. */}
       <h1 className="sr-only">Feed</h1>
-      {/* Con forma de buscador y no una lupa sola (#252): sin palabras, casi nadie se
-          daba cuenta de que desde acá se encuentra gente para seguir. Es un link y no un
-          campo: escribir pasa en /buscar, y un campo que no deja escribir confunde.
-          Mismo aspecto que el buscador de Explorar. */}
-      <Link
-        to="/buscar"
-        className="flex min-h-12 items-center gap-2 rounded-full bg-base-100 px-4 py-3 text-base text-base-content/70 shadow-[var(--sombra-control)] md:px-5"
-      >
-        <IconSearch size={18} className="flex-none" />
-        Buscá gente para seguir…
-      </Link>
-      <div role="tablist" aria-label="Qué reseñas ver" className="tabs tabs-box">
-        {PESTANIAS.map((p) => (
+      {/* Un buscador a la vista y no una lupa sola (#252): sin palabras, casi nadie se
+          daba cuenta de que desde acá se encuentra gente para seguir. Se escribe acá
+          mismo, sin pasar por /buscar: mientras hay algo escrito, la gente encontrada
+          ocupa el lugar del feed, y al borrarlo el feed vuelve como estaba. Mismo
+          aspecto que el buscador de Explorar. */}
+      <label className="flex min-h-12 items-center gap-2 rounded-full bg-base-100 py-1 pl-4 pr-1 shadow-[var(--sombra-control)] focus-within:ring-2 focus-within:ring-primary md:pl-5">
+        <IconSearch size={18} className="flex-none text-base-content/70" />
+        <input
+          ref={campo}
+          type="search"
+          value={busqueda.texto}
+          onChange={(e) => busqueda.setTexto(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') busqueda.setTexto('')
+          }}
+          placeholder="Buscá gente para seguir…"
+          aria-label="Buscar gente por nombre de usuario"
+          autoComplete="off"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          enterKeyHint="search"
+          className="min-w-0 flex-1 bg-transparent py-2 text-base outline-none placeholder:text-base-content/70 [&::-webkit-search-cancel-button]:appearance-none"
+        />
+        {/* La X propia y no la del navegador, que es chiquita y no está en todos. */}
+        {buscandoGente && (
           <button
-            key={p.fuente}
-            role="tab"
             type="button"
-            aria-selected={fuente === p.fuente}
-            onClick={() => cambiarDePestania(p.fuente)}
-            className={`tab flex-1 ${fuente === p.fuente ? 'tab-active' : 'text-base-content/70'}`}
+            onClick={() => {
+              // El botón desaparece al borrar: el foco vuelve al campo y no se pierde.
+              busqueda.setTexto('')
+              campo.current?.focus()
+            }}
+            aria-label="Borrar la búsqueda y volver al feed"
+            className="btn btn-circle btn-ghost size-11 flex-none text-base-content/70"
           >
-            {p.texto}
+            <span aria-hidden="true">✕</span>
           </button>
-        ))}
-      </div>
+        )}
+      </label>
 
-      {error ? (
-        <LoadError error={error} onRetry={reintentar} />
+      {buscandoGente ? (
+        <ResultadosDeGente busqueda={busqueda} />
       ) : (
         <>
-          <div className="flex flex-col gap-3">
-            {items.map((item) => (
-              <TarjetaDeFeed
-                key={item.ratingId}
-                item={item}
-                esMia={item.autorId === user?.userId}
-              />
+          <div role="tablist" aria-label="Qué reseñas ver" className="tabs tabs-box">
+            {PESTANIAS.map((p) => (
+              <button
+                key={p.fuente}
+                role="tab"
+                type="button"
+                aria-selected={fuente === p.fuente}
+                onClick={() => cambiarDePestania(p.fuente)}
+                className={`tab flex-1 ${fuente === p.fuente ? 'tab-active' : 'text-base-content/70'}`}
+              >
+                {p.texto}
+              </button>
             ))}
           </div>
 
-          {cargando && <p role="status" className="text-sm text-base-content/70">Cargando…</p>}
+          {error ? (
+            <LoadError error={error} onRetry={reintentar} />
+          ) : (
+            <>
+              <div className="flex flex-col gap-3">
+                {items.map((item) => (
+                  <TarjetaDeFeed
+                    key={item.ratingId}
+                    item={item}
+                    esMia={item.autorId === user?.userId}
+                  />
+                ))}
+              </div>
 
-          {!cargando && items.length === 0 && (
-            <div className="flex flex-col items-start gap-3 tarjeta p-4">
-              <p className="text-sm text-base-content/80">
-                {fuente === 'SIGUIENDO'
-                  ? 'Todavía no seguís a nadie, o quienes seguís no reseñaron nada.'
-                  : 'Todavía no hay reseñas en la app.'}
-              </p>
-              {fuente === 'SIGUIENDO' && (
-                <Link to="/buscar" className="btn btn-sm btn-primary">
-                  Buscar gente
-                </Link>
+              {cargando && <p role="status" className="text-sm text-base-content/70">Cargando…</p>}
+
+              {!cargando && items.length === 0 && (
+                <div className="flex flex-col items-start gap-3 tarjeta p-4">
+                  <p className="text-sm text-base-content/80">
+                    {fuente === 'SIGUIENDO'
+                      ? 'Todavía no seguís a nadie, o quienes seguís no reseñaron nada.'
+                      : 'Todavía no hay reseñas en la app.'}
+                  </p>
+                  {fuente === 'SIGUIENDO' && (
+                    // Lleva al buscador de arriba, que ya busca acá mismo.
+                    <button
+                      type="button"
+                      onClick={() => campo.current?.focus()}
+                      className="btn btn-sm btn-primary"
+                    >
+                      Buscar gente
+                    </button>
+                  )}
+                </div>
               )}
-            </div>
-          )}
 
-          {siguiente && (
-            <button
-              type="button"
-              onClick={traerMas}
-              disabled={trayendoMas}
-              className="btn btn-outline btn-block"
-            >
-              {trayendoMas ? 'Cargando más…' : 'Ver más'}
-            </button>
+              {siguiente && (
+                <button
+                  type="button"
+                  onClick={traerMas}
+                  disabled={trayendoMas}
+                  className="btn btn-outline btn-block"
+                >
+                  {trayendoMas ? 'Cargando más…' : 'Ver más'}
+                </button>
+              )}
+            </>
           )}
         </>
       )}
