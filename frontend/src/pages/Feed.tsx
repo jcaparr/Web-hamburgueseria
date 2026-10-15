@@ -83,28 +83,30 @@ export function Feed() {
       {/* Sin título a la vista, porque la pestaña de abajo ya dice dónde se está; pero
           el lector de pantalla necesita uno para saber en qué página cayó. */}
       <h1 className="sr-only">Feed</h1>
-      <div className="flex items-center gap-3">
-        <Link
-          to="/buscar"
-          aria-label="Buscar gente"
-          className="btn btn-ghost btn-square flex-none"
-        >
-          <IconSearch size={18} />
-        </Link>
-        <div role="tablist" aria-label="Qué reseñas ver" className="tabs tabs-box flex-1">
-          {PESTANIAS.map((p) => (
-            <button
-              key={p.fuente}
-              role="tab"
-              type="button"
-              aria-selected={fuente === p.fuente}
-              onClick={() => cambiarDePestania(p.fuente)}
-              className={`tab flex-1 ${fuente === p.fuente ? 'tab-active' : 'text-base-content/70'}`}
-            >
-              {p.texto}
-            </button>
-          ))}
-        </div>
+      {/* Con forma de buscador y no una lupa sola (#252): sin palabras, casi nadie se
+          daba cuenta de que desde acá se encuentra gente para seguir. Es un link y no un
+          campo: escribir pasa en /buscar, y un campo que no deja escribir confunde.
+          Mismo aspecto que el buscador de Explorar. */}
+      <Link
+        to="/buscar"
+        className="flex min-h-12 items-center gap-2 rounded-full bg-base-100 px-4 py-3 text-base text-base-content/70 shadow-[var(--sombra-control)] md:px-5"
+      >
+        <IconSearch size={18} className="flex-none" />
+        Buscá gente para seguir…
+      </Link>
+      <div role="tablist" aria-label="Qué reseñas ver" className="tabs tabs-box">
+        {PESTANIAS.map((p) => (
+          <button
+            key={p.fuente}
+            role="tab"
+            type="button"
+            aria-selected={fuente === p.fuente}
+            onClick={() => cambiarDePestania(p.fuente)}
+            className={`tab flex-1 ${fuente === p.fuente ? 'tab-active' : 'text-base-content/70'}`}
+          >
+            {p.texto}
+          </button>
+        ))}
       </div>
 
       {error ? (
