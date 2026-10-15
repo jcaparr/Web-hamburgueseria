@@ -10,7 +10,7 @@ const ESPERA_MS = 300
 export const MINIMO = 2
 
 /**
- * La búsqueda de gente por nombre de usuario, la misma en /buscar y en el Feed (#252).
+ * La búsqueda de gente por nombre de usuario, desde el buscador del Feed (#252).
  */
 export function useBuscarGente() {
   const [texto, setTextoCrudo] = useState('')

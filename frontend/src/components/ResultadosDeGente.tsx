@@ -1,19 +1,13 @@
 import { FilaDePersona } from './FilaDePersona'
 import { LoadError } from './LoadError'
-import { estadoDeLaBusqueda, type BusquedaDeGente } from '../hooks/useBuscarGente'
+import type { BusquedaDeGente } from '../hooks/useBuscarGente'
 
 /**
- * La lista de gente que encontró una búsqueda, y el renglón que dice cómo va. Quien la
- * monta y desmonta según haya algo escrito pasa conEstado={false} y deja el renglón
- * siempre montado: una región viva que entra al DOM ya con texto casi nunca se anuncia.
+ * La lista de gente que encontró una búsqueda. El renglón que dice cómo va lo pone quien
+ * la usa, siempre montado: una región viva que entra al DOM ya con texto casi nunca se
+ * anuncia.
  */
-export function ResultadosDeGente({
-  busqueda,
-  conEstado = true,
-}: {
-  busqueda: BusquedaDeGente
-  conEstado?: boolean
-}) {
+export function ResultadosDeGente({ busqueda }: { busqueda: BusquedaDeGente }) {
   const { resultados, error, reintentar, cambioDeSeguimiento } = busqueda
 
   return (
@@ -30,14 +24,6 @@ export function ResultadosDeGente({
             />
           ))}
         </ul>
-      )}
-
-      {conEstado && (
-        // Un solo renglón que dice cómo va la búsqueda, y que el lector de pantalla
-        // anuncia: antes los resultados aparecían y desaparecían sin que se dijera.
-        <p role="status" className="text-sm text-base-content/70">
-          {estadoDeLaBusqueda(busqueda)}
-        </p>
       )}
     </>
   )

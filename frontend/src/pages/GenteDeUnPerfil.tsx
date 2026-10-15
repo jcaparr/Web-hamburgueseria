@@ -51,7 +51,7 @@ export function GenteDeUnPerfil({ lista }: { lista: Lista }) {
         <p className="text-sm text-base-content/70">
           Puede que el enlace esté mal escrito o que esa cuenta ya no exista.
         </p>
-        <Link to="/buscar" className="btn btn-primary btn-sm">
+        <Link to="/feed" className="btn btn-primary btn-sm">
           Buscar gente
         </Link>
       </div>
@@ -90,7 +90,7 @@ export function GenteDeUnPerfil({ lista }: { lista: Lista }) {
           Cargando…
         </p>
       ) : gente.length === 0 ? (
-        <AvisoVacio accion={soyYo ? { texto: 'Buscar gente', a: '/buscar' } : undefined}>
+        <AvisoVacio accion={soyYo ? { texto: 'Buscar gente', a: '/feed' } : undefined}>
           {lista === 'seguidores'
             ? soyYo ? 'Todavía no tenés seguidores.' : 'Todavía no tiene seguidores.'
             : soyYo ? 'Todavía no seguís a nadie.' : 'Todavía no sigue a nadie.'}

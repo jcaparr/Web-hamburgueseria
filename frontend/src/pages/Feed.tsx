@@ -63,7 +63,7 @@ export function Feed() {
   function escribir(escrito: string) {
     const limpio = busqueda.setTexto(escrito)
     // Al volver de buscar, "Siguiendo" se pide de nuevo: puede haber gente recién
-    // seguida, y antes eso pasaba solo porque /buscar era otra página.
+    // seguida, y antes eso pasaba solo porque buscar era otra página.
     if (buscandoGente && limpio === '' && fuente === 'SIGUIENDO') reintentar()
   }
 
@@ -96,7 +96,7 @@ export function Feed() {
       <h1 className="sr-only">Feed</h1>
       {/* Un buscador a la vista y no una lupa sola (#252): sin palabras, casi nadie se
           daba cuenta de que desde acá se encuentra gente para seguir. Se escribe acá
-          mismo, sin pasar por /buscar: mientras hay algo escrito, la gente encontrada
+          mismo, sin ir a otra página: mientras hay algo escrito, la gente encontrada
           ocupa el lugar del feed, y al borrarlo el feed vuelve como estaba. Mismo
           aspecto que el buscador de Explorar. */}
       <div className="flex min-h-12 items-center gap-2 rounded-full bg-base-100 py-1 pl-4 pr-1 shadow-[var(--sombra-control)] focus-within:ring-2 focus-within:ring-primary md:pl-5">
@@ -136,7 +136,7 @@ export function Feed() {
       </div>
 
       {buscandoGente ? (
-        <ResultadosDeGente busqueda={busqueda} conEstado={false} />
+        <ResultadosDeGente busqueda={busqueda} />
       ) : (
         <>
           <div role="tablist" aria-label="Qué reseñas ver" className="tabs tabs-box">
