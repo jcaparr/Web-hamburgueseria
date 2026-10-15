@@ -19,6 +19,7 @@ import { Privacidad } from './pages/Privacidad'
 import { Profile } from './pages/Profile'
 import { Ranking } from './pages/Ranking'
 import { Register } from './pages/Register'
+import { ReseniasDeUnPerfil } from './pages/ReseniasDeUnPerfil'
 import { Reviews } from './pages/Reviews'
 import { Terminos } from './pages/Terminos'
 import { Tour } from './pages/Tour'
@@ -59,6 +60,7 @@ export default function App() {
               {/* Bajo /u/ para que un nombre de usuario no pueda chocar nunca con una
                   pantalla de la app: alguien que se llame "tour" no rompe nada. */}
               <Route path="/u/:username" element={<RequireAuth><PerfilPublico /></RequireAuth>} />
+              <Route path="/u/:username/resenias" element={<RequireAuth><ReseniasDeUnPerfil /></RequireAuth>} />
               <Route path="/u/:username/seguidores" element={<RequireAuth><GenteDeUnPerfil lista="seguidores" /></RequireAuth>} />
               <Route path="/u/:username/siguiendo" element={<RequireAuth><GenteDeUnPerfil lista="siguiendo" /></RequireAuth>} />
               <Route path="/buscar" element={<RequireAuth><BuscarGente /></RequireAuth>} />

@@ -261,6 +261,29 @@ class SocialServiceTest {
         assertThat(service.perfil("JuanCa", YO).username()).isEqualTo("juanca");
     }
 
+    /** Todas sus reseñas salen de la misma consulta que las del perfil, con más lugar. */
+    @Test
+    void lasReseniasDeAlguienSonLasDeEsaPersona() {
+        when(userRepository.findByUsername("juanca")).thenReturn(Optional.of(persona(OTRO, "juanca")));
+
+        service.resenias("juanca", YO);
+
+        ArgumentCaptor<Pageable> pagina = ArgumentCaptor.forClass(Pageable.class);
+        verify(ratingRepository).ultimasDe(eq(OTRO), pagina.capture());
+        assertThat(pagina.getValue().getPageSize()).isGreaterThan(5);
+    }
+
+    /** Con un bloqueo, sus reseñas no se ven, igual que su perfil. */
+    @Test
+    void conUnBloqueoLasReseniasSon404() {
+        when(userRepository.findByUsername("juanca")).thenReturn(Optional.of(persona(OTRO, "juanca")));
+        when(bloqueos.hayEntre(YO, OTRO)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.resenias("juanca", YO))
+            .isInstanceOf(ResourceNotFoundException.class);
+        verify(ratingRepository, never()).ultimasDe(anyLong(), any());
+    }
+
     /** Dejar de seguir a quien no seguías tampoco es un error. */
     @Test
     void dejarDeSeguirAQuienNoSeguiasNoFalla() {

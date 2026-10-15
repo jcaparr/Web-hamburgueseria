@@ -2,6 +2,7 @@ package com.hamburguesas.service;
 
 import com.hamburguesas.auth.Usernames;
 import com.hamburguesas.dto.PerfilPublicoDto;
+import com.hamburguesas.dto.ReseniaDePerfilDto;
 import com.hamburguesas.dto.ReseniasPorUsuarioDto;
 import com.hamburguesas.dto.UsuarioBloqueadoDto;
 import com.hamburguesas.dto.UsuarioBuscadoDto;
@@ -40,6 +41,12 @@ public class SocialService {
 
     /** Cuántas reseñas se asoman en el perfil de otro. */
     private static final int RESENIAS_EN_EL_PERFIL = 5;
+
+    /**
+     * Tope de la lista con todas las reseñas de alguien (#247). Sin páginas: hoy nadie
+     * pasa de unas decenas, y el tope evita que una cuenta con miles traiga todo de una.
+     */
+    private static final int RESENIAS_EN_LA_LISTA = 200;
 
     /** Con menos de esto no se busca: dos letras devuelven medio padrón. */
     private static final int MINIMO_PARA_BUSCAR = 2;
@@ -101,6 +108,16 @@ public class SocialService {
         User persona = visiblePara(username, quienMira);
         return comoResultados(
             followRepository.seguidoresDe(persona.getId(), bloqueos.queNoPuedeVer(quienMira)), quienMira);
+    }
+
+    /**
+     * Todas sus reseñas, de la más nueva a la más vieja (#247): a lo que lleva la cifra de
+     * reseñas del perfil, igual que la de seguidores lleva a quiénes son. Con un bloqueo
+     * de por medio no hay nada que ver, igual que en el perfil.
+     */
+    public List<ReseniaDePerfilDto> resenias(String username, Long quienMira) {
+        User persona = visiblePara(username, quienMira);
+        return ratingRepository.ultimasDe(persona.getId(), PageRequest.of(0, RESENIAS_EN_LA_LISTA));
     }
 
     /** A quiénes sigue esta persona, con el mismo criterio que {@link #seguidores}. */
