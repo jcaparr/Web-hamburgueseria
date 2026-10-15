@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { CabeceraDePerfil } from '../components/CabeceraDePerfil'
 import { CuentasBloqueadas } from '../components/CuentasBloqueadas'
-import { IconChevronRight, IconPencil, IconSearch, IconSettings } from '../components/icons'
+import { IconChevronRight, IconPencil, IconSettings } from '../components/icons'
 import { LoadError } from '../components/LoadError'
 import { SavedTourCard } from '../components/SavedTourCard'
 import { SelectorDeTema } from '../components/SelectorDeTema'
@@ -140,15 +140,7 @@ export function Profile() {
             a: `/u/${user.username}/siguiendo`,
           },
         ]}
-        acciones={
-          // Un acceso y no un botón grande: se usa de vez en cuando, y un botón de ancho
-          // completo pesaba más que el perfil mismo. Buscar gente está también en el
-          // Feed, que es donde más se busca.
-          <Link to="/buscar" className="-my-2 inline-flex min-h-11 w-fit items-center gap-1.5 rounded-field text-sm font-semibold text-primary hover:underline">
-            <IconSearch size={16} />
-            Buscar gente
-          </Link>
-        }
+        // Sin "Buscar gente": está a la vista en el Feed, que es donde se busca (#263).
       />
 
       {error !== null && (
