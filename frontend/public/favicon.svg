@@ -1,20 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- El logo de Burgómetro para la pestaña: sobre un cuadrado marrón, para que se vea
-       igual en una barra clara que en una oscura. A 16 px no entran el pan de abajo ni
-       siete semillas, así que es el tablero con cinco, la aguja, el cheddar y la carne. -->
-  <rect width="64" height="64" rx="14" fill="#3a2a1e"/>
-  <g stroke="#f7efd8" stroke-linejoin="round">
-    <rect x="9" y="42" width="46" height="9" rx="4.5" fill="#7a4526" stroke-width="2.5"/>
-    <path d="M11 40 H53 L51 44.5 H42 C42 48.5 37 48.5 37 44.5 H13 Z" fill="#f2b705" stroke-width="2"/>
-    <path d="M9 39 A23 23 0 0 1 55 39 Z" fill="#cf8636" stroke-width="2.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 142 120">
+  <!-- El logo de Burgómetro para la pestaña (#255), con su borde crema de calco para que
+       se vea igual en una barra clara que en una oscura. A 16 px no entran siete marcas
+       ni los brillos: van cinco marcas, más gruesas, y el contorno más grueso. -->
+  <g fill="#fffdf8" stroke="#fffdf8" stroke-width="12" stroke-linejoin="round">
+    <path d="M9 57 C9 24 36 3 65 3 C94 3 121 24 121 57 C121 61 119 63 115 63 H15 C11 63 9 61 9 57 Z"/>
+    <rect x="7" y="64" width="116" height="22" rx="11"/>
+    <rect x="12" y="86" width="106" height="18" rx="9"/>
   </g>
-  <g fill="#f7efd8">
-    <ellipse cx="16.02" cy="33.19" rx="1.6" ry="3.2" transform="rotate(-70 16.02 33.19)"/>
-    <ellipse cx="22.25" cy="25.07" rx="1.6" ry="3.2" transform="rotate(-35 22.25 25.07)"/>
-    <ellipse cx="32" cy="22" rx="1.6" ry="3.2"/>
-    <ellipse cx="41.75" cy="25.07" rx="1.6" ry="3.2" transform="rotate(35 41.75 25.07)"/>
-    <ellipse cx="47.98" cy="33.19" rx="1.6" ry="3.2" transform="rotate(70 47.98 33.19)"/>
+  <g stroke="#141110" stroke-width="5" stroke-linejoin="round">
+    <rect x="12" y="88" width="106" height="16" rx="8" fill="#e39f58"/>
+    <rect x="7" y="66" width="116" height="20" rx="10" fill="#5d302a"/>
+    <path d="M14 62 H116 V71 H98 C98 81 86 81 86 71 H46 C46 80 34 80 34 71 H14 Z" fill="#e5812c" stroke-width="4"/>
+    <path d="M9 57 C9 24 36 3 65 3 C94 3 121 24 121 57 C121 61 119 63 115 63 H15 C11 63 9 61 9 57 Z" fill="#e39f58"/>
   </g>
-  <polygon points="45.79,27.43 33.67,40.99 30.33,37.01" fill="#b23a2e" stroke="#f7efd8" stroke-width="1.5" stroke-linejoin="round"/>
-  <circle cx="32" cy="39" r="3.6" fill="#f7efd8"/>
+  <g stroke="#141110" stroke-width="5.5" stroke-linecap="round">
+    <line x1="96.2" y1="40" x2="103.1" y2="36"/>
+    <line x1="83" y1="26.8" x2="87" y2="19.9"/>
+    <line x1="65" y1="22" x2="65" y2="14"/>
+    <line x1="47" y1="26.8" x2="43" y2="19.9"/>
+    <line x1="33.8" y1="40" x2="26.9" y2="36"/>
+  </g>
+  <polygon points="94.7,31.2 69.5,63 60.5,53" fill="#e63240" stroke="#141110" stroke-width="3.5" stroke-linejoin="round"/>
+  <circle cx="65" cy="58" r="8" fill="#5d302a" stroke="#141110" stroke-width="4"/>
 </svg>

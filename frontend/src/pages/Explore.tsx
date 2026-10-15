@@ -15,9 +15,10 @@ import { useTitulo } from '../hooks/useTitulo'
 import type { BurgerJoint, Cadena, PageResponse } from '../types'
 import { isSessionExpired } from '../utils/errors'
 
-// Múltiplo de 1, 2 y 3, las columnas que tiene la grilla según el ancho: con 20, en la
-// compu la última fila quedaba con dos fichas y un hueco (#175).
-const PAGE_SIZE = 18
+// Múltiplo de 1 y 3, las columnas en celu y en la compu: con 20, la última fila quedaba
+// con un hueco (#175). Se bajó de 18 a 9 para recorrer menos antes de paginar (#261); en
+// tablet, con dos columnas, la última fila queda con una ficha sola.
+const PAGE_SIZE = 9
 
 /** Los dos filtros, a la altura del buscador en escritorio y con aire para su texto. */
 const CLASE_DE_LOS_FILTROS = 'h-11 min-h-11 px-4 md:h-12 md:min-h-12 md:px-5'
