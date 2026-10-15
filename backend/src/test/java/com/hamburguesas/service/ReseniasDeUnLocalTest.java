@@ -134,6 +134,22 @@ class ReseniasDeUnLocalTest {
         assertThatThrownBy(() -> service.una(LOCAL, 30L, YO)).isInstanceOf(ResourceNotFoundException.class);
     }
 
+    /** Una que no existe (la borraron, o el enlace está mal) es un 404, no un error del servidor. */
+    @Test
+    void unaQueNoExisteEsUnNoEncontrado() {
+        when(ratingRepository.findById(30L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.una(LOCAL, 30L, YO)).isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    /** Sin sesión también se llega: la ficha de un local se mira sin cuenta. */
+    @Test
+    void unaSinSesionSeVe() {
+        when(ratingRepository.findById(30L)).thenReturn(Optional.of(unaResenia(30L, "otro", 4)));
+
+        assertThat(service.una(LOCAL, 30L, null).username()).isEqualTo("otro");
+    }
+
     // ---- el resumen de arriba ----
 
     @Test
