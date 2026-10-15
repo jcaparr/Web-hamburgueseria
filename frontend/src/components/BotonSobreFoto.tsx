@@ -7,9 +7,10 @@ import type { ButtonHTMLAttributes } from 'react'
  * oscura. Está en la portada de la ficha y en las tarjetas de Explorar, y tienen que
  * verse iguales para que el corazón de una sea reconocible como el de la otra.
  *
- * Encendido (un local guardado) va relleno de kétchup (#245): con el corazón rojo
- * sobre el mismo círculo de siempre, guardado y sin guardar se distinguían por el
- * color de un dibujo de 20 px, y sobre una foto con rojos casi no se notaba.
+ * Encendido (un local guardado) va en marrón con el corazón amarillo (#245), como la
+ * opción elegida de la barra de arriba (7,4 : 1): con el corazón rojo sobre el mismo
+ * círculo de siempre, guardado y sin guardar se distinguían por el color de un dibujo
+ * de 20 px, y sobre una foto con rojos casi no se notaba.
  */
 export function BotonSobreFoto({
   encendido = false,
@@ -17,7 +18,7 @@ export function BotonSobreFoto({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { encendido?: boolean }) {
   const colores = encendido
-    ? 'bg-primary text-primary-content hover:bg-primary'
+    ? 'bg-neutral text-secondary hover:bg-neutral'
     : 'bg-base-100/90 text-base-content hover:bg-base-100'
   return (
     <button

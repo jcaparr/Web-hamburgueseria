@@ -44,7 +44,7 @@ export function TopBar() {
               lugar para el nombre, y cortado ("burgóme…") se ve peor que no estar: queda
               el dibujo, y el nombre sigue ahí para los lectores de pantalla. */}
           <span
-            className={`truncate text-lg font-extrabold tracking-tight sm:text-xl ${user ? '' : 'max-[359px]:sr-only'}`}
+            className={`truncate text-lg font-extrabold tracking-tight sm:text-xl lg:text-2xl ${user ? '' : 'max-[359px]:sr-only'}`}
           >
             burgómetro
           </span>

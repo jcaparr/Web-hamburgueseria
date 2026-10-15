@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import type { BurgerJoint } from '../types'
 import { shortAddress } from '../utils/address'
 import { BotonSobreFoto } from './BotonSobreFoto'
-import { IconHeart } from './icons'
+import { IconHeart, IconPin } from './icons'
 import { JointPhoto } from './JointPhoto'
 import { ScoreBadge } from './ScoreBadge'
 
@@ -49,8 +49,9 @@ export function TarjetaDeLocal({
           {/* La dirección y las reseñas al 80 % y no al 70 (#245): pasaban el mínimo
               (5,2 : 1 en claro), pero sobre la tarjeta se veían apagadas. Al 80 % quedan
               en 7,2 : 1 en claro y 9,4 : 1 en oscuro. */}
-          <p className="line-clamp-1 text-sm text-base-content/80">
-            {shortAddress(local.address, local.area)}
+          <p className="flex items-center gap-1.5 text-sm text-base-content/80">
+            <IconPin className="flex-none" />
+            <span className="line-clamp-1">{shortAddress(local.address, local.area)}</span>
           </p>
           <div className="mt-auto pt-2">
             {local.averageScore ? (
