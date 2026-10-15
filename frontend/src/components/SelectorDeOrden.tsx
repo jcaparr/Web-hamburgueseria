@@ -57,7 +57,7 @@ export function SelectorDeOrden<T extends string>({
       className="dropdown dropdown-end"
       onToggle={(evento) => setAbierto(evento.currentTarget.open)}
     >
-      <summary className={`btn ${claseDelBoton} list-none rounded-full border-0 bg-base-100 shadow-[var(--sombra-tarjeta)] [&::-webkit-details-marker]:hidden`}>
+      <summary className={`btn ${claseDelBoton} list-none rounded-full border-0 bg-base-100 shadow-[var(--sombra-control)] [&::-webkit-details-marker]:hidden`}>
         <span className="sr-only">Ordenar por: </span>
         {actual.texto}
         <IconChevronRight size={14} className={`flex-none transition-transform ${abierto ? '-rotate-90' : 'rotate-90'}`} />

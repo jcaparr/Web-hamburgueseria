@@ -340,7 +340,7 @@ export function Explore() {
         {/* El buscador manda, y los filtros van a su lado con la misma altura (#245):
             más bajos parecían de otra fila. En el teléfono, 44 px para poder tocarlos. */}
         <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:gap-3">
-          <label className="flex min-h-12 flex-1 items-center gap-2 rounded-full bg-base-100 px-4 py-3 shadow-[var(--sombra-tarjeta)] focus-within:ring-2 focus-within:ring-primary md:max-w-2xl md:px-5">
+          <label className="flex min-h-12 flex-1 items-center gap-2 rounded-full bg-base-100 px-4 py-3 shadow-[var(--sombra-control)] focus-within:ring-2 focus-within:ring-primary md:max-w-2xl md:px-5">
             <IconSearch size={18} className="flex-none text-base-content/70" />
             <input
               type="search"

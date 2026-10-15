@@ -10,7 +10,8 @@ import type { ButtonHTMLAttributes } from 'react'
  * Encendido (un local guardado) va en marrón con el corazón amarillo (#245), como la
  * opción elegida de la barra de arriba (7,4 : 1): con el corazón rojo sobre el mismo
  * círculo de siempre, guardado y sin guardar se distinguían por el color de un dibujo
- * de 20 px, y sobre una foto con rojos casi no se notaba.
+ * de 20 px, y sobre una foto con rojos casi no se notaba. El aro amarillo es para el
+ * tema oscuro, donde el círculo marrón casi no se distingue del crema oscurecido.
  */
 export function BotonSobreFoto({
   encendido = false,
@@ -18,7 +19,7 @@ export function BotonSobreFoto({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { encendido?: boolean }) {
   const colores = encendido
-    ? 'bg-neutral text-secondary hover:bg-neutral'
+    ? 'bg-neutral text-secondary ring-2 ring-secondary hover:bg-neutral'
     : 'bg-base-100/90 text-base-content hover:bg-base-100'
   return (
     <button
