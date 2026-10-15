@@ -36,17 +36,16 @@ export function TopBar() {
       <header className="flex items-center justify-between gap-2 px-4 py-2 md:px-6">
         <NavLink to="/" end className="flex min-h-11 min-w-0 items-center gap-1.5 rounded-field sm:gap-2">
           <MarcaBurgometro className="h-8 w-[38px] flex-none" />
-          {/* En minúscula y en su ancho normal, no angosta como los títulos: así es el
-              logo, y es lo que tiene que reconocerse igual en la barra, en la pestaña y
-              en un mail.
+          {/* Con mayúscula y en Lexend, como en el logo nuevo (#255): es lo que tiene
+              que reconocerse igual en la barra, en la pestaña y en un mail.
 
               Sin sesión, en los teléfonos de menos de 360 px los dos botones no dejan
               lugar para el nombre, y cortado ("burgóme…") se ve peor que no estar: queda
               el dibujo, y el nombre sigue ahí para los lectores de pantalla. */}
           <span
-            className={`truncate text-lg font-extrabold tracking-tight sm:text-xl lg:text-2xl ${user ? '' : 'max-[359px]:sr-only'}`}
+            className={`font-logo truncate text-lg tracking-tight sm:text-xl lg:text-2xl ${user ? '' : 'max-[359px]:sr-only'}`}
           >
-            burgómetro
+            Burgómetro
           </span>
         </NavLink>
 
