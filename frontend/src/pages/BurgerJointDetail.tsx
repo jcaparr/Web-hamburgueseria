@@ -121,16 +121,19 @@ export function BurgerJointDetail() {
   const lista =
     buscada && buscada.id === objetivo && !estaEnLaLista ? [buscada, ...ratings] : ratings
 
-  // Baja hasta la reseña y la marca un momento, una sola vez por ancla: después de
+  // Salta hasta la reseña y la marca un momento, una sola vez por ancla: después de
   // guardar una reseña la lista se vuelve a armar, y no tiene que volver a saltar.
+  //
+  // De una, como cualquier ancla, y no deslizándose: con las fotos y el horario todavía
+  // llegando, el deslizamiento a veces ni arrancaba y la página quedaba arriba. Dónde
+  // quedó lo dice la marca.
   const yaSeMostro = useRef<number | null>(null)
   useEffect(() => {
     if (objetivo === null || yaSeMostro.current === objetivo) return
     const elemento = document.getElementById(anclaDeResenia(objetivo))
     if (!elemento) return
     yaSeMostro.current = objetivo
-    const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    elemento.scrollIntoView({ block: 'start', behavior: sinMovimiento ? 'auto' : 'smooth' })
+    elemento.scrollIntoView({ block: 'start' })
     elemento.classList.add(...RESALTADA)
     setTimeout(() => elemento.classList.remove(...RESALTADA), 2500)
   }, [objetivo, ratings, buscada])
