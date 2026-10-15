@@ -19,6 +19,9 @@ import { isSessionExpired } from '../utils/errors'
 // compu la última fila quedaba con dos fichas y un hueco (#175).
 const PAGE_SIZE = 18
 
+/** Los dos filtros, a la altura del buscador en escritorio y con aire para su texto. */
+const CLASE_DE_LOS_FILTROS = 'h-11 min-h-11 px-4 md:h-12 md:min-h-12 md:px-5'
+
 /**
  * Cómo se puede ordenar la lista (#207). Por omisión, las más relevantes: las que más
  * reseñas tienen, que es lo que más dice de un lugar. Con "mejores valoradas", una
@@ -334,8 +337,10 @@ export function Explore() {
             debajo del enlace. */}
         <h1 className="titulo-pagina">¿Dónde comemos hoy?</h1>
 
-        <div className="flex flex-col gap-2.5 md:flex-row md:items-center">
-          <label className="flex flex-1 items-center gap-2 rounded-full bg-base-100 px-4 py-3 shadow-[var(--sombra-tarjeta)] focus-within:ring-2 focus-within:ring-primary md:max-w-xl">
+        {/* El buscador manda, y los filtros van a su lado con la misma altura (#245):
+            más bajos parecían de otra fila. En el teléfono, 44 px para poder tocarlos. */}
+        <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:gap-3">
+          <label className="flex min-h-12 flex-1 items-center gap-2 rounded-full bg-base-100 px-4 py-3 shadow-[var(--sombra-control)] focus-within:ring-2 focus-within:ring-primary md:max-w-2xl md:px-5">
             <IconSearch size={18} className="flex-none text-base-content/70" />
             <input
               type="search"
@@ -350,15 +355,17 @@ export function Explore() {
               className="w-full bg-transparent text-base outline-none placeholder:text-base-content/70"
             />
           </label>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
             <SelectorDeBarrios
               barrios={barrios}
               elegidos={barriosElegidos}
               onAlternar={alternarBarrio}
               onLimpiar={limpiarBarrios}
+              claseDelBoton={CLASE_DE_LOS_FILTROS}
             />
             {/* El de por omisión no se escribe en la dirección. */}
             <SelectorDeOrden
+              claseDelBoton={CLASE_DE_LOS_FILTROS}
               opciones={ORDENES}
               valor={orden}
               onCambiar={(valor) => cambiar({ orden: valor === 'relevantes' ? null : valor, pagina: null })}
@@ -379,7 +386,7 @@ export function Explore() {
           </h2>
           {/* Cuántas hay, en el mismo renglón que "Buscando…": así la lista no salta
               cuando termina de buscar, y quien filtra ve enseguida cuánto achicó. */}
-          <p role="status" className="min-h-5 text-sm text-base-content/70">
+          <p role="status" className="min-h-5 text-sm text-base-content/80">
             {loading
               ? 'Buscando…'
               : pageData && pageData.page.totalElements > 0
@@ -401,7 +408,7 @@ export function Explore() {
         {error ? (
           <LoadError error={error} onRetry={() => setAttempt((n) => n + 1)} />
         ) : items.length > 0 ? (
-          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
             {items.map((local) => (
               <li key={local.id}>
                 <TarjetaDeLocal local={local} onAbrir={anotarDondeQuedo} onGuardar={alternarGuardada} />
@@ -411,7 +418,7 @@ export function Explore() {
         ) : loading ? (
           // La forma de las tarjetas mientras llegan, la primera vez: con el texto
           // "Buscando…" solo, la página quedaba vacía y después saltaba.
-          <ul aria-hidden="true" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul aria-hidden="true" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
             {[0, 1, 2].map((n) => (
               <li key={n}>
                 <TarjetaDeLocalCargando />

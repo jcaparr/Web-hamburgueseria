@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import type { BurgerJoint } from '../types'
 import { shortAddress } from '../utils/address'
 import { BotonSobreFoto } from './BotonSobreFoto'
-import { IconHeart } from './icons'
+import { IconHeart, IconPin } from './icons'
 import { JointPhoto } from './JointPhoto'
 import { ScoreBadge } from './ScoreBadge'
 
@@ -46,19 +46,23 @@ export function TarjetaDeLocal({
         />
         <div className="flex flex-1 flex-col gap-1 px-2.5 pb-2.5 pt-3">
           <h3 className="line-clamp-1 font-display text-lg font-bold">{local.name}</h3>
-          <p className="line-clamp-1 text-sm text-base-content/70">
-            {shortAddress(local.address, local.area)}
+          {/* La dirección y las reseñas al 80 % y no al 70 (#245): pasaban el mínimo
+              (5,2 : 1 en claro), pero sobre la tarjeta se veían apagadas. Al 80 % quedan
+              en 7,2 : 1 en claro y 9,4 : 1 en oscuro. */}
+          <p className="flex items-center gap-1.5 text-sm text-base-content/80">
+            <IconPin className="flex-none" />
+            <span className="line-clamp-1">{shortAddress(local.address, local.area)}</span>
           </p>
           <div className="mt-auto pt-2">
             {local.averageScore ? (
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-3">
                 <ScoreBadge score={local.averageScore} size="sm" />
-                <span className="text-xs text-base-content/70">
+                <span className="text-xs text-base-content/80">
                   {local.ratingsCount === 1 ? '1 reseña' : `${local.ratingsCount} reseñas`}
                 </span>
               </span>
             ) : (
-              <span className="text-xs text-base-content/70">Sin calificaciones</span>
+              <span className="text-xs text-base-content/80">Sin calificaciones</span>
             )}
           </div>
         </div>
@@ -70,7 +74,8 @@ export function TarjetaDeLocal({
         onClick={() => onGuardar(local)}
         aria-pressed={local.inWishlist}
         aria-label={local.inWishlist ? `Quitar ${local.name} de guardadas` : `Guardar ${local.name}`}
-        className={`absolute right-4 top-4 ${local.inWishlist ? 'text-primary' : ''}`}
+        encendido={local.inWishlist}
+        className="absolute right-4 top-4"
       >
         <IconHeart size={20} filled={local.inWishlist} />
       </BotonSobreFoto>

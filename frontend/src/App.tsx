@@ -19,6 +19,7 @@ import { Privacidad } from './pages/Privacidad'
 import { Profile } from './pages/Profile'
 import { Ranking } from './pages/Ranking'
 import { Register } from './pages/Register'
+import { ReseniasDeUnPerfil } from './pages/ReseniasDeUnPerfil'
 import { Reviews } from './pages/Reviews'
 import { Terminos } from './pages/Terminos'
 import { Tour } from './pages/Tour'
@@ -41,11 +42,14 @@ export default function App() {
           {/* En el teléfono, lo de abajo deja lugar para la barra de navegación, que flota
               encima: 59 px de barra, lo que ocupa la barra de gestos del teléfono si tiene
               y unos 13 de aire. Con pb-28 fijo sobraban 43 px vacíos al final de cada
-              página (#174). */}
+              página (#174).
+
+              En escritorio llega hasta 1200 px: con 1024 un monitor ancho quedaba con la
+              mitad vacía (#244). Las páginas para leer ponen su propio ancho, más angosto. */}
           <main
             id="contenido"
             tabIndex={-1}
-            className="mx-auto w-full max-w-[480px] flex-1 pb-[calc(4.5rem_+_env(safe-area-inset-bottom))] focus:outline-none md:max-w-5xl md:px-6 md:pb-8 md:pt-6"
+            className="mx-auto w-full max-w-[480px] flex-1 pb-[calc(4.5rem_+_env(safe-area-inset-bottom))] focus:outline-none md:max-w-[75rem] md:px-6 md:pb-8 md:pt-6"
           >
             <Routes>
               <Route path="/" element={<Explore />} />
@@ -56,6 +60,7 @@ export default function App() {
               {/* Bajo /u/ para que un nombre de usuario no pueda chocar nunca con una
                   pantalla de la app: alguien que se llame "tour" no rompe nada. */}
               <Route path="/u/:username" element={<RequireAuth><PerfilPublico /></RequireAuth>} />
+              <Route path="/u/:username/resenias" element={<RequireAuth><ReseniasDeUnPerfil /></RequireAuth>} />
               <Route path="/u/:username/seguidores" element={<RequireAuth><GenteDeUnPerfil lista="seguidores" /></RequireAuth>} />
               <Route path="/u/:username/siguiendo" element={<RequireAuth><GenteDeUnPerfil lista="siguiendo" /></RequireAuth>} />
               <Route path="/buscar" element={<RequireAuth><BuscarGente /></RequireAuth>} />
