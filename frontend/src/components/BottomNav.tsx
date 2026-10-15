@@ -43,7 +43,7 @@ export function BottomNav() {
             }
           >
             <Icon size={21} />
-            <span className="text-xs font-semibold">{label}</span>
+            <span className="font-nav text-xs font-semibold">{label}</span>
           </NavLink>
         ))}
       </div>

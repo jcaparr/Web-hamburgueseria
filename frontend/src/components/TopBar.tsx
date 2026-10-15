@@ -61,7 +61,7 @@ export function TopBar() {
                   to={link.to}
                   end={link.to === '/'}
                   className={({ isActive }) =>
-                    `flex min-h-11 items-center rounded-full px-5 text-sm font-semibold transition-colors lg:px-7 ${
+                    `font-nav flex min-h-11 items-center rounded-full px-5 text-sm font-semibold transition-colors lg:px-7 ${
                       isActive ? 'bg-neutral text-secondary' : 'text-base-content hover:text-primary'
                     }`
                   }
