@@ -5,7 +5,7 @@ import { LoadError } from '../components/LoadError'
 import { ResultadosDeGente } from '../components/ResultadosDeGente'
 import { TarjetaDeFeed } from '../components/TarjetaDeFeed'
 import { useAuth } from '../context/useAuth'
-import { useBuscarGente } from '../hooks/useBuscarGente'
+import { estadoDeLaBusqueda, useBuscarGente } from '../hooks/useBuscarGente'
 import { usePedido } from '../hooks/usePedido'
 import { useTitulo } from '../hooks/useTitulo'
 import type { ItemDeFeed, PaginaDeFeed } from '../types'
@@ -60,6 +60,13 @@ export function Feed() {
     pedido.reintentar()
   }
 
+  function escribir(escrito: string) {
+    const limpio = busqueda.setTexto(escrito)
+    // Al volver de buscar, "Siguiendo" se pide de nuevo: puede haber gente recién
+    // seguida, y antes eso pasaba solo porque /buscar era otra página.
+    if (buscandoGente && limpio === '' && fuente === 'SIGUIENDO') reintentar()
+  }
+
   function traerMas() {
     if (!siguiente || trayendoMas) return
 
@@ -92,15 +99,15 @@ export function Feed() {
           mismo, sin pasar por /buscar: mientras hay algo escrito, la gente encontrada
           ocupa el lugar del feed, y al borrarlo el feed vuelve como estaba. Mismo
           aspecto que el buscador de Explorar. */}
-      <label className="flex min-h-12 items-center gap-2 rounded-full bg-base-100 py-1 pl-4 pr-1 shadow-[var(--sombra-control)] focus-within:ring-2 focus-within:ring-primary md:pl-5">
+      <div className="flex min-h-12 items-center gap-2 rounded-full bg-base-100 py-1 pl-4 pr-1 shadow-[var(--sombra-control)] focus-within:ring-2 focus-within:ring-primary md:pl-5">
         <IconSearch size={18} className="flex-none text-base-content/70" />
         <input
           ref={campo}
           type="search"
           value={busqueda.texto}
-          onChange={(e) => busqueda.setTexto(e.target.value)}
+          onChange={(e) => escribir(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Escape') busqueda.setTexto('')
+            if (e.key === 'Escape') escribir('')
           }}
           placeholder="Buscá gente para seguir…"
           aria-label="Buscar gente por nombre de usuario"
@@ -117,7 +124,7 @@ export function Feed() {
             type="button"
             onClick={() => {
               // El botón desaparece al borrar: el foco vuelve al campo y no se pierde.
-              busqueda.setTexto('')
+              escribir('')
               campo.current?.focus()
             }}
             aria-label="Borrar la búsqueda y volver al feed"
@@ -126,10 +133,10 @@ export function Feed() {
             <span aria-hidden="true">✕</span>
           </button>
         )}
-      </label>
+      </div>
 
       {buscandoGente ? (
-        <ResultadosDeGente busqueda={busqueda} />
+        <ResultadosDeGente busqueda={busqueda} conEstado={false} />
       ) : (
         <>
           <div role="tablist" aria-label="Qué reseñas ver" className="tabs tabs-box">
@@ -197,6 +204,11 @@ export function Feed() {
           )}
         </>
       )}
+
+      {/* Siempre montado, para que el lector de pantalla anuncie cómo va la búsqueda. */}
+      <p role="status" className={buscandoGente ? 'text-sm text-base-content/70' : 'sr-only'}>
+        {buscandoGente ? estadoDeLaBusqueda(busqueda) : ''}
+      </p>
     </div>
   )
 }

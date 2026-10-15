@@ -19,7 +19,9 @@ export function useBuscarGente() {
   // acento o un espacio y después ignorarlo por lo bajo es peor: vería su nombre
   // completo escrito, cero resultados, y ninguna pista de por qué.
   function setTexto(escrito: string) {
-    setTextoCrudo(escrito.toLowerCase().replace(/[^a-z0-9_]/g, ''))
+    const limpio = escrito.toLowerCase().replace(/[^a-z0-9_]/g, '')
+    setTextoCrudo(limpio)
+    return limpio
   }
 
   // Una consulta por tecla haría que escribir "juanca" dispare seis búsquedas: se busca
@@ -50,3 +52,12 @@ export function useBuscarGente() {
 }
 
 export type BusquedaDeGente = ReturnType<typeof useBuscarGente>
+
+/** Cómo va la búsqueda, en un renglón. */
+export function estadoDeLaBusqueda({ texto, resultados, buscando, error }: BusquedaDeGente) {
+  if (error) return ''
+  if (texto.length < MINIMO) return `Escribí al menos ${MINIMO} letras del nombre de usuario que buscás.`
+  if (buscando) return 'Buscando…'
+  if (resultados.length === 0) return 'No hay nadie con ese nombre.'
+  return resultados.length === 1 ? '1 persona' : `${resultados.length} personas`
+}
