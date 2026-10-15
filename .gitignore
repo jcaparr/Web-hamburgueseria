@@ -31,10 +31,9 @@ burgometro-backups.key
 .DS_Store
 Thumbs.db
 
-# Herramientas locales / clones sueltos. De .claude/ se versionan solo los
-# subagentes: las skills locales y los .local.env quedan afuera.
-**/.claude/*
-!/.claude/agents/
+# Herramientas locales / clones sueltos. Todo .claude/ queda afuera: los subagentes,
+# las skills y los .local.env son de cada PC, no del producto, y no viajan con main.
+**/.claude/
 /auth/
 tools/
 /.vite/
