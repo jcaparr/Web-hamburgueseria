@@ -17,16 +17,17 @@ public interface ReaccionRepository extends JpaRepository<Reaccion, Long> {
 
     /**
      * Las reacciones a las reseñas de esta persona, de lo más nuevo a lo más viejo, para
-     * su buzón de notificaciones (#210). Sin las suyas —uno no reacciona a lo propio,
+     * su buzón de notificaciones (#210). Solo las posteriores a una fecha. Sin las suyas —uno no reacciona a lo propio,
      * pero la base no lo impide— ni las de gente con la que hay un bloqueo.
      */
     @Query("""
         select r from Reaccion r join fetch r.user join fetch r.rating resenia join fetch resenia.burgerJoint
         where resenia.user.id = :yo and r.user.id <> :yo and r.user.id not in :ocultos
+          and r.createdAt > :desde
         order by r.createdAt desc, r.id desc
         """)
     List<Reaccion> aLasReseniasDe(@Param("yo") Long yo, @Param("ocultos") Collection<Long> ocultos,
-                                  Pageable pagina);
+                                  @Param("desde") Instant desde, Pageable pagina);
 
     /** Cuántas de esas llegaron después de una fecha: lo que cuenta la campana. */
     @Query("""

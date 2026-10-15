@@ -167,8 +167,8 @@ export function CampanaDeNotificaciones() {
             </p>
           ) : avisos.length === 0 ? (
             <p className="px-2 pb-2 text-sm text-base-content/70">
-              Todavía no tenés notificaciones. Cuando alguien te siga o reaccione a una de tus
-              reseñas, te va a aparecer acá.
+              No tenés notificaciones de esta semana. Cuando alguien te siga o reaccione a una
+              de tus reseñas, te va a aparecer acá.
             </p>
           ) : (
             <>
