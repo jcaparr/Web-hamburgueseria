@@ -7,6 +7,7 @@ import { PasoNombreDeGoogle } from '../components/PasoNombreDeGoogle'
 import { useAuth } from '../context/useAuth'
 import { useTitulo } from '../hooks/useTitulo'
 import { useGoogleSignIn } from '../hooks/useGoogleSignIn'
+import { volverDespuesDeEntrar } from '../utils/volverDespuesDeEntrar'
 
 export function Login() {
   const { login } = useAuth()
@@ -30,7 +31,7 @@ export function Login() {
     setNotice(null)
     try {
       await login(email, password)
-      navigate('/')
+      navigate(volverDespuesDeEntrar(location.state))
     } catch (err: any) {
       const data = err.response?.data
 

@@ -84,6 +84,15 @@ app:
     # anything else gets rejected or lands in spam.
     from: ${MAIL_FROM:}
     from-name: ${MAIL_FROM_NAME:Burgómetro}
+  # "Sugerir un local" (#257). Los topes son por ventana de 24 horas, no por día
+  # calendario. El de mails cuida los 300 diarios gratis de Brevo, que también tienen
+  # que alcanzar para los códigos de verificación.
+  sugerencias:
+    mail-a: ${SUGERENCIAS_MAIL_A:hola@burgometro.com.ar}
+    tope-por-persona: 5
+    minimo-entre-una-y-otra: 1m
+    tope-de-mails: 20
+    tope-total: 100
   auth:
     session:
       access-token-minutes: 15

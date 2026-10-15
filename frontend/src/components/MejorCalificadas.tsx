@@ -8,7 +8,7 @@ import { FilaDeTarjetas, LugarEnLaFila, TarjetaChicaDeLocal } from './TarjetaChi
 const CUANTAS = 8
 
 /**
- * Las mejor calificadas, al final de la primera página de Explorar.
+ * Las mejores calificadas, al final de la primera página de Explorar.
  *
  * Para quien recorrió la lista sin decidirse: veinte hamburgueserías en el orden de la
  * base, la mayoría sin calificar, y esta fila le da por dónde empezar. Sale del mismo
@@ -40,7 +40,7 @@ export function MejorCalificadas() {
   return (
     <div className="border-t border-base-content/10 pt-6">
       <Seccion
-        titulo="Las mejor calificadas"
+        titulo="Las mejores calificadas"
         bajada="¿No te decidiste? Estas son las que mejor puntuó la gente."
         verTodas="/ranking"
         textoDeVerTodas="Ver ranking"
