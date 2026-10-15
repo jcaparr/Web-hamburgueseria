@@ -154,8 +154,10 @@ export function Tour() {
     enAuto: modo === 'EN_AUTO',
   })
 
+  // Angosta como la ficha: es un formulario y una lista, y a lo ancho de Explorar (#244)
+  // la barra de paradas medía más de 1.100 px.
   return (
-    <div className="flex flex-col gap-5 p-4 md:p-0">
+    <div className="flex flex-col gap-5 p-4 md:mx-auto md:w-full md:max-w-3xl md:p-0">
       <div>
         <h1 className="titulo-pagina">Armar un tour</h1>
         <p className="mt-1 text-sm text-base-content/70">

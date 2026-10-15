@@ -3,15 +3,13 @@ import { apiClient } from '../api/client'
 import { BotonBloquear } from '../components/BotonBloquear'
 import { BotonSeguir } from '../components/BotonSeguir'
 import { CabeceraDePerfil } from '../components/CabeceraDePerfil'
-import { JointPhoto } from '../components/JointPhoto'
+import { ListaDeReseniasDePerfil } from '../components/ListaDeReseniasDePerfil'
 import { LoadError } from '../components/LoadError'
-import { ScoreBadge } from '../components/ScoreBadge'
 import { AvisoVacio, Seccion } from '../components/Seccion'
 import { usePedido } from '../hooks/usePedido'
 import { useTitulo } from '../hooks/useTitulo'
 import { isNotFound } from '../utils/errors'
 import { cantidad, nota } from '../utils/numeros'
-import { fechaYHora } from '../utils/fechaYHora'
 import type { PerfilPublico as Perfil } from '../types'
 
 /**
@@ -84,7 +82,12 @@ export function PerfilPublico() {
         username={perfil.username}
         hamburguesa={perfil.hamburguesa}
         cifras={[
-          { valor: cantidad(perfil.resenias), etiqueta: perfil.resenias === 1 ? 'reseña' : 'reseñas' },
+          {
+            // Lleva a todas sus reseñas (#247), como seguidores lleva a quiénes son.
+            valor: cantidad(perfil.resenias),
+            etiqueta: perfil.resenias === 1 ? 'reseña' : 'reseñas',
+            a: `/u/${perfil.username}/resenias`,
+          },
           { valor: perfil.promedio ? nota(perfil.promedio) : '—', etiqueta: 'promedio' },
           {
             valor: cantidad(perfil.seguidores),
@@ -119,38 +122,12 @@ export function PerfilPublico() {
         }
       />
 
-      {/* Con lo que escribió y no solo la nota: es lo que dice si vale la pena seguirla.
-          Un 4 sin más es igual al de cualquiera. */}
-      <Seccion titulo="Últimas reseñas">
+      <Seccion
+        titulo="Últimas reseñas"
+        verTodas={perfil.resenias > perfil.ultimasResenias.length ? `/u/${perfil.username}/resenias` : undefined}
+      >
         {perfil.ultimasResenias.length > 0 ? (
-          <ul className="flex flex-col gap-3">
-            {perfil.ultimasResenias.map((r) => (
-              <li key={r.id}>
-                <Link
-                  to={`/burger-joints/${r.burgerJointId}`}
-                  className="flex flex-col gap-2 tarjeta p-3 transition-shadow hover:tarjeta-alzada"
-                >
-                  <span className="flex items-center gap-3">
-                    <JointPhoto
-                      src={r.photoUrl}
-                      name={r.burgerJointName}
-                      className="h-14 w-14 flex-none rounded-lg object-cover"
-                    />
-                    <span className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate font-semibold">{r.burgerJointName}</span>
-                      <span className="text-xs text-base-content/70">{fechaYHora(r.createdAt)}</span>
-                    </span>
-                    <ScoreBadge score={r.score} size="sm" />
-                  </span>
-                  {r.comment && (
-                    <span className="line-clamp-3 text-sm leading-relaxed text-base-content/80">
-                      {r.comment}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <ListaDeReseniasDePerfil resenias={perfil.ultimasResenias} />
         ) : (
           <AvisoVacio>
             {perfil.soyYo

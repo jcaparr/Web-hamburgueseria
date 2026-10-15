@@ -1,6 +1,7 @@
 package com.hamburguesas.controller;
 
 import com.hamburguesas.dto.PerfilPublicoDto;
+import com.hamburguesas.dto.ReseniaDePerfilDto;
 import com.hamburguesas.dto.UsuarioBloqueadoDto;
 import com.hamburguesas.dto.UsuarioBuscadoDto;
 import com.hamburguesas.security.CurrentUser;
@@ -39,6 +40,12 @@ public class UsuariosController {
     @GetMapping("/{username}")
     public PerfilPublicoDto perfil(@PathVariable String username) {
         return socialService.perfil(username, CurrentUser.requireId());
+    }
+
+    /** Todas sus reseñas (#247). */
+    @GetMapping("/{username}/resenias")
+    public List<ReseniaDePerfilDto> resenias(@PathVariable String username) {
+        return socialService.resenias(username, CurrentUser.requireId());
     }
 
     /** Quiénes siguen a esta persona (#183). */
