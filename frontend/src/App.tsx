@@ -41,11 +41,14 @@ export default function App() {
           {/* En el teléfono, lo de abajo deja lugar para la barra de navegación, que flota
               encima: 59 px de barra, lo que ocupa la barra de gestos del teléfono si tiene
               y unos 13 de aire. Con pb-28 fijo sobraban 43 px vacíos al final de cada
-              página (#174). */}
+              página (#174).
+
+              En escritorio llega hasta 1200 px: con 1024 un monitor ancho quedaba con la
+              mitad vacía (#244). Las páginas para leer ponen su propio ancho, más angosto. */}
           <main
             id="contenido"
             tabIndex={-1}
-            className="mx-auto w-full max-w-[480px] flex-1 pb-[calc(4.5rem_+_env(safe-area-inset-bottom))] focus:outline-none md:max-w-5xl md:px-6 md:pb-8 md:pt-6"
+            className="mx-auto w-full max-w-[480px] flex-1 pb-[calc(4.5rem_+_env(safe-area-inset-bottom))] focus:outline-none md:max-w-[75rem] md:px-6 md:pb-8 md:pt-6"
           >
             <Routes>
               <Route path="/" element={<Explore />} />

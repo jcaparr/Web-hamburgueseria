@@ -6,13 +6,24 @@ import type { ButtonHTMLAttributes } from 'react'
  * El fondo crema casi opaco es lo que lo hace legible sobre cualquier foto, clara u
  * oscura. Está en la portada de la ficha y en las tarjetas de Explorar, y tienen que
  * verse iguales para que el corazón de una sea reconocible como el de la otra.
+ *
+ * Encendido (un local guardado) va relleno de kétchup (#245): con el corazón rojo
+ * sobre el mismo círculo de siempre, guardado y sin guardar se distinguían por el
+ * color de un dibujo de 20 px, y sobre una foto con rojos casi no se notaba.
  */
-export function BotonSobreFoto({ className = '', ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
+export function BotonSobreFoto({
+  encendido = false,
+  className = '',
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & { encendido?: boolean }) {
+  const colores = encendido
+    ? 'bg-primary text-primary-content hover:bg-primary'
+    : 'bg-base-100/90 text-base-content hover:bg-base-100'
   return (
     <button
       type="button"
       {...props}
-      className={`btn btn-circle btn-sm h-11 w-11 border-0 bg-base-100/90 text-base-content shadow-md backdrop-blur-sm hover:bg-base-100 ${className}`}
+      className={`btn btn-circle btn-sm h-11 w-11 border-0 shadow-md backdrop-blur-sm ${colores} ${className}`}
     />
   )
 }

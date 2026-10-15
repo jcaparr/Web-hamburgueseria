@@ -78,7 +78,7 @@ export function PortadaDelLocal({
             onClick={onGuardar}
             aria-pressed={local.inWishlist}
             aria-label={local.inWishlist ? 'Quitar de guardadas' : 'Guardar'}
-            className={local.inWishlist ? 'text-primary' : ''}
+            encendido={local.inWishlist}
           >
             <IconHeart size={20} filled={local.inWishlist} />
           </BotonSobreFoto>

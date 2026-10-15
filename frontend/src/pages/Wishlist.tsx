@@ -52,7 +52,7 @@ export function Wishlist() {
           setAttempt((n) => n + 1)
         }} />}
 
-      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
         {items.map((b) => (
           <li key={b.id} className="tarjeta">
             <div className="flex items-center gap-3 p-3 pb-0">

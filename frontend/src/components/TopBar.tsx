@@ -50,6 +50,9 @@ export function TopBar() {
           </span>
         </NavLink>
 
+        {/* Cada opción es un blanco de 44 px de alto con aire a los costados (#244): lo
+            que se toca es toda la píldora, no solo la palabra, así que la letra puede
+            quedar en 14 px sin que cueste acertarle. */}
         <nav aria-label="Principal" className="hidden flex-1 justify-center md:flex">
           <ul className="flex items-center gap-1 rounded-full bg-base-100 p-1 shadow-[var(--sombra-tarjeta)]">
             {links.map((link) => (
@@ -58,7 +61,7 @@ export function TopBar() {
                   to={link.to}
                   end={link.to === '/'}
                   className={({ isActive }) =>
-                    `rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
+                    `flex min-h-11 items-center rounded-full px-5 text-sm font-semibold transition-colors lg:px-7 ${
                       isActive ? 'bg-neutral text-secondary' : 'text-base-content hover:text-primary'
                     }`
                   }
