@@ -204,4 +204,19 @@ class BuzonDeNotificacionesTest {
         assertThat(avisos).filteredOn(a -> a.username().equals("anabuzon")).singleElement()
             .extracting(NotificacionDto::loSigo).isEqualTo(false);
     }
+
+    /** Lo de hace más de una semana ya no se avisa, ni en el buzón ni en la campana (#249). */
+    @Test
+    void loDeHaceMasDeUnaSemanaNoAparece() {
+        Instant haceOchoDias = Instant.now().minus(8, ChronoUnit.DAYS);
+        sigue(ana, yo, haceOchoDias);
+        reacciona(beto, TipoDeReaccion.FUEGO, haceOchoDias);
+        sigue(caro, yo, Instant.now().minus(6, ChronoUnit.DAYS));
+
+        BuzonDto buzon = service.buzon(yo.getId());
+
+        assertThat(buzon.notificaciones()).extracting(NotificacionDto::username).containsExactly("carobuzon");
+        assertThat(buzon.nuevas()).isEqualTo(1);
+        assertThat(service.nuevas(yo.getId()).nuevas()).isEqualTo(1);
+    }
 }

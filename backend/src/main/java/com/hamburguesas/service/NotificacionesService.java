@@ -15,7 +15,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -40,6 +42,12 @@ public class NotificacionesService {
      */
     static final int CUANTAS = 50;
 
+    /**
+     * Hasta cuándo se avisa algo. Pasada una semana, un seguimiento o una reacción ya no es
+     * novedad. No se borra nada: el seguimiento y la reacción siguen, solo dejan de avisarse.
+     */
+    static final Duration VIGENCIA = Duration.ofDays(7);
+
     private final FollowRepository followRepository;
     private final ReaccionRepository reaccionRepository;
     private final UserRepository userRepository;
@@ -54,11 +62,12 @@ public class NotificacionesService {
     @Transactional(readOnly = true)
     public BuzonDto buzon(Long yo) {
         Instant vistas = desdeCuandoSonNuevas(persona(yo));
+        Instant corte = corte();
         List<Long> ocultos = bloqueos.queNoPuedeVer(yo);
         PageRequest primeras = PageRequest.of(0, CUANTAS);
 
-        List<Follow> seguimientos = followRepository.seguimientosA(yo, ocultos, primeras);
-        List<Reaccion> reacciones = reaccionRepository.aLasReseniasDe(yo, ocultos, primeras);
+        List<Follow> seguimientos = followRepository.seguimientosA(yo, ocultos, corte, primeras);
+        List<Reaccion> reacciones = reaccionRepository.aLasReseniasDe(yo, ocultos, corte, primeras);
         Set<Long> sigo = aCualesSigue(yo, seguimientos);
 
         List<NotificacionDto> avisos = Stream.concat(
@@ -77,11 +86,12 @@ public class NotificacionesService {
      */
     @Transactional(readOnly = true)
     public NotificacionesNuevasDto nuevas(Long yo) {
-        Instant vistas = desdeCuandoSonNuevas(persona(yo));
+        // Lo vencido no está en el buzón, así que tampoco cuenta en la campana.
+        Instant desde = Collections.max(List.of(desdeCuandoSonNuevas(persona(yo)), corte()));
         List<Long> ocultos = bloqueos.queNoPuedeVer(yo);
         return new NotificacionesNuevasDto(
-            followRepository.seguimientosNuevosA(yo, ocultos, vistas)
-                + reaccionRepository.nuevasALasReseniasDe(yo, ocultos, vistas));
+            followRepository.seguimientosNuevosA(yo, ocultos, desde)
+                + reaccionRepository.nuevasALasReseniasDe(yo, ocultos, desde));
     }
 
     /** Da por visto todo lo que llegó hasta ahora: la campana vuelve a cero. */
@@ -93,6 +103,11 @@ public class NotificacionesService {
     private User persona(Long yo) {
         return userRepository.findById(yo)
             .orElseThrow(() -> new ResourceNotFoundException("No encontramos tu cuenta"));
+    }
+
+    /** Lo anterior a esto ya venció y no se muestra. */
+    private static Instant corte() {
+        return Instant.now().minus(VIGENCIA);
     }
 
     /** Sin fecha es que nunca lo abrió, y entonces todo es nuevo. */

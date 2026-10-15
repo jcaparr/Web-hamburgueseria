@@ -15,15 +15,16 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 
     /**
      * Quiénes empezaron a seguir a esta persona, de lo más nuevo a lo más viejo, para su
-     * buzón de notificaciones (#210). Sin la gente con la que hay un bloqueo.
+     * buzón de notificaciones (#210). Solo los posteriores a una fecha, y sin la gente con
+     * la que hay un bloqueo.
      */
     @Query("""
         select f from Follow f join fetch f.follower
-        where f.followed.id = :yo and f.follower.id not in :ocultos
+        where f.followed.id = :yo and f.follower.id not in :ocultos and f.createdAt > :desde
         order by f.createdAt desc, f.id desc
         """)
     List<Follow> seguimientosA(@Param("yo") Long yo, @Param("ocultos") Collection<Long> ocultos,
-                               Pageable pagina);
+                               @Param("desde") Instant desde, Pageable pagina);
 
     /** Cuántos de esos llegaron después de una fecha: lo que cuenta la campana. */
     @Query("""
