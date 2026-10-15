@@ -265,6 +265,23 @@ public class RatingService {
     }
 
     /**
+     * Una sola reseña de un local, para llegar a ella desde el feed o un perfil (#260).
+     *
+     * La ficha trae las primeras veinte: una más vieja no estaría en la página y el
+     * enlace llevaría a un lugar donde no está. Con las mismas reglas que la lista: de
+     * otro local o de alguien con un bloqueo de por medio, no existe.
+     */
+    @Transactional(readOnly = true)
+    public RatingResponse una(Long burgerJointId, Long ratingId, Long userId) {
+        List<Long> ocultos = bloqueos.queNoPuedeVer(userId);
+        Rating resenia = ratingRepository.findById(ratingId)
+            .filter(r -> r.getBurgerJoint().getId().equals(burgerJointId))
+            .filter(r -> !ocultos.contains(r.getUser().getId()))
+            .orElseThrow(() -> new ResourceNotFoundException("Rating not found"));
+        return conReacciones(List.of(resenia), userId).get(0);
+    }
+
+    /**
      * Lo que va arriba de la lista de reseñas: la distribución de notas y lo que
      * dijeron los que seguís.
      *

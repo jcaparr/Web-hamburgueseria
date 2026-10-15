@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { IconClock, IconExternal, IconPin, IconRoute } from '../components/icons'
 import { HorarioDelLocal } from '../components/HorarioDelLocal'
@@ -14,6 +14,7 @@ import { useAuth } from '../context/useAuth'
 import { useDatosEstructurados, useDescripcion, useNoIndexar } from '../hooks/useMetadatos'
 import { useTitulo } from '../hooks/useTitulo'
 import type { BurgerJoint, Horario, PageResponse, Rating, ResumenDeResenias } from '../types'
+import { anclaDeResenia, reseniaDelAncla } from '../utils/aLaResenia'
 import { descripcionDe, restauranteDe } from '../utils/datosEstructurados'
 import { isNotFound, isSessionExpired } from '../utils/errors'
 import { shortAddress } from '../utils/address'
@@ -25,6 +26,9 @@ import { comoLlegarUrl, mapsUrl } from '../utils/maps'
  * quedara en la URL, volver atrás la abriría de nuevo.
  */
 const ABRIR_OPINION = 'opinar'
+
+/** Cómo se marca la reseña a la que se llegó por el ancla (#260), mientras se la busca con la vista. */
+const RESALTADA = ['outline-2', 'outline-offset-4', 'outline-primary']
 
 export function BurgerJointDetail() {
   const { id } = useParams()
@@ -45,6 +49,9 @@ export function BurgerJointDetail() {
   const [aperturas, setAperturas] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<unknown>(null)
+  const location = useLocation()
+  const objetivo = reseniaDelAncla(location.hash)
+  const [buscada, setBuscada] = useState<Rating | null>(null)
 
   const myRating = ratings.find((r) => r.userId === user?.userId) ?? null
   useTitulo(burgerJoint?.name ?? (isNotFound(loadError) ? 'Hamburguesería no encontrada' : null))
@@ -90,6 +97,43 @@ export function BurgerJointDetail() {
       .then(({ data }) => setHorario(data))
       .catch(() => setHorario(null))
   }, [id])
+
+  // La reseña que pide el ancla, si no está entre las que trajo la lista (#260): la
+  // ficha trae las primeras veinte, y una más vieja hay que pedirla aparte. Si no se
+  // puede ver (la borraron, hay un bloqueo), la ficha queda arriba, como antes.
+  const listaCargada = cuantasResenias !== null
+  const estaEnLaLista = objetivo !== null && ratings.some((r) => r.id === objetivo)
+  useEffect(() => {
+    if (objetivo === null || !listaCargada || estaEnLaLista) return
+    let vigente = true
+    apiClient
+      .get<Rating>(`/burger-joints/${id}/ratings/${objetivo}`)
+      .then(({ data }) => {
+        if (vigente) setBuscada(data)
+      })
+      .catch(() => {})
+    return () => {
+      vigente = false
+    }
+  }, [id, objetivo, listaCargada, estaEnLaLista])
+
+  // Primero la buscada y después las demás, sin repetirla.
+  const lista =
+    buscada && buscada.id === objetivo && !estaEnLaLista ? [buscada, ...ratings] : ratings
+
+  // Baja hasta la reseña y la marca un momento, una sola vez por ancla: después de
+  // guardar una reseña la lista se vuelve a armar, y no tiene que volver a saltar.
+  const yaSeMostro = useRef<number | null>(null)
+  useEffect(() => {
+    if (objetivo === null || yaSeMostro.current === objetivo) return
+    const elemento = document.getElementById(anclaDeResenia(objetivo))
+    if (!elemento) return
+    yaSeMostro.current = objetivo
+    const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    elemento.scrollIntoView({ block: 'start', behavior: sinMovimiento ? 'auto' : 'smooth' })
+    elemento.classList.add(...RESALTADA)
+    setTimeout(() => elemento.classList.remove(...RESALTADA), 2500)
+  }, [objetivo, ratings, buscada])
 
   // Abierta por el enlace mientras el parámetro esté y haya sesión. Se deduce en vez de
   // prenderla desde un efecto: un dibujo menos (#109), y no hace falta esperar a saber
@@ -270,21 +314,24 @@ export function BurgerJointDetail() {
 
       {/* Sin reseñas, el bloque de calificaciones ya invita a escribir la primera: un
           "Reseñas (0)" abajo repetiría lo mismo. */}
-      {ratings.length > 0 && (
+      {lista.length > 0 && (
         <section id="resenias" className="flex scroll-mt-20 flex-col gap-3">
           <h2 className="font-display text-lg font-bold">
             {cuantasResenias !== null ? `Reseñas (${cuantasResenias})` : 'Reseñas'}
           </h2>
-          {ratings.map((r) => {
+          {lista.map((r) => {
             const esMia = r.userId === user?.userId
+            // El ancla va acá y no en la tarjeta: la misma reseña puede estar también
+            // arriba, en "Lo que dijeron los que seguís", y un id no se puede repetir.
             return (
-              <TarjetaDeResenia
-                key={r.id}
-                resenia={r}
-                esMia={esMia}
-                puedeReaccionar={user !== null && !esMia}
-                onEditar={esMia ? abrirOpinion : undefined}
-              />
+              <div key={r.id} id={anclaDeResenia(r.id)} className="scroll-mt-24 rounded-box">
+                <TarjetaDeResenia
+                  resenia={r}
+                  esMia={esMia}
+                  puedeReaccionar={user !== null && !esMia}
+                  onEditar={esMia ? abrirOpinion : undefined}
+                />
+              </div>
             )
           })}
         </section>

@@ -32,6 +32,12 @@ public class RatingController {
         return ratingService.list(burgerJointId, CurrentUser.idOrNull(), Paginas.sinOrden(pageable));
     }
 
+    /** Una sola, para llevar a ella desde el feed o un perfil aunque no esté entre las primeras (#260). */
+    @GetMapping("/{ratingId:\\d+}")
+    public RatingResponse una(@PathVariable Long burgerJointId, @PathVariable Long ratingId) {
+        return ratingService.una(burgerJointId, ratingId, CurrentUser.idOrNull());
+    }
+
     /**
      * La distribución de notas y lo que dijeron los que seguís.
      *
