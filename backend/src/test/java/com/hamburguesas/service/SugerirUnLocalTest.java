@@ -186,6 +186,30 @@ class SugerirUnLocalTest {
         assertThatThrownBy(() -> sugerenciasDeLocales.sugerir(ana.getId(), pedido("Una más")))
             .isInstanceOf(TooManyRequestsException.class)
             .hasMessage("Hoy recibimos muchas sugerencias. Probá mañana.");
+        assertThat(sugerencias.count()).isEqualTo(3);
+    }
+
+    /** Con 5 y la última recién mandada, lo que la frena es el tope del día, no el minuto. */
+    @Test
+    void conElDiaLlenoAvisaQueEsHastaMananaAunqueNoHayaPasadoElMinuto() {
+        yaHabia(ana, Duration.ofSeconds(10));
+        for (int i = 1; i <= 4; i++) {
+            yaHabia(ana, Duration.ofMinutes(i * 10L));
+        }
+
+        assertThatThrownBy(() -> sugerenciasDeLocales.sugerir(ana.getId(), pedido("Sexta")))
+            .hasMessage("Ya mandaste varias hoy. Probá mañana.");
+    }
+
+    /** La última que entra en el tope de mails todavía lo manda: el borde, donde se esconde un error de a uno. */
+    @Test
+    void laUltimaDentroDelTopeDeMailsSiAvisa() {
+        topes.setTopeDeMails(2);
+        yaHabia(beto, Duration.ofMinutes(10));
+
+        sugerenciasDeLocales.sugerir(ana.getId(), pedido("Segunda del día"));
+
+        verify(emailService).send(anyString(), anyString(), anyString(), anyString());
     }
 
     /** Pasado el tope de mails se guarda igual, pero sin mail: los códigos necesitan los de Brevo. */

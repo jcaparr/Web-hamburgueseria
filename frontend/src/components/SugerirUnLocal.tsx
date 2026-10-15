@@ -30,9 +30,7 @@ export function BotonSugerirUnLocal() {
 
   function abrir() {
     if (!user) {
-      const parametros = new URLSearchParams(location.search)
-      parametros.set(PARAMETRO, '1')
-      navigate('/login', { state: { volverA: `${location.pathname}?${parametros}` } })
+      navigate('/login', { state: { volverA: conElFormulario(location) } })
       return
     }
     setVez((n) => n + 1)
@@ -49,11 +47,18 @@ export function BotonSugerirUnLocal() {
           key={vez}
           emailDeLaCuenta={user.email}
           onCerrar={() => setAbierto(false)}
-          onSesionVencida={() => navigate('/login')}
+          onSesionVencida={() => navigate('/login', { state: { volverA: conElFormulario(location) } })}
         />
       )}
     </>
   )
+}
+
+/** Esta misma pantalla, con la marca que abre el formulario al volver de iniciar sesión. */
+function conElFormulario(location: { pathname: string; search: string }) {
+  const parametros = new URLSearchParams(location.search)
+  parametros.set(PARAMETRO, '1')
+  return `${location.pathname}?${parametros}`
 }
 
 /**
@@ -78,7 +83,7 @@ export function AbrirSugerenciaAlVolver() {
     <ModalSugerirUnLocal
       emailDeLaCuenta={user.email}
       onCerrar={cerrar}
-      onSesionVencida={() => navigate('/login')}
+      onSesionVencida={() => navigate('/login', { state: { volverA: conElFormulario(location) } })}
     />
   )
 }
@@ -107,12 +112,20 @@ function ModalSugerirUnLocal({
   const [enviada, setEnviada] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const idDelTitulo = useId()
+  const idDelComentario = useId()
+  const listo = useRef<HTMLButtonElement>(null)
 
   // Se monta solo cuando hay que mostrarla, así que se abre al montarse.
   useEffect(() => {
     const ventana = dialogo.current
     if (ventana && !ventana.open) ventana.showModal()
   }, [])
+
+  // Al enviar, el formulario se va con el foco adentro: sin esto, el teclado y el
+  // lector de pantalla quedaban sin saber dónde estaban.
+  useEffect(() => {
+    if (enviada) listo.current?.focus()
+  }, [enviada])
 
   const hayAlgoEscrito = !enviada && (nombre.trim() !== '' || direccion.trim() !== '' || comentario.trim() !== '')
 
@@ -176,7 +189,7 @@ function ModalSugerirUnLocal({
         {enviada ? (
           <>
             <p role="status">Gracias. La vamos a revisar.</p>
-            <button type="button" onClick={onCerrar} className="btn btn-primary">
+            <button ref={listo} type="button" onClick={onCerrar} className={CLASE_DEL_BOTON}>
               Listo
             </button>
           </>
@@ -229,11 +242,11 @@ function ModalSugerirUnLocal({
               )}
             </Campo>
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="comentario-de-la-sugerencia" className="text-sm font-semibold">
+              <label htmlFor={idDelComentario} className="text-sm font-semibold">
                 Comentario <span className="font-normal text-base-content/70">(opcional)</span>
               </label>
               <textarea
-                id="comentario-de-la-sugerencia"
+                id={idDelComentario}
                 value={comentario}
                 onChange={(e) => setComentario(e.target.value)}
                 placeholder="¿Qué tiene de bueno?"
@@ -248,7 +261,7 @@ function ModalSugerirUnLocal({
               </p>
             )}
 
-            <button type="submit" disabled={enviando} className="btn btn-primary">
+            <button type="submit" disabled={enviando} className={CLASE_DEL_BOTON}>
               {enviando ? 'Enviando…' : 'Enviar sugerencia'}
             </button>
           </form>

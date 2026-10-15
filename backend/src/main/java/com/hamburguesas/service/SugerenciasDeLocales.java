@@ -51,12 +51,14 @@ public class SugerenciasDeLocales {
             throw new EmailNotVerifiedException("Para sugerir un local, primero verificá tu email.");
         }
 
+        // El del día antes que el del minuto: a quien ya llegó a 5, decirle que espere un
+        // minuto lo hacía volver para recién ahí enterarse de que no podía hasta mañana.
         Instant ahora = Instant.now();
-        if (sugerencias.countByUser_IdAndCreatedAtAfter(userId, ahora.minus(topes.getMinimoEntreUnaYOtra())) > 0) {
-            throw new TooManyRequestsException("Esperá un minuto antes de mandar otra.");
-        }
         if (sugerencias.countByUser_IdAndCreatedAtAfter(userId, ahora.minus(UN_DIA)) >= topes.getTopePorPersona()) {
             throw new TooManyRequestsException("Ya mandaste varias hoy. Probá mañana.");
+        }
+        if (sugerencias.countByUser_IdAndCreatedAtAfter(userId, ahora.minus(topes.getMinimoEntreUnaYOtra())) > 0) {
+            throw new TooManyRequestsException("Esperá un minuto antes de mandar otra.");
         }
         long deHoy = sugerencias.countByCreatedAtAfter(ahora.minus(UN_DIA));
         if (deHoy >= topes.getTopeTotal()) {
