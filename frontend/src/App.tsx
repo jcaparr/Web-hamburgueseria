@@ -1,12 +1,11 @@
 import { useEffect, useRef } from 'react'
-import { BrowserRouter, Route, Routes, useLocation, useNavigationType } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
 import { RequireAuth } from './components/RequireAuth'
 import { TopBar } from './components/TopBar'
 import { AuthProvider } from './context/AuthContext'
 import { ArmarHamburguesa } from './pages/ArmarHamburguesa'
 import { BurgerJointDetail } from './pages/BurgerJointDetail'
-import { BuscarGente } from './pages/BuscarGente'
 import { Explore } from './pages/Explore'
 import { Feed } from './pages/Feed'
 import { GenteDeUnPerfil } from './pages/GenteDeUnPerfil'
@@ -63,7 +62,8 @@ export default function App() {
               <Route path="/u/:username/resenias" element={<RequireAuth><ReseniasDeUnPerfil /></RequireAuth>} />
               <Route path="/u/:username/seguidores" element={<RequireAuth><GenteDeUnPerfil lista="seguidores" /></RequireAuth>} />
               <Route path="/u/:username/siguiendo" element={<RequireAuth><GenteDeUnPerfil lista="siguiendo" /></RequireAuth>} />
-              <Route path="/buscar" element={<RequireAuth><BuscarGente /></RequireAuth>} />
+              {/* Buscar gente vive en el Feed: /buscar queda para los enlaces viejos. */}
+              <Route path="/buscar" element={<Navigate to="/feed" replace />} />
               <Route path="/feed" element={<RequireAuth><Feed /></RequireAuth>} />
               <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
               <Route path="/profile/hamburguesa" element={<RequireAuth><ArmarHamburguesa /></RequireAuth>} />

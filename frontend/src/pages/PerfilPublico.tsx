@@ -53,7 +53,7 @@ export function PerfilPublico() {
         <p className="text-sm text-base-content/70">
           Puede que el enlace esté mal escrito o que esa cuenta ya no exista.
         </p>
-        <Link to="/buscar" className="btn btn-primary btn-sm">
+        <Link to="/feed" className="btn btn-primary btn-sm">
           Buscar gente
         </Link>
       </div>
