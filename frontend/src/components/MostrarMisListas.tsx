@@ -55,7 +55,7 @@ export function MostrarMisListas() {
         </p>
       )}
       <p className="text-xs text-base-content/70">
-        Apagalo y tus guardadas y recorridos quedan solo para vos. Prendido, quien entre a tu perfil los ve y puede guardarse tus recorridos.
+        Apagado, quedan solo para vos.
       </p>
       {error && (
         <p role="alert" className="text-sm text-error">
