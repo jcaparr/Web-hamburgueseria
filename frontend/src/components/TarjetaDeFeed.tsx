@@ -5,6 +5,7 @@ import { IconPin } from './icons'
 import { ReaccionesDeResenia } from './ReaccionesDeResenia'
 import { ScoreBadge } from './ScoreBadge'
 import { Stars } from './Stars'
+import { aLaResenia } from '../utils/aLaResenia'
 import { fechaYHora } from '../utils/fechaYHora'
 import type { ItemDeFeed } from '../types'
 
@@ -25,6 +26,9 @@ import type { ItemDeFeed } from '../types'
 export function TarjetaDeFeed({ item, esMia }: { item: ItemDeFeed; esMia: boolean }) {
   const aLaFicha = `/burger-joints/${item.burgerJointId}`
   const alPerfil = `/u/${item.autorUsername}`
+  // Las fotos son la reseña: tocarlas lleva a esa reseña en la ficha, y el nombre del
+  // local, al principio de la ficha (#260).
+  const aEstaResenia = aLaResenia(item.burgerJointId, item.ratingId)
 
   return (
     <article className="overflow-hidden tarjeta">
@@ -65,8 +69,7 @@ export function TarjetaDeFeed({ item, esMia }: { item: ItemDeFeed; esMia: boolea
         </div>
       </header>
 
-      {/* Tocar una foto lleva al mismo lugar que el nombre del local de arriba. */}
-      <FotosDeResenia fotos={item.fotosDeLaResenia} autorUsername={item.autorUsername} enlace={aLaFicha} />
+      <FotosDeResenia fotos={item.fotosDeLaResenia} autorUsername={item.autorUsername} enlace={aEstaResenia} />
 
       <div className="flex flex-col gap-2 px-4 py-3">
         <div className="flex items-center justify-between gap-3">

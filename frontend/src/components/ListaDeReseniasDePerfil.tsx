@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { ReseniaDePerfil } from '../types'
+import { aLaResenia } from '../utils/aLaResenia'
 import { fechaYHora } from '../utils/fechaYHora'
 import { JointPhoto } from './JointPhoto'
 import { ScoreBadge } from './ScoreBadge'
@@ -9,6 +10,8 @@ import { ScoreBadge } from './ScoreBadge'
  * vale la pena seguirla. Un 4 sin más es igual al de cualquiera.
  *
  * La misma lista en el perfil, con las últimas, y en la página con todas (#247).
+ *
+ * Cada una lleva a esa reseña en la ficha del local, no al principio de la ficha (#260).
  */
 export function ListaDeReseniasDePerfil({ resenias }: { resenias: ReseniaDePerfil[] }) {
   return (
@@ -16,7 +19,7 @@ export function ListaDeReseniasDePerfil({ resenias }: { resenias: ReseniaDePerfi
       {resenias.map((r) => (
         <li key={r.id}>
           <Link
-            to={`/burger-joints/${r.burgerJointId}`}
+            to={aLaResenia(r.burgerJointId, r.id)}
             className="flex flex-col gap-2 tarjeta p-3 transition-shadow hover:tarjeta-alzada"
           >
             <span className="flex items-center gap-3">

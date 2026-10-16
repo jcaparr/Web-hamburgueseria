@@ -8,6 +8,7 @@ import { ScoreBadge } from '../components/ScoreBadge'
 import { useAuth } from '../context/useAuth'
 import { useTitulo } from '../hooks/useTitulo'
 import type { ReseniaDePerfil } from '../types'
+import { aLaResenia } from '../utils/aLaResenia'
 import { isSessionExpired } from '../utils/errors'
 import { fechaYHora } from '../utils/fechaYHora'
 
@@ -46,7 +47,7 @@ export function Reviews() {
       <ul className="flex flex-col gap-3">
         {ratings.map((r) => (
           <li key={r.id} className="tarjeta p-3">
-            <Link to={`/burger-joints/${r.burgerJointId}`} className="flex items-center gap-3">
+            <Link to={aLaResenia(r.burgerJointId, r.id)} className="flex items-center gap-3">
               <JointPhoto
                 src={r.photoUrl}
                 name={r.burgerJointName}

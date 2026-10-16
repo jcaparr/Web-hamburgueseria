@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { IconClock, IconExternal, IconPin, IconRoute } from '../components/icons'
 import { HorarioDelLocal } from '../components/HorarioDelLocal'
@@ -14,6 +14,7 @@ import { useAuth } from '../context/useAuth'
 import { useDatosEstructurados, useDescripcion, useNoIndexar } from '../hooks/useMetadatos'
 import { useTitulo } from '../hooks/useTitulo'
 import type { BurgerJoint, Horario, PageResponse, Rating, ResumenDeResenias } from '../types'
+import { anclaDeResenia, reseniaDelAncla } from '../utils/aLaResenia'
 import { descripcionDe, restauranteDe } from '../utils/datosEstructurados'
 import { isNotFound, isSessionExpired } from '../utils/errors'
 import { shortAddress } from '../utils/address'
@@ -25,6 +26,9 @@ import { comoLlegarUrl, mapsUrl } from '../utils/maps'
  * quedara en la URL, volver atrás la abriría de nuevo.
  */
 const ABRIR_OPINION = 'opinar'
+
+/** Cómo se marca la reseña a la que se llegó por el ancla (#260), mientras se la busca con la vista. */
+const RESALTADA = ['outline-2', 'outline-offset-4', 'outline-primary']
 
 export function BurgerJointDetail() {
   const { id } = useParams()
@@ -45,8 +49,12 @@ export function BurgerJointDetail() {
   const [aperturas, setAperturas] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<unknown>(null)
+  const location = useLocation()
+  const objetivo = reseniaDelAncla(location.hash)
+  // La reseña del ancla cuando no vino entre las primeras veinte (#260), con el local
+  // al que pertenece.
+  const [buscada, setBuscada] = useState<{ local: string | undefined; resenia: Rating } | null>(null)
 
-  const myRating = ratings.find((r) => r.userId === user?.userId) ?? null
   useTitulo(burgerJoint?.name ?? (isNotFound(loadError) ? 'Hamburguesería no encontrada' : null))
   // Para los buscadores: la descripción y la ficha en schema.org. Un local que no existe
   // no se tiene que guardar, aunque el servidor haya contestado 200 con la app.
@@ -69,11 +77,26 @@ export function BurgerJointDetail() {
         setCuantasResenias(ratingsRes.data.page.totalElements)
         setResumen(resumenRes.data)
         setLoadError(null)
+
+        // La reseña que pide el ancla, si no está entre las que trajo la lista (#260):
+        // la ficha trae las primeras veinte, y una más vieja hay que pedirla aparte. Se
+        // vuelve a pedir con cada carga, así que después de editarla se ve lo nuevo. Si
+        // no se puede ver (la borraron, hay un bloqueo), la ficha queda arriba, como antes.
+        if (objetivo === null || ratingsRes.data.content.some((r) => r.id === objetivo)) {
+          setBuscada(null)
+          return
+        }
+        const local = id
+        apiClient
+          .get<Rating>(`/burger-joints/${local}/ratings/${objetivo}`)
+          .then(({ data }) => setBuscada({ local, resenia: data }))
+          .catch(() => setBuscada(null))
       })
       .catch(setLoadError)
   }
 
-  useEffect(load, [id])
+  // Con el ancla también: otra reseña del mismo local hay que buscarla (#260).
+  useEffect(load, [id, objetivo])
 
   // Cada ficha empieza arriba. Al pasar de un local a otro desde "Más hamburgueserías
   // en…", que está al final, la página nueva aparecía scrolleada hasta abajo.
@@ -90,6 +113,39 @@ export function BurgerJointDetail() {
       .then(({ data }) => setHorario(data))
       .catch(() => setHorario(null))
   }, [id])
+
+  // Primero la buscada y después las demás, sin repetirla. Solo si es de este local:
+  // la de la ficha anterior no se cuela al pasar a otra.
+  const estaEnLaLista = objetivo !== null && ratings.some((r) => r.id === objetivo)
+  const lista =
+    buscada && buscada.local === id && buscada.resenia.id === objetivo && !estaEnLaLista
+      ? [buscada.resenia, ...ratings]
+      : ratings
+  // De la lista con la buscada: si tu reseña es vieja y llegaste a ella desde "Mis
+  // reseñas", es la buscada, y sin esto la ficha ofrecía escribir otra.
+  const myRating = lista.find((r) => r.userId === user?.userId) ?? null
+
+  // Salta hasta la reseña, le pasa el foco y la marca un momento, una sola vez por
+  // ancla: después de guardar una reseña la lista se vuelve a armar, y no tiene que
+  // volver a saltar.
+  //
+  // De una, como cualquier ancla, y no deslizándose: con las fotos y el horario todavía
+  // llegando, el deslizamiento a veces ni arrancaba y la página quedaba arriba. El foco
+  // es para el lector de pantalla, que sin él no se entera de a dónde llegó, y para que
+  // el próximo Tab siga desde ahí.
+  const yaSeMostro = useRef<number | null>(null)
+  const sacarMarca = useRef<ReturnType<typeof setTimeout>>(undefined)
+  useEffect(() => {
+    if (objetivo === null || yaSeMostro.current === objetivo) return
+    const elemento = document.getElementById(anclaDeResenia(objetivo))
+    if (!elemento) return
+    yaSeMostro.current = objetivo
+    elemento.scrollIntoView({ block: 'start' })
+    elemento.focus({ preventScroll: true })
+    elemento.classList.add(...RESALTADA)
+    sacarMarca.current = setTimeout(() => elemento.classList.remove(...RESALTADA), 2500)
+  }, [objetivo, ratings, buscada])
+  useEffect(() => () => clearTimeout(sacarMarca.current), [])
 
   // Abierta por el enlace mientras el parámetro esté y haya sesión. Se deduce en vez de
   // prenderla desde un efecto: un dibujo menos (#109), y no hace falta esperar a saber
@@ -270,21 +326,24 @@ export function BurgerJointDetail() {
 
       {/* Sin reseñas, el bloque de calificaciones ya invita a escribir la primera: un
           "Reseñas (0)" abajo repetiría lo mismo. */}
-      {ratings.length > 0 && (
+      {lista.length > 0 && (
         <section id="resenias" className="flex scroll-mt-20 flex-col gap-3">
           <h2 className="font-display text-lg font-bold">
             {cuantasResenias !== null ? `Reseñas (${cuantasResenias})` : 'Reseñas'}
           </h2>
-          {ratings.map((r) => {
+          {lista.map((r) => {
             const esMia = r.userId === user?.userId
+            // El ancla va acá y no en la tarjeta: la misma reseña puede estar también
+            // arriba, en "Lo que dijeron los que seguís", y un id no se puede repetir.
             return (
-              <TarjetaDeResenia
-                key={r.id}
-                resenia={r}
-                esMia={esMia}
-                puedeReaccionar={user !== null && !esMia}
-                onEditar={esMia ? abrirOpinion : undefined}
-              />
+              <div key={r.id} id={anclaDeResenia(r.id)} tabIndex={-1} className="scroll-mt-24 rounded-box">
+                <TarjetaDeResenia
+                  resenia={r}
+                  esMia={esMia}
+                  puedeReaccionar={user !== null && !esMia}
+                  onEditar={esMia ? abrirOpinion : undefined}
+                />
+              </div>
             )
           })}
         </section>

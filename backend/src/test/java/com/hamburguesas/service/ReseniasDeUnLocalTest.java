@@ -5,6 +5,7 @@ import com.hamburguesas.dto.NotaYCuantasDto;
 import com.hamburguesas.dto.RatingResponse;
 import com.hamburguesas.dto.ReaccionesDto;
 import com.hamburguesas.dto.ResumenDeReseniasDto;
+import com.hamburguesas.exception.ResourceNotFoundException;
 import com.hamburguesas.fotos.FotosDeResenias;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.Rating;
@@ -23,8 +24,10 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -101,6 +104,50 @@ class ReseniasDeUnLocalTest {
         Page<RatingResponse> lista = service.list(LOCAL, null, PRIMERA_PAGINA);
 
         assertThat(lista.getContent()).extracting(RatingResponse::username).containsExactly("otro");
+    }
+
+    // ---- una sola, para llegar a ella (#260) ----
+
+    @Test
+    void unaSolaTraeEsaResenia() {
+        when(ratingRepository.findById(30L)).thenReturn(Optional.of(unaResenia(30L, "otro", 4)));
+
+        RatingResponse resenia = service.una(LOCAL, 30L, YO);
+
+        assertThat(resenia.username()).isEqualTo("otro");
+    }
+
+    /** Pedida con otro local en la dirección, no existe: no se cruza una reseña de un lado a otro. */
+    @Test
+    void unaDeOtroLocalNoExiste() {
+        when(ratingRepository.findById(30L)).thenReturn(Optional.of(unaResenia(30L, "otro", 4)));
+
+        assertThatThrownBy(() -> service.una(99L, 30L, YO)).isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    /** Con un bloqueo de por medio tampoco: igual que en la lista. */
+    @Test
+    void unaDeQuienBloqueasteNoExiste() {
+        when(bloqueos.queNoPuedeVer(YO)).thenReturn(List.of(30L));
+        when(ratingRepository.findById(30L)).thenReturn(Optional.of(unaResenia(30L, "otro", 4)));
+
+        assertThatThrownBy(() -> service.una(LOCAL, 30L, YO)).isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    /** Una que no existe (la borraron, o el enlace está mal) es un 404, no un error del servidor. */
+    @Test
+    void unaQueNoExisteEsUnNoEncontrado() {
+        when(ratingRepository.findById(30L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.una(LOCAL, 30L, YO)).isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    /** Sin sesión también se llega: la ficha de un local se mira sin cuenta. */
+    @Test
+    void unaSinSesionSeVe() {
+        when(ratingRepository.findById(30L)).thenReturn(Optional.of(unaResenia(30L, "otro", 4)));
+
+        assertThat(service.una(LOCAL, 30L, null).username()).isEqualTo("otro");
     }
 
     // ---- el resumen de arriba ----
