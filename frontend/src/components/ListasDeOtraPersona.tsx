@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { usePedido } from '../hooks/usePedido'
 import type { BurgerJoint, SavedTour } from '../types'
@@ -85,15 +85,23 @@ function GuardarEnMisRecorridos({ tour }: { tour: SavedTour }) {
       })
   }
 
+  // Hecho, un texto y no el botón apagado: un botón deshabilitado se ve tan tenue que el
+  // aviso de que se guardó casi no se leía.
+  if (estado === 'guardado') {
+    return (
+      <p role="status" className="flex min-h-11 flex-wrap items-center gap-x-2 text-sm font-semibold">
+        Guardado en tus recorridos.
+        <Link to="/profile?ver=recorridos" className="text-primary hover:underline">
+          Verlos
+        </Link>
+      </p>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-1.5">
-      <button
-        type="button"
-        onClick={guardar}
-        disabled={estado !== 'listo'}
-        className="btn btn-outline h-11 min-h-11"
-      >
-        {estado === 'guardado' ? 'Guardado en tus recorridos' : estado === 'guardando' ? 'Guardando…' : 'Guardar en mis recorridos'}
+      <button type="button" onClick={guardar} disabled={estado === 'guardando'} className="btn btn-outline h-11 min-h-11">
+        {estado === 'guardando' ? 'Guardando…' : 'Guardar en mis recorridos'}
         <span className="sr-only"> {tour.name}</span>
       </button>
       {error && (
