@@ -3,6 +3,7 @@ import { useAuth } from '../context/useAuth'
 import { useHideOnScroll } from '../hooks/useScrollDirection'
 import { CampanaDeNotificaciones } from './CampanaDeNotificaciones'
 import { MarcaBurgometro } from './MarcaBurgometro'
+import { PanelDeAjustes } from './PanelDeAjustes'
 
 const NAV_LINKS = [
   { to: '/', label: 'Explorar' },
@@ -39,11 +40,11 @@ export function TopBar() {
           {/* Con mayúscula y en Lexend, como en el logo nuevo (#255): es lo que tiene
               que reconocerse igual en la barra, en la pestaña y en un mail.
 
-              Sin sesión, en los teléfonos de menos de 360 px los dos botones no dejan
+              Sin sesión, en los teléfonos de menos de 408 px los tres botones (con la tuerca) no dejan
               lugar para el nombre, y cortado ("burgóme…") se ve peor que no estar: queda
               el dibujo, y el nombre sigue ahí para los lectores de pantalla. */}
           <span
-            className={`font-logo truncate text-lg tracking-tight sm:text-xl lg:text-2xl ${user ? '' : 'max-[359px]:sr-only'}`}
+            className={`font-logo truncate text-lg tracking-tight sm:text-xl lg:text-2xl ${user ? '' : 'max-[407px]:sr-only'}`}
           >
             Burgómetro
           </span>
@@ -81,6 +82,7 @@ export function TopBar() {
               {/* La campana del buzón (#210): arriba y no en la barra de abajo del
                   teléfono, que ya tiene cinco botones. */}
               <CampanaDeNotificaciones />
+              <PanelDeAjustes />
               <span className="hidden font-medium sm:inline">@{user.username}</span>
               <button type="button" onClick={handleLogout} className="btn btn-ghost px-3">
                 <span className="sm:hidden">Salir</span>
@@ -89,6 +91,8 @@ export function TopBar() {
             </>
           ) : (
             <>
+              {/* El tema también se cambia sin cuenta (#270). */}
+              <PanelDeAjustes />
               <NavLink to="/login" className="btn btn-ghost px-2.5 sm:px-3">
                 <span className="sm:hidden">Entrar</span>
                 <span className="hidden sm:inline">Iniciar sesión</span>

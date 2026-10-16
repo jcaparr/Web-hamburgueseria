@@ -8,8 +8,8 @@ import { Interruptor } from './Interruptor'
  * Si tus guardadas y tus recorridos se ven en tu perfil público (#264).
  *
  * Se muestra como "Perfil privado" (#270): prendido es lo contrario de lo que guarda el
- * servidor. Las cuentas nuevas arrancan públicas, y el interruptor va dentro de la
- * cabecera del perfil, a la vista, no escondido en los ajustes. Uno solo para las dos
+ * servidor. Las cuentas nuevas arrancan públicas, y el interruptor vive en el panel de la
+ * tuerca de la barra (PanelDeAjustes), a un toque desde cualquier pantalla. Uno solo para las dos
  * listas y no uno por lista: es la misma pregunta —"¿muestro lo que pienso hacer?"— y
  * dos interruptores pedían pensar dos veces lo mismo.
  *
@@ -25,6 +25,8 @@ export function MostrarMisListas() {
   const [error, setError] = useState<string | null>(null)
 
   function cambiar(nuevo: boolean) {
+    // Sin deshabilitar el campo: uno deshabilitado le saca el foco a quien usa teclado.
+    if (guardando) return
     pedido.actualizar(() => nuevo)
     setGuardando(true)
     setError(null)
@@ -38,9 +40,9 @@ export function MostrarMisListas() {
       .finally(() => setGuardando(false))
   }
 
-  // Una sola fila de 44 px, sin título ni texto de ayuda: a la vista sin ocupar un bloque.
+  // Una sola fila de 44 px, sin título ni texto de ayuda.
   return (
-    <fieldset className="flex flex-col items-center md:items-start" disabled={guardando}>
+    <fieldset className="flex flex-col px-2">
       {pedido.datos !== undefined ? (
         // Prendido = privado: es lo contrario de lo que guarda el servidor ("muestra").
         <Interruptor activo={!pedido.datos} onCambiar={(privado) => cambiar(!privado)} className="gap-2 text-base-content/80">

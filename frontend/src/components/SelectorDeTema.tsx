@@ -16,8 +16,8 @@ export function SelectorDeTema() {
   const [tema, elegir] = useTema()
 
   return (
-    <fieldset className="flex flex-col gap-2">
-      <legend className="mb-2 text-sm font-semibold">Apariencia</legend>
+    <fieldset className="flex flex-col">
+      <legend className="px-2 pb-1 pt-2 text-xs font-semibold text-base-content/70">Apariencia</legend>
       <div className="flex rounded-full bg-base-200 p-1">
         {OPCIONES.map((opcion) => (
           <label
@@ -38,7 +38,7 @@ export function SelectorDeTema() {
           </label>
         ))}
       </div>
-      <p className="text-xs text-base-content/70">Automático sigue lo que tengas elegido en el teléfono o la compu.</p>
+      <p className="sr-only">Automático sigue lo que tengas elegido en el teléfono o la compu.</p>
     </fieldset>
   )
 }
