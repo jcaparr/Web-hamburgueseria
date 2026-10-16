@@ -2,9 +2,11 @@ package com.hamburguesas.controller;
 
 import com.hamburguesas.dto.AuthResponse;
 import com.hamburguesas.dto.HamburguesaRequest;
+import com.hamburguesas.dto.MostrarListasDto;
 import com.hamburguesas.dto.ProfileStatsDto;
 import com.hamburguesas.dto.ReseniaDePerfilDto;
 import com.hamburguesas.security.CurrentUser;
+import com.hamburguesas.service.ListasDelPerfil;
 import com.hamburguesas.service.ProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import java.util.List;
 public class ProfileController {
 
     private final ProfileService profileService;
+    private final ListasDelPerfil listasDelPerfil;
 
     @GetMapping("/stats")
     public ProfileStatsDto stats() {
@@ -37,5 +40,16 @@ public class ProfileController {
     @PutMapping("/hamburguesa")
     public AuthResponse hamburguesa(@Valid @RequestBody HamburguesaRequest pedido) {
         return profileService.cambiarHamburguesa(CurrentUser.requireId(), pedido.receta());
+    }
+
+    /** Si mostrás tus guardadas y tus recorridos en tu perfil público (#264). */
+    @GetMapping("/muestra-listas")
+    public MostrarListasDto muestraListas() {
+        return new MostrarListasDto(listasDelPerfil.lasMuestra(CurrentUser.requireId()));
+    }
+
+    @PutMapping("/muestra-listas")
+    public MostrarListasDto mostrarListas(@Valid @RequestBody MostrarListasDto pedido) {
+        return new MostrarListasDto(listasDelPerfil.mostrar(CurrentUser.requireId(), pedido.muestra()));
     }
 }

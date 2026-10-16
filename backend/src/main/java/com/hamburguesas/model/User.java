@@ -69,6 +69,14 @@ public class User {
     @Column(name = "notificaciones_vistas_el")
     private Instant notificacionesVistasEl;
 
+    /**
+     * Si muestra sus guardadas y sus recorridos en su perfil público (#264). Arranca
+     * apagado: quién los ve lo decide {@link com.hamburguesas.service.ListasDelPerfil}.
+     */
+    @Column(name = "muestra_listas", nullable = false)
+    @Builder.Default
+    private boolean muestraListas = false;
+
     @PrePersist
     void prePersist() {
         if (createdAt == null) {

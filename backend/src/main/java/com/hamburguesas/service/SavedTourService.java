@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -62,6 +63,12 @@ public class SavedTourService {
             throw new ConflictException(
                 "Llegaste a " + MAXIMO_POR_PERSONA + " recorridos guardados. Borrá alguno.");
         }
+        // El mismo dos veces no: desde el perfil de otro (#264) se guarda con un toque, y
+        // al volver a la pestaña el botón está de nuevo. Mismas paradas, en el mismo orden
+        // y del mismo modo, es el mismo recorrido.
+        if (yaLoTiene(userId, ids, request.modo())) {
+            throw new ConflictException("Ya tenés este recorrido guardado.");
+        }
 
         List<BurgerJoint> paradas = enElOrdenPedido(ids);
         User user = userRepository.findById(userId)
@@ -90,10 +97,35 @@ public class SavedTourService {
         return comoDto(savedTourRepository.save(tour));
     }
 
+    private boolean yaLoTiene(Long userId, List<Long> ids, ModoDeViaje modo) {
+        return savedTourRepository.findByUser_IdOrderByCreatedAtDesc(userId).stream()
+            .anyMatch(tour -> tour.getTravelMode() == modo
+                && tour.getStops().stream()
+                    .sorted(Comparator.comparingInt(SavedTourStop::getPosition))
+                    .map(stop -> stop.getBurgerJoint().getId())
+                    .toList()
+                    .equals(ids));
+    }
+
     @Transactional(readOnly = true)
     public List<SavedTourDto> mios(Long userId) {
-        return savedTourRepository.findByUser_IdOrderByCreatedAtDesc(userId).stream()
-            .map(this::comoDto)
+        return deUnaPersona(userId, userId);
+    }
+
+    /**
+     * Los recorridos de una persona como los ve otra (#264). Quién puede pedirlos lo
+     * decide {@link ListasDelPerfil}; acá solo se arman.
+     *
+     * Las paradas salen marcadas según lo que puntuó quien mira, no el dueño: en el
+     * recorrido de otro, lo que sirve saber es a cuáles ya fuiste vos.
+     */
+    @Transactional(readOnly = true)
+    public List<SavedTourDto> deUnaPersona(Long duenioId, Long quienMira) {
+        Set<Long> puntuadas = quienMira == null
+            ? Set.of()
+            : new HashSet<>(ratingRepository.idsPuntuadosPor(quienMira));
+        return savedTourRepository.findByUser_IdOrderByCreatedAtDesc(duenioId).stream()
+            .map(tour -> comoDto(tour, puntuadas))
             .toList();
     }
 
@@ -164,9 +196,10 @@ public class SavedTourService {
     }
 
     private SavedTourDto comoDto(SavedTour tour) {
-        Set<Long> puntuadas = new HashSet<>(
-            ratingRepository.idsPuntuadosPor(tour.getUser().getId()));
+        return comoDto(tour, new HashSet<>(ratingRepository.idsPuntuadosPor(tour.getUser().getId())));
+    }
 
+    private SavedTourDto comoDto(SavedTour tour, Set<Long> puntuadas) {
         List<SavedTourStop> stops = tour.getStops();
         List<BurgerJointDto> fichas = fichaDeLocal.conDeseo(
             stops.stream().map(SavedTourStop::getBurgerJoint).toList(), false);

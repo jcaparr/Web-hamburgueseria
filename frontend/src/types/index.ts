@@ -237,6 +237,8 @@ export interface PerfilPublico {
   loSigo: boolean
   soyYo: boolean
   ultimasResenias: ReseniaDePerfil[]
+  /** Si se pueden ver sus guardadas y sus recorridos (#264): los muestra, o es tu perfil. */
+  seVenSusListas: boolean
 }
 
 /** Una reseña como se lee en el feed, con quién, dónde y qué dijo. */

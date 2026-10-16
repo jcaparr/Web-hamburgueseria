@@ -1,10 +1,12 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { CabeceraDePerfil } from '../components/CabeceraDePerfil'
 import { CuentasBloqueadas } from '../components/CuentasBloqueadas'
 import { IconChevronRight, IconPencil, IconSettings } from '../components/icons'
 import { LoadError } from '../components/LoadError'
+import { MostrarMisListas } from '../components/MostrarMisListas'
+import { BarraDePestanias, GrillaDeLocales, VerTodas } from '../components/PestaniasDePerfil'
 import { SavedTourCard } from '../components/SavedTourCard'
 import { SelectorDeTema } from '../components/SelectorDeTema'
 import { AvisoVacio } from '../components/Seccion'
@@ -13,23 +15,12 @@ import { useAuth } from '../context/useAuth'
 import { useTitulo } from '../hooks/useTitulo'
 import type { BurgerJoint, ReseniaDePerfil, ProfileStats, SavedTour } from '../types'
 import { isSessionExpired } from '../utils/errors'
+import { PANEL_DEL_PERFIL, pestaniaDe, type Pestania } from '../utils/pestaniasDePerfil'
 import { cantidad, nota } from '../utils/numeros'
 import { fechaYHora } from '../utils/fechaYHora'
 
 /** Cuántas reseñas y guardadas se asoman en el perfil; el resto, en "Ver todas". */
 const CUANTAS_EN_LA_GRILLA = 6
-
-type Pestania = 'resenias' | 'guardadas' | 'recorridos'
-
-const PESTANIAS: { id: Pestania; texto: string }[] = [
-  { id: 'resenias', texto: 'Reseñas' },
-  { id: 'guardadas', texto: 'Guardadas' },
-  { id: 'recorridos', texto: 'Recorridos' },
-]
-
-function esPestania(valor: string | null): valor is Pestania {
-  return PESTANIAS.some((p) => p.id === valor)
-}
 
 export function Profile() {
   const { user, logout } = useAuth()
@@ -38,8 +29,7 @@ export function Profile() {
   // La pestaña va en la dirección, como en el Ranking: al volver de una ficha se vuelve
   // a la misma, y no a Reseñas.
   const [parametros, setParametros] = useSearchParams()
-  const pedida = parametros.get('ver')
-  const pestania: Pestania = esPestania(pedida) ? pedida : 'resenias'
+  const pestania = pestaniaDe(parametros.get('ver'))
   const [stats, setStats] = useState<ProfileStats | null>(null)
   const [ratings, setRatings] = useState<ReseniaDePerfil[]>([])
   const [favorites, setFavorites] = useState<BurgerJoint[]>([])
@@ -153,32 +143,11 @@ export function Profile() {
         />
       )}
 
-      {/* Pestañas en vez de tres secciones apiladas: con las tres a la vista, el perfil
-          era una tira larga de tarjetas y cajas vacías, y lo de abajo no lo veía nadie. */}
       <div className="flex flex-col gap-4">
-        <div role="tablist" aria-label="Qué ver de tu perfil" className="flex border-b border-base-content/15">
-          {PESTANIAS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              role="tab"
-              id={`pestania-${p.id}`}
-              aria-selected={pestania === p.id}
-              aria-controls="contenido-del-perfil"
-              onClick={() => elegir(p.id)}
-              className={`-mb-px min-h-11 flex-1 cursor-pointer border-b-2 px-2 text-sm font-semibold transition-colors ${
-                pestania === p.id
-                  ? 'border-primary text-base-content'
-                  : 'border-transparent text-base-content/70 hover:text-base-content'
-              }`}
-            >
-              {p.texto}
-            </button>
-          ))}
-        </div>
+        <BarraDePestanias actual={pestania} onElegir={elegir} etiqueta="Qué ver de tu perfil" />
 
         <section
-          id="contenido-del-perfil"
+          id={PANEL_DEL_PERFIL}
           role="tabpanel"
           aria-labelledby={`pestania-${pestania}`}
           aria-busy={loading}
@@ -263,6 +232,7 @@ export function Profile() {
         </summary>
         <div className="flex flex-col gap-5 pt-2 pb-2">
           <SelectorDeTema />
+          <MostrarMisListas />
           <CuentasBloqueadas />
           <button type="button" onClick={cerrarSesion} className="btn btn-outline w-full md:w-fit md:px-6">
             Cerrar sesión
@@ -278,23 +248,5 @@ export function Profile() {
         </div>
       </details>
     </div>
-  )
-}
-
-/** Las tarjetas de una pestaña: de a dos en el teléfono y de a tres en la compu. */
-function GrillaDeLocales({ children }: { children: ReactNode }) {
-  return <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">{children}</ul>
-}
-
-/** El enlace al final de una pestaña, hacia la lista entera. */
-function VerTodas({ a, children }: { a: string; children: ReactNode }) {
-  return (
-    <Link
-      to={a}
-      className="-my-3 flex w-fit items-center gap-1 self-end rounded-field py-3 text-sm font-semibold text-primary hover:underline"
-    >
-      {children}
-      <IconChevronRight size={14} />
-    </Link>
   )
 }

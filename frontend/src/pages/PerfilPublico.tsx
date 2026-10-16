@@ -1,14 +1,17 @@
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { BotonBloquear } from '../components/BotonBloquear'
 import { BotonSeguir } from '../components/BotonSeguir'
 import { CabeceraDePerfil } from '../components/CabeceraDePerfil'
+import { GuardadasDeOtraPersona, RecorridosDeOtraPersona } from '../components/ListasDeOtraPersona'
 import { ListaDeReseniasDePerfil } from '../components/ListaDeReseniasDePerfil'
 import { LoadError } from '../components/LoadError'
+import { BarraDePestanias, VerTodas } from '../components/PestaniasDePerfil'
 import { AvisoVacio, Seccion } from '../components/Seccion'
 import { usePedido } from '../hooks/usePedido'
 import { useTitulo } from '../hooks/useTitulo'
 import { isNotFound } from '../utils/errors'
+import { PANEL_DEL_PERFIL, pestaniaDe, type Pestania } from '../utils/pestaniasDePerfil'
 import { cantidad, nota } from '../utils/numeros'
 import type { PerfilPublico as Perfil } from '../types'
 
@@ -16,12 +19,19 @@ import type { PerfilPublico as Perfil } from '../types'
  * El perfil de otra persona.
  *
  * Muestra sus reseñas y sus números, que es lo que hace falta para decidir si vale la
- * pena seguirla. Sus favoritos no: marcar una hamburguesería para ir algún día es una
- * intención, no una opinión publicada.
+ * pena seguirla. Sus guardadas y sus recorridos, solo si eligió mostrarlos (#264):
+ * marcar una hamburguesería para ir algún día es una intención, no una opinión publicada.
  */
 export function PerfilPublico() {
   const { username = '' } = useParams()
   const navigate = useNavigate()
+  // La pestaña en la dirección, como en el perfil propio: al volver de una ficha se
+  // vuelve a la misma.
+  const [parametros, setParametros] = useSearchParams()
+  const pestania = pestaniaDe(parametros.get('ver'))
+  function elegir(nueva: Pestania) {
+    setParametros(nueva === 'resenias' ? {} : { ver: nueva }, { replace: true })
+  }
 
   // Solo lo de esta persona: al pasar de un perfil a otro no se ve el anterior mientras
   // llega el nuevo.
@@ -76,6 +86,18 @@ export function PerfilPublico() {
     )
   }
 
+  const hayMasResenias = perfil.resenias > perfil.ultimasResenias.length
+  const resenias =
+    perfil.ultimasResenias.length > 0 ? (
+      <ListaDeReseniasDePerfil resenias={perfil.ultimasResenias} />
+    ) : (
+      <AvisoVacio>
+        {perfil.soyYo
+          ? 'Todavía no calificaste ninguna hamburguesería.'
+          : 'Todavía no calificó ninguna hamburguesería.'}
+      </AvisoVacio>
+    )
+
   return (
     <div className="flex flex-col gap-6 p-4 md:mx-auto md:max-w-3xl md:p-0 md:pt-6">
       <CabeceraDePerfil
@@ -122,20 +144,34 @@ export function PerfilPublico() {
         }
       />
 
-      <Seccion
-        titulo="Últimas reseñas"
-        verTodas={perfil.resenias > perfil.ultimasResenias.length ? `/u/${perfil.username}/resenias` : undefined}
-      >
-        {perfil.ultimasResenias.length > 0 ? (
-          <ListaDeReseniasDePerfil resenias={perfil.ultimasResenias} />
-        ) : (
-          <AvisoVacio>
-            {perfil.soyYo
-              ? 'Todavía no calificaste ninguna hamburguesería.'
-              : 'Todavía no calificó ninguna hamburguesería.'}
-          </AvisoVacio>
-        )}
-      </Seccion>
+      {/* Con sus guardadas y recorridos a la vista (#264), las mismas pestañas que el
+          perfil propio. Si no los muestra, sin pestañas: una sola no es una elección. */}
+      {perfil.seVenSusListas ? (
+        <div className="flex flex-col gap-4">
+          <BarraDePestanias actual={pestania} onElegir={elegir} etiqueta={`Qué ver de @${perfil.username}`} />
+          <section
+            id={PANEL_DEL_PERFIL}
+            role="tabpanel"
+            aria-labelledby={`pestania-${pestania}`}
+            className="flex flex-col gap-4"
+          >
+            {pestania === 'guardadas' ? (
+              <GuardadasDeOtraPersona username={perfil.username} />
+            ) : pestania === 'recorridos' ? (
+              <RecorridosDeOtraPersona username={perfil.username} soyYo={perfil.soyYo} />
+            ) : (
+              <>
+                {resenias}
+                {hayMasResenias && <VerTodas a={`/u/${perfil.username}/resenias`}>Ver todas</VerTodas>}
+              </>
+            )}
+          </section>
+        </div>
+      ) : (
+        <Seccion titulo="Últimas reseñas" verTodas={hayMasResenias ? `/u/${perfil.username}/resenias` : undefined}>
+          {resenias}
+        </Seccion>
+      )}
 
       {!perfil.soyYo && (
         <section className="border-t border-base-content/10 pt-6">

@@ -1,10 +1,13 @@
 package com.hamburguesas.controller;
 
+import com.hamburguesas.dto.BurgerJointDto;
 import com.hamburguesas.dto.PerfilPublicoDto;
 import com.hamburguesas.dto.ReseniaDePerfilDto;
+import com.hamburguesas.dto.SavedTourDto;
 import com.hamburguesas.dto.UsuarioBloqueadoDto;
 import com.hamburguesas.dto.UsuarioBuscadoDto;
 import com.hamburguesas.security.CurrentUser;
+import com.hamburguesas.service.ListasDelPerfil;
 import com.hamburguesas.service.SocialService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +34,7 @@ import java.util.List;
 public class UsuariosController {
 
     private final SocialService socialService;
+    private final ListasDelPerfil listasDelPerfil;
 
     @GetMapping
     public List<UsuarioBuscadoDto> buscar(@RequestParam(defaultValue = "") String q) {
@@ -46,6 +50,18 @@ public class UsuariosController {
     @GetMapping("/{username}/resenias")
     public List<ReseniaDePerfilDto> resenias(@PathVariable String username) {
         return socialService.resenias(username, CurrentUser.requireId());
+    }
+
+    /** Sus guardadas, si las muestra (#264). Si no, 404. */
+    @GetMapping("/{username}/guardadas")
+    public List<BurgerJointDto> guardadas(@PathVariable String username) {
+        return listasDelPerfil.guardadas(username, CurrentUser.requireId());
+    }
+
+    /** Sus recorridos, si los muestra (#264). Si no, 404. */
+    @GetMapping("/{username}/recorridos")
+    public List<SavedTourDto> recorridos(@PathVariable String username) {
+        return listasDelPerfil.recorridos(username, CurrentUser.requireId());
     }
 
     /** Quiénes siguen a esta persona (#183). */
