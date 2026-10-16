@@ -2,13 +2,10 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { CabeceraDePerfil } from '../components/CabeceraDePerfil'
-import { CuentasBloqueadas } from '../components/CuentasBloqueadas'
-import { IconChevronRight, IconPencil, IconSettings } from '../components/icons'
+import { IconPencil } from '../components/icons'
 import { LoadError } from '../components/LoadError'
-import { MostrarMisListas } from '../components/MostrarMisListas'
 import { BarraDePestanias, GrillaDeLocales, VerTodas } from '../components/PestaniasDePerfil'
 import { SavedTourCard } from '../components/SavedTourCard'
-import { SelectorDeTema } from '../components/SelectorDeTema'
 import { AvisoVacio } from '../components/Seccion'
 import { TarjetaChicaDeLocal } from '../components/TarjetaChicaDeLocal'
 import { useAuth } from '../context/useAuth'
@@ -23,7 +20,7 @@ import { fechaYHora } from '../utils/fechaYHora'
 const CUANTAS_EN_LA_GRILLA = 6
 
 export function Profile() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   useTitulo('Tu perfil')
   const navigate = useNavigate()
   // La pestaña va en la dirección, como en el Ranking: al volver de una ficha se vuelve
@@ -64,13 +61,6 @@ export function Profile() {
     // replace: cambiar de pestaña no es ir a otra página, y "atrás" tiene que salir del
     // perfil, no recorrer las pestañas que se tocaron.
     setParametros(nueva === 'resenias' ? {} : { ver: nueva }, { replace: true })
-  }
-
-  // Lo mismo que "Salir" arriba, y en el mismo orden: primero se va al inicio, porque
-  // borrar la sesión con una página privada abierta manda al login.
-  async function cerrarSesion() {
-    navigate('/')
-    await logout()
   }
 
   function borrarTour(id: number) {
@@ -222,31 +212,16 @@ export function Profile() {
         </section>
       </div>
 
-      {/* Los ajustes al final, aparte y plegados: es lo que menos se toca, y cerrar
-          sesión ya está arriba, en la barra. */}
-      <details className="group border-t border-base-content/10 pt-2">
-        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-field font-display text-base font-bold [&::-webkit-details-marker]:hidden">
-          <IconSettings size={18} />
-          Ajustes
-          <IconChevronRight size={16} className="ml-auto transition-transform group-open:rotate-90" />
-        </summary>
-        <div className="flex flex-col gap-5 pt-2 pb-2">
-          <SelectorDeTema />
-          <MostrarMisListas />
-          <CuentasBloqueadas />
-          <button type="button" onClick={cerrarSesion} className="btn btn-outline w-full md:w-fit md:px-6">
-            Cerrar sesión
-          </button>
-          <nav aria-label="Legales" className="-my-2 flex flex-wrap gap-x-5 text-sm">
-            <Link to="/terminos" className="inline-flex min-h-11 items-center rounded-field text-base-content/70 hover:text-base-content hover:underline">
-              Términos y condiciones
-            </Link>
-            <Link to="/privacidad" className="inline-flex min-h-11 items-center rounded-field text-base-content/70 hover:text-base-content hover:underline">
-              Política de privacidad
-            </Link>
-          </nav>
-        </div>
-      </details>
+      {/* Al pie, solo lo legal (#270): el tema, la privacidad y los bloqueados viven en la
+          tuerca de la barra, y cerrar sesión, en la barra también. */}
+      <nav aria-label="Legales" className="flex flex-wrap gap-x-5 border-t border-base-content/10 text-sm">
+        <Link to="/terminos" className="inline-flex min-h-11 items-center rounded-field text-base-content/70 hover:text-base-content hover:underline">
+          Términos y condiciones
+        </Link>
+        <Link to="/privacidad" className="inline-flex min-h-11 items-center rounded-field text-base-content/70 hover:text-base-content hover:underline">
+          Política de privacidad
+        </Link>
+      </nav>
     </div>
   )
 }

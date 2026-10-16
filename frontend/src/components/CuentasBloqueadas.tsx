@@ -47,8 +47,8 @@ export function CuentasBloqueadas() {
   if (bloqueados.length === 0) return null
 
   return (
-    <details className="flex flex-col gap-3">
-      <summary className="cursor-pointer rounded-field py-3 font-display text-base font-bold">
+    <details className="flex flex-col gap-2 px-2">
+      <summary className="flex min-h-11 cursor-pointer items-center rounded-field text-sm">
         Cuentas bloqueadas ({bloqueados.length})
       </summary>
 

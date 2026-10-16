@@ -70,12 +70,12 @@ public class User {
     private Instant notificacionesVistasEl;
 
     /**
-     * Si muestra sus guardadas y sus recorridos en su perfil público (#264). Arranca
-     * apagado: quién los ve lo decide {@link com.hamburguesas.service.ListasDelPerfil}.
+     * Si muestra sus guardadas y sus recorridos en su perfil público (#264). Las
+     * cuentas nuevas arrancan prendido (#270), las viejas quedan como estaban: quién los ve lo decide {@link com.hamburguesas.service.ListasDelPerfil}.
      */
     @Column(name = "muestra_listas", nullable = false)
     @Builder.Default
-    private boolean muestraListas = false;
+    private boolean muestraListas = true;
 
     @PrePersist
     void prePersist() {

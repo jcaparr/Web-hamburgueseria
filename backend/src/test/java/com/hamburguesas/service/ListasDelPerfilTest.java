@@ -89,7 +89,8 @@ class ListasDelPerfilTest {
 
     private User alguien(String username) {
         return userRepository.findByUsername(username).orElseGet(() -> userRepository.save(
-            User.builder().username(username).email(username + "@example.com").emailVerified(true).build()));
+            User.builder().username(username).email(username + "@example.com").emailVerified(true)
+                .muestraListas(false).build()));
     }
 
     private BurgerJoint local(String placeId, double lat, double lng) {
@@ -110,6 +111,12 @@ class ListasDelPerfilTest {
             .isInstanceOf(ResourceNotFoundException.class);
         assertThatThrownBy(() -> listas.recorridos("analistas", beto.getId()))
             .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    /** Una cuenta nueva muestra sus listas sin que nadie lo prenda (#270). */
+    @Test
+    void unaCuentaNuevaArrancaMostrandolas() {
+        assertThat(User.builder().username("nueva").build().isMuestraListas()).isTrue();
     }
 
     @Test

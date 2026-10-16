@@ -56,6 +56,16 @@ export function IconPin({ size = 14, className }: IconProps) {
   )
 }
 
+/** Un candado: cerrado cuando algo es privado, con el arco levantado cuando no. */
+export function IconLock({ size = 14, abierto = false, className }: IconProps & { abierto?: boolean }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.8} className={className}>
+      <rect x="4.5" y="9" width="11" height="8" rx="1.8" />
+      <path d={abierto ? 'M7 9V6.2a3 3 0 0 1 5.8-1' : 'M7 9V6a3 3 0 0 1 6 0v3'} />
+    </svg>
+  )
+}
+
 export function IconRoute({ size = 18, className }: IconProps) {
   return (
     <svg aria-hidden="true" viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.8} className={className}>
@@ -75,11 +85,12 @@ export function IconUser({ size = 18, className }: IconProps) {
   )
 }
 
+/** La tuerca de ajustes (#270). Con dientes y no con rayos: los rayos se leían como un sol, o sea, como el tema. */
 export function IconSettings({ size = 18, className }: IconProps) {
   return (
-    <svg aria-hidden="true" viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.6} className={className}>
-      <circle cx="10" cy="10" r="2.6" />
-      <path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.6 4.6l1.4 1.4M14 14l1.4 1.4M15.4 4.6 14 6M6 14l-1.4 1.4" />
+    <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
     </svg>
   )
 }
