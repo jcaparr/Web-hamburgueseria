@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import { apiClient } from '../api/client'
 import { usePedido } from '../hooks/usePedido'
+import { IconLock } from './icons'
 import { Interruptor } from './Interruptor'
 
 /**
  * Si tus guardadas y tus recorridos se ven en tu perfil público (#264).
  *
- * Las cuentas nuevas arrancan prendido (#270) y van con el interruptor a la vista, en el
- * perfil, no escondido en los ajustes. Uno solo para las dos listas y no uno por lista: es la misma pregunta —"¿muestro lo que pienso
- * hacer?"— y dos interruptores pedían pensar dos veces lo mismo.
+ * Se muestra como "Perfil privado" (#270): prendido es lo contrario de lo que guarda el
+ * servidor. Las cuentas nuevas arrancan públicas, y el interruptor va dentro de la
+ * cabecera del perfil, a la vista, no escondido en los ajustes. Uno solo para las dos
+ * listas y no uno por lista: es la misma pregunta —"¿muestro lo que pienso hacer?"— y
+ * dos interruptores pedían pensar dos veces lo mismo.
  *
  * Se marca enseguida, pero no se puede volver a tocar hasta que el servidor contesta, y
  * lo que queda es lo que él dice: prenderlo y apagarlo rápido mandaba dos pedidos que
@@ -35,12 +38,16 @@ export function MostrarMisListas() {
       .finally(() => setGuardando(false))
   }
 
-  // Una sola fila, sin tarjeta ni título: a la vista pero sin ocupar un bloque entero.
+  // Una sola fila de 44 px, sin título ni texto de ayuda: a la vista sin ocupar un bloque.
   return (
-    <fieldset className="flex flex-col" disabled={guardando}>
+    <fieldset className="flex flex-col items-center md:items-start" disabled={guardando}>
       {pedido.datos !== undefined ? (
-        <Interruptor activo={pedido.datos} onCambiar={cambiar}>
-          Mostrar mis guardadas y recorridos
+        // Prendido = privado: es lo contrario de lo que guarda el servidor ("muestra").
+        <Interruptor activo={!pedido.datos} onCambiar={(privado) => cambiar(!privado)} className="gap-2 text-base-content/80">
+          <span className="flex items-center gap-1.5">
+            <IconLock size={14} abierto={pedido.datos} />
+            Perfil privado
+          </span>
         </Interruptor>
       ) : pedido.error ? (
         <p role="alert" className="flex min-h-11 flex-wrap items-center gap-x-2 text-sm text-error">

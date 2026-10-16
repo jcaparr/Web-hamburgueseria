@@ -99,6 +99,7 @@ export function Profile() {
         // Debajo del nombre, al lado de la hamburguesa: es donde se la mira y donde se
         // busca cómo cambiarla.
         bajada={
+          <>
           <Link
             to="/profile/hamburguesa"
             className="-my-2 inline-flex min-h-11 w-fit items-center gap-1.5 rounded-field text-sm font-semibold text-primary hover:underline"
@@ -106,6 +107,10 @@ export function Profile() {
             <IconPencil size={14} />
             Cambiar tu hamburguesa
           </Link>
+          {/* Dentro de la tarjeta (#270): es parte de quién sos y de quién te ve, y así no
+              suma un bloque más entre la cabecera y las pestañas. */}
+          <MostrarMisListas />
+          </>
         }
         cifras={[
           {
@@ -142,10 +147,6 @@ export function Profile() {
           }}
         />
       )}
-
-      {/* A la vista y no plegado en Ajustes (#270): el perfil arranca público, y quien
-          prefiere cerrarlo tiene que poder encontrar cómo sin buscar. */}
-      <MostrarMisListas />
 
       <div className="flex flex-col gap-4">
         <BarraDePestanias actual={pestania} onElegir={elegir} etiqueta="Qué ver de tu perfil" />

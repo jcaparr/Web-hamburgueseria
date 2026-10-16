@@ -56,6 +56,16 @@ export function IconPin({ size = 14, className }: IconProps) {
   )
 }
 
+/** Un candado: cerrado cuando algo es privado, con el arco levantado cuando no. */
+export function IconLock({ size = 14, abierto = false, className }: IconProps & { abierto?: boolean }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.8} className={className}>
+      <rect x="4.5" y="9" width="11" height="8" rx="1.8" />
+      <path d={abierto ? 'M7 9V6.2a3 3 0 0 1 5.8-1' : 'M7 9V6a3 3 0 0 1 6 0v3'} />
+    </svg>
+  )
+}
+
 export function IconRoute({ size = 18, className }: IconProps) {
   return (
     <svg aria-hidden="true" viewBox="0 0 20 20" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.8} className={className}>
