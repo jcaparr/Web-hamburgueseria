@@ -50,6 +50,15 @@ public class EmailService {
     }
 
     public void send(String to, String subject, String body) {
+        send(to, subject, body, null);
+    }
+
+    /**
+     * Con Reply-To: el mail sale desde no-responder@, y esto hace que "Responder" le
+     * escriba a otra dirección. Lo usa el aviso de una sugerencia de local (#257), para
+     * contestarle directo a quien la mandó. Nulo: sin Reply-To.
+     */
+    public void send(String to, String subject, String body, String replyTo) {
         JavaMailSender sender = properties.isEnabled() ? mailSenderProvider.getIfAvailable() : null;
 
         if (sender == null) {
@@ -68,6 +77,9 @@ public class EmailService {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(String.format("%s <%s>", properties.getFromName(), properties.getFrom()));
         message.setTo(to);
+        if (replyTo != null) {
+            message.setReplyTo(replyTo);
+        }
         message.setSubject(subject);
         message.setText(body);
 

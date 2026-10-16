@@ -7,6 +7,7 @@ import { PasoNombreDeGoogle } from '../components/PasoNombreDeGoogle'
 import { useAuth } from '../context/useAuth'
 import { useTitulo } from '../hooks/useTitulo'
 import { useGoogleSignIn } from '../hooks/useGoogleSignIn'
+import { conVolverA, volverDespuesDeEntrar } from '../utils/volverDespuesDeEntrar'
 
 export function Login() {
   const { login } = useAuth()
@@ -30,14 +31,14 @@ export function Login() {
     setNotice(null)
     try {
       await login(email, password)
-      navigate('/')
+      navigate(volverDespuesDeEntrar(location.state))
     } catch (err: any) {
       const data = err.response?.data
 
       // The password was right but the account was never activated. The server has
       // already sent a fresh code, so send them straight to the screen to enter it.
       if (data?.code === 'EMAIL_NOT_VERIFIED') {
-        navigate('/verify-email', { state: { email, notice: data.error } })
+        navigate('/verify-email', { state: { email, notice: data.error, ...conVolverA(location.state) } })
         return
       }
 
@@ -109,7 +110,7 @@ export function Login() {
             </Link>
           </p>
           <p className="text-sm text-base-content/70">
-            ¿No tenés cuenta? <Link to="/register" className="link text-primary">Creá una</Link>
+            ¿No tenés cuenta? <Link to="/register" state={conVolverA(location.state)} className="link text-primary">Creá una</Link>
           </p>
         </div>
       </div>

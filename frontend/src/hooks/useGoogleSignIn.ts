@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
+import { volverDespuesDeEntrar } from '../utils/volverDespuesDeEntrar'
 
 /**
  * Shared by the login and register screens, which are the same action as far as
@@ -11,6 +12,8 @@ import { useAuth } from '../context/useAuth'
 export function useGoogleSignIn() {
   const { loginWithGoogle } = useAuth()
   const navigate = useNavigate()
+  // Si quien mandó a iniciar sesión dejó a dónde volver (#257).
+  const location = useLocation()
   const [error, setError] = useState<string | null>(null)
 
   /**
@@ -28,7 +31,7 @@ export function useGoogleSignIn() {
     setError(null)
     try {
       await loginWithGoogle(credential)
-      navigate('/')
+      navigate(volverDespuesDeEntrar(location.state))
     } catch (err: any) {
       const data = err.response?.data
 
@@ -54,7 +57,7 @@ export function useGoogleSignIn() {
     if (!pendiente) return
     await loginWithGoogle(pendiente.credential, username)
     setPendiente(null)
-    navigate('/')
+    navigate(volverDespuesDeEntrar(location.state))
   }
 
   function cancelar() {

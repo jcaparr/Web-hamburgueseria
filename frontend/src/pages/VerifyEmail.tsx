@@ -4,6 +4,7 @@ import { apiClient } from '../api/client'
 import { Campo } from '../components/Campo'
 import { useAuth } from '../context/useAuth'
 import { useTitulo } from '../hooks/useTitulo'
+import { volverDespuesDeEntrar } from '../utils/volverDespuesDeEntrar'
 
 const RESEND_COOLDOWN_SECONDS = 60
 
@@ -55,7 +56,7 @@ export function VerifyEmail() {
     setError(null)
     try {
       await verifyEmail(email, code)
-      navigate('/')
+      navigate(volverDespuesDeEntrar(location.state))
     } catch (err: any) {
       setError(err.response?.data?.error ?? 'No pudimos verificar el código. Revisalo y probá de nuevo.')
     } finally {

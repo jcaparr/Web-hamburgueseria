@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Campo, CampoDeContrasenia } from '../components/Campo'
 import { CampoNombreDeUsuario } from '../components/CampoNombreDeUsuario'
 import { AvisoDeTerminos } from '../components/AvisoDeTerminos'
@@ -9,6 +9,7 @@ import { useAuth } from '../context/useAuth'
 import { useTitulo } from '../hooks/useTitulo'
 import { useGoogleSignIn } from '../hooks/useGoogleSignIn'
 import { useNombreDeUsuario } from '../hooks/useNombreDeUsuario'
+import { conVolverA } from '../utils/volverDespuesDeEntrar'
 
 export function Register() {
   const { register } = useAuth()
@@ -16,6 +17,8 @@ export function Register() {
   const google = useGoogleSignIn()
   const { onCredential, googleError, setGoogleError } = google
   const navigate = useNavigate()
+  // Si venía de iniciar sesión con a dónde volver (#257), se pasa a verificar el email.
+  const location = useLocation()
   const username = useNombreDeUsuario()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -31,7 +34,7 @@ export function Register() {
       // No session yet: the account is not usable until the emailed code is entered.
       // The message the server returns is not passed along: the verification screen
       // already says the same thing, with the address filled in.
-      navigate('/verify-email', { state: { email } })
+      navigate('/verify-email', { state: { email, ...conVolverA(location.state) } })
     } catch (err: any) {
       // Si el problema es el nombre de usuario, queda marcado en ese campo: es donde
       // se arregla, y un cartel arriba no diría dónde mirar.
@@ -100,7 +103,7 @@ export function Register() {
           />
           <AvisoDeTerminos accion="Al crear tu cuenta" />
           <p className="text-sm text-base-content/70">
-            ¿Ya tenés cuenta? <Link to="/login" className="link text-primary">Iniciá sesión</Link>
+            ¿Ya tenés cuenta? <Link to="/login" state={conVolverA(location.state)} className="link text-primary">Iniciá sesión</Link>
           </p>
         </div>
       </div>

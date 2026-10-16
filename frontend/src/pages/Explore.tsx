@@ -7,6 +7,11 @@ import { MejorCalificadas } from '../components/MejorCalificadas'
 import { AvisoVacio } from '../components/Seccion'
 import { SelectorDeBarrios } from '../components/SelectorDeBarrios'
 import { SelectorDeOrden } from '../components/SelectorDeOrden'
+import {
+  AbrirSugerenciaAlVolver,
+  BotonSugerirUnLocal,
+  TarjetaFaltaTuHamburgueseria,
+} from '../components/SugerirUnLocal'
 import { TarjetaDeCadena } from '../components/TarjetaDeCadena'
 import { TarjetaDeLocal, TarjetaDeLocalCargando } from '../components/TarjetaDeLocal'
 import { useAuth } from '../context/useAuth'
@@ -439,9 +444,16 @@ export function Explore() {
                   ? `No encontramos hamburgueserías en ${enCastellano(barriosElegidos)}${query ? ' con ese nombre' : ''}.`
                   : 'No encontramos hamburgueserías con ese nombre.'}
               </AvisoVacio>
-              <button type="button" onClick={borrarFiltros} className="btn btn-outline btn-sm">
-                Ver todas las hamburgueserías
-              </button>
+              {/* Puede que no esté porque falta, no porque se escribió mal (#257). Va
+                  primero porque es lo único que se puede hacer acá con lo que se buscó;
+                  ver todas es empezar de nuevo. Las dos con 44 px para el dedo. */}
+              <p className="text-sm text-base-content/70">¿Conocés una que no está? Pasanos el dato y la sumamos.</p>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <BotonSugerirUnLocal />
+                <button type="button" onClick={borrarFiltros} className="btn btn-outline h-11 min-h-11">
+                  Ver todas las hamburgueserías
+                </button>
+              </div>
             </div>
           )
         )}
@@ -476,6 +488,13 @@ export function Explore() {
           sin filtros y en la primera página: con un filtro puesto ya se sabe qué se
           busca. */}
       {sinFiltros && page === 0 && !error && <MejorCalificadas />}
+
+      {/* Lo último de la primera página, para quien la recorrió entera sin encontrar la
+          suya (#257). En las demás no: con una vez alcanza. */}
+      {sinFiltros && page === 0 && !error && pageData && <TarjetaFaltaTuHamburgueseria />}
+
+      {/* Al volver de iniciar sesión desde "Sugerir un local", el formulario se abre solo. */}
+      <AbrirSugerenciaAlVolver />
     </div>
   )
 }

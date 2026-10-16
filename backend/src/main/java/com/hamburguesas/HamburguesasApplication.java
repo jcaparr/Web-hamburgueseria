@@ -3,6 +3,7 @@ package com.hamburguesas;
 import com.hamburguesas.auth.AuthProperties;
 import com.hamburguesas.mail.MailProperties;
 import com.hamburguesas.places.PlacesProperties;
+import com.hamburguesas.service.SugerenciasProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -10,7 +11,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-@EnableConfigurationProperties({PlacesProperties.class, MailProperties.class, AuthProperties.class})
+@EnableConfigurationProperties({PlacesProperties.class, MailProperties.class, AuthProperties.class,
+    SugerenciasProperties.class})
 public class HamburguesasApplication {
     public static void main(String[] args) {
         SpringApplication.run(HamburguesasApplication.class, args);
