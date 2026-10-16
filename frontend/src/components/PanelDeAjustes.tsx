@@ -24,7 +24,7 @@ export function PanelDeAjustes() {
   const [armado, setArmado] = useState(false)
 
   return (
-    <PanelDeBarra etiqueta="Ajustes" icono={<IconSettings size={21} />} titulo="Ajustes" onCambio={(abierto) => abierto && setArmado(true)}>
+    <PanelDeBarra etiqueta="Ajustes" icono={<IconSettings size={21} />} titulo="Ajustes" angosto onCambio={(abierto) => abierto && setArmado(true)}>
       {armado && (
         <div className="flex flex-col gap-1">
           <SelectorDeTema />

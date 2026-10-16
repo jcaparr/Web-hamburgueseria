@@ -16,6 +16,8 @@ import { useLocation } from 'react-router-dom'
  * @param titulo    el encabezado del panel
  * @param insignia  lo que va montado sobre el botón, como el número de la campana
  * @param onCambio  avisa cuando el panel se abre o se cierra
+ * @param angosto   un panel de pocos renglones: en el teléfono, una columna angosta pegada
+ *                  a la derecha en vez de ocupar todo el ancho
  */
 export function PanelDeBarra({
   etiqueta,
@@ -23,6 +25,7 @@ export function PanelDeBarra({
   titulo,
   insignia,
   onCambio,
+  angosto = false,
   children,
 }: {
   etiqueta: string
@@ -30,6 +33,7 @@ export function PanelDeBarra({
   titulo: string
   insignia?: ReactNode
   onCambio?: (abierto: boolean) => void
+  angosto?: boolean
   children: ReactNode
 }) {
   const desplegable = useRef<HTMLDetailsElement>(null)
@@ -90,18 +94,35 @@ export function PanelDeBarra({
         {abierto && (
           <span
             aria-hidden="true"
-            className="absolute left-1/2 top-[calc(100%+3px)] z-[29] size-4 -translate-x-1/2 rotate-45 rounded-[3px] bg-base-100 shadow-[var(--sombra-alzada)]"
+            className="absolute left-1/2 top-[calc(100%+3px)] z-[29] size-4 -translate-x-1/2 rotate-45 rounded-[3px] border border-base-content/55 bg-base-100 shadow-[var(--sombra-alzada)]"
           />
         )}
         {insignia}
       </summary>
 
+      {/* Un velo tenue detrás, solo en el teléfono: separa el panel de la pantalla y tocarlo
+          lo cierra. Cuelga del borde de la barra (que es sticky) y baja hasta el final. */}
+      {abierto && (
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-hidden="true"
+          onClick={cerrar}
+          className="absolute inset-x-0 top-full z-[28] h-dvh cursor-default bg-black/35 md:hidden"
+        />
+      )}
+
       {/* En el teléfono, de borde a borde y pegado al borde de la barra: anclado al
           botón se salía por la izquierda, y con un hueco arriba se asomaba lo de atrás.
           En la compu, colgado del botón, bajado los 11 px que faltan hasta el borde de
           la barra y corrido a la derecha para que el pico no caiga en la esquina
-          redondeada. */}
-      <div className="dropdown-content z-30 flex max-h-[70dvh] flex-col overflow-hidden rounded-box bg-base-100 shadow-[var(--sombra-alzada)] max-md:inset-x-4 max-md:top-full md:-right-4 md:mt-[11px] md:w-96">
+          redondeada. Con borde: el panel es del color del fondo de la pantalla, y sin él
+          en el tema oscuro no se distinguía. */}
+      <div
+        className={`dropdown-content z-30 flex max-h-[70dvh] flex-col overflow-hidden rounded-box border border-base-content/55 bg-base-100 shadow-[var(--sombra-alzada)] max-md:top-full md:-right-4 md:mt-[11px] ${
+          angosto ? 'max-md:right-4 max-md:w-60 md:w-80' : 'max-md:inset-x-4 md:w-96'
+        }`}
+      >
         <h2 className="px-4 pb-2 pt-3 font-display text-lg font-bold">{titulo}</h2>
         <div className="overflow-y-auto px-2 pb-2">{children}</div>
       </div>
