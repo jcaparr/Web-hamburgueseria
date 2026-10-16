@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { IconRoute } from './icons'
 import { JointPhoto } from './JointPhoto'
@@ -11,15 +12,20 @@ import { enHoras } from '../utils/tiempo'
  *
  * Muestra las paradas en miniatura y no la lista entera: en el perfil hay varios, y lo
  * que se quiere ver de un vistazo es cuál es cuál. El detalle está a un toque, en Maps.
+ *
+ * En el perfil de otro (#264) no se borra: va sin `onBorrar`, y con lo que se pueda
+ * hacer con ese recorrido en `accion`, al pie.
  */
 export function SavedTourCard({
   tour,
   onBorrar,
-  borrando,
+  borrando = false,
+  accion,
 }: {
   tour: SavedTour
-  onBorrar: (id: number) => void
-  borrando: boolean
+  onBorrar?: (id: number) => void
+  borrando?: boolean
+  accion?: ReactNode
 }) {
   const enAuto = tour.modo === 'EN_AUTO'
 
@@ -32,19 +38,21 @@ export function SavedTourCard({
             {kilometros(tour.kilometros)} km: {enHoras(tour.minutos)} {enAuto ? 'en auto' : 'caminando'}
           </p>
         </div>
-        <button
-          type="button"
-          // Borrar no se deshace: antes se iba con un solo toque, y el botón está en la
-          // misma tarjeta que se toca para abrir el recorrido.
-          onClick={() => {
-            if (confirm(`¿Borrar el recorrido “${tour.name}”? No se puede deshacer.`)) onBorrar(tour.id)
-          }}
-          disabled={borrando}
-          className="btn btn-ghost btn-sm -mr-2 -mt-1 shrink-0 text-error"
-        >
-          {borrando ? 'Borrando…' : 'Borrar'}
-          <span className="sr-only"> el recorrido {tour.name}</span>
-        </button>
+        {onBorrar && (
+          <button
+            type="button"
+            // Borrar no se deshace: antes se iba con un solo toque, y el botón está en la
+            // misma tarjeta que se toca para abrir el recorrido.
+            onClick={() => {
+              if (confirm(`¿Borrar el recorrido “${tour.name}”? No se puede deshacer.`)) onBorrar(tour.id)
+            }}
+            disabled={borrando}
+            className="btn btn-ghost btn-sm -mr-2 -mt-1 shrink-0 text-error"
+          >
+            {borrando ? 'Borrando…' : 'Borrar'}
+            <span className="sr-only"> el recorrido {tour.name}</span>
+          </button>
+        )}
       </div>
 
       <ol className="flex flex-wrap gap-2">
@@ -78,6 +86,8 @@ export function SavedTourCard({
         Abrir el recorrido en Maps
         <span className="sr-only"> (se abre en otra pestaña)</span>
       </a>
+
+      {accion}
     </article>
   )
 }
