@@ -1,6 +1,6 @@
 # Carrusel de Instagram (#272)
 
-Ocho láminas de 1080×1350 (4:5) con las funciones principales de Burgómetro. Estilo C
+Ocho láminas en dos formatos: `laminas/` en 4:5 (1080×1350, el del carrusel del feed) y `laminas-9x16/` en 9:16 (1080×1920, para historias, con lo importante dentro de la zona segura: sin nada clave en los ~250 px de arriba y abajo). El celu se ve entero en las dos con las funciones principales de Burgómetro. Estilo C
 (amarillo tipográfico), con la plantilla que armó Juan.
 
 | Lámina | Archivo | Qué muestra |

@@ -8,8 +8,12 @@ import { fileURLToPath } from 'node:url'
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url))
 const EDGE = process.env.EDGE ?? 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
-const SALIDA = path.join(AQUI, 'laminas')
-fs.mkdirSync(SALIDA, { recursive: true })
+// 4:5 es el formato del carrusel del feed; 9:16 es para historias (con ~250 px de zona segura arriba y abajo).
+// El celu se dibuja siempre a 490×1100 y se escala (S) alrededor de su centro (cx, cy).
+const FORMATOS = [
+  { dir: 'laminas', alto: 1350, S: 0.8, cx: 770, cy: 855, h1: 92, sub: 0, st: 0, logo: 58, c: { h1: 110, g: 360, u: 1030, s: 1170 } },
+  { dir: 'laminas-9x16', alto: 1920, S: 0.95, cx: 750, cy: 1120, h1: 270, sub: 245, st: 410, logo: 280, c: { h1: 330, g: 600, u: 1280, s: 1450 } },
+]
 
 // El isotipo es el mismo dibujo de frontend/src/components/MarcaBurgometro.tsx, sin el calco.
 const ISOTIPO = `<svg viewBox="-5 -5 140 118" xmlns="http://www.w3.org/2000/svg"><g stroke="#141110" stroke-width="3.5" stroke-linejoin="round"><rect x="12" y="88" width="106" height="16" rx="8" fill="#e39f58"/><rect x="7" y="66" width="116" height="20" rx="10" fill="#5d302a"/><path d="M14 62 H116 V71 H98 C98 81 86 81 86 71 H46 C46 80 34 80 34 71 H14 Z" fill="#e5812c" stroke-width="3"/><path d="M9 57 C9 24 36 3 65 3 C94 3 121 24 121 57 C121 61 119 63 115 63 H15 C11 63 9 61 9 57 Z" fill="#e39f58"/></g><g stroke="#fff" stroke-opacity=".4" stroke-linecap="round" fill="none"><path d="M19 42 C21 32 26 24 33 18" stroke-width="4"/><path d="M21 95 H30" stroke-width="3"/></g><g stroke="#141110" stroke-width="3.6" stroke-linecap="round"><line x1="99.24" y1="46.88" x2="106.85" y2="44.40"/><line x1="91.75" y1="33.91" x2="97.70" y2="28.56"/><line x1="79.64" y1="25.11" x2="82.90" y2="17.80"/><line x1="65" y1="22" x2="65" y2="14"/><line x1="50.36" y1="25.11" x2="47.10" y2="17.80"/><line x1="38.25" y1="33.91" x2="32.30" y2="28.56"/><line x1="30.76" y1="46.88" x2="23.15" y2="44.40"/></g><polygon points="94.7,31.2 69.01,62.46 60.99,53.54" fill="#e63240" stroke="#141110" stroke-width="2.5" stroke-linejoin="round"/><circle cx="65" cy="58" r="7.5" fill="#5d302a" stroke="#141110" stroke-width="3"/></svg>`
@@ -20,7 +24,7 @@ const CSS = `
 @font-face{font-family:Poppins;font-weight:600;src:url(../../fuentes/poppins-600.ttf)}
 @font-face{font-family:Poppins;font-weight:800;src:url(../../fuentes/poppins-800.ttf)}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:1080px;height:1350px;overflow:hidden}
+html,body{width:1080px;overflow:hidden}
 body{position:relative;background:#f2b705;color:#2b1a10;font-family:Poppins,system-ui,sans-serif}
 .marca{position:absolute;right:-150px;top:-120px;width:640px;opacity:.13;transform:rotate(-14deg)}
 .marca svg{width:100%;display:block}
@@ -36,7 +40,7 @@ h1.m{font-size:92px}
 .burst i{position:absolute;width:9px;border-radius:5px;background:#2b1a10;transform-origin:center}
 .logo{position:absolute;left:70px;bottom:58px;display:flex;align-items:center;gap:20px;font-weight:800;font-size:46px;letter-spacing:-1px;z-index:5}
 .logo svg{width:74px;height:auto}
-.phone{position:absolute;width:490px;height:1100px;left:528px;top:380px;padding:13px;border-radius:80px;background:linear-gradient(160deg,#3b3b3e,#161617 60%);box-shadow:0 0 0 3px #5a5a5e inset,0 50px 70px rgba(43,26,16,.38);transform:rotate(7deg)}
+.phone{position:absolute;width:490px;height:1100px;padding:13px;border-radius:80px;background:linear-gradient(160deg,#3b3b3e,#161617 60%);box-shadow:0 0 0 3px #5a5a5e inset,0 50px 70px rgba(43,26,16,.38);}
 .phone:before,.phone:after{content:"";position:absolute;width:7px;background:#2a2a2c;border-radius:4px}
 .phone:before{left:-7px;top:190px;height:90px}
 .phone:after{right:-7px;top:260px;height:130px}
@@ -66,9 +70,9 @@ function destello(cx, cy, r) {
   return `<div class="burst" style="left:${cx}px;top:${cy}px">${s}</div>`
 }
 
-function celu({ img, barra = '#faf3e3', pantallaHtml }) {
+function celu({ img, barra = '#faf3e3', pantallaHtml }, F) {
   const dentro = pantallaHtml ?? `<img src="../../capturas/${img}">`
-  return `<div class="phone"><div class="pantalla" style="background:${barra}"><div class="isla"></div><div class="estado" style="background:${barra}"><b>9:41</b>${ICONOS_ESTADO}</div>${dentro}</div></div>`
+  return `<div class="phone" style="left:${F.cx - 245}px;top:${F.cy - 550}px;transform:rotate(7deg) scale(${F.S})"><div class="pantalla" style="background:${barra}"><div class="isla"></div><div class="estado" style="background:${barra}"><b>9:41</b>${ICONOS_ESTADO}</div>${dentro}</div></div>`
 }
 
 const NUM = 'display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:#3a2a1e;color:#f7efd8;font:800 26px Poppins;position:absolute'
@@ -106,39 +110,43 @@ const LAMINAS = [
   { id: '07-guardadas', h: 'Guardá las<br>que te debés', sub: 'Tocá el corazón y encontralas después en Guardadas.', subTop: 400, sticker: ['para', 'después'], stTop: 700, phone: { img: 'guardadas.png' } },
 ]
 
-function html(l) {
-  const phone = celu({ img: l.phone.img, barra: l.phone.barra, pantallaHtml: l.phone.html })
-  return `<!doctype html><meta charset="utf-8"><title>${l.id}</title><style>${CSS}</style>
+function html(l, F) {
+  const phone = celu({ img: l.phone.img, barra: l.phone.barra, pantallaHtml: l.phone.html }, F)
+  const subTop = l.subTop + F.sub, stTop = l.stTop + F.st
+  return `<!doctype html><meta charset="utf-8"><title>${l.id}</title><style>${CSS}html,body{height:${F.alto}px}.logo{bottom:${F.logo}px}</style>
 <div class="marca">${ISOTIPO}</div>
-<h1 class="${l.m ? 'm' : ''}">${l.h}</h1>
-<p class="sub" style="top:${l.subTop}px;${l.subSize ? `font-size:${l.subSize}px;width:380px` : ''}">${l.sub}</p>
-${rayas(486, l.subTop - 12, -60)}
+<h1 class="${l.m ? 'm' : ''}" style="top:${F.h1}px">${l.h}</h1>
+<p class="sub" style="top:${subTop}px;${l.subSize ? `font-size:${l.subSize}px;width:380px` : ''}">${l.sub}</p>
+${rayas(486, subTop - 12, -60)}
 ${phone}
-<div class="sticker" style="top:${l.stTop}px">${l.sticker[0]}<br>${l.sticker[1]}<u></u></div>
-${destello(282, l.stTop + 170, 215)}
+<div class="sticker" style="top:${stTop}px">${l.sticker[0]}<br>${l.sticker[1]}<u></u></div>
+${destello(282, stTop + 170, 215)}
 <div class="logo">${ISOTIPO}<span>Burgómetro</span></div>`
 }
 
 // Cierre: sin celu, el logo grande y la dirección.
-const CIERRE = `<!doctype html><meta charset="utf-8"><title>08-cierre</title><style>${CSS}
-.grande{position:absolute;left:0;right:0;top:360px;text-align:center}
+const cierre = (F) => `<!doctype html><meta charset="utf-8"><title>08-cierre</title><style>${CSS}html,body{height:${F.alto}px}
+.grande{position:absolute;left:0;right:0;top:${F.c.g}px;text-align:center}
 .grande svg{width:430px;display:block;margin:0 auto}
 .grande .n{font-weight:800;font-size:128px;letter-spacing:-3px;margin-top:24px}
-.url{position:absolute;left:0;right:0;top:1030px;text-align:center}
+.url{position:absolute;left:0;right:0;top:${F.c.u}px;text-align:center}
 .url span{display:inline-block;background:#3a2a1e;color:#f7efd8;border-radius:60px;padding:26px 58px;font-weight:800;font-size:54px}
 </style>
 <div class="marca" style="right:-190px;top:-150px;width:700px">${ISOTIPO}</div>
-<h1 style="text-align:center;left:0;right:0;width:auto;font-size:84px;top:110px">Descubrí. Calificá. Recorré.</h1>
+<h1 style="text-align:center;left:0;right:0;width:auto;font-size:84px;top:${F.c.h1}px">Descubrí. Calificá. Recorré.</h1>
 <div class="grande">${ISOTIPO}<div class="n">Burgómetro</div></div>
 <div class="url"><span>burgometro.com.ar</span></div>
-<p class="sub" style="left:0;right:0;width:auto;text-align:center;top:1170px;font-size:36px">Entrá desde el link de la bio.</p>`
+<p class="sub" style="left:0;right:0;width:auto;text-align:center;top:${F.c.s}px;font-size:36px">Entrá desde el link de la bio.</p>`
 
-const todas = [...LAMINAS.map(l => [l.id, html(l)]), ['08-cierre', CIERRE]]
-const dirHtml = path.join(SALIDA, 'html')
-fs.mkdirSync(dirHtml, { recursive: true })
-for (const [id, h] of todas) {
-  const f = path.join(dirHtml, id + '.html')
-  fs.writeFileSync(f, h)
-  const r = spawnSync(EDGE, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=1', '--window-size=1080,1350', '--virtual-time-budget=4000', `--screenshot=${path.join(SALIDA, id + '.png')}`, 'file:///' + f.replace(/\\/g, '/')], { stdio: 'ignore' })
-  console.log(id, r.status)
+for (const F of FORMATOS) {
+  const salida = path.join(AQUI, F.dir)
+  const dirHtml = path.join(salida, 'html')
+  fs.mkdirSync(dirHtml, { recursive: true })
+  const todas = [...LAMINAS.map(l => [l.id, html(l, F)]), ['08-cierre', cierre(F)]]
+  for (const [id, h] of todas) {
+    const f = path.join(dirHtml, id + '.html')
+    fs.writeFileSync(f, h)
+    const r = spawnSync(EDGE, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=1', `--window-size=1080,${F.alto}`, '--virtual-time-budget=4000', `--screenshot=${path.join(salida, id + '.png')}`, 'file:///' + f.replaceAll('\\', '/')], { stdio: 'ignore' })
+    console.log(F.dir, id, r.status)
+  }
 }
