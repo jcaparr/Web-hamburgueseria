@@ -13,7 +13,6 @@ import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.Rating;
 import com.hamburguesas.model.User;
 import com.hamburguesas.repository.BurgerJointRepository;
-import com.hamburguesas.repository.FollowRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +43,6 @@ public class RatingService {
     private final BurgerJointRepository burgerJointRepository;
     private final UserRepository userRepository;
     private final FotosDeResenias fotos;
-    private final FollowRepository followRepository;
     private final Bloqueos bloqueos;
     private final Reacciones reacciones;
 
@@ -282,11 +280,10 @@ public class RatingService {
     }
 
     /**
-     * Lo que va arriba de la lista de reseñas: la distribución de notas y lo que
-     * dijeron los que seguís.
+     * Lo que va arriba de la lista de reseñas: la distribución de notas y de qué hablan.
      *
-     * Sin sesión la segunda parte viene vacía en vez de dar error. Un local se puede
-     * mirar sin cuenta, y la distribución es información del local, no de nadie.
+     * Es información del local, no de nadie: no mira quién pregunta ni los bloqueos, y
+     * un local se puede mirar sin cuenta.
      */
     @Transactional(readOnly = true)
     public ResumenDeReseniasDto resumen(Long burgerJointId, Long userId) {
@@ -298,8 +295,7 @@ public class RatingService {
             .mapToObj(nota -> new NotaYCuantasDto(nota, cuantasPorNota.getOrDefault(nota, 0L)))
             .toList();
 
-        return new ResumenDeReseniasDto(distribucion, temas(burgerJointId),
-            deQuienesSigo(burgerJointId, userId));
+        return new ResumenDeReseniasDto(distribucion, temas(burgerJointId));
     }
 
     /**
@@ -318,20 +314,6 @@ public class RatingService {
         return TemasDeLasResenias.de(menciones).stream()
             .map(tema -> new TemaDeReseniasDto(tema.nombre(), tema.menciones(), tema.aFavor()))
             .toList();
-    }
-
-    private List<RatingResponse> deQuienesSigo(Long burgerJointId, Long userId) {
-        if (userId == null) {
-            return List.of();
-        }
-
-        List<Long> seguidos = new ArrayList<>(followRepository.idsQueSigue(userId));
-        seguidos.removeAll(bloqueos.queNoPuedeVer(userId));
-        if (seguidos.isEmpty()) {
-            return List.of();
-        }
-
-        return conReacciones(ratingRepository.deAutoresEn(burgerJointId, seguidos), userId);
     }
 
     private byte[] leer(MultipartFile foto) {

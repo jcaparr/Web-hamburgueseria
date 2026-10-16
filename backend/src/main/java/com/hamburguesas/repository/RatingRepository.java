@@ -141,26 +141,6 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
     List<NotaYComentarioDto> notasYComentarios(@Param("burgerJointId") Long burgerJointId);
 
     /**
-     * Las reseñas de un grupo de personas sobre un local.
-     *
-     * Sirve para asomar arriba lo que dijeron los que seguís: de una lista de veinte
-     * reseñas, la de alguien que te importa puede estar en la página tres, y ahí no la
-     * ve nadie.
-     *
-     * No filtra bloqueados porque quien llama ya los sacó del grupo: bloquear borra el
-     * seguir en las dos direcciones, así que un bloqueado no puede estar entre los
-     * seguidos, y el filtro iría contra una lista que ya está limpia.
-     */
-    @Query("""
-        select r from Rating r join fetch r.user u
-        where r.burgerJoint.id = :burgerJointId
-          and u.id in :autores
-        order by r.createdAt desc
-        """)
-    List<Rating> deAutoresEn(@Param("burgerJointId") Long burgerJointId,
-                             @Param("autores") Collection<Long> autores);
-
-    /**
      * Las fotos de varias reseñas, en orden, en una sola consulta.
      *
      * Es para el feed, que arma sus tarjetas con una consulta que solo puede traer la

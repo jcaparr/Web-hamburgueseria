@@ -133,8 +133,6 @@ export interface ResumenDeResenias {
   distribucion: NotaYCuantas[]
   /** De qué habla la gente. Vacía mientras no haya reseñas escritas suficientes. */
   temas: TemaDeResenias[]
-  /** Las reseñas de la gente que seguís. Vacía sin sesión. */
-  deQuienesSigo: Rating[]
 }
 
 /**

@@ -6,7 +6,6 @@ import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.Rating;
 import com.hamburguesas.model.User;
 import com.hamburguesas.repository.BurgerJointRepository;
-import com.hamburguesas.repository.FollowRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -42,7 +41,7 @@ class BorrarReseniaTest {
         fotos = mock(FotosDeResenias.class);
         when(ratingRepository.findByUser_IdAndBurgerJoint_Id(any(), any())).thenReturn(Optional.empty());
         service = new RatingService(ratingRepository, mock(BurgerJointRepository.class),
-            mock(UserRepository.class), fotos, mock(FollowRepository.class), mock(Bloqueos.class),
+            mock(UserRepository.class), fotos, mock(Bloqueos.class),
             mock(Reacciones.class));
     }
 
