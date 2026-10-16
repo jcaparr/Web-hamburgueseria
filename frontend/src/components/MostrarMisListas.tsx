@@ -35,12 +35,12 @@ export function MostrarMisListas() {
       .finally(() => setGuardando(false))
   }
 
+  // Una sola fila, sin tarjeta ni título: a la vista pero sin ocupar un bloque entero.
   return (
-    <fieldset className="flex flex-col gap-1 tarjeta p-4" disabled={guardando}>
-      <legend className="mb-1 text-sm font-semibold">Tu perfil público</legend>
+    <fieldset className="flex flex-col" disabled={guardando}>
       {pedido.datos !== undefined ? (
         <Interruptor activo={pedido.datos} onCambiar={cambiar}>
-          Mostrar mis guardadas y mis recorridos
+          Mostrar mis guardadas y recorridos
         </Interruptor>
       ) : pedido.error ? (
         <p role="alert" className="flex min-h-11 flex-wrap items-center gap-x-2 text-sm text-error">
@@ -54,9 +54,6 @@ export function MostrarMisListas() {
           Cargando…
         </p>
       )}
-      <p className="text-xs text-base-content/70">
-        Apagado, quedan solo para vos.
-      </p>
       {error && (
         <p role="alert" className="text-sm text-error">
           {error}
