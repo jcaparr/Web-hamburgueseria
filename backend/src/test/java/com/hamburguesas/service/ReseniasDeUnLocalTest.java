@@ -11,7 +11,6 @@ import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.Rating;
 import com.hamburguesas.model.User;
 import com.hamburguesas.repository.BurgerJointRepository;
-import com.hamburguesas.repository.FollowRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,24 +52,21 @@ class ReseniasDeUnLocalTest {
     private static final List<Long> NADIE = List.of(-1L);
 
     private RatingRepository ratingRepository;
-    private FollowRepository followRepository;
     private Bloqueos bloqueos;
     private RatingService service;
 
     @BeforeEach
     void setUp() {
         ratingRepository = mock(RatingRepository.class);
-        followRepository = mock(FollowRepository.class);
         bloqueos = mock(Bloqueos.class);
 
         when(ratingRepository.distribucionDeNotas(LOCAL)).thenReturn(List.of());
         when(ratingRepository.deUnLocalSalvo(any(), any(), any())).thenReturn(Page.empty());
-        when(followRepository.idsQueSigue(anyLong())).thenReturn(List.of());
         when(bloqueos.queNoPuedeVer(any())).thenReturn(NADIE);
 
         service = new RatingService(
             ratingRepository, mock(BurgerJointRepository.class), mock(UserRepository.class),
-            mock(FotosDeResenias.class), followRepository, bloqueos, mock(Reacciones.class)
+            mock(FotosDeResenias.class), bloqueos, mock(Reacciones.class)
         );
     }
 
@@ -191,62 +187,6 @@ class ReseniasDeUnLocalTest {
         service.resumen(LOCAL, YO);
 
         verify(ratingRepository).distribucionDeNotas(LOCAL);
-    }
-
-    /** Un local se puede mirar sin cuenta: la parte social viene vacía, no falla. */
-    @Test
-    void sinSesionNoSePreguntaAQuienSigue() {
-        ResumenDeReseniasDto resumen = service.resumen(LOCAL, null);
-
-        assertThat(resumen.deQuienesSigo()).isEmpty();
-        verify(followRepository, never()).idsQueSigue(any());
-    }
-
-    @Test
-    void siNoSigoANadieNoSeVaABuscarNingunaResenia() {
-        ResumenDeReseniasDto resumen = service.resumen(LOCAL, YO);
-
-        assertThat(resumen.deQuienesSigo()).isEmpty();
-        verify(ratingRepository, never()).deAutoresEn(any(), any());
-    }
-
-    /**
-     * Seguir a alguien no alcanza para verlo si hay un bloqueo de por medio.
-     *
-     * Hoy bloquear borra el seguir en las dos direcciones, así que esta situación no
-     * debería poder existir; la prueba está para que el día que alguien toque esa otra
-     * regla, la consecuencia no sea que un bloqueado reaparezca acá.
-     */
-    @Test
-    void unBloqueadoNoAparecePorMasQueLoSigas() {
-        when(followRepository.idsQueSigue(YO)).thenReturn(List.of(7L, 8L));
-        when(bloqueos.queNoPuedeVer(YO)).thenReturn(List.of(8L));
-        when(ratingRepository.deAutoresEn(any(), any())).thenReturn(List.of());
-
-        service.resumen(LOCAL, YO);
-
-        @SuppressWarnings("unchecked")
-        ArgumentCaptor<List<Long>> autores = ArgumentCaptor.forClass(List.class);
-        verify(ratingRepository).deAutoresEn(any(), autores.capture());
-        assertThat(autores.getValue()).containsExactly(7L);
-    }
-
-    @Test
-    void lasReseniasDeLosQueSigoLleganConSusFotos() {
-        Instant cuando = Instant.now();
-        Rating deUnAmigo = Rating.builder().id(9L).score(5).comment("una masa").createdAt(cuando)
-            .user(User.builder().id(7L).username("amigo").hamburguesa("20131").build())
-            .burgerJoint(BurgerJoint.builder().id(LOCAL).name("Un local").build())
-            .build();
-        deUnAmigo.ponerFotos(List.of("/api/rating-photos/x.jpg", "/api/rating-photos/y.jpg"));
-        when(followRepository.idsQueSigue(YO)).thenReturn(List.of(7L));
-        when(ratingRepository.deAutoresEn(LOCAL, List.of(7L))).thenReturn(List.of(deUnAmigo));
-
-        ResumenDeReseniasDto resumen = service.resumen(LOCAL, YO);
-
-        assertThat(resumen.deQuienesSigo()).containsExactly(new RatingResponse(
-            9L, 7L, "amigo", "20131", 5, "una masa",
-            List.of("/api/rating-photos/x.jpg", "/api/rating-photos/y.jpg"), cuando, ReaccionesDto.NINGUNA));
     }
 
     // ---- de qué hablan las reseñas ----

@@ -7,7 +7,6 @@ import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.Rating;
 import com.hamburguesas.model.User;
 import com.hamburguesas.repository.BurgerJointRepository;
-import com.hamburguesas.repository.FollowRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -63,7 +62,7 @@ class VariasFotosPorReseniaTest {
         when(fotos.guardar(any())).thenAnswer(l -> ruta("n" + guardadas.incrementAndGet()));
 
         service = new RatingService(ratingRepository, burgerJointRepository, userRepository, fotos,
-            mock(FollowRepository.class), mock(Bloqueos.class), mock(Reacciones.class));
+            mock(Bloqueos.class), mock(Reacciones.class));
     }
 
     @AfterEach

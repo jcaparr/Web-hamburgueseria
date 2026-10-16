@@ -307,23 +307,6 @@ export function BurgerJointDetail() {
         miResenia={myRating}
       />
 
-      {/* Asomadas arriba de la lista: de veinte reseñas, la de alguien que te importa
-          puede caer en la página tres, y ahí no la ve nadie. Siguen estando abajo con
-          todas las demás, esto es un atajo y no otra lista. */}
-      {resumen && resumen.deQuienesSigo.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2 className="font-display text-lg font-bold">Lo que dijeron los que seguís</h2>
-          {resumen.deQuienesSigo.map((r) => (
-            <TarjetaDeResenia
-              key={r.id}
-              resenia={r}
-              esMia={r.userId === user?.userId}
-              puedeReaccionar={user !== null && r.userId !== user.userId}
-            />
-          ))}
-        </section>
-      )}
-
       {/* Sin reseñas, el bloque de calificaciones ya invita a escribir la primera: un
           "Reseñas (0)" abajo repetiría lo mismo. */}
       {lista.length > 0 && (
@@ -333,8 +316,6 @@ export function BurgerJointDetail() {
           </h2>
           {lista.map((r) => {
             const esMia = r.userId === user?.userId
-            // El ancla va acá y no en la tarjeta: la misma reseña puede estar también
-            // arriba, en "Lo que dijeron los que seguís", y un id no se puede repetir.
             return (
               <div key={r.id} id={anclaDeResenia(r.id)} tabIndex={-1} className="scroll-mt-24 rounded-box">
                 <TarjetaDeResenia
