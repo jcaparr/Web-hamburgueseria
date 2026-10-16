@@ -86,7 +86,7 @@ const MENU_CHROME = `<div style="position:absolute;inset:62px 0 0 0;background:#
     <div style="padding:17px 26px">Historial</div>
     <div style="border-top:2px solid #e8eaed;margin:8px 0"></div>
     <div style="position:relative;margin:4px 12px;padding:16px 14px;border-radius:16px;background:#fde7e4;box-shadow:0 0 0 4px #b23a2e;font-weight:600;line-height:1.2">Agregar a la pantalla de inicio
-      <b style="${NUM};left:-6px;top:-22px;z-index:2">2</b></div>
+      <b style="${NUM};right:-8px;top:-26px;z-index:2">2</b></div>
     <div style="padding:17px 26px">Compartir…</div>
     <div style="padding:17px 26px">Configuración</div>
   </div>
@@ -111,7 +111,7 @@ function html(l) {
   return `<!doctype html><meta charset="utf-8"><title>${l.id}</title><style>${CSS}</style>
 <div class="marca">${ISOTIPO}</div>
 <h1 class="${l.m ? 'm' : ''}">${l.h}</h1>
-<p class="sub" style="top:${l.subTop}px;${l.subSize ? `font-size:${l.subSize}px` : ''}">${l.sub}</p>
+<p class="sub" style="top:${l.subTop}px;${l.subSize ? `font-size:${l.subSize}px;width:380px` : ''}">${l.sub}</p>
 ${rayas(486, l.subTop - 12, -60)}
 ${phone}
 <div class="sticker" style="top:${l.stTop}px">${l.sticker[0]}<br>${l.sticker[1]}<u></u></div>
@@ -121,17 +121,17 @@ ${destello(282, l.stTop + 170, 215)}
 
 // Cierre: sin celu, el logo grande y la dirección.
 const CIERRE = `<!doctype html><meta charset="utf-8"><title>08-cierre</title><style>${CSS}
-.grande{position:absolute;left:0;right:0;top:300px;text-align:center}
+.grande{position:absolute;left:0;right:0;top:360px;text-align:center}
 .grande svg{width:430px;display:block;margin:0 auto}
 .grande .n{font-weight:800;font-size:128px;letter-spacing:-3px;margin-top:24px}
-.url{position:absolute;left:0;right:0;top:960px;text-align:center}
+.url{position:absolute;left:0;right:0;top:1030px;text-align:center}
 .url span{display:inline-block;background:#3a2a1e;color:#f7efd8;border-radius:60px;padding:26px 58px;font-weight:800;font-size:54px}
 </style>
 <div class="marca" style="right:-190px;top:-150px;width:700px">${ISOTIPO}</div>
-<h1 style="text-align:center;left:0;right:0;width:auto;font-size:84px;top:90px">Descubrí. Calificá. Recorré.</h1>
+<h1 style="text-align:center;left:0;right:0;width:auto;font-size:84px;top:110px">Descubrí. Calificá. Recorré.</h1>
 <div class="grande">${ISOTIPO}<div class="n">Burgómetro</div></div>
 <div class="url"><span>burgometro.com.ar</span></div>
-<p class="sub" style="left:0;right:0;width:auto;text-align:center;top:1110px;font-size:36px">Entrá desde el link de la bio.</p>`
+<p class="sub" style="left:0;right:0;width:auto;text-align:center;top:1170px;font-size:36px">Entrá desde el link de la bio.</p>`
 
 const todas = [...LAMINAS.map(l => [l.id, html(l)]), ['08-cierre', CIERRE]]
 const dirHtml = path.join(SALIDA, 'html')
