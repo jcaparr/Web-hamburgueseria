@@ -11,8 +11,8 @@ const EDGE = process.env.EDGE ?? 'C:/Program Files (x86)/Microsoft/Edge/Applicat
 // 4:5 es el formato del carrusel del feed; 9:16 es para historias (con ~250 px de zona segura arriba y abajo).
 // El celu se dibuja siempre a 490×1100 y se escala (S) alrededor de su centro (cx, cy).
 const FORMATOS = [
-  { dir: 'laminas', alto: 1350, S: 0.8, cx: 770, cy: 855, h1: 92, sub: 0, st: 0, logo: 58, c: { h1: 110, g: 360, u: 1030, s: 1170 } },
-  { dir: 'laminas-9x16', alto: 1920, S: 0.95, cx: 750, cy: 1120, h1: 270, sub: 245, st: 410, logo: 280, c: { h1: 330, g: 600, u: 1280, s: 1450 } },
+  { dir: 'laminas', alto: 1350, S: 0.86, cx: 778, cy: 820, h1: 80, sub: 0, st: 0, logo: 58, c: { h1: 110, g: 360, u: 1030, s: 1170 } },
+  { dir: 'laminas-9x16', alto: 1920, S: 0.98, cx: 750, cy: 1105, h1: 270, sub: 245, st: 410, logo: 310, c: { h1: 330, g: 600, u: 1280, s: 1450 } },
 ]
 
 // El isotipo es el mismo dibujo de frontend/src/components/MarcaBurgometro.tsx, sin el calco.
@@ -30,7 +30,7 @@ body{position:relative;background:#f2b705;color:#2b1a10;font-family:Poppins,syst
 .marca svg{width:100%;display:block}
 .marca svg *{fill:#8a5a00!important;stroke:none!important}
 h1{position:absolute;left:58px;top:92px;width:960px;font-weight:800;font-size:98px;line-height:1.04;letter-spacing:-2px}
-h1.m{font-size:92px}
+h1.m{font-size:84px}
 .sub{position:absolute;left:62px;font-weight:500;font-size:35px;line-height:1.3;width:410px;color:#3a2a1e}
 .rayas{position:absolute;width:60px;height:80px}
 .rayas i{position:absolute;height:7px;border-radius:4px;background:#b23a2e;transform-origin:left center}
@@ -51,6 +51,12 @@ h1.m{font-size:92px}
 .estado svg{height:20px;width:auto}
 .isla{position:absolute;left:50%;top:14px;width:150px;height:42px;margin-left:-75px;border-radius:24px;background:#0b0b0c;z-index:3}
 .pantalla>img{display:block;width:100%}
+.nota-r{position:absolute;border:6px solid #b23a2e;border-radius:18px;box-shadow:0 0 0 4px #fff7e0;z-index:5}
+.nota-c{position:absolute;background:#3a2a1e;color:#f7efd8;font:600 26px/1.1 Poppins;padding:9px 16px;border-radius:15px;white-space:nowrap;z-index:6;box-shadow:0 6px 14px rgba(43,26,16,.3)}
+.nota-c:after{content:"";position:absolute;left:var(--tx,30px);border:10px solid transparent}
+.nota-c.arriba:after{top:-19px;border-bottom-color:#3a2a1e}
+.nota-c.abajo:after{bottom:-19px;border-top-color:#3a2a1e}
+.nota-c.izq:after{left:-19px;top:calc(50% - 10px);border-right-color:#3a2a1e}
 `
 const ICONOS_ESTADO = `<span><svg viewBox="0 0 28 20"><rect x="0" y="12" width="4" height="8" rx="1" fill="currentColor"/><rect x="8" y="8" width="4" height="12" rx="1" fill="currentColor"/><rect x="16" y="4" width="4" height="16" rx="1" fill="currentColor"/><rect x="24" y="0" width="4" height="20" rx="1" fill="currentColor"/></svg><svg viewBox="0 0 44 20"><rect x="1" y="2" width="38" height="16" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="4" y="5" width="28" height="10" rx="3" fill="currentColor"/></svg></span>`
 
@@ -70,9 +76,25 @@ function destello(cx, cy, r) {
   return `<div class="burst" style="left:${cx}px;top:${cy}px">${s}</div>`
 }
 
-function celu({ img, barra = '#faf3e3', pantallaHtml }, F) {
+const FC = 464 / 375
+function notas(lista = []) {
+  const ANCHO = 464
+  return lista.map(n => {
+    const [x, y, w, h] = n.ring
+    const ring = `<div class="nota-r" style="left:${x * FC - 6}px;top:${62 + y * FC - 6}px;width:${w * FC + 12}px;height:${h * FC + 12}px"></div>`
+    const c = n.chip
+    const texto = c.t.replace(/<[^>]+>/g, '')
+    const ancho = texto.length * 13.9 + 36
+    let izq = Math.min(Math.max(c.x * FC, 14), ANCHO - 14 - ancho)
+    const centro = (x + w / 2) * FC
+    const tx = Math.min(Math.max(centro - izq - 10, 16), ancho - 38)
+    return ring + `<div class="nota-c ${c.tail ?? 'abajo'}" style="left:${izq}px;top:${62 + c.y * FC}px;--tx:${tx}px">${c.t}</div>`
+  }).join('')
+}
+
+function celu({ img, barra = '#faf3e3', pantallaHtml, notas: lista }, F) {
   const dentro = pantallaHtml ?? `<img src="../../capturas/${img}">`
-  return `<div class="phone" style="left:${F.cx - 245}px;top:${F.cy - 550}px;transform:rotate(7deg) scale(${F.S})"><div class="pantalla" style="background:${barra}"><div class="isla"></div><div class="estado" style="background:${barra}"><b>9:41</b>${ICONOS_ESTADO}</div>${dentro}</div></div>`
+  return `<div class="phone" style="left:${F.cx - 245}px;top:${F.cy - 550}px;transform:rotate(7deg) scale(${F.S})"><div class="pantalla" style="background:${barra}"><div class="isla"></div><div class="estado" style="background:${barra}"><b>9:41</b>${ICONOS_ESTADO}</div>${dentro}${notas(lista)}</div></div>`
 }
 
 const NUM = 'display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:#3a2a1e;color:#f7efd8;font:800 26px Poppins;position:absolute'
@@ -84,7 +106,7 @@ const MENU_CHROME = `<div style="position:absolute;inset:62px 0 0 0;background:#
     <div style="position:relative;width:52px;height:52px;border-radius:50%;background:#fde7e4;display:grid;place-items:center;box-shadow:0 0 0 4px #b23a2e"><svg width="8" height="30" viewBox="0 0 8 30"><circle cx="4" cy="4" r="3.6" fill="#202124"/><circle cx="4" cy="15" r="3.6" fill="#202124"/><circle cx="4" cy="26" r="3.6" fill="#202124"/></svg>
       <b style="${NUM};left:-34px;top:-20px">1</b></div>
   </div>
-  <div style="position:absolute;right:16px;top:100px;width:440px;background:#fff;border-radius:22px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:14px 0;font-size:25px">
+  <div style="position:absolute;right:16px;top:150px;width:440px;background:#fff;border-radius:22px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:14px 0;font-size:25px">
     <div style="padding:17px 26px">Nueva pestaña</div>
     <div style="padding:17px 26px">Nueva pestaña de incógnito</div>
     <div style="padding:17px 26px">Historial</div>
@@ -94,24 +116,47 @@ const MENU_CHROME = `<div style="position:absolute;inset:62px 0 0 0;background:#
     <div style="padding:17px 26px">Compartir…</div>
     <div style="padding:17px 26px">Configuración</div>
   </div>
-  <div style="position:absolute;left:0;right:0;top:650px;height:240px;background:#fff;border-radius:30px;box-shadow:0 -8px 30px rgba(0,0,0,.25);padding:28px 30px;font-size:26px">
+  <div style="position:absolute;left:0;right:0;top:680px;height:240px;background:#fff;border-radius:30px;box-shadow:0 -8px 30px rgba(0,0,0,.25);padding:28px 30px;font-size:26px">
     <div style="font-weight:600;font-size:29px;margin-bottom:18px">Agregar a la pantalla de inicio</div>
     <div style="display:flex;gap:14px;align-items:center"><div style="width:62px;height:62px;border-radius:16px;background:#f2b705;display:grid;place-items:center;padding:7px">${ISOTIPO}</div><div style="flex:1;font-size:24px">Burgómetro</div>
     <div style="padding:16px 20px;border-radius:30px;background:#b23a2e;color:#fff;font-weight:600;font-size:23px;box-shadow:0 0 0 4px #fde7e4,0 0 0 8px #b23a2e;position:relative">Crear acceso directo<b style="${NUM};right:-14px;top:-40px">3</b></div></div>
-  </div></div>`
+  </div>
+  <div class="nota-c arriba" style="right:70px;top:86px;--tx:calc(100% - 52px)">Tocá los 3 puntitos</div>
+  <div class="nota-c arriba" style="left:40px;top:520px;--tx:70px">Elegí esta opción</div>
+  <div class="nota-c arriba" style="right:24px;top:930px;--tx:calc(100% - 60px)">Confirmá acá</div>
+  </div>`
 
 const LAMINAS = [
-  { id: '01-portada', h: 'Todo lo que podés hacer en Burgómetro', m: true, sub: '+1.200 hamburgueserías en Buenos Aires y alrededores, en un solo lugar.', subTop: 470, sticker: ['deslizá', '→'], stTop: 790, phone: { img: 'explorar.png' } },
-  { id: '02-sugerir-local', h: '¿Falta tu hamburguesería?', sub: 'Sumala a nuestro mapa y ayudanos a que más personas descubran tu lugar.', subTop: 400, sticker: ['pasanos', 'el dato'], stTop: 700, phone: { img: 'sugerir-local.png', barra: '#9b958b' } },
+  { id: '01-portada', h: 'Todo lo que podés hacer en Burgómetro', m: true, sub: '+1.200 hamburgueserías en Buenos Aires y alrededores, en un solo lugar.', subTop: 470, sticker: ['deslizá', '→'], stTop: 790, phone: { img: 'explorar.png', notas: [
+    { ring: [16, 122, 343, 46], chip: { t: 'Buscá acá', x: 150, y: 78, tail: 'abajo', tx: 120 } },
+    { ring: [16, 178, 169, 44], chip: { t: 'Filtrá por barrio', x: 40, y: 228, tail: 'arriba' } },
+    { ring: [299, 330, 44, 44], chip: { t: 'Guardá tus favoritas', x: 140, y: 384, tail: 'arriba', tx: 190 } },
+  ] } },
+  { id: '02-sugerir-local', h: '¿Falta tu hamburguesería?', sub: 'Sumala a nuestro mapa y ayudanos a que más personas descubran tu lugar.', subTop: 400, sticker: ['pasanos', 'el dato'], stTop: 700, phone: { img: 'sugerir-local.png', barra: '#9b958b', notas: [
+    { ring: [20, 338, 335, 138], chip: { t: 'Datos del local', x: 190, y: 258, tail: 'abajo', tx: 130 } },
+    { ring: [20, 743, 335, 48], chip: { t: 'Enviá la sugerencia', x: 120, y: 708, tail: 'abajo', tx: 130 } },
+  ] } },
   { id: '03-instalar', h: 'Tenela<br>en tu celu', sub: 'En el menú del navegador (los 3 puntitos), elegí «Agregar a la pantalla de inicio». En iPhone, tocá Compartir.', subSize: 31, subTop: 400, sticker: ['3 toques', 'y entrás'], stTop: 700, phone: { html: MENU_CHROME, barra: '#f1f3f4' } },
-  { id: '04-recorrido', h: 'Armá tu<br>recorrido', sub: 'Elegí paradas y distancia, a pie o en auto. Te armamos la ruta.', subTop: 400, sticker: ['a pie', 'o en auto'], stTop: 700, phone: { img: 'tour.png' } },
-  { id: '05-buscar-gente', h: 'Buscá gente y seguila', sub: 'Encontrá a otros fanáticos de las burgers y mirá qué recomiendan.', subTop: 400, sticker: ['mirá qué', 'comen'], stTop: 700, phone: { img: 'buscar-gente.png' } },
-  { id: '06-avatar', h: 'Armá tu hamburguesa', sub: 'Elegí fondo, pan y queso. Es tu cara en Burgómetro.', subTop: 400, sticker: ['a tu', 'gusto'], stTop: 700, phone: { img: 'avatar.png' } },
-  { id: '07-guardadas', h: 'Guardá las<br>que te debés', sub: 'Tocá el corazón y encontralas después en Guardadas.', subTop: 400, sticker: ['para', 'después'], stTop: 700, phone: { img: 'guardadas.png' } },
+  { id: '04-recorrido', h: 'Armá tu<br>recorrido', sub: 'Elegí paradas y distancia, a pie o en auto. Te armamos la ruta.', subTop: 400, sticker: ['a pie', 'o en auto'], stTop: 700, phone: { img: 'tour.png', notas: [
+    { ring: [32, 94, 311, 52], chip: { t: 'A pie o en auto', x: 100, y: 52, tail: 'abajo' } },
+    { ring: [32, 612, 311, 44], chip: { t: 'Armá tu tour', x: 200, y: 568, tail: 'abajo', tx: 90 } },
+  ] } },
+  { id: '05-buscar-gente', h: 'Buscá gente y seguila', sub: 'Encontrá a otros fanáticos de las burgers y mirá qué recomiendan.', subTop: 400, sticker: ['mirá qué', 'comen'], stTop: 700, phone: { img: 'buscar-gente.png', notas: [
+    { ring: [16, 79, 343, 52], chip: { t: 'Buscá por usuario', x: 150, y: 50, tail: 'abajo', tx: 120 } },
+    { ring: [258, 162, 89, 35], chip: { t: 'Seguila', x: 250, y: 199, tail: 'arriba' } },
+  ] } },
+  { id: '06-avatar', h: 'Armá tu hamburguesa', sub: 'Elegí fondo, pan y queso. Es tu cara en Burgómetro.', subTop: 400, sticker: ['a tu', 'gusto'], stTop: 700, phone: { img: 'avatar.png', notas: [
+    { ring: [104, 240, 168, 168], chip: { t: 'Tu cara en Burgómetro', x: 24, y: 204, tail: 'abajo', tx: 170 } },
+    { ring: [12, 486, 351, 276], chip: { t: 'Elegí fondo, pan y queso', x: 100, y: 452, tail: 'abajo' } },
+  ] } },
+  { id: '07-guardadas', h: 'Guardá las<br>que te debés', sub: 'Tocá el corazón y encontralas después en Guardadas.', subTop: 400, sticker: ['para', 'después'], stTop: 700, phone: { img: 'guardadas.png', notas: [
+    { ring: [303, 142, 44, 44], chip: { t: 'Las que guardaste', x: 150, y: 96, tail: 'abajo', tx: 160 } },
+    { ring: [16, 192, 120, 38], chip: { t: 'Mirá cómo llegar', x: 146, y: 195, tail: 'izq' } },
+  ] } },
 ]
 
 function html(l, F) {
-  const phone = celu({ img: l.phone.img, barra: l.phone.barra, pantallaHtml: l.phone.html }, F)
+  const phone = celu({ img: l.phone.img, barra: l.phone.barra, pantallaHtml: l.phone.html, notas: l.phone.notas }, F)
   const subTop = l.subTop + F.sub, stTop = l.stTop + F.st
   return `<!doctype html><meta charset="utf-8"><title>${l.id}</title><style>${CSS}html,body{height:${F.alto}px}.logo{bottom:${F.logo}px}</style>
 <div class="marca">${ISOTIPO}</div>
