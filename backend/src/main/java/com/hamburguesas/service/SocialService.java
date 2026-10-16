@@ -92,7 +92,8 @@ public class SocialService {
             !soyYo && quienMira != null
                 && followRepository.existsByFollower_IdAndFollowed_Id(quienMira, persona.getId()),
             soyYo,
-            ratingRepository.ultimasDe(persona.getId(), PageRequest.of(0, RESENIAS_EN_EL_PERFIL)));
+            ratingRepository.ultimasDe(persona.getId(), PageRequest.of(0, RESENIAS_EN_EL_PERFIL)),
+            ListasDelPerfil.puedeVer(persona, quienMira));
     }
 
     /**
@@ -211,8 +212,11 @@ public class SocialService {
      * Con un bloqueo de por medio se contesta lo mismo que si no existiera, y no un
      * "está bloqueado": decirlo le confirmaría al bloqueado que lo bloquearon, que es
      * justo el tipo de aviso que hace que insista por otro lado.
+     *
+     * Del paquete y no privado: las guardadas y los recorridos del perfil (#264) pasan
+     * por la misma puerta.
      */
-    private User visiblePara(String username, Long quienMira) {
+    User visiblePara(String username, Long quienMira) {
         User persona = porNombre(username);
         if (!persona.getId().equals(quienMira) && hayBloqueo(quienMira, persona.getId())) {
             throw new ResourceNotFoundException("No encontramos a esa persona");

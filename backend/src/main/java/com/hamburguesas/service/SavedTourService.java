@@ -92,8 +92,23 @@ public class SavedTourService {
 
     @Transactional(readOnly = true)
     public List<SavedTourDto> mios(Long userId) {
-        return savedTourRepository.findByUser_IdOrderByCreatedAtDesc(userId).stream()
-            .map(this::comoDto)
+        return deUnaPersona(userId, userId);
+    }
+
+    /**
+     * Los recorridos de una persona como los ve otra (#264). Quién puede pedirlos lo
+     * decide {@link ListasDelPerfil}; acá solo se arman.
+     *
+     * Las paradas salen marcadas según lo que puntuó quien mira, no el dueño: en el
+     * recorrido de otro, lo que sirve saber es a cuáles ya fuiste vos.
+     */
+    @Transactional(readOnly = true)
+    public List<SavedTourDto> deUnaPersona(Long duenioId, Long quienMira) {
+        Set<Long> puntuadas = quienMira == null
+            ? Set.of()
+            : new HashSet<>(ratingRepository.idsPuntuadosPor(quienMira));
+        return savedTourRepository.findByUser_IdOrderByCreatedAtDesc(duenioId).stream()
+            .map(tour -> comoDto(tour, puntuadas))
             .toList();
     }
 
@@ -164,9 +179,10 @@ public class SavedTourService {
     }
 
     private SavedTourDto comoDto(SavedTour tour) {
-        Set<Long> puntuadas = new HashSet<>(
-            ratingRepository.idsPuntuadosPor(tour.getUser().getId()));
+        return comoDto(tour, new HashSet<>(ratingRepository.idsPuntuadosPor(tour.getUser().getId())));
+    }
 
+    private SavedTourDto comoDto(SavedTour tour, Set<Long> puntuadas) {
         List<SavedTourStop> stops = tour.getStops();
         List<BurgerJointDto> fichas = fichaDeLocal.conDeseo(
             stops.stream().map(SavedTourStop::getBurgerJoint).toList(), false);
