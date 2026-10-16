@@ -6,8 +6,8 @@ import { Interruptor } from './Interruptor'
 /**
  * Si tus guardadas y tus recorridos se ven en tu perfil público (#264).
  *
- * Arranca apagado: hasta ahora eran solo tuyos, y nadie aceptó mostrarlos. Uno solo para
- * las dos listas y no uno por lista: es la misma pregunta —"¿muestro lo que pienso
+ * Las cuentas nuevas arrancan prendido (#270) y van con el interruptor a la vista, en el
+ * perfil, no escondido en los ajustes. Uno solo para las dos listas y no uno por lista: es la misma pregunta —"¿muestro lo que pienso
  * hacer?"— y dos interruptores pedían pensar dos veces lo mismo.
  *
  * Se marca enseguida, pero no se puede volver a tocar hasta que el servidor contesta, y
@@ -36,7 +36,7 @@ export function MostrarMisListas() {
   }
 
   return (
-    <fieldset className="flex flex-col gap-1" disabled={guardando}>
+    <fieldset className="flex flex-col gap-1 tarjeta p-4" disabled={guardando}>
       <legend className="mb-1 text-sm font-semibold">Tu perfil público</legend>
       {pedido.datos !== undefined ? (
         <Interruptor activo={pedido.datos} onCambiar={cambiar}>
@@ -55,7 +55,7 @@ export function MostrarMisListas() {
         </p>
       )}
       <p className="text-xs text-base-content/70">
-        Si lo prendés, quien entre a tu perfil los ve y puede guardarse tus recorridos.
+        Apagalo y tus guardadas y recorridos quedan solo para vos. Prendido, quien entre a tu perfil los ve y puede guardarse tus recorridos.
       </p>
       {error && (
         <p role="alert" className="text-sm text-error">

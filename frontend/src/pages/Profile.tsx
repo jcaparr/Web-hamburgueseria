@@ -143,6 +143,10 @@ export function Profile() {
         />
       )}
 
+      {/* A la vista y no plegado en Ajustes (#270): el perfil arranca público, y quien
+          prefiere cerrarlo tiene que poder encontrar cómo sin buscar. */}
+      <MostrarMisListas />
+
       <div className="flex flex-col gap-4">
         <BarraDePestanias actual={pestania} onElegir={elegir} etiqueta="Qué ver de tu perfil" />
 
@@ -232,7 +236,6 @@ export function Profile() {
         </summary>
         <div className="flex flex-col gap-5 pt-2 pb-2">
           <SelectorDeTema />
-          <MostrarMisListas />
           <CuentasBloqueadas />
           <button type="button" onClick={cerrarSesion} className="btn btn-outline w-full md:w-fit md:px-6">
             Cerrar sesión

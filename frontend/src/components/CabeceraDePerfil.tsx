@@ -43,7 +43,7 @@ export function CabeceraDePerfil({
           <AvatarDeUsuario username={username} hamburguesa={hamburguesa} className="size-24 md:size-36" />
           <div className="flex min-w-0 max-w-full flex-col items-center gap-1.5 md:items-start">
             {/* El arroba más apagado: es de todos los nombres y no dice nada de este. */}
-            <h1 className="max-w-full truncate titulo-pagina md:text-[2.25rem]">
+            <h1 className="max-w-full titulo-pagina [overflow-wrap:anywhere] md:text-[2.25rem]">
               <span className="text-base-content/60">@</span>
               {username}
             </h1>
