@@ -2,18 +2,24 @@ package com.hamburguesas.service;
 
 import com.hamburguesas.dto.BurgerJointDto;
 import com.hamburguesas.dto.GuardarTourRequest;
+import com.hamburguesas.dto.MostrarListasDto;
 import com.hamburguesas.dto.SavedTourDto;
+import com.hamburguesas.dto.TourStopDto;
+import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.exception.ResourceNotFoundException;
 import com.hamburguesas.model.Block;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.ModoDeViaje;
+import com.hamburguesas.model.Rating;
 import com.hamburguesas.model.User;
 import com.hamburguesas.model.WishlistItem;
 import com.hamburguesas.repository.BlockRepository;
 import com.hamburguesas.repository.BurgerJointRepository;
+import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.SavedTourRepository;
 import com.hamburguesas.repository.UserRepository;
 import com.hamburguesas.repository.WishlistRepository;
+import jakarta.validation.Validator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,6 +49,8 @@ class ListasDelPerfilTest {
     @Autowired private WishlistRepository wishlistRepository;
     @Autowired private SavedTourRepository savedTourRepository;
     @Autowired private BlockRepository blockRepository;
+    @Autowired private RatingRepository ratingRepository;
+    @Autowired private Validator validator;
 
     private User ana;
     private User beto;
@@ -68,6 +76,9 @@ class ListasDelPerfilTest {
 
     private void limpiar() {
         blockRepository.deleteAll();
+        userRepository.findByUsername("betolistas")
+            .ifPresent(b -> ratingRepository.deleteAll(ratingRepository.findAll().stream()
+                .filter(r -> r.getUser().getId().equals(b.getId())).toList()));
         wishlistRepository.deleteAll();
         savedTourRepository.deleteAll();
         userRepository.findByUsername("analistas").ifPresent(u -> {
@@ -147,6 +158,52 @@ class ListasDelPerfilTest {
             .isInstanceOf(ResourceNotFoundException.class);
         assertThatThrownBy(() -> listas.recorridos("analistas", beto.getId()))
             .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    /** Y al revés: quien bloqueó tampoco ve las listas de quien bloqueó. */
+    @Test
+    void conUnBloqueoAlRevesTampoco() {
+        muestra();
+        blockRepository.save(Block.builder().blocker(beto).blocked(ana).createdAt(Instant.now()).build());
+
+        assertThatThrownBy(() -> listas.guardadas("analistas", beto.getId()))
+            .isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> listas.recorridos("analistas", beto.getId()))
+            .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    /** En el recorrido de otro, "ya fuiste" es de quien mira, no del dueño. */
+    @Test
+    void lasVisitadasSonDeQuienMira() {
+        muestra();
+        ratingRepository.save(Rating.builder().user(beto).burgerJoint(uno).score(5).createdAt(Instant.now()).build());
+
+        SavedTourDto visto = listas.recorridos("analistas", beto.getId()).get(0);
+        assertThat(visto.paradas()).filteredOn(p -> p.local().id().equals(uno.getId()))
+            .extracting(TourStopDto::visitada).containsExactly(true);
+        assertThat(listas.recorridos("analistas", ana.getId()).get(0).paradas())
+            .extracting(TourStopDto::visitada).containsOnly(false);
+    }
+
+    /** Guardarse dos veces el mismo recorrido de otro no lo duplica. */
+    @Test
+    void elMismoRecorridoNoSeGuardaDosVeces() {
+        GuardarTourRequest copia = new GuardarTourRequest(List.of(uno.getId(), dos.getId()), ModoDeViaje.A_PIE);
+        savedTourService.guardar(beto.getId(), copia);
+
+        assertThatThrownBy(() -> savedTourService.guardar(beto.getId(), copia))
+            .isInstanceOf(ConflictException.class)
+            .hasMessage("Ya tenés este recorrido guardado.");
+        // En otro orden, o de otro modo, es otro recorrido.
+        savedTourService.guardar(beto.getId(), new GuardarTourRequest(List.of(dos.getId(), uno.getId()), ModoDeViaje.A_PIE));
+        savedTourService.guardar(beto.getId(), new GuardarTourRequest(List.of(uno.getId(), dos.getId()), ModoDeViaje.EN_AUTO));
+        assertThat(savedTourService.mios(beto.getId())).hasSize(3);
+    }
+
+    @Test
+    void elInterruptorPideUnValor() {
+        assertThat(validator.validate(new MostrarListasDto(null))).hasSize(1);
+        assertThat(validator.validate(new MostrarListasDto(true))).isEmpty();
     }
 
     /** La regla, sola: si un día cambia ("solo seguidores", "todos"), este es el test que cambia. */

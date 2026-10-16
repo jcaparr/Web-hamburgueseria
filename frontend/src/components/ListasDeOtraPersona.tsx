@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { usePedido } from '../hooks/usePedido'
 import type { BurgerJoint, SavedTour } from '../types'
-import { isSessionExpired } from '../utils/errors'
+import { isNotFound, isSessionExpired } from '../utils/errors'
 import { LoadError } from './LoadError'
 import { GrillaDeLocales } from './PestaniasDePerfil'
 import { SavedTourCard } from './SavedTourCard'
@@ -21,7 +21,7 @@ export function GuardadasDeOtraPersona({ username }: { username: string }) {
   const pedido = usePedido(`guardadas:${username}`, () =>
     apiClient.get<BurgerJoint[]>(`/usuarios/${username}/guardadas`).then(({ data }) => data),
   )
-  if (pedido.error) return <LoadError error={pedido.error} onRetry={pedido.reintentar} />
+  if (pedido.error) return <ErrorDeLaLista error={pedido.error} onRetry={pedido.reintentar} />
   if (!pedido.datos) return <Cargando />
   if (pedido.datos.length === 0) {
     return <AvisoVacio>Todavía no guardó ninguna hamburguesería.</AvisoVacio>
@@ -41,7 +41,7 @@ export function RecorridosDeOtraPersona({ username, soyYo }: { username: string;
   const pedido = usePedido(`recorridos:${username}`, () =>
     apiClient.get<SavedTour[]>(`/usuarios/${username}/recorridos`).then(({ data }) => data),
   )
-  if (pedido.error) return <LoadError error={pedido.error} onRetry={pedido.reintentar} />
+  if (pedido.error) return <ErrorDeLaLista error={pedido.error} onRetry={pedido.reintentar} />
   if (!pedido.datos) return <Cargando />
   if (pedido.datos.length === 0) {
     return <AvisoVacio>Todavía no guardó ningún recorrido.</AvisoVacio>
@@ -50,12 +50,25 @@ export function RecorridosDeOtraPersona({ username, soyYo }: { username: string;
     <ul className="grid gap-3 md:grid-cols-2">
       {pedido.datos.map((tour) => (
         <li key={tour.id}>
-          {/* El propio ya está en tus recorridos: guardarlo de nuevo lo duplicaría. */}
-          <SavedTourCard tour={tour} accion={soyYo ? undefined : <GuardarEnMisRecorridos tour={tour} />} />
+          {/* El propio ya está en tus recorridos: guardarlo de nuevo lo duplicaría. Y uno
+              que quedó con una sola parada (se borró un local) ya no es un recorrido. */}
+          <SavedTourCard
+            tour={tour}
+            accion={soyYo || tour.paradas.length < 2 ? undefined : <GuardarEnMisRecorridos tour={tour} />}
+          />
         </li>
       ))}
     </ul>
   )
+}
+
+/**
+ * Un 404 acá es que dejó de mostrarlas con el perfil abierto: reintentar no lo arregla,
+ * y el "algo salió mal" de siempre lo hacía parecer una falla.
+ */
+function ErrorDeLaLista({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  if (isNotFound(error)) return <AvisoVacio>Ya no muestra sus guardadas ni sus recorridos.</AvisoVacio>
+  return <LoadError error={error} onRetry={onRetry} />
 }
 
 /**

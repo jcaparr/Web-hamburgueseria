@@ -72,8 +72,10 @@ public class ListasDelPerfil {
     }
 
     /**
-     * La persona, si quien mira puede ver sus listas. Si no, no existen: el mismo 404
-     * que con un bloqueo, así no se distingue "no las muestra" de "no hay nada".
+     * La persona, si quien mira puede ver sus listas. Si no, un 404, como con un bloqueo:
+     * para quien mira, esas listas no existen. El mensaje sí dice que no las muestra,
+     * porque eso ya se sabe por el perfil (no tiene pestañas); lo que no se revela es un
+     * bloqueo, que sigue contestando "No encontramos a esa persona".
      */
     private User conListasVisibles(String username, Long quienMira) {
         User duenio = socialService.visiblePara(username, quienMira);
