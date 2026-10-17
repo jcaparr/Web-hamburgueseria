@@ -52,6 +52,20 @@
 		reverse_proxy backend:8080
 	}
 
+	# La vista previa al compartir la ficha de un local (#277). WhatsApp, Instagram, X y
+	# compañía no ejecutan la app: leen el HTML y nada más, y el index.html es el mismo
+	# para todas las direcciones. A ellos —y solo a ellos, por el User-Agent— el backend
+	# les arma una página con el nombre, la nota y la foto del local. Quien llega con un
+	# navegador cae en el handle de abajo y recibe la app de siempre.
+	@vistaprevia {
+		path_regexp ficha ^/burger-joints/([0-9]+)/?$
+		header_regexp ua User-Agent (?i)(whatsapp|facebookexternalhit|facebot|meta-externalagent|twitterbot|telegrambot|slackbot|discordbot|linkedinbot|skypeuripreview|pinterest|redditbot)
+	}
+	handle @vistaprevia {
+		rewrite * /api/burger-joints/{re.ficha.1}/vista-previa
+		reverse_proxy backend:8080
+	}
+
 	handle {
 		root * /srv
 		# Hashed asset filenames change on every build, so they can be cached forever.
