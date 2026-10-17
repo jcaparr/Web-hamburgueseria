@@ -7,7 +7,7 @@ Ocho láminas en dos formatos: `laminas/` en 4:5 (1080×1350, el del carrusel de
 |---|---|---|
 | 1 | `laminas/01-portada.png` | Portada, con Explorar |
 | 2 | `laminas/02-sugerir-local.png` | Sugerir un local |
-| 3 | `laminas/03-instalar.png` | Agregar a la pantalla de inicio (ilustración del menú de Chrome) |
+| 3 | `laminas/03-instalar.png` | Instalar la web: Android (Chrome) «Instalar app», iPhone (Safari) «Agregar a inicio» (ilustración del menú de Chrome) |
 | 4 | `laminas/04-recorrido.png` | Armar un recorrido (Tour) |
 | 5 | `laminas/05-buscar-gente.png` | Buscar gente (nombres de ejemplo) |
 | 6 | `laminas/06-avatar.png` | Armar tu hamburguesa |
@@ -25,3 +25,9 @@ Ocho láminas en dos formatos: `laminas/` en 4:5 (1080×1350, el del carrusel de
 
 Reglas del contenido: sin cifras de la web (reseñas, usuarios); el único número es «+1.200 hamburgueserías
 en Buenos Aires y alrededores».
+
+## Antes de publicar
+
+Las láminas 3 asumen que el manifest (#281) ya está deployado: sin él, Chrome en Android solo ofrece
+«Agregar a la pantalla principal», con un ícono común, y no «Instalar app». **No publiques el post antes del deploy del manifest.**
+En iPhone (Safari) «Compartir > Agregar a inicio» ya funciona hoy. Los nombres son los del manifest: la app se llama «Burgómetro».

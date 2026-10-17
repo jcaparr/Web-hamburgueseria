@@ -111,19 +111,18 @@ const MENU_CHROME = `<div style="position:absolute;inset:62px 0 0 0;background:#
     <div style="padding:17px 26px">Nueva pestaña de incógnito</div>
     <div style="padding:17px 26px">Historial</div>
     <div style="border-top:2px solid #e8eaed;margin:8px 0"></div>
-    <div style="position:relative;margin:4px 12px;padding:16px 14px;border-radius:16px;background:#fde7e4;box-shadow:0 0 0 4px #b23a2e;font-weight:600;line-height:1.2">Agregar a la pantalla de inicio
+    <div style="position:relative;margin:4px 12px;padding:16px 14px;border-radius:16px;background:#fde7e4;box-shadow:0 0 0 4px #b23a2e;font-weight:600;line-height:1.2">Instalar app
       <b style="${NUM};right:-8px;top:-26px;z-index:2">2</b></div>
     <div style="padding:17px 26px">Compartir…</div>
     <div style="padding:17px 26px">Configuración</div>
   </div>
   <div style="position:absolute;left:0;right:0;top:680px;height:240px;background:#fff;border-radius:30px;box-shadow:0 -8px 30px rgba(0,0,0,.25);padding:28px 30px;font-size:26px">
-    <div style="font-weight:600;font-size:29px;margin-bottom:18px">Agregar a la pantalla de inicio</div>
+    <div style="font-weight:600;font-size:29px;margin-bottom:18px">Instalar app</div>
     <div style="display:flex;gap:14px;align-items:center"><div style="width:62px;height:62px;border-radius:16px;background:#f2b705;display:grid;place-items:center;padding:7px">${ISOTIPO}</div><div style="flex:1;font-size:24px">Burgómetro</div>
-    <div style="padding:16px 20px;border-radius:30px;background:#b23a2e;color:#fff;font-weight:600;font-size:23px;box-shadow:0 0 0 4px #fde7e4,0 0 0 8px #b23a2e;position:relative">Crear acceso directo<b style="${NUM};right:-14px;top:-40px">3</b></div></div>
+    <div style="padding:16px 20px;border-radius:30px;background:#b23a2e;color:#fff;font-weight:600;font-size:23px;box-shadow:0 0 0 4px #fde7e4,0 0 0 8px #b23a2e;position:relative">Instalar<b style="${NUM};right:-14px;top:-40px">3</b></div></div>
   </div>
   <div class="nota-c arriba" style="right:70px;top:86px;--tx:calc(100% - 52px)">Tocá los 3 puntitos</div>
-  <div class="nota-c arriba" style="left:40px;top:520px;--tx:70px">Elegí esta opción</div>
-  <div class="nota-c arriba" style="right:24px;top:930px;--tx:calc(100% - 60px)">Confirmá acá</div>
+  <div class="nota-c arriba" style="left:40px;top:464px;--tx:70px">Elegí «Instalar app»</div>
   </div>`
 
 const LAMINAS = [
@@ -136,7 +135,7 @@ const LAMINAS = [
     { ring: [20, 338, 335, 138], chip: { t: 'Datos del local', x: 190, y: 258, tail: 'abajo', tx: 130 } },
     { ring: [20, 743, 335, 48], chip: { t: 'Enviá la sugerencia', x: 120, y: 708, tail: 'abajo', tx: 130 } },
   ] } },
-  { id: '03-instalar', h: 'Tenela<br>en tu celu', sub: 'En el menú del navegador (los 3 puntitos), elegí «Agregar a la pantalla de inicio». En iPhone, tocá Compartir.', subSize: 31, subTop: 400, sticker: ['3 toques', 'y entrás'], stTop: 700, phone: { html: MENU_CHROME, barra: '#f1f3f4' } },
+  { id: '03-instalar', h: 'Tenela<br>en tu celu', sub: '<b>Android (Chrome):</b> 3 puntitos y «Instalar app».<br><b>iPhone (Safari):</b> Compartir y «Agregar a inicio».', subSize: 30, subTop: 400, sticker: ['como', 'una app'], stTop: 700, phone: { html: MENU_CHROME, barra: '#f1f3f4' } },
   { id: '04-recorrido', h: 'Armá tu<br>recorrido', sub: 'Elegí paradas y distancia, a pie o en auto. Te armamos la ruta.', subTop: 400, sticker: ['a pie', 'o en auto'], stTop: 700, phone: { img: 'tour.png', notas: [
     { ring: [32, 94, 311, 52], chip: { t: 'A pie o en auto', x: 100, y: 52, tail: 'abajo' } },
     { ring: [32, 612, 311, 44], chip: { t: 'Armá tu tour', x: 200, y: 568, tail: 'abajo', tx: 90 } },
