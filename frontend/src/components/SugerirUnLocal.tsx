@@ -367,17 +367,12 @@ function FotoDelLocal({ foto, onCambio }: { foto: File | null; onCambio: (foto: 
           />
         </label>
         {foto && vista && (
-          <div className="relative flex-none">
-            <img src={vista} alt="La foto que vas a mandar" className="size-14 rounded-field bg-base-200 object-cover" />
-            <button
-              type="button"
-              onClick={() => mostrar(null, null)}
-              aria-label="Sacar la foto"
-              className="btn btn-circle btn-xs absolute -right-2 -top-2 border-0 bg-black/70 text-white hover:bg-black/90"
-            >
-              <span aria-hidden="true">✕</span>
+          <>
+            <img src={vista} alt="La foto que vas a mandar" className="size-14 flex-none rounded-field bg-base-200 object-cover" />
+            <button type="button" onClick={() => mostrar(null, null)} className="btn btn-ghost h-11 min-h-11 px-3">
+              Sacar
             </button>
-          </div>
+          </>
         )}
       </div>
       <p id={idDelAviso} className="text-xs text-base-content/70">
