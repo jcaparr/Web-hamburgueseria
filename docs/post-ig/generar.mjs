@@ -102,30 +102,35 @@ function celu({ img, barra = '#faf3e3', pantallaHtml, notas: lista }, F) {
 const NUM = 'display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:#3a2a1e;color:#f7efd8;font:800 26px Poppins;position:absolute'
 
 // El menú de Chrome es una ilustración (no sale de la web): los tres puntitos, el menú y el paso clave resaltado.
-const MENU_CHROME = `<div style="position:absolute;inset:62px 0 0 0;background:#fff;font-family:Roboto,Arial,sans-serif;color:#202124">
-  <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:#f1f3f4">
-    <div style="flex:1;background:#fff;border-radius:30px;padding:16px 22px;font-size:25px">burgometro.com.ar</div>
-    <div style="position:relative;width:52px;height:52px;border-radius:50%;background:#fde7e4;display:grid;place-items:center;box-shadow:0 0 0 4px #b23a2e"><svg width="8" height="30" viewBox="0 0 8 30"><circle cx="4" cy="4" r="3.6" fill="#202124"/><circle cx="4" cy="15" r="3.6" fill="#202124"/><circle cx="4" cy="26" r="3.6" fill="#202124"/></svg>
-      <b style="${NUM};left:-34px;top:-20px">1</b></div>
+const MENU_CHROME = (() => {
+  const fila = (t, extra = '') => `<div style="padding:19px 26px;display:flex;gap:18px;align-items:center;${extra}"><i style="width:30px;height:30px;border-radius:8px;border:3px solid #9aa0a6;flex:none"></i>${t}</div>`
+  const marca = (n, pos) => `<b style="${NUM};${pos};z-index:3">${n}</b>`
+  return `<div style="position:absolute;inset:62px 0 0 0;background:#17110d;font-family:Roboto,Arial,sans-serif;color:#e8eaed">
+  <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:#202124">
+    <div style="flex:1;background:#35363a;border-radius:30px;padding:16px 22px;font-size:25px;color:#bdc1c6">burgometro.com.ar</div>
+    <div style="position:relative;width:56px;height:56px;border-radius:50%;background:#fde7e4;display:grid;place-items:center;box-shadow:0 0 0 4px #17110d,0 0 0 8px #f7efd8,0 0 0 12px #e5674f"><svg width="8" height="30" viewBox="0 0 8 30"><circle cx="4" cy="4" r="3.6" fill="#202124"/><circle cx="4" cy="15" r="3.6" fill="#202124"/><circle cx="4" cy="26" r="3.6" fill="#202124"/></svg>
+      ${marca(1, 'left:-40px;top:-24px')}</div>
   </div>
-  <div style="position:absolute;right:16px;top:150px;width:440px;background:#fff;border-radius:22px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:14px 0;font-size:25px">
-    <div style="padding:17px 26px">Nueva pestaña</div>
-    <div style="padding:17px 26px">Nueva pestaña de incógnito</div>
-    <div style="padding:17px 26px">Historial</div>
-    <div style="border-top:2px solid #e8eaed;margin:8px 0"></div>
-    <div style="position:relative;margin:4px 12px;padding:16px 14px;border-radius:16px;background:#fde7e4;box-shadow:0 0 0 4px #b23a2e;font-weight:600;line-height:1.2">Instalar app
-      <b style="${NUM};right:-8px;top:-26px;z-index:2">2</b></div>
-    <div style="padding:17px 26px">Compartir…</div>
-    <div style="padding:17px 26px">Configuración</div>
+  <div style="position:absolute;right:12px;top:140px;width:430px;background:#2b2c2f;border-radius:24px;box-shadow:0 10px 40px rgba(0,0,0,.6);padding:12px 0;font-size:25px">
+    ${fila('Traducir…')}
+    ${fila('Mostrar el Modo de lectura')}
+    <div style="position:relative;margin:4px 10px;border-radius:16px;background:#fde7e4;color:#202124;font-weight:600;line-height:1.15;box-shadow:0 0 0 4px #2b2c2f,0 0 0 8px #b23a2e">${fila('Instalar y crear acceso directo', 'padding:16px 16px')}${marca(2, 'right:-12px;top:-28px')}</div>
+    ${fila('Sitio para computadoras')}
   </div>
-  <div style="position:absolute;left:0;right:0;top:680px;height:240px;background:#fff;border-radius:30px;box-shadow:0 -8px 30px rgba(0,0,0,.25);padding:28px 30px;font-size:26px">
-    <div style="font-weight:600;font-size:29px;margin-bottom:18px">Instalar app</div>
-    <div style="display:flex;gap:14px;align-items:center"><div style="width:62px;height:62px;border-radius:16px;background:#f2b705;display:grid;place-items:center;padding:7px">${ISOTIPO}</div><div style="flex:1;font-size:24px">Burgómetro</div>
-    <div style="padding:16px 20px;border-radius:30px;background:#b23a2e;color:#fff;font-weight:600;font-size:23px;box-shadow:0 0 0 4px #fde7e4,0 0 0 8px #b23a2e;position:relative">Instalar<b style="${NUM};right:-14px;top:-40px">3</b></div></div>
+  <div style="position:absolute;left:10px;right:10px;top:640px;background:#3c3d41;border-radius:28px;padding:24px 22px 22px;box-shadow:0 -8px 30px rgba(0,0,0,.5)">
+    <div style="text-align:center;font-size:27px;margin-bottom:16px">Instalar y crear acceso directo</div>
+    <div style="position:relative;display:flex;align-items:center;gap:16px;background:#fde7e4;color:#202124;border-radius:18px;padding:14px 16px;font-size:27px;font-weight:600;box-shadow:0 0 0 4px #3c3d41,0 0 0 8px #b23a2e">
+      <div style="width:64px;height:64px;border-radius:16px;background:#f2b705;display:grid;place-items:center;padding:7px;flex:none">${ISOTIPO}</div><div style="flex:1">Instalar</div><div style="font-size:22px;font-weight:600;color:#b23a2e">1.ª opción</div>
+      ${marca(3, 'right:-12px;top:-30px')}</div>
+    <div style="display:flex;align-items:center;gap:16px;margin-top:16px;padding:12px 16px;font-size:23px;color:#bdc1c6;opacity:.8">
+      <div style="width:64px;height:64px;border-radius:16px;background:#f2b705;display:grid;place-items:center;padding:7px;flex:none;opacity:.7">${ISOTIPO}</div><div style="flex:1"><div style="font-size:26px">Crear acceso directo</div>Los accesos directos se abren en Chrome</div></div>
   </div>
-  <div class="nota-c arriba" style="right:70px;top:86px;--tx:calc(100% - 52px)">Tocá los 3 puntitos</div>
-  <div class="nota-c arriba" style="left:40px;top:464px;--tx:70px">Elegí «Instalar app»</div>
+  <div class="nota-c arriba" style="right:80px;top:96px;--tx:calc(100% - 60px)">Tocá los 3 puntitos</div>
+  <div class="nota-c abajo" style="left:20px;top:100px;--tx:60px;white-space:normal;width:250px;font-size:24px;display:none">x</div>
+  <div class="nota-c arriba" style="left:60px;top:470px;--tx:60px">Elegí esta opción</div>
+  <div class="nota-c abajo" style="right:20px;top:594px;--tx:calc(100% - 90px)">Tocá «Instalar»</div>
   </div>`
+})()
 
 const LAMINAS = [
   { id: '01-portada', h: 'Todo lo que podés hacer en Burgómetro', m: true, sub: '+1.200 hamburgueserías en Buenos Aires y alrededores, en un solo lugar.', subTop: 470, sticker: ['deslizá', '→'], stTop: 790, phone: { img: 'explorar.png', notas: [
@@ -137,7 +142,7 @@ const LAMINAS = [
     { ring: [20, 338, 335, 138], chip: { t: 'Datos del local', x: 190, y: 258, tail: 'abajo', tx: 130 } },
     { ring: [20, 743, 335, 48], chip: { t: 'Enviá la sugerencia', x: 120, y: 708, tail: 'abajo', tx: 130 } },
   ] } },
-  { id: '03-instalar', h: 'Tenela<br>en tu celu', sub: '<b>Android (Chrome):</b> 3 puntitos y «Instalar app».<br><b>iPhone (Safari):</b> Compartir y «Agregar a inicio».', subSize: 30, subTop: 400, sticker: ['como', 'una app'], stTop: 700, phone: { html: MENU_CHROME, barra: '#f1f3f4' } },
+  { id: '03-instalar', h: 'Tenela<br>en tu celu', sub: '<b>Android (Chrome):</b> 3 puntitos, «Instalar y crear acceso directo» y «Instalar».<br><b>iPhone (Safari):</b> Compartir y «Agregar a inicio».', subSize: 28, subTop: 400, sticker: ['como', 'una app'], stTop: 700, phone: { html: MENU_CHROME, barra: '#f1f3f4' } },
   { id: '04-recorrido', h: 'Armá tu<br>recorrido', sub: 'Elegí paradas y distancia, a pie o en auto. Te armamos la ruta.', subTop: 400, sticker: ['a pie', 'o en auto'], stTop: 700, phone: { img: 'tour.png', notas: [
     { ring: [32, 94, 311, 52], chip: { t: 'A pie o en auto', x: 100, y: 52, tail: 'abajo' } },
     { ring: [32, 612, 311, 44], chip: { t: 'Armá tu tour', x: 200, y: 568, tail: 'abajo', tx: 90 } },
