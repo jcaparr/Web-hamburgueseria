@@ -2,6 +2,7 @@
 
 ¿Dónde comemos hoy? Deslizá y mirá todo lo que podés hacer en Burgómetro.
 Armá un recorrido, guardá las que te debés y mirá qué comen otros fanáticos.
+¿Reseñaste una burger? Tocá «Compartir en historias» y subila a tu Instagram: la imagen te la armamos nosotros.
 ¿Falta tu hamburguesería? Sumala desde la web.
 Link en la bio.
 

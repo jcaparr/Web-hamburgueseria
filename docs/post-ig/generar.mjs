@@ -11,8 +11,8 @@ const EDGE = process.env.EDGE ?? 'C:/Program Files (x86)/Microsoft/Edge/Applicat
 // 4:5 es el formato del carrusel del feed; 9:16 es para historias (con ~250 px de zona segura arriba y abajo).
 // El celu se dibuja siempre a 490×1100 y se escala (S) alrededor de su centro (cx, cy).
 const FORMATOS = [
-  { dir: 'laminas', alto: 1350, S: 0.86, cx: 778, cy: 820, h1: 80, sub: 0, st: 0, logo: 58, c: { h1: 110, g: 360, u: 1030, s: 1170 } },
-  { dir: 'laminas-9x16', alto: 1920, S: 0.98, cx: 750, cy: 1105, h1: 270, sub: 245, st: 410, logo: 310, c: { h1: 330, g: 600, u: 1280, s: 1450 } },
+  { dir: 'laminas', alto: 1350, S: 0.86, cx: 778, cy: 820, h1: 80, sub: 0, st: 0, logo: 58, c: { h1: 110, g: 360, u: 1030, s: 1170 }, hist: { top: 650, w: 300 } },
+  { dir: 'laminas-9x16', alto: 1920, S: 0.98, cx: 750, cy: 1105, h1: 270, sub: 245, st: 410, logo: 310, c: { h1: 330, g: 600, u: 1280, s: 1450 }, hist: { top: 870, w: 330 } },
 ]
 
 // El isotipo es el mismo dibujo de frontend/src/components/MarcaBurgometro.tsx, sin el calco.
@@ -56,6 +56,8 @@ h1.m{font-size:84px}
 .nota-c:after{content:"";position:absolute;left:var(--tx,30px);border:10px solid transparent}
 .nota-c.arriba:after{top:-19px;border-bottom-color:#3a2a1e}
 .nota-c.abajo:after{bottom:-19px;border-top-color:#3a2a1e}
+.historia{position:absolute;left:78px;border:10px solid #fff7e0;border-radius:34px;overflow:hidden;box-shadow:0 24px 40px rgba(43,26,16,.4);transform:rotate(-5deg);z-index:4;background:#241a13}
+.historia img{display:block;width:100%}
 .nota-c.izq:after{left:-19px;top:calc(50% - 10px);border-right-color:#3a2a1e}
 `
 const ICONOS_ESTADO = `<span><svg viewBox="0 0 28 20"><rect x="0" y="12" width="4" height="8" rx="1" fill="currentColor"/><rect x="8" y="8" width="4" height="12" rx="1" fill="currentColor"/><rect x="16" y="4" width="4" height="16" rx="1" fill="currentColor"/><rect x="24" y="0" width="4" height="20" rx="1" fill="currentColor"/></svg><svg viewBox="0 0 44 20"><rect x="1" y="2" width="38" height="16" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="4" y="5" width="28" height="10" rx="3" fill="currentColor"/></svg></span>`
@@ -122,7 +124,7 @@ const MENU_CHROME = `<div style="position:absolute;inset:62px 0 0 0;background:#
     <div style="padding:16px 20px;border-radius:30px;background:#b23a2e;color:#fff;font-weight:600;font-size:23px;box-shadow:0 0 0 4px #fde7e4,0 0 0 8px #b23a2e;position:relative">Instalar<b style="${NUM};right:-14px;top:-40px">3</b></div></div>
   </div>
   <div class="nota-c arriba" style="right:70px;top:86px;--tx:calc(100% - 52px)">Tocá los 3 puntitos</div>
-  <div class="nota-c arriba" style="left:40px;top:464px;--tx:70px">Elegí «Instalar app»</div>
+  <div class="nota-c arriba" style="left:40px;top:464px;--tx:70px">Elegí «Instalar app»</div>
   </div>`
 
 const LAMINAS = [
@@ -152,6 +154,9 @@ const LAMINAS = [
     { ring: [303, 142, 44, 44], chip: { t: 'Las que guardaste', x: 150, y: 96, tail: 'abajo', tx: 160 } },
     { ring: [16, 192, 120, 38], chip: { t: 'Mirá cómo llegar', x: 146, y: 195, tail: 'izq' } },
   ] } },
+  { id: '09-compartir-resenia', h: 'Compartí<br>tu reseña', sub: 'Un toque y te armamos la historia.', subTop: 400, historia: 'historia-generada.png', phone: { img: 'resenia-compartir.png', notas: [
+    { ring: [32, 541, 190, 44], chip: { t: 'Tocá acá', x: 70, y: 596, tail: 'arriba' } },
+  ] } },
 ]
 
 function html(l, F) {
@@ -163,8 +168,7 @@ function html(l, F) {
 <p class="sub" style="top:${subTop}px;${l.subSize ? `font-size:${l.subSize}px;width:380px` : ''}">${l.sub}</p>
 ${rayas(486, subTop - 12, -60)}
 ${phone}
-<div class="sticker" style="top:${stTop}px">${l.sticker[0]}<br>${l.sticker[1]}<u></u></div>
-${destello(282, stTop + 170, 215)}
+${l.historia ? `<div class="historia" style="top:${F.hist.top}px;width:${F.hist.w}px"><img src="../../capturas/${l.historia}"></div><div class="nota-c abajo" style="left:100px;top:${F.hist.top - 64}px;--tx:60px;font-size:30px">Así queda tu historia</div>` : `<div class="sticker" style="top:${stTop}px">${l.sticker[0]}<br>${l.sticker[1]}<u></u></div>${destello(282, stTop + 170, 215)}`}
 <div class="logo">${ISOTIPO}<span>Burgómetro</span></div>`
 }
 
