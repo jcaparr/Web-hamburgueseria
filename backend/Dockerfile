@@ -20,7 +20,7 @@ COPY --from=build /build/target/*.jar app.jar
 
 # Photos live on volumes mounted here; the app user has to own them to write new ones.
 # Docker copies this ownership into a volume the first time it is mounted.
-RUN mkdir -p /data/place-photos /data/rating-photos && chown -R app:app /data
+RUN mkdir -p /data/place-photos /data/rating-photos /data/sugerencias-fotos && chown -R app:app /data
 USER app
 
 EXPOSE 8080

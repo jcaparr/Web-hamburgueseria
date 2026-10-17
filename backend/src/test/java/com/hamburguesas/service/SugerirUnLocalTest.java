@@ -1,8 +1,10 @@
 package com.hamburguesas.service;
 
 import com.hamburguesas.dto.SugerenciaDeLocalRequest;
+import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.exception.EmailNotVerifiedException;
 import com.hamburguesas.exception.TooManyRequestsException;
+import com.hamburguesas.fotos.FotosDeSugerencias;
 import com.hamburguesas.mail.EmailDeliveryException;
 import com.hamburguesas.mail.EmailService;
 import com.hamburguesas.model.SugerenciaDeLocal;
@@ -27,6 +29,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -41,6 +44,7 @@ class SugerirUnLocalTest {
     @Autowired private SugerenciasProperties topes;
     @Autowired private Validator validator;
     @MockitoBean private EmailService emailService;
+    @MockitoBean private FotosDeSugerencias fotos;
 
     private User ana;
     private User beto;
@@ -113,6 +117,60 @@ class SugerirUnLocalTest {
         sugerenciasDeLocales.sugerir(ana.getId(), pedido("Burger Uno"));
 
         assertThat(sugerencias.count()).isEqualTo(1);
+    }
+
+    @Test
+    void sinFotoElMailDiceQueNoTrae() {
+        sugerenciasDeLocales.sugerir(ana.getId(), pedido("Sin foto"));
+
+        assertThat(sugerencias.findAll().get(0).getFotoArchivo()).isNull();
+        verify(emailService).send(anyString(), anyString(), contains("Foto: (sin foto)"), anyString());
+        verify(fotos, never()).guardar(org.mockito.ArgumentMatchers.any());
+    }
+
+    /** Se guarda el nombre del archivo y el mail avisa que trae foto. */
+    @Test
+    void conFotoGuardaElArchivoYElMailLoAvisa() {
+        when(fotos.guardar(org.mockito.ArgumentMatchers.any())).thenReturn("abc.jpg");
+
+        sugerenciasDeLocales.sugerir(ana.getId(), pedido("Con foto"), new byte[] {1, 2, 3});
+
+        assertThat(sugerencias.findAll().get(0).getFotoArchivo()).isEqualTo("abc.jpg");
+        verify(emailService).send(anyString(), anyString(),
+            contains("Foto: SÍ, trae foto (sugerencias-fotos/abc.jpg)"), anyString());
+    }
+
+    /** Una foto que no sirve frena todo: no queda la sugerencia sin su foto. */
+    @Test
+    void siLaFotoNoSirveNoSeGuardaNada() {
+        when(fotos.guardar(org.mockito.ArgumentMatchers.any()))
+            .thenThrow(new ConflictException("Eso no es una imagen"));
+
+        assertThatThrownBy(() -> sugerenciasDeLocales.sugerir(ana.getId(), pedido("Mala"), new byte[] {1}))
+            .isInstanceOf(ConflictException.class);
+        assertThat(sugerencias.count()).isZero();
+        verify(emailService, never()).send(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void unaFotoMasPesadaQueElTopeSeRechazaSinProcesarla() {
+        byte[] enorme = new byte[(int) topes.getPesoMaximoDeFoto().toBytes() + 1];
+
+        assertThatThrownBy(() -> sugerenciasDeLocales.sugerir(ana.getId(), pedido("Pesada"), enorme))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("pesa demasiado");
+        assertThat(sugerencias.count()).isZero();
+        verify(fotos, never()).guardar(org.mockito.ArgumentMatchers.any());
+    }
+
+    /** Los topes de siempre valen igual con foto: no se procesa la de un pedido rechazado. */
+    @Test
+    void conElMinutoSinCumplirNoSeProcesaLaFoto() {
+        yaHabia(ana, Duration.ofSeconds(10));
+
+        assertThatThrownBy(() -> sugerenciasDeLocales.sugerir(ana.getId(), pedido("Otra"), new byte[] {1}))
+            .isInstanceOf(TooManyRequestsException.class);
+        verify(fotos, never()).guardar(org.mockito.ArgumentMatchers.any());
     }
 
     @Test

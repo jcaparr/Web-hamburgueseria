@@ -3,6 +3,8 @@ package com.hamburguesas.service;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import org.springframework.util.unit.DataSize;
+
 import java.time.Duration;
 
 /**
@@ -27,6 +29,12 @@ public class SugerenciasProperties {
      * mail: así nunca se comen los 300 diarios de Brevo que necesitan los códigos.
      */
     private int topeDeMails = 20;
+
+    /** Dónde se guardan las fotos opcionales (#283). Ninguna ruta de la web las sirve. */
+    private String directorioDeFotos = "./data/sugerencias-fotos";
+
+    /** Lo que puede pesar la foto que se sube. Lo que se guarda pesa mucho menos. */
+    private DataSize pesoMaximoDeFoto = DataSize.ofMegabytes(8);
 
     /** Cuántas se aceptan por día, entre todos. Pasado eso se rechazan. */
     private int topeTotal = 100;
