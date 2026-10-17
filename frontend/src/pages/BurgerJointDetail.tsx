@@ -323,6 +323,7 @@ export function BurgerJointDetail() {
                   esMia={esMia}
                   puedeReaccionar={user !== null && !esMia}
                   onEditar={esMia ? abrirOpinion : undefined}
+                  local={{ nombre: burgerJoint.name, barrio: burgerJoint.area }}
                 />
               </div>
             )

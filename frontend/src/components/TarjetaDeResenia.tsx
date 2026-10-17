@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
 import { FotosDeResenia } from './FotosDeResenia'
+import { BotonCompartirEnHistorias } from './BotonCompartirEnHistorias'
 import { Stars } from './Stars'
 import { IconPencil } from './icons'
 import { ReaccionesDeResenia } from './ReaccionesDeResenia'
@@ -23,6 +24,7 @@ export function TarjetaDeResenia({
   esMia,
   puedeReaccionar,
   onEditar,
+  local,
 }: {
   resenia: Rating
   esMia: boolean
@@ -30,6 +32,8 @@ export function TarjetaDeResenia({
   puedeReaccionar: boolean
   /** Si viene, se muestra el lápiz para editarla. Solo tiene sentido en la propia. */
   onEditar?: () => void
+  /** Si viene en la propia, se ofrece armar la imagen para las historias de Instagram (#278). */
+  local?: { nombre: string; barrio: string | null }
 }) {
   return (
     <article className="overflow-hidden tarjeta">
@@ -73,6 +77,12 @@ export function TarjetaDeResenia({
             </p>
           )}
           <ReaccionesDeResenia ratingId={resenia.id} reacciones={resenia.reacciones} puedeReaccionar={puedeReaccionar} />
+        </div>
+      )}
+
+      {esMia && local && (
+        <div className="px-4 pb-3">
+          <BotonCompartirEnHistorias resenia={resenia} nombreDelLocal={local.nombre} barrio={local.barrio} />
         </div>
       )}
     </article>
