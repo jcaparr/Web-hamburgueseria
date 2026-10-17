@@ -527,6 +527,10 @@ app:
         # Aci2 Bar, Cucha Cucha 2595: la fachada con el cartel «El Bar» (#237). Es la primera
         # foto del local en Google, la que subió el propio bar.
         ChIJ96JLf5i3vJURMgf-h-YH-rM: "3024x1702|Aci2 Bar"
+        # American Way, Belgrano 4398: la hamburguesa con pepinillos, cheddar y carne
+        # desmenuzada (#282). Es la única foto vertical de Julieta Di Marco; las otras
+        # suyas son apaisadas o cuadradas.
+        ChIJgxSL6nK3vJURxT_LFZVI5MU: "3204x4800|Julieta Di Marco"
       # 3 es el máximo que devuelve Google por consulta (60 resultados); pedir más
       # no trae nada nuevo.
       # Cuántas fotos tiene que tener en Google un local que Google NO clasifica como
