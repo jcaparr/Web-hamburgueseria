@@ -65,6 +65,9 @@ services:
       # Las fotos de las reseñas: las sube la gente y no se pueden volver a bajar de
       # ningún lado, así que van en su propio volumen y entran en el backup (#136).
       - rating_photos:/data/rating-photos
+      # Las fotos que acompañan las sugerencias de locales (#283): las revisa Juan a mano,
+      # no se sirven por la web y tienen que sobrevivir a que se recree el contenedor.
+      - sugerencias_fotos:/data/sugerencias-fotos
     # Also not published: only Caddy talks to it, over the internal network.
 
   caddy:
@@ -119,5 +122,6 @@ volumes:
   db_data:
   place_photos:
   rating_photos:
+  sugerencias_fotos:
   caddy_data:
   caddy_config:

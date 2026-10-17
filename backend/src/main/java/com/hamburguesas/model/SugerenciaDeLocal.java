@@ -37,6 +37,10 @@ public class SugerenciaDeLocal {
     @Column(length = 1000)
     private String comentario;
 
+    /** El nombre del archivo de la foto opcional, en la carpeta que la web no sirve (#283). */
+    @Column(name = "foto_archivo", length = 100)
+    private String fotoArchivo;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

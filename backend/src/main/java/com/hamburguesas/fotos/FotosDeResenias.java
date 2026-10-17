@@ -87,17 +87,7 @@ public class FotosDeResenias {
      * @throws ConflictException si eso no era una imagen que podamos guardar.
      */
     public String guardar(byte[] subido) {
-        if (subido == null || subido.length == 0) {
-            throw new ConflictException("No llegó ninguna foto");
-        }
-        // La firma se mira primero porque es lo más barato: descarta un PDF o un texto
-        // sin que ImageIO tenga que intentar nada.
-        if (ImageFormat.of(subido) == null) {
-            throw new ConflictException("Eso no es una imagen");
-        }
-
-        BufferedImage imagen = decodificar(subido);
-        byte[] jpeg = aJpeg(achicarYEnderezar(imagen, OrientacionExif.de(subido)));
+        byte[] jpeg = aJpegSeguro(subido);
 
         String nombre = UUID.randomUUID() + ".jpg";
         try {
@@ -110,6 +100,32 @@ public class FotosDeResenias {
         }
 
         return "/api/rating-photos/" + nombre;
+    }
+
+    /**
+     * Lo que se guarda de cualquier foto que suba la gente: la imagen decodificada y vuelta
+     * a escribir como JPEG derecho, achicado y sin metadatos. Las fotos de las sugerencias
+     * de locales pasan por acá también (#283), con otro destino.
+     *
+     * @throws ConflictException si eso no era una imagen que podamos guardar.
+     */
+    public byte[] aJpegSeguro(byte[] subido) {
+        return aJpegSeguro(subido, LADO_MAXIMO, LADO_MINIMO);
+    }
+
+    /** Lo mismo con otras medidas: ver {@link #aJpegSeguro(byte[])}. */
+    public byte[] aJpegSeguro(byte[] subido, int ladoMaximo, int ladoMinimo) {
+        if (subido == null || subido.length == 0) {
+            throw new ConflictException("No llegó ninguna foto");
+        }
+        // La firma se mira primero porque es lo más barato: descarta un PDF o un texto
+        // sin que ImageIO tenga que intentar nada.
+        if (ImageFormat.of(subido) == null) {
+            throw new ConflictException("Eso no es una imagen");
+        }
+
+        BufferedImage imagen = decodificar(subido, ladoMinimo);
+        return aJpeg(achicarYEnderezar(imagen, OrientacionExif.de(subido), ladoMaximo));
     }
 
     /** Borra el archivo de una foto que ya no está en ninguna reseña. */
@@ -146,7 +162,7 @@ public class FotosDeResenias {
     }
 
     /** Mira las medidas antes de decodificar, y recién ahí lee la imagen. */
-    private BufferedImage decodificar(byte[] subido) {
+    private BufferedImage decodificar(byte[] subido, int ladoMinimo) {
         try (ImageInputStream entrada =
                  ImageIO.createImageInputStream(new ByteArrayInputStream(subido))) {
             Iterator<ImageReader> lectores = ImageIO.getImageReaders(entrada);
@@ -164,10 +180,10 @@ public class FotosDeResenias {
                 if ((long) ancho * alto > PIXELES_MAXIMOS) {
                     throw new ConflictException("Esa imagen es demasiado grande");
                 }
-                if (Math.min(ancho, alto) < LADO_MINIMO) {
+                if (Math.min(ancho, alto) < ladoMinimo) {
                     throw new ConflictException(
                         "Esa foto es muy chica (" + ancho + "×" + alto + ") y se vería"
-                            + " borrosa. Necesita al menos " + LADO_MINIMO + " px de lado.");
+                            + " borrosa. Necesita al menos " + ladoMinimo + " px de lado.");
                 }
                 return lector.read(0);
             } finally {
@@ -192,14 +208,14 @@ public class FotosDeResenias {
      * Las dos cosas van en el mismo dibujo porque cada copia de una foto grande ocupa
      * decenas de megas: girar y después achicar serían dos copias en vez de una.
      */
-    private BufferedImage achicarYEnderezar(BufferedImage original, int orientacion) {
+    private BufferedImage achicarYEnderezar(BufferedImage original, int orientacion, int ladoMaximo) {
         int lado = Math.max(original.getWidth(), original.getHeight());
         boolean derecha = orientacion == OrientacionExif.DERECHA;
-        if (lado <= LADO_MAXIMO && derecha) {
+        if (lado <= ladoMaximo && derecha) {
             return original;
         }
 
-        double escala = Math.min(1.0, (double) LADO_MAXIMO / lado);
+        double escala = Math.min(1.0, (double) ladoMaximo / lado);
         int ancho = Math.max(1, (int) Math.round(original.getWidth() * escala));
         int alto = Math.max(1, (int) Math.round(original.getHeight() * escala));
         // De la 5 a la 8 hay un cuarto de giro: el ancho y el alto se cambian de lugar.

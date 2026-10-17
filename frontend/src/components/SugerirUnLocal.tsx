@@ -4,9 +4,19 @@ import { apiClient } from '../api/client'
 import { useAuth } from '../context/useAuth'
 import { isSessionExpired } from '../utils/errors'
 import { Campo } from './Campo'
+import { IconCamera } from './icons'
 
 /** En la dirección, para que al volver de iniciar sesión el formulario se abra solo. */
 const PARAMETRO = 'sugerir'
+
+/** Lo que acepta el servidor. El WEBP queda afuera: el JDK no lo sabe leer. */
+const FOTOS_ACEPTADAS = 'image/jpeg,image/png'
+
+/** El mismo tope que el servidor (#283), para avisar acá y no después de subirla. */
+const MAXIMO_MB_DE_FOTO = 8
+
+/** El mínimo que exige el servidor a estas fotos. No se pide recortarla: se adapta allá. */
+const LADO_MINIMO_DE_FOTO = 400
 
 /** Cada botón que abre el formulario: el de búsqueda sin resultados y el de la tarjeta. */
 const CLASE_DEL_BOTON = 'btn btn-primary h-11 min-h-11'
@@ -108,6 +118,7 @@ function ModalSugerirUnLocal({
   // Con la del de la cuenta, que casi siempre es la que sirve; se puede cambiar.
   const [email, setEmail] = useState(emailDeLaCuenta)
   const [comentario, setComentario] = useState('')
+  const [foto, setFoto] = useState<File | null>(null)
   const [enviando, setEnviando] = useState(false)
   const [enviada, setEnviada] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -127,7 +138,7 @@ function ModalSugerirUnLocal({
     if (enviada) listo.current?.focus()
   }, [enviada])
 
-  const hayAlgoEscrito = !enviada && (nombre.trim() !== '' || direccion.trim() !== '' || comentario.trim() !== '')
+  const hayAlgoEscrito = !enviada && (nombre.trim() !== '' || direccion.trim() !== '' || comentario.trim() !== '' || foto !== null)
 
   function intentarCerrar() {
     if (enviando) return
@@ -140,18 +151,24 @@ function ModalSugerirUnLocal({
     setEnviando(true)
     setError(null)
     try {
-      await apiClient.post('/sugerencias', {
-        nombre: nombre.trim(),
-        direccion: direccion.trim(),
-        email: email.trim(),
-        comentario: comentario.trim() || null,
-      })
+      // En multipart porque puede llevar una foto (#283).
+      const cuerpo = new FormData()
+      cuerpo.append('nombre', nombre.trim())
+      cuerpo.append('direccion', direccion.trim())
+      cuerpo.append('email', email.trim())
+      if (comentario.trim()) cuerpo.append('comentario', comentario.trim())
+      if (foto) cuerpo.append('foto', foto)
+      await apiClient.post('/sugerencias', cuerpo)
       setEnviada(true)
     } catch (err: any) {
       if (isSessionExpired(err)) {
         onSesionVencida()
-      } else if (['RATE_LIMITED', 'EMAIL_NOT_VERIFIED'].includes(err.response?.data?.code)) {
-        // Un tope o la cuenta sin verificar: el servidor dice qué pasó y cuándo volver.
+      } else if (
+        ['RATE_LIMITED', 'EMAIL_NOT_VERIFIED'].includes(err.response?.data?.code) ||
+        (foto && err.response?.status === 409)
+      ) {
+        // Un tope, la cuenta sin verificar o una foto que no sirve: el servidor dice qué
+        // pasó y cuándo volver, o qué le pasa a la foto, y es lo único que permite arreglarlo.
         setError(err.response.data.error)
       } else {
         setError('No pudimos enviar tu sugerencia. Revisá los datos y probá de nuevo.')
@@ -255,6 +272,8 @@ function ModalSugerirUnLocal({
               />
             </div>
 
+            <FotoDelLocal foto={foto} onCambio={setFoto} />
+
             {error && (
               <p role="alert" className="text-sm text-error">
                 {error}
@@ -274,6 +293,102 @@ function ModalSugerirUnLocal({
         </button>
       </form>
     </dialog>
+  )
+}
+
+/**
+ * La foto opcional del local (#283): una fila chica y no un recuadro, porque el
+ * formulario ya es largo en un teléfono y esto no es lo que lo completa.
+ *
+ * La foto no se publica sola: la revisa Juan al agregar el local. Por eso el aviso dice de
+ * quién tiene que ser. Se mide en el navegador, como en las reseñas, para decir "muy
+ * chica" apenas se elige y no después de mandar todo.
+ */
+function FotoDelLocal({ foto, onCambio }: { foto: File | null; onCambio: (foto: File | null) => void }) {
+  const [vista, setVista] = useState<string | null>(null)
+  const [aviso, setAviso] = useState<string | null>(null)
+  const idDelAviso = useId()
+  // La vista previa ocupa memoria hasta que se la suelta: se revoca al cambiarla, al
+  // sacarla y al cerrar.
+  const abierta = useRef<string | null>(null)
+  useEffect(() => () => {
+    if (abierta.current) URL.revokeObjectURL(abierta.current)
+  }, [])
+
+  function mostrar(archivo: File | null, url: string | null) {
+    if (abierta.current && abierta.current !== url) URL.revokeObjectURL(abierta.current)
+    abierta.current = url
+    setVista(url)
+    onCambio(archivo)
+  }
+
+  function elegir(archivo: File | undefined) {
+    setAviso(null)
+    if (!archivo) return
+    if (archivo.size > MAXIMO_MB_DE_FOTO * 1024 * 1024) {
+      setAviso(`Esa foto pesa más de ${MAXIMO_MB_DE_FOTO} MB.`)
+      return
+    }
+    const url = URL.createObjectURL(archivo)
+    const prueba = new Image()
+    prueba.onload = () => {
+      if (Math.min(prueba.naturalWidth, prueba.naturalHeight) < LADO_MINIMO_DE_FOTO) {
+        URL.revokeObjectURL(url)
+        setAviso(`Esa foto es muy chica (${prueba.naturalWidth}×${prueba.naturalHeight}): necesita al menos ${LADO_MINIMO_DE_FOTO} px de lado.`)
+        return
+      }
+      mostrar(archivo, url)
+    }
+    // Si el navegador no la puede leer, la decisión queda para el servidor.
+    prueba.onerror = () => mostrar(archivo, url)
+    prueba.src = url
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-sm font-semibold">
+        Foto del local <span className="font-normal text-base-content/70">(opcional)</span>
+      </span>
+      <div className="flex items-center gap-3">
+        {/* El campo de archivo es invisible, así que el anillo de foco lo dibuja la etiqueta. */}
+        <label className="btn btn-outline h-11 min-h-11 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-primary">
+          <IconCamera size={20} />
+          {foto ? 'Cambiar foto' : 'Agregar foto'}
+          <input
+            type="file"
+            accept={FOTOS_ACEPTADAS}
+            aria-describedby={idDelAviso}
+            onChange={(e) => {
+              elegir(e.target.files?.[0])
+              // Vacío de nuevo, para que elegir otra vez la misma foto vuelva a avisar.
+              e.target.value = ''
+            }}
+            className="sr-only"
+          />
+        </label>
+        {foto && vista && (
+          <div className="relative flex-none">
+            <img src={vista} alt="La foto que vas a mandar" className="size-14 rounded-field bg-base-200 object-cover" />
+            <button
+              type="button"
+              onClick={() => mostrar(null, null)}
+              aria-label="Sacar la foto"
+              className="btn btn-circle btn-xs absolute -right-2 -top-2 border-0 bg-black/70 text-white hover:bg-black/90"
+            >
+              <span aria-hidden="true">✕</span>
+            </button>
+          </div>
+        )}
+      </div>
+      <p id={idDelAviso} className="text-xs text-base-content/70">
+        Subila como la tengas, nosotros la adaptamos. Tiene que ser tuya o tener permiso del local.
+      </p>
+      {aviso && (
+        <p role="alert" className="text-sm text-error">
+          {aviso}
+        </p>
+      )}
+    </div>
   )
 }
 

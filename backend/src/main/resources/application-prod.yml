@@ -36,6 +36,9 @@ app:
     # usuario de la app ni siquiera puede escribir: no se podía publicar ninguna reseña,
     # y si se hubiera podido, cada deploy las habría borrado (#136).
     directorio: ${RATING_PHOTOS_DIR:/data/rating-photos}
+  sugerencias:
+    # Lo mismo para las fotos de las sugerencias (#283): en un volumen y no en ./data.
+    directorio-de-fotos: ${SUGERENCIAS_FOTOS_DIR:/data/sugerencias-fotos}
 
 logging:
   level:

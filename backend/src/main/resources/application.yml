@@ -93,6 +93,9 @@ app:
     minimo-entre-una-y-otra: 1m
     tope-de-mails: 20
     tope-total: 100
+    # La foto opcional de una sugerencia (#283). No la sirve ninguna ruta: la revisa Juan.
+    directorio-de-fotos: ${SUGERENCIAS_FOTOS_DIR:./data/sugerencias-fotos}
+    peso-maximo-de-foto: 8MB
   auth:
     session:
       access-token-minutes: 15

@@ -1,9 +1,11 @@
 package com.hamburguesas.service;
 
 import com.hamburguesas.dto.SugerenciaDeLocalRequest;
+import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.exception.EmailNotVerifiedException;
 import com.hamburguesas.exception.ResourceNotFoundException;
 import com.hamburguesas.exception.TooManyRequestsException;
+import com.hamburguesas.fotos.FotosDeSugerencias;
 import com.hamburguesas.mail.EmailService;
 import com.hamburguesas.model.SugerenciaDeLocal;
 import com.hamburguesas.model.User;
@@ -28,6 +30,10 @@ import java.time.Instant;
  * minuto entre una y otra, un tope por persona y otro entre todos. Los mails tienen su
  * propio tope, más bajo, para no comerse los 300 diarios de Brevo.
  *
+ * La foto es opcional (#283). Se procesa igual que las de las reseñas pero se guarda
+ * aparte y nada la sirve: la ve Juan, que la aprueba al agregar el local. Cuenta para los
+ * mismos topes que el resto de la sugerencia, más un tope de peso por foto.
+ *
  * Los topes cuentan y después guardan, sin bloquear: dos pedidos exactamente a la vez
  * podrían pasarse por uno. Para frenar abusos alcanza.
  */
@@ -42,9 +48,15 @@ public class SugerenciasDeLocales {
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final SugerenciasProperties topes;
+    private final FotosDeSugerencias fotos;
 
-    @Transactional
     public void sugerir(Long userId, SugerenciaDeLocalRequest pedido) {
+        sugerir(userId, pedido, null);
+    }
+
+    /** @param foto los bytes de la foto opcional, o nulo si no mandó ninguna. */
+    @Transactional
+    public void sugerir(Long userId, SugerenciaDeLocalRequest pedido, byte[] foto) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if (!user.isEmailVerified()) {
@@ -65,14 +77,32 @@ public class SugerenciasDeLocales {
             throw new TooManyRequestsException("Hoy recibimos muchas sugerencias. Probá mañana.");
         }
 
-        SugerenciaDeLocal sugerencia = sugerencias.save(SugerenciaDeLocal.builder()
-            .user(user)
-            .nombre(pedido.nombre().strip())
-            .direccion(pedido.direccion().strip())
-            .email(pedido.email().strip())
-            .comentario(vacioANulo(pedido.comentario()))
-            .createdAt(ahora)
-            .build());
+        if (foto != null && foto.length > topes.getPesoMaximoDeFoto().toBytes()) {
+            throw new ConflictException("La foto pesa demasiado. El máximo es "
+                + topes.getPesoMaximoDeFoto().toMegabytes() + " MB.");
+        }
+        // Después de los topes y antes de guardar: una foto no se procesa para un pedido
+        // que se iba a rechazar igual, y si la foto no sirve no queda la sugerencia a medias.
+        String archivoDeFoto = foto == null || foto.length == 0 ? null : fotos.guardar(foto);
+
+        SugerenciaDeLocal sugerencia;
+        try {
+            sugerencia = sugerencias.save(SugerenciaDeLocal.builder()
+                .user(user)
+                .nombre(pedido.nombre().strip())
+                .direccion(pedido.direccion().strip())
+                .email(pedido.email().strip())
+                .comentario(vacioANulo(pedido.comentario()))
+                .fotoArchivo(archivoDeFoto)
+                .createdAt(ahora)
+                .build());
+        } catch (RuntimeException ex) {
+            // Que no quede en disco una foto que ninguna sugerencia apunta.
+            if (archivoDeFoto != null) {
+                fotos.borrar(archivoDeFoto);
+            }
+            throw ex;
+        }
 
         // Pasado el tope de mails se guarda igual, sin aviso: Juan la ve en la base.
         if (deHoy >= topes.getTopeDeMails()) {
@@ -99,6 +129,7 @@ public class SugerenciasDeLocales {
             Dirección o link: %s
             Email de contacto: %s
             Comentario: %s
+            Foto: %s
             Usuario: @%s
 
             Respondiendo este mail le escribís a quien lo sugirió.
@@ -107,6 +138,9 @@ public class SugerenciasDeLocales {
                 sugerencia.getDireccion(),
                 sugerencia.getEmail(),
                 sugerencia.getComentario() == null ? "(sin comentario)" : sugerencia.getComentario(),
+                // Sin el archivo adjunto: la foto se mira en el servidor, no sale por mail.
+                sugerencia.getFotoArchivo() == null
+                    ? "(sin foto)" : "SÍ, trae foto (sugerencias-fotos/" + sugerencia.getFotoArchivo() + ")",
                 usuario);
         try {
             emailService.send(topes.getMailA(), asunto, cuerpo, sugerencia.getEmail());
