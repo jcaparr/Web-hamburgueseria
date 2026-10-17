@@ -76,6 +76,10 @@
 		# que pide archivos de /assets que ya no existen, y la página quedaba en blanco.
 		@resto not path /assets/*
 		header @resto Cache-Control "no-cache"
+		# Caddy no conoce la extensión .webmanifest y lo serviría sin tipo, y con nosniff
+		# arriba algunos navegadores no lo leen: sin manifest no hay "Instalar app" (#279).
+		@manifest path /manifest.webmanifest
+		header @manifest Content-Type application/manifest+json
 		# Client-side routing: unknown paths are React Router's problem, not a 404.
 		try_files {path} /index.html
 		file_server

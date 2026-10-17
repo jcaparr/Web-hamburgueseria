@@ -1,0 +1,17 @@
+{
+  "id": "/",
+  "name": "Burgómetro",
+  "short_name": "Burgómetro",
+  "description": "Las hamburgueserías de Buenos Aires, con las notas y reseñas de quienes fueron.",
+  "lang": "es-AR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf3e3",
+  "theme_color": "#faf3e3",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
