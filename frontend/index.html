@@ -7,6 +7,10 @@
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- Lo que Chrome en Android necesita para ofrecer "Instalar app" con ícono y nombre
+         propios (#279). Sin service worker a propósito: no hace falta para instalarla, y
+         una caché de más podía dejar a alguien con una versión vieja. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Las hamburgueserías de Buenos Aires, con las notas y reseñas de quienes fueron." />
     <!-- La tarjeta que se arma al compartir un enlace por WhatsApp, X o donde sea. Esos
