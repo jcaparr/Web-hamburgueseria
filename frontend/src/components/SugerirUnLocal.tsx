@@ -334,7 +334,7 @@ function FotoDelLocal({ foto, onCambio }: { foto: File | null; onCambio: (foto: 
     prueba.onload = () => {
       if (Math.min(prueba.naturalWidth, prueba.naturalHeight) < LADO_MINIMO_DE_FOTO) {
         URL.revokeObjectURL(url)
-        setAviso(`Esa foto es muy chica (${prueba.naturalWidth}×${prueba.naturalHeight}): necesita al menos ${LADO_MINIMO_DE_FOTO} px de lado.`)
+        setAviso(`Esa foto es muy chica (${prueba.naturalWidth}×${prueba.naturalHeight}). Probá con una de ${LADO_MINIMO_DE_FOTO} px o más.`)
         return
       }
       mostrar(archivo, url)
@@ -376,7 +376,7 @@ function FotoDelLocal({ foto, onCambio }: { foto: File | null; onCambio: (foto: 
         )}
       </div>
       <p id={idDelAviso} className="text-xs text-base-content/70">
-        Subila como la tengas, nosotros la adaptamos. Tiene que ser tuya o tener permiso del local.
+        Subila como la tengas. Tiene que ser tuya o tener permiso del local.
       </p>
       {aviso && (
         <p role="alert" className="text-sm text-error">
