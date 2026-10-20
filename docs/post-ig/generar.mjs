@@ -11,8 +11,8 @@ const EDGE = process.env.EDGE ?? 'C:/Program Files (x86)/Microsoft/Edge/Applicat
 // 4:5 es el formato del carrusel del feed; 9:16 es para historias (con ~250 px de zona segura arriba y abajo).
 // El celu se dibuja siempre a 490×1100 y se escala (S) alrededor de su centro (cx, cy).
 const FORMATOS = [
-  { dir: 'laminas', alto: 1350, S: 0.86, cx: 778, cy: 820, h1: 80, sub: 0, st: 0, logo: 58, c: { h1: 110, g: 360, u: 1030, s: 1170 }, hist: { top: 650, w: 210 } },
-  { dir: 'laminas-9x16', alto: 1920, S: 0.92, cx: 765, cy: 1100, h1: 270, sub: 245, st: 360, logo: 360, c: { h1: 330, g: 600, u: 1280, s: 1450 }, hist: { top: 870, w: 255 } },
+  { dir: 'laminas', alto: 1350, S: 0.86, cx: 778, cy: 820, h1: 80, sub: 0, st: 0, logo: 58, c: { h1: 110, g: 360, u: 1030, s: 1170 }, hist: { top: 650, w: 150 }, sello: 165 },
+  { dir: 'laminas-9x16', alto: 1920, S: 0.92, cx: 765, cy: 1100, h1: 270, sub: 245, st: 360, logo: 360, c: { h1: 330, g: 600, u: 1280, s: 1450 }, hist: { top: 870, w: 185 }, sello: 240 },
 ]
 
 // El isotipo es el mismo dibujo de frontend/src/components/MarcaBurgometro.tsx, sin el calco.
@@ -25,16 +25,17 @@ const CSS = `
 @font-face{font-family:Poppins;font-weight:800;src:url(../../fuentes/poppins-800.ttf)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:1080px;overflow:hidden}
-body{position:relative;background:#f2b705;color:#2b1a10;font-family:Poppins,system-ui,sans-serif}
-.marca{position:absolute;right:-190px;top:-150px;width:760px;opacity:.55;transform:rotate(-14deg)}
+body{position:relative;background:#f4ca2c;color:#2b1a10;font-family:Poppins,system-ui,sans-serif}
+.marca{position:absolute;right:-250px;top:-170px;width:780px;opacity:.9;transform:rotate(-14deg)}
 .marca svg{width:100%;display:block}
-.marca svg *{fill:#fbd451!important;stroke:none!important}
+.marca svg *{fill:none!important;stroke:#f8dc6a!important;stroke-width:7!important;stroke-linejoin:round!important}
 h1{position:absolute;left:58px;top:92px;width:960px;font-weight:800;font-size:98px;line-height:1.04;letter-spacing:-2px}
 h1.m{font-size:84px}
 .sub{position:absolute;left:62px;font-weight:500;font-size:35px;line-height:1.3;width:410px;color:#3a2a1e}
 .rayas{position:absolute;width:60px;height:80px}
 .rayas i{position:absolute;height:7px;border-radius:4px;background:#b23a2e;transform-origin:left center}
 .sticker{position:absolute;left:112px;width:340px;height:340px;border-radius:50%;background:#3a2a1e;color:#f7efd8;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:60px;line-height:1.05;transform:rotate(-9deg);box-shadow:0 18px 30px rgba(43,26,16,.35);z-index:4}
+.sello-chico{position:absolute;z-index:5}
 .sticker u{display:block;width:230px;height:9px;border-radius:6px;background:#f2b705;margin-top:10px;text-decoration:none;transform:rotate(-4deg)}
 .burst{position:absolute;z-index:4}
 .burst i{position:absolute;width:9px;border-radius:5px;background:#2b1a10;transform-origin:center}
@@ -205,7 +206,7 @@ const run = () => {
     const t = e.getBoundingClientRect(), h = c.offsetHeight
     const top = Math.min(window.APILAR ? prev : Math.max(prev, t.top + t.height / 2 - h / 2), Math.max(prev, window.TOPE - h))
     if (first === null) first = top
-    c.style.top = top + 'px'; prev = top + h + 24
+    c.style.top = top + 'px'; prev = top + h + 18
   })
   const x = document.getElementById('extra')
   if (x) x.style.top = (window.ARRIBA ? Math.max(sb.bottom + 30, first - x.offsetHeight - 24) : prev - 6) + 'px'
@@ -237,7 +238,7 @@ function html(l, F) {
   const phone = celu({ img: l.phone.img, barra: l.phone.barra, pantallaHtml: l.phone.html, notas: esPortada ? [] : l.phone.notas }, F)
   const subTop = l.subTop + F.sub, stTop = l.stTop + F.st
   const extra = l.hoja
-    ? `<div id="extra" class="extra"><div style="zoom:${F.alto > 1400 ? 1 : 0.84}">${HOJA_COMPARTIR}</div></div>`
+    ? `<div id="extra" class="extra"><div style="zoom:${F.alto > 1400 ? 1 : 0.7}">${HOJA_COMPARTIR}</div></div>`
     : l.historia
       ? `<div id="extra" class="extra"><div class="cap">Así queda tu historia</div><div class="historia" style="position:relative;left:8px;width:${F.hist.w}px"><img src="../../capturas/${l.historia}"></div></div>`
       : ''
@@ -248,9 +249,9 @@ function html(l, F) {
 ${rayas(486, subTop - 12, -60)}
 <svg id="flechasBajo" xmlns="http://www.w3.org/2000/svg"></svg>
 ${phone}
-${esPortada ? `<div class="sticker" style="top:${stTop}px">${l.sticker[0]}<br>${l.sticker[1]}<u></u></div>${destello(282, stTop + 170, 215)}` : '<div id="pasos"></div>' + extra}
+${esPortada ? `<div class="sticker" style="top:${stTop}px">${l.sticker[0]}<br>${l.sticker[1]}<u></u></div>${destello(282, stTop + 170, 215)}` : `<div id="pasos"></div>${extra}${l.sticker ? `<div class="sello-chico" style="left:70px;top:${F.alto - F.logo - 94 - F.sello - 34}px"><div class="sticker" style="position:absolute;left:0;top:0;transform-origin:top left;transform:rotate(-9deg) scale(${F.sello / 340})">${l.sticker[0]}<br>${l.sticker[1]}<u></u></div>${destello(F.sello * 0.62, F.sello * 0.1, F.sello * 0.52)}</div>` : ''}`}
 <svg id="flechas" xmlns="http://www.w3.org/2000/svg"></svg>
-<div class="logo">${ISOTIPO}<span>Burgómetro</span></div><script>window.APILAR=${!!l.hoja};window.ARRIBA=${!!l.historia};window.TOPE=${F.alto - F.logo - 130}</script>${SCRIPT}`
+<div class="logo">${ISOTIPO}<span>Burgómetro</span></div><script>window.APILAR=true;window.ARRIBA=${!!l.historia};window.TOPE=${F.alto - F.logo - 130}</script>${SCRIPT}`
 }
 
 // Cierre: sin celu, el logo grande y la dirección.
