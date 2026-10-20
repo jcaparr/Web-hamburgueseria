@@ -14,8 +14,9 @@ package com.hamburguesas.geo;
  */
 public final class Distancias {
 
-    private static final double METROS_POR_GRADO_DE_LONGITUD = 91_700;
-    private static final double METROS_POR_GRADO_DE_LATITUD = 111_000;
+    // Públicos para que una consulta SQL pueda armar la misma cuenta que metrosEntre.
+    public static final double METROS_POR_GRADO_DE_LONGITUD = 91_700;
+    public static final double METROS_POR_GRADO_DE_LATITUD = 111_000;
 
     private Distancias() {}
 

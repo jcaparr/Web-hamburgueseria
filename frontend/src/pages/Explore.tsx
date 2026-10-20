@@ -17,6 +17,7 @@ import { TarjetaDeLocal, TarjetaDeLocalCargando } from '../components/TarjetaDeL
 import { useAuth } from '../context/useAuth'
 import { useBarrios } from '../hooks/useBarrios'
 import { useTitulo } from '../hooks/useTitulo'
+import { useUbicacion } from '../hooks/useUbicacion'
 import type { BurgerJoint, Cadena, PageResponse } from '../types'
 import { isSessionExpired } from '../utils/errors'
 
@@ -34,8 +35,13 @@ const CLASE_DE_LOS_FILTROS = 'h-11 min-h-11 px-4 md:h-12 md:min-h-12 md:px-5'
  * con una sola reseña de 5 quedaría arriba de una con veinte y 4,8.
  *
  * En las tres, las que nadie reseñó van al final y por nombre.
+ *
+ * "Más cercanas" (#288) solo existe si el navegador dio la ubicación, y entonces es la de
+ * por omisión: primero lo que está cerca y, entre lo que está igual de cerca, lo mejor
+ * calificado.
  */
 const ORDENES = [
+  { valor: 'cercanas', texto: 'Más cercanas' },
   { valor: 'relevantes', texto: 'Más relevantes' },
   { valor: 'mejores', texto: 'Mejores valoradas' },
   { valor: 'peores', texto: 'Peores valoradas' },
@@ -70,7 +76,12 @@ export function Explore() {
   // mientras los barrios sean los mismos es este texto.
   const claveDeBarrios = JSON.stringify(barriosElegidos)
   const page = paginaDe(parametros.get('pagina'))
-  const orden = ordenDe(parametros.get('orden'))
+  const { ubicacion, esperando: esperandoUbicacion } = useUbicacion()
+  const orden = ordenDe(parametros.get('orden'), ubicacion !== null)
+  const ordenPorOmision: Orden = ubicacion ? 'cercanas' : 'relevantes'
+  // Con "cercanas" el pedido lleva la ubicación; con otro orden no hace falta mandarla.
+  const lat = orden === 'cercanas' ? ubicacion?.lat : undefined
+  const lon = orden === 'cercanas' ? ubicacion?.lon : undefined
 
   /**
    * Cambia un filtro y vuelve a la primera página.
@@ -136,6 +147,10 @@ export function Explore() {
   const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
+    // Con el permiso de ubicación ya dado se espera la respuesta, que es instantánea, para
+    // no pedir la lista por relevancia y reordenarla un segundo después.
+    if (esperandoUbicacion) return
+
     // Se rearma desde el texto y no se usa el arreglo de afuera: el efecto depende del
     // texto, que no cambia mientras los barrios sean los mismos, y usar el arreglo
     // obligaría a depender de él, que cambia en cada dibujo.
@@ -154,6 +169,8 @@ export function Explore() {
             // espera el servidor. Vacío se omite, y eso quiere decir "todos".
             area: elegidos.length > 0 ? elegidos : undefined,
             orden,
+            lat,
+            lon,
             page,
             size: PAGE_SIZE,
           },
@@ -191,7 +208,7 @@ export function Explore() {
       vigente = false
       clearTimeout(timeout)
     }
-  }, [query, claveDeBarrios, orden, page, attempt, setParametros])
+  }, [query, claveDeBarrios, orden, lat, lon, esperandoUbicacion, page, attempt, setParametros])
 
   // Las cadenas, que en la lista no salen nunca (#206): buscándolas por nombre aparecen
   // acá, una tarjeta por cadena. Con menos de dos letras el servidor no busca, así que
@@ -372,9 +389,9 @@ export function Explore() {
             {/* El de por omisión no se escribe en la dirección. */}
             <SelectorDeOrden
               claseDelBoton={CLASE_DE_LOS_FILTROS}
-              opciones={ORDENES}
+              opciones={ubicacion ? ORDENES : ORDENES.filter((o) => o.valor !== 'cercanas')}
               valor={orden}
-              onCambiar={(valor) => cambiar({ orden: valor === 'relevantes' ? null : valor, pagina: null })}
+              onCambiar={(valor) => cambiar({ orden: valor === ordenPorOmision ? null : valor, pagina: null })}
             />
             {barriosElegidos.length > 0 && (
               <button type="button" onClick={limpiarBarrios} className="btn btn-ghost btn-sm">
@@ -524,9 +541,15 @@ function conBarrios(previos: URLSearchParams, barrios: string[]) {
   return nuevos
 }
 
-/** El orden que trae la dirección; uno que no existe es el de por omisión. */
-function ordenDe(valor: string | null): Orden {
-  return ORDENES.find((opcion) => opcion.valor === valor)?.valor ?? 'relevantes'
+/**
+ * El orden que trae la dirección; uno que no existe es el de por omisión, que es "más
+ * cercanas" con ubicación y "más relevantes" sin ella. Un enlace con "cercanas" abierto
+ * sin ubicación (se negó el permiso, o es otra persona) también cae en relevantes.
+ */
+function ordenDe(valor: string | null, conUbicacion: boolean): Orden {
+  const pedido = ORDENES.find((opcion) => opcion.valor === valor)?.valor
+  if (pedido === 'cercanas' && !conUbicacion) return 'relevantes'
+  return pedido ?? (conUbicacion ? 'cercanas' : 'relevantes')
 }
 
 /**

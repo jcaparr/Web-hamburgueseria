@@ -2,6 +2,7 @@ package com.hamburguesas.controller;
 
 import com.hamburguesas.dto.BurgerJointDto;
 import com.hamburguesas.dto.HorarioDto;
+import com.hamburguesas.geo.Ubicacion;
 import com.hamburguesas.repository.OrdenDeLocales;
 import com.hamburguesas.security.CurrentUser;
 import com.hamburguesas.service.BurgerJointService;
@@ -32,17 +33,21 @@ public class BurgerJointController {
      *             Sigue llamándose "area" en singular aunque ahora acepte varios: es lo
      *             que hay escrito en las direcciones que la gente dejó en favoritos y en
      *             el historial del navegador, y uno solo sigue funcionando igual.
-     * @param orden "relevantes" (por omisión), "mejores" o "peores"; ver OrdenDeLocales.
-     *              Uno que no existe es el de por omisión, no un error.
+     * @param orden "relevantes" (por omisión), "mejores", "peores" o "cercanas"; ver
+     *              OrdenDeLocales. Uno que no existe es el de por omisión, no un error.
+     * @param lat   dónde está quien mira, para "cercanas" (#288). Solo ordena: no se
+     * @param lon   guarda. Sin las dos, "cercanas" se ordena como "relevantes".
      */
     @GetMapping
     public Page<BurgerJointDto> search(
         @RequestParam(required = false) String q,
         @RequestParam(name = "area", required = false) List<String> areas,
         @RequestParam(required = false) String orden,
+        @RequestParam(required = false) Double lat,
+        @RequestParam(required = false) Double lon,
         @PageableDefault(size = 20) Pageable pageable
     ) {
-        return burgerJointService.search(q, areas, OrdenDeLocales.de(orden),
+        return burgerJointService.search(q, areas, OrdenDeLocales.de(orden), Ubicacion.de(lat, lon),
             CurrentUser.idOrNull(), Paginas.sinOrden(pageable));
     }
 

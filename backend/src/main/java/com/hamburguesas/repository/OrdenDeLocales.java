@@ -24,7 +24,17 @@ public enum OrdenDeLocales {
     MEJORES,
 
     /** Peor puntaje primero; a igual puntaje, más reseñas. */
-    PEORES;
+    PEORES,
+
+    /**
+     * Los más cercanos a quien mira (#288), por franjas de distancia y no por metro:
+     * ordenar por la distancia exacta hace que la calificación nunca decida nada, porque
+     * dos locales casi nunca están a la misma distancia. Dentro de cada franja, mejor
+     * puntaje y, a igual puntaje, más reseñas.
+     *
+     * Sin la ubicación de la persona se ordena como RELEVANTES: no hay desde dónde medir.
+     */
+    CERCANAS;
 
     /**
      * La opción que dice la dirección, sin importar mayúsculas: "mejores", "MEJORES".
