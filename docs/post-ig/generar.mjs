@@ -11,8 +11,8 @@ const EDGE = process.env.EDGE ?? 'C:/Program Files (x86)/Microsoft/Edge/Applicat
 // 4:5 es el formato del carrusel del feed; 9:16 es para historias (con ~250 px de zona segura arriba y abajo).
 // El celu se dibuja siempre a 490×1100 y se escala (S) alrededor de su centro (cx, cy).
 const FORMATOS = [
-  { dir: 'laminas', alto: 1350, S: 0.86, cx: 778, cy: 820, h1: 80, sub: 0, st: 0, logo: 58, c: { h1: 110, g: 360, u: 1030, s: 1170 }, hist: { top: 650, w: 300 } },
-  { dir: 'laminas-9x16', alto: 1920, S: 0.98, cx: 750, cy: 1105, h1: 270, sub: 245, st: 360, logo: 310, c: { h1: 330, g: 600, u: 1280, s: 1450 }, hist: { top: 870, w: 330 } },
+  { dir: 'laminas', alto: 1350, S: 0.86, cx: 778, cy: 820, h1: 80, sub: 0, st: 0, logo: 58, c: { h1: 110, g: 360, u: 1030, s: 1170 }, hist: { top: 650, w: 200 } },
+  { dir: 'laminas-9x16', alto: 1920, S: 0.92, cx: 765, cy: 1100, h1: 270, sub: 245, st: 360, logo: 310, c: { h1: 330, g: 600, u: 1280, s: 1450 }, hist: { top: 870, w: 290 } },
 ]
 
 // El isotipo es el mismo dibujo de frontend/src/components/MarcaBurgometro.tsx, sin el calco.
@@ -59,6 +59,14 @@ h1.m{font-size:84px}
 .nota-c.abajo:after{bottom:-19px;border-top-color:#3a2a1e}
 .historia{position:absolute;left:78px;border:10px solid #fff7e0;border-radius:34px;overflow:hidden;box-shadow:0 24px 40px rgba(43,26,16,.4);transform:rotate(-5deg);z-index:4;background:#241a13}
 .historia img{display:block;width:100%}
+.paso::before{content:attr(data-paso);position:absolute;left:-22px;top:-26px;width:42px;height:42px;border-radius:50%;background:#b23a2e;color:#fff;box-shadow:0 0 0 3px #fff;display:grid;place-items:center;font:800 26px Poppins;z-index:8}
+#pasos{position:absolute;left:0;top:0;width:1080px;z-index:6}
+.pc{position:absolute;left:58px;width:430px;display:flex;align-items:center;gap:16px;background:#3a2a1e;color:#f7efd8;border-radius:24px;padding:14px 22px 14px 14px;font:600 34px/1.15 Poppins;box-shadow:0 8px 18px rgba(43,26,16,.3)}
+.pc .num{width:54px;height:54px;font-size:32px;margin:0;box-shadow:0 0 0 3px #f7efd8}
+#flechas{position:absolute;left:0;top:0;width:1080px;z-index:7;pointer-events:none}
+#flechasBajo{position:absolute;left:0;top:0;width:1080px;pointer-events:none}
+.extra{position:absolute;left:120px}
+.cap{display:inline-flex;background:#3a2a1e;color:#f7efd8;border-radius:18px;padding:10px 20px;font:600 30px/1.1 Poppins;margin-bottom:22px}
 .nota-c.izq:after{left:-19px;top:calc(50% - 10px);border-right-color:#3a2a1e}
 `
 const ICONOS_ESTADO = `<span><svg viewBox="0 0 28 20"><rect x="0" y="12" width="4" height="8" rx="1" fill="currentColor"/><rect x="8" y="8" width="4" height="12" rx="1" fill="currentColor"/><rect x="16" y="4" width="4" height="16" rx="1" fill="currentColor"/><rect x="24" y="0" width="4" height="20" rx="1" fill="currentColor"/></svg><svg viewBox="0 0 44 20"><rect x="1" y="2" width="38" height="16" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="4" y="5" width="28" height="10" rx="3" fill="currentColor"/></svg></span>`
@@ -81,17 +89,9 @@ function destello(cx, cy, r) {
 
 const FC = 464 / 375
 function notas(lista = []) {
-  const ANCHO = 464
   return lista.map((n, k) => {
     const [x, y, w, h] = n.ring
-    const ring = `<div class="nota-r" style="left:${x * FC - 6}px;top:${62 + y * FC - 6}px;width:${w * FC + 12}px;height:${h * FC + 12}px"></div>`
-    const c = n.chip
-    const texto = c.t.replace(/<[^>]+>/g, '')
-    const ancho = texto.length * 16.3 + 38 + (lista.length > 1 ? 50 : 0)
-    let izq = Math.min(Math.max(c.x * FC, 14), ANCHO - 14 - ancho)
-    const centro = (x + w / 2) * FC
-    const tx = Math.min(Math.max(centro - izq - 10, 16), ancho - 38)
-    return ring + `<div class="nota-c ${c.tail ?? 'abajo'}" style="left:${izq}px;top:${62 + c.y * FC}px;--tx:${tx}px">${lista.length > 1 ? `<span class="num">${k + 1}</span>` : ''}${c.t}</div>`
+    return `<div class="nota-r paso" data-paso="${k + 1}" data-txt="${n.chip.t}" style="left:${x * FC - 6}px;top:${62 + y * FC - 6}px;width:${w * FC + 12}px;height:${h * FC + 12}px"></div>`
   }).join('')
 }
 
@@ -110,26 +110,23 @@ const MENU_CHROME = (() => {
   return `<div style="position:absolute;inset:62px 0 0 0;background:#f8f9fa;font-family:Roboto,Arial,sans-serif;color:#202124">
   <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:#f1f3f4">
     <div style="flex:1;background:#fff;border-radius:30px;padding:16px 22px;font-size:25px;color:#5f6368">burgometro.com.ar</div>
-    <div style="position:relative;width:56px;height:56px;border-radius:50%;background:#fde7e4;display:grid;place-items:center;box-shadow:0 0 0 4px #fff,0 0 0 8px #b23a2e"><svg width="8" height="30" viewBox="0 0 8 30"><circle cx="4" cy="4" r="3.6" fill="#202124"/><circle cx="4" cy="15" r="3.6" fill="#202124"/><circle cx="4" cy="26" r="3.6" fill="#202124"/></svg>
+    <div class="paso" data-paso="1" data-txt="Tocá los 3 puntitos" style="position:relative;width:56px;height:56px;border-radius:50%;background:#fde7e4;display:grid;place-items:center;box-shadow:0 0 0 4px #fff,0 0 0 8px #b23a2e"><svg width="8" height="30" viewBox="0 0 8 30"><circle cx="4" cy="4" r="3.6" fill="#202124"/><circle cx="4" cy="15" r="3.6" fill="#202124"/><circle cx="4" cy="26" r="3.6" fill="#202124"/></svg>
       </div>
   </div>
   <div style="position:absolute;right:12px;top:176px;width:430px;background:#fff;border-radius:24px;box-shadow:0 10px 40px rgba(60,64,67,.4);padding:12px 0;font-size:25px">
     ${fila('Traducir…')}
     ${fila('Mostrar el Modo de lectura')}
-    <div style="position:relative;margin:4px 10px;border-radius:16px;background:#fde7e4;font-weight:600;line-height:1.15;box-shadow:0 0 0 4px #fff,0 0 0 8px #b23a2e">${fila('Instalar y crear acceso directo', 'padding:16px 16px')}</div>
+    <div class="paso" data-paso="2" data-txt="Elegí «Instalar y crear acceso directo»" style="position:relative;margin:4px 10px;border-radius:16px;background:#fde7e4;font-weight:600;line-height:1.15;box-shadow:0 0 0 4px #fff,0 0 0 8px #b23a2e">${fila('Instalar y crear acceso directo', 'padding:16px 16px')}</div>
     ${fila('Sitio para computadoras')}
   </div>
   <div style="position:absolute;left:10px;right:10px;top:640px;background:#fff;border-radius:28px;padding:24px 22px 22px;box-shadow:0 -4px 30px rgba(60,64,67,.35)">
     <div style="text-align:center;font-size:27px;margin-bottom:16px">Instalar y crear acceso directo</div>
-    <div style="position:relative;display:flex;align-items:center;gap:16px;background:#fde7e4;border-radius:18px;padding:14px 16px;font-size:27px;font-weight:600;box-shadow:0 0 0 4px #fff,0 0 0 8px #b23a2e">
+    <div class="paso" data-paso="3" data-txt="Tocá «Instalar»" style="position:relative;display:flex;align-items:center;gap:16px;background:#fde7e4;border-radius:18px;padding:14px 16px;font-size:27px;font-weight:600;box-shadow:0 0 0 4px #fff,0 0 0 8px #b23a2e">
       <div style="width:64px;height:64px;border-radius:16px;background:#f2b705;display:grid;place-items:center;padding:7px;flex:none">${ISOTIPO}</div><div style="flex:1">Instalar</div><div style="font-size:22px;font-weight:600;color:#b23a2e">1.ª opción</div>
 </div>
     <div style="display:flex;align-items:center;gap:16px;margin-top:16px;padding:12px 16px;font-size:23px;color:#5f6368">
       <div style="width:64px;height:64px;border-radius:16px;background:#f2b705;display:grid;place-items:center;padding:7px;flex:none;opacity:.6">${ISOTIPO}</div><div style="flex:1"><div style="font-size:26px">Crear acceso directo</div>Los accesos directos se abren en Chrome</div></div>
   </div>
-  <div class="nota-c arriba" style="right:70px;top:100px;--tx:calc(100% - 60px)"><span class="num">1</span>Tocá los 3 puntitos</div>
-  <div class="nota-c arriba" style="left:20px;top:500px;--tx:60px"><span class="num">2</span>Elegí esta opción</div>
-  <div class="nota-c abajo" style="right:14px;top:572px;--tx:calc(100% - 90px)"><span class="num">3</span>Tocá «Instalar»</div>
   </div>`
 })()
 
@@ -141,7 +138,7 @@ const MENU_SAFARI = (() => {
   return `<div style="position:absolute;inset:62px 0 0 0;font-family:Roboto,Arial,sans-serif;color:#1c1c1e">
   <img src="../../capturas/explorar.png" style="position:absolute;left:0;top:0;width:100%"><div style="position:absolute;inset:0;background:rgba(40,30,20,.22)"></div>
   <div style="position:absolute;right:14px;bottom:176px;width:340px;background:rgba(250,250,252,.97);border-radius:30px;box-shadow:0 12px 40px rgba(0,0,0,.35);padding:10px 0">
-    <div style="position:relative;margin:4px 10px;border-radius:18px;background:#fde7e4;font-weight:600;box-shadow:0 0 0 4px #fff,0 0 0 8px #b23a2e">${fila('Compartir')}</div>
+    <div class="paso" data-paso="2" data-txt="Elegí «Compartir»" style="position:relative;margin:4px 10px;border-radius:18px;background:#fde7e4;font-weight:600;box-shadow:0 0 0 4px #fff,0 0 0 8px #b23a2e">${fila('Compartir')}</div>
     ${fila('Agregar a Marcadores')}
     ${fila('Agregar marcador a…')}
     <div style="border-top:2px solid #d8d8dc;margin:6px 22px"></div>
@@ -151,10 +148,8 @@ const MENU_SAFARI = (() => {
   <div style="position:absolute;left:18px;right:18px;bottom:30px;height:86px;display:flex;gap:14px;align-items:center">
     <div style="width:86px;height:86px;border-radius:50%;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.2);display:grid;place-items:center;font-size:40px">‹</div>
     <div style="flex:1;height:86px;border-radius:43px;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;font-size:25px;color:#3a3a3c">burgometro.com.ar</div>
-    <div style="position:relative;width:86px;height:86px;border-radius:50%;background:#fde7e4;box-shadow:0 0 0 4px #fff,0 0 0 8px #b23a2e;display:grid;place-items:center;"><svg width="44" height="12" viewBox="0 0 44 12"><circle cx="6" cy="6" r="5" fill="#1c1c1e"/><circle cx="22" cy="6" r="5" fill="#1c1c1e"/><circle cx="38" cy="6" r="5" fill="#1c1c1e"/></svg></div>
+    <div class="paso" data-paso="1" data-txt="Tocá los 3 puntitos de abajo" style="position:relative;width:86px;height:86px;border-radius:50%;background:#fde7e4;box-shadow:0 0 0 4px #fff,0 0 0 8px #b23a2e;display:grid;place-items:center;"><svg width="44" height="12" viewBox="0 0 44 12"><circle cx="6" cy="6" r="5" fill="#1c1c1e"/><circle cx="22" cy="6" r="5" fill="#1c1c1e"/><circle cx="38" cy="6" r="5" fill="#1c1c1e"/></svg></div>
   </div>
-  <div class="nota-c abajo" style="right:14px;bottom:128px;--tx:calc(100% - 70px)"><span class="num">1</span>Tocá los 3 puntitos</div>
-  <div class="nota-c abajo" style="left:14px;top:352px;--tx:60px"><span class="num">2</span>Elegí «Compartir»</div>
   </div>`
 })()
 
@@ -162,51 +157,97 @@ const MENU_SAFARI = (() => {
 const HOJA_COMPARTIR = `<div style="width:430px;font-family:Roboto,Arial,sans-serif;color:#1c1c1e;background:#f2f2f7;border-radius:34px;padding:18px;box-sizing:border-box">
   <div style="background:#fff;border-radius:24px;padding:6px 0">
     <div style="padding:20px 24px;display:flex;gap:18px;align-items:center;font-size:27px"><i style="width:30px;height:30px;border-radius:7px;border:3px solid #6e6e73;flex:none"></i>Buscar en la página</div>
-    <div style="position:relative;margin:4px 10px;padding:18px 16px;border-radius:18px;background:#fde7e4;display:flex;gap:18px;align-items:center;font-size:27px;font-weight:600;box-shadow:0 0 0 4px #fff,0 0 0 8px #b23a2e"><i style="width:32px;height:32px;border-radius:8px;border:3px solid #1c1c1e;flex:none;display:grid;place-items:center;font-style:normal;font-size:26px;line-height:1">+</i>Agregar a Inicio</div>
+    <div class="paso" data-paso="3" data-txt="Bajá y elegí «Agregar a Inicio»" style="position:relative;margin:4px 10px;padding:18px 16px;border-radius:18px;background:#fde7e4;display:flex;gap:18px;align-items:center;font-size:27px;font-weight:600;box-shadow:0 0 0 4px #fff,0 0 0 8px #b23a2e"><i style="width:32px;height:32px;border-radius:8px;border:3px solid #1c1c1e;flex:none;display:grid;place-items:center;font-style:normal;font-size:26px;line-height:1">+</i>Agregar a Inicio</div>
     <div style="padding:20px 24px;display:flex;gap:18px;align-items:center;font-size:27px"><i style="width:30px;height:30px;border-radius:50%;border:3px solid #6e6e73;flex:none"></i>Marcado</div>
   </div></div>`
 
 const LAMINAS = [
   { id: '01-portada', h: 'Todo lo que podés hacer en Burgómetro', m: true, sub: '+1.200 hamburgueserías en Buenos Aires y alrededores, en un solo lugar.', subTop: 470, sticker: ['deslizá', '→'], stTop: 790, phone: { img: 'explorar.png', notas: [
-    { ring: [16, 122, 343, 46], chip: { t: 'Buscá acá', x: 150, y: 78, tail: 'abajo', tx: 120 } },
-    { ring: [16, 178, 169, 44], chip: { t: 'Filtrá por barrio', x: 40, y: 228, tail: 'arriba' } },
+    { ring: [16, 122, 343, 46], chip: { t: 'Buscá acá' } },
+    { ring: [16, 178, 169, 44], chip: { t: 'Filtrá por barrio' } },
   ] } },
   { id: '02-sugerir-local', h: '¿Falta tu hamburguesería?', sub: 'Sumala a nuestro mapa y ayudanos a que más personas descubran tu lugar.', subTop: 400, sticker: ['pasanos', 'el dato'], stTop: 700, phone: { img: 'sugerir-local.png', barra: '#9b958b', notas: [
-    { ring: [20, 338, 335, 138], chip: { t: 'Los datos', x: 230, y: 292, tail: 'abajo' } },
-    { ring: [20, 743, 335, 48], chip: { t: 'Enviala', x: 150, y: 696, tail: 'abajo' } },
+    { ring: [20, 338, 335, 138], chip: { t: 'Completá los datos' } },
+    { ring: [20, 743, 335, 48], chip: { t: 'Enviá la sugerencia' } },
   ] } },
-  { id: '03a-instalar-android', h: 'Instalala<br>en Android', sub: 'En Chrome, tocá los 3 puntitos de arriba, elegí «Instalar y crear acceso directo» y después «Instalar».', subSize: 31, subTop: 400, sticker: ['como', 'una app'], stTop: 700, phone: { html: MENU_CHROME, barra: '#f1f3f4' } },
-  { id: '03b-instalar-iphone', h: 'Instalala<br>en iPhone', sub: 'En Safari: los 3 puntitos de abajo, «Compartir» y «Agregar a Inicio».', subSize: 31, subTop: 400, hoja: true, phone: { html: MENU_SAFARI, barra: '#f5f0e1' } },
-  { id: '04-recorrido', h: 'Armá tu<br>recorrido', sub: 'Elegí paradas y distancia, a pie o en auto. Te armamos la ruta.', subTop: 400, sticker: ['a pie', 'o en auto'], stTop: 700, phone: { img: 'tour.png', notas: [
-    { ring: [32, 94, 311, 52], chip: { t: 'A pie o en auto', x: 100, y: 52, tail: 'abajo' } },
-    { ring: [32, 612, 311, 44], chip: { t: 'Armá tu tour', x: 150, y: 662, tail: 'arriba' } },
+  { id: '03a-instalar-android', h: 'Instalala<br>en Android', sub: 'Queda con el ícono y el nombre de Burgómetro.', subSize: 35, subW: 440, subTop: 400, sticker: ['como', 'una app'], stTop: 700, phone: { html: MENU_CHROME, barra: '#f1f3f4' } },
+  { id: '03b-instalar-iphone', h: 'Instalala<br>en iPhone', sub: 'Queda con el ícono de Burgómetro en tu inicio.', subSize: 35, subW: 440, subTop: 400, hoja: true, phone: { html: MENU_SAFARI, barra: '#f5f0e1' } },
+  { id: '04-recorrido', h: 'Armá tu<br>recorrido', sub: 'Elegí paradas y distancia. Te armamos la ruta.', subTop: 400, sticker: ['a pie', 'o en auto'], stTop: 700, phone: { img: 'tour.png', notas: [
+    { ring: [32, 94, 311, 52], chip: { t: 'Elegí a pie o en auto' } },
+    { ring: [32, 612, 311, 44], chip: { t: 'Tocá «Armar tour»' } },
   ] } },
-  { id: '05-buscar-gente', h: 'Buscá gente y seguila', sub: 'Encontrá a otros fanáticos de las burgers y mirá qué recomiendan.', subTop: 400, sticker: ['mirá qué', 'comen'], stTop: 700, phone: { img: 'buscar-gente.png', notas: [
-    { ring: [16, 79, 343, 52], chip: { t: 'Buscá por usuario', x: 150, y: 50, tail: 'abajo', tx: 120 } },
-    { ring: [258, 391, 89, 35], chip: { t: 'Seguila', x: 250, y: 432, tail: 'arriba' } },
+  { id: '05-buscar-gente', h: 'Buscá gente y seguila', sub: 'Encontrá a otros fanáticos y mirá qué recomiendan.', subTop: 400, sticker: ['mirá qué', 'comen'], stTop: 700, phone: { img: 'buscar-gente.png', notas: [
+    { ring: [16, 79, 343, 52], chip: { t: 'Buscá por usuario' } },
+    { ring: [258, 391, 89, 35], chip: { t: 'Tocá «Seguir»' } },
   ] } },
-  { id: '06-avatar', h: 'Armá tu hamburguesa', sub: 'Elegí fondo, pan y queso. Es tu cara en Burgómetro.', subTop: 400, sticker: ['a tu', 'gusto'], stTop: 700, phone: { img: 'avatar.png', notas: [
-    { ring: [12, 486, 351, 276], chip: { t: 'Fondo, pan y queso', x: 60, y: 446, tail: 'abajo' } },
+  { id: '06-avatar', h: 'Armá tu hamburguesa', sub: 'Es tu cara en Burgómetro.', subTop: 400, sticker: ['a tu', 'gusto'], stTop: 700, phone: { img: 'avatar.png', notas: [
+    { ring: [12, 486, 351, 276], chip: { t: 'Elegí fondo, pan y queso' } },
   ] } },
   { id: '07-guardadas', h: 'Guardá las<br>que te debés', sub: 'Tocá el corazón y encontralas después en Guardadas.', subTop: 400, sticker: ['para', 'después'], stTop: 700, phone: { img: 'guardadas.png', notas: [
-    { ring: [303, 142, 44, 44], chip: { t: 'Favoritas', x: 230, y: 98, tail: 'abajo' } },
+    { ring: [303, 142, 44, 44], chip: { t: 'Tocá el corazón' } },
   ] } },
   { id: '09-compartir-resenia', h: 'Compartí<br>tu reseña', sub: 'Un toque y te armamos la historia.', subTop: 400, historia: 'historia-generada.png', phone: { img: 'resenia-compartir.png', notas: [
-    { ring: [32, 541, 190, 44], chip: { t: 'Tocá acá', x: 70, y: 596, tail: 'arriba' } },
+    { ring: [32, 541, 190, 44], chip: { t: 'Tocá «Compartir en historias»' } },
   ] } },
 ]
 
+const SCRIPT = `<script>
+const run = () => {
+  const P = document.getElementById('pasos')
+  const sb = document.querySelector('.sub').getBoundingClientRect()
+  const els = [...document.querySelectorAll('[data-paso]')].sort((a, b) => a.dataset.paso - b.dataset.paso)
+  let prev = sb.bottom + 40, first = null
+  els.forEach(e => {
+    const c = document.createElement('div'); c.className = 'pc'; c.innerHTML = '<span class="num">' + e.dataset.paso + '</span><span>' + e.dataset.txt + '</span>'; P.appendChild(c)
+    const t = e.getBoundingClientRect(), h = c.offsetHeight
+    const top = Math.min(window.APILAR ? prev : Math.max(prev, t.top + t.height / 2 - h / 2), Math.max(prev, window.TOPE - h))
+    if (first === null) first = top
+    c.style.top = top + 'px'; prev = top + h + 24
+  })
+  const x = document.getElementById('extra')
+  if (x) x.style.top = (window.ARRIBA ? Math.max(sb.bottom + 30, first - x.offsetHeight - 24) : prev - 6) + 'px'
+  const svg = document.getElementById('flechas'), bajo = document.getElementById('flechasBajo')
+  svg.setAttribute('height', document.documentElement.clientHeight)
+  bajo.setAttribute('height', document.documentElement.clientHeight)
+  let d = '', db = ''
+  els.forEach((e, i) => {
+    const c = P.children[i].getBoundingClientRect(), t = e.getBoundingClientRect()
+    let sx = c.right + 6, sy = c.top + c.height / 2, ex = t.left - 12, ey = t.top + t.height / 2, izq = false
+    if (ex < sx) { izq = true; sx = c.left + 40; sy = c.bottom + 6 }
+    const k = Math.max((ex - sx) * 0.5, 20)
+    const largo = window.APILAR && i === 0
+    const path = largo ? 'M' + sx + ' ' + sy + ' C' + (sx + 30) + ' ' + (sy + 520) + ' ' + (ex - 330) + ' ' + (ey + 70) + ' ' + ex + ' ' + ey : izq ? 'M' + sx + ' ' + sy + ' C' + sx + ' ' + (sy + 90) + ' ' + (ex - 90) + ' ' + ey + ' ' + ex + ' ' + ey : 'M' + sx + ' ' + sy + ' C' + (sx + k) + ' ' + sy + ' ' + (ex - k) + ' ' + ey + ' ' + ex + ' ' + ey
+    const pts = [[ex, ey], [ex - 25, ey - 15], [ex - 25, ey + 15]].map(p => p.join(',')).join(' ')
+    let g = '<path d="' + path + '" fill="none" stroke="#fff7e0" stroke-width="12" stroke-linecap="round"/><polygon points="' + pts + '" fill="#fff7e0" stroke="#fff7e0" stroke-width="8" stroke-linejoin="round"/>'
+    g += '<path d="' + path + '" fill="none" stroke="#2b1a10" stroke-width="5.5" stroke-linecap="round"/><polygon points="' + pts + '" fill="#2b1a10"/>'
+    // en la lámina del iPhone la flecha 1 es larguísima: va por detrás del celu y el número rojo del aro la completa
+    d += g
+  })
+  bajo.innerHTML = db
+  svg.innerHTML = d
+}
+;(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(run, 400))
+</script>`
+
 function html(l, F) {
-  const phone = celu({ img: l.phone.img, barra: l.phone.barra, pantallaHtml: l.phone.html, notas: l.phone.notas }, F)
+  const esPortada = l.id === '01-portada'
+  const phone = celu({ img: l.phone.img, barra: l.phone.barra, pantallaHtml: l.phone.html, notas: esPortada ? [] : l.phone.notas }, F)
   const subTop = l.subTop + F.sub, stTop = l.stTop + F.st
+  const extra = l.hoja
+    ? `<div id="extra" class="extra"><div style="zoom:${F.alto > 1400 ? 1 : 0.84}">${HOJA_COMPARTIR}</div></div>`
+    : l.historia
+      ? `<div id="extra" class="extra"><div class="cap">Así queda tu historia</div><div class="historia" style="position:relative;left:8px;width:${F.hist.w}px"><img src="../../capturas/${l.historia}"></div></div>`
+      : ''
   return `<!doctype html><meta charset="utf-8"><title>${l.id}</title><style>${CSS}html,body{height:${F.alto}px}.logo{bottom:${F.logo}px}</style>
 <div class="marca">${ISOTIPO}</div>
 <h1 class="${l.m ? 'm' : ''}" style="top:${F.h1}px">${l.h}</h1>
-<p class="sub" style="top:${subTop}px;${l.subSize ? `font-size:${l.subSize}px;width:380px` : ''}">${l.sub}</p>
+<p class="sub" style="top:${subTop}px;${l.subSize ? `font-size:${l.subSize}px;width:${l.subW ?? 380}px` : ''}">${l.sub}</p>
 ${rayas(486, subTop - 12, -60)}
+<svg id="flechasBajo" xmlns="http://www.w3.org/2000/svg"></svg>
 ${phone}
-${l.hoja ? `<div class="historia" style="top:${F.hist.top - 40}px;width:${F.hist.w + 60}px;border:none;background:none;box-shadow:none"><div style="width:430px;transform:scale(${(F.hist.w + 60) / 430});transform-origin:top left">${HOJA_COMPARTIR}</div></div><div class="nota-c abajo" style="left:70px;top:${F.hist.top - 100}px;--tx:90px"><span class="num">3</span>Bajá y elegí esta opción</div>` : l.historia ? `<div class="historia" style="top:${F.hist.top}px;width:${F.hist.w}px"><img src="../../capturas/${l.historia}"></div><div class="nota-c abajo" style="left:100px;top:${F.hist.top - 64}px;--tx:60px;font-size:30px">Así queda tu historia</div>` : `<div class="sticker" style="top:${stTop}px">${l.sticker[0]}<br>${l.sticker[1]}<u></u></div>${destello(282, stTop + 170, 215)}`}
-<div class="logo">${ISOTIPO}<span>Burgómetro</span></div>`
+${esPortada ? `<div class="sticker" style="top:${stTop}px">${l.sticker[0]}<br>${l.sticker[1]}<u></u></div>${destello(282, stTop + 170, 215)}` : '<div id="pasos"></div>' + extra}
+<svg id="flechas" xmlns="http://www.w3.org/2000/svg"></svg>
+<div class="logo">${ISOTIPO}<span>Burgómetro</span></div><script>window.APILAR=${!!l.hoja};window.ARRIBA=${!!l.historia};window.TOPE=${F.alto - F.logo - 130}</script>${SCRIPT}`
 }
 
 // Cierre: sin celu, el logo grande y la dirección.
