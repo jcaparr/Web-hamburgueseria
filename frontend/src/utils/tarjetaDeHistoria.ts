@@ -18,7 +18,7 @@ const MARGEN = 64
  * va pegada bajo la fila del usuario.
  */
 const MARCA_ARRIBA = 150
-const BORDE_LIBRE_ABAJO = 110
+const BORDE_LIBRE_ABAJO = 160
 const MAXIMO_DEL_COMENTARIO = 150
 
 const TINTA = '#3a2a1e'
