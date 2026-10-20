@@ -26,9 +26,9 @@ const CSS = `
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:1080px;overflow:hidden}
 body{position:relative;background:#f2b705;color:#2b1a10;font-family:Poppins,system-ui,sans-serif}
-.marca{position:absolute;right:-150px;top:-120px;width:640px;opacity:.13;transform:rotate(-14deg)}
+.marca{position:absolute;right:-190px;top:-150px;width:760px;opacity:.55;transform:rotate(-14deg)}
 .marca svg{width:100%;display:block}
-.marca svg *{fill:#8a5a00!important;stroke:none!important}
+.marca svg *{fill:#fbd451!important;stroke:none!important}
 h1{position:absolute;left:58px;top:92px;width:960px;font-weight:800;font-size:98px;line-height:1.04;letter-spacing:-2px}
 h1.m{font-size:84px}
 .sub{position:absolute;left:62px;font-weight:500;font-size:35px;line-height:1.3;width:410px;color:#3a2a1e}
@@ -40,7 +40,7 @@ h1.m{font-size:84px}
 .burst i{position:absolute;width:9px;border-radius:5px;background:#2b1a10;transform-origin:center}
 .logo{position:absolute;left:70px;bottom:58px;display:flex;align-items:center;gap:20px;font-weight:800;font-size:46px;letter-spacing:-1px;z-index:5}
 .logo svg{width:74px;height:auto}
-.phone{position:absolute;width:490px;height:1100px;padding:13px;border-radius:80px;background:linear-gradient(160deg,#3b3b3e,#161617 60%);box-shadow:0 0 0 3px #5a5a5e inset,0 50px 70px rgba(43,26,16,.38);}
+.phone{position:absolute;width:490px;height:1100px;padding:13px;border-radius:80px;background:linear-gradient(160deg,#3b3b3e,#161617 60%);box-shadow:0 0 0 3px #5a5a5e inset,26px 46px 64px rgba(110,64,0,.38);}
 .phone:before,.phone:after{content:"";position:absolute;width:7px;background:#2a2a2c;border-radius:4px}
 .phone:before{left:-7px;top:190px;height:90px}
 .phone:after{right:-7px;top:260px;height:130px}
@@ -61,7 +61,7 @@ h1.m{font-size:84px}
 .historia img{display:block;width:100%}
 .paso::before{content:attr(data-paso);position:absolute;left:-22px;top:-26px;width:42px;height:42px;border-radius:50%;background:#b23a2e;color:#fff;box-shadow:0 0 0 3px #fff;display:grid;place-items:center;font:800 26px Poppins;z-index:8}
 #pasos{position:absolute;left:0;top:0;width:1080px;z-index:6}
-.pc{position:absolute;left:58px;width:430px;display:flex;align-items:center;gap:16px;background:#3a2a1e;color:#f7efd8;border-radius:24px;padding:14px 22px 14px 14px;font:600 34px/1.15 Poppins;box-shadow:0 8px 18px rgba(43,26,16,.3)}
+.pc{position:absolute;left:58px;width:430px;display:flex;align-items:center;gap:16px;background:#3a2a1e;color:#f7efd8;border-radius:24px;padding:14px 22px 14px 14px;font:600 34px/1.15 Poppins;box-shadow:0 18px 30px rgba(43,26,16,.35)}
 .pc .num{width:54px;height:54px;font-size:32px;margin:0;box-shadow:0 0 0 3px #f7efd8}
 #flechas{position:absolute;left:0;top:0;width:1080px;z-index:7;pointer-events:none}
 #flechasBajo{position:absolute;left:0;top:0;width:1080px;pointer-events:none}
