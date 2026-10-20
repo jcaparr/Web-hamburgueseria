@@ -11,8 +11,8 @@ const EDGE = process.env.EDGE ?? 'C:/Program Files (x86)/Microsoft/Edge/Applicat
 // 4:5 es el formato del carrusel del feed; 9:16 es para historias (con ~250 px de zona segura arriba y abajo).
 // El celu se dibuja siempre a 490×1100 y se escala (S) alrededor de su centro (cx, cy).
 const FORMATOS = [
-  { dir: 'laminas', alto: 1350, S: 0.86, cx: 778, cy: 820, h1: 80, sub: 0, st: 0, logo: 58, c: { h1: 110, g: 360, u: 1030, s: 1170 }, hist: { top: 650, w: 200 } },
-  { dir: 'laminas-9x16', alto: 1920, S: 0.92, cx: 765, cy: 1100, h1: 270, sub: 245, st: 360, logo: 310, c: { h1: 330, g: 600, u: 1280, s: 1450 }, hist: { top: 870, w: 290 } },
+  { dir: 'laminas', alto: 1350, S: 0.86, cx: 778, cy: 820, h1: 80, sub: 0, st: 0, logo: 58, c: { h1: 110, g: 360, u: 1030, s: 1170 }, hist: { top: 650, w: 210 } },
+  { dir: 'laminas-9x16', alto: 1920, S: 0.92, cx: 765, cy: 1100, h1: 270, sub: 245, st: 360, logo: 360, c: { h1: 330, g: 600, u: 1280, s: 1450 }, hist: { top: 870, w: 255 } },
 ]
 
 // El isotipo es el mismo dibujo de frontend/src/components/MarcaBurgometro.tsx, sin el calco.
@@ -65,6 +65,7 @@ h1.m{font-size:84px}
 .pc .num{width:54px;height:54px;font-size:32px;margin:0;box-shadow:0 0 0 3px #f7efd8}
 #flechas{position:absolute;left:0;top:0;width:1080px;z-index:7;pointer-events:none}
 #flechasBajo{position:absolute;left:0;top:0;width:1080px;pointer-events:none}
+#flechas,#flechasBajo{display:none}
 .extra{position:absolute;left:120px}
 .cap{display:inline-flex;background:#3a2a1e;color:#f7efd8;border-radius:18px;padding:10px 20px;font:600 30px/1.1 Poppins;margin-bottom:22px}
 .nota-c.izq:after{left:-19px;top:calc(50% - 10px);border-right-color:#3a2a1e}
@@ -197,6 +198,8 @@ const run = () => {
   const sb = document.querySelector('.sub').getBoundingClientRect()
   const els = [...document.querySelectorAll('[data-paso]')].sort((a, b) => a.dataset.paso - b.dataset.paso)
   let prev = sb.bottom + 40, first = null
+  const xx = document.getElementById('extra')
+  if (xx && window.ARRIBA) { xx.style.top = (sb.bottom + 24) + 'px'; prev = xx.getBoundingClientRect().bottom + 24 }
   els.forEach(e => {
     const c = document.createElement('div'); c.className = 'pc'; c.innerHTML = '<span class="num">' + e.dataset.paso + '</span><span>' + e.dataset.txt + '</span>'; P.appendChild(c)
     const t = e.getBoundingClientRect(), h = c.offsetHeight

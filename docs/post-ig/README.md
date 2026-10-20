@@ -34,4 +34,4 @@ La lámina 9 muestra «Compartir en historias» (#278), ya en main; el local, el
 
 Las láminas 3a, 3b y 9 asumen que el manifest (#281) ya está deployado: sin él, Chrome en Android solo ofrece
 «Agregar a la pantalla principal», con un ícono común, y no «Instalar». **No publiques el post antes del deploy del manifest.**
-En iPhone (Safari) «Compartir > Agregar a inicio» ya funciona hoy. Los pasos de Android e iPhone los verificó Juan en sus celulares. Los pasos van en tarjetas fuera del celu, numerados en rojo y unidos con una flecha a un aro rojo del mismo número sobre la pantalla (así no tapan la captura).
+En iPhone (Safari) «Compartir > Agregar a inicio» ya funciona hoy. Los pasos de Android e iPhone los verificó Juan en sus celulares. Los pasos van en tarjetas fuera del celu, numerados en rojo con el mismo número en un aro rojo sobre la pantalla (sin flechas) (así no tapan la captura).
