@@ -1,5 +1,7 @@
 package com.hamburguesas.repository;
 
+import com.hamburguesas.geo.Distancias;
+import com.hamburguesas.geo.Ubicacion;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.Rating;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -33,7 +35,11 @@ final class FiltroDeLocales {
     private FiltroDeLocales() {
     }
 
-    static Specification<BurgerJoint> con(String nombre, List<String> barrios, OrdenDeLocales orden) {
+    /** Hasta dónde llega cada franja de "más cercanas", en metros. Lo que pasa de la última es una sola. */
+    private static final double[] FRANJAS_EN_METROS = {1_000, 2_000, 4_000, 8_000};
+
+    static Specification<BurgerJoint> con(String nombre, List<String> barrios, OrdenDeLocales orden,
+                                          Ubicacion ubicacion) {
         return (local, consulta, cb) -> {
             List<Predicate> condiciones = new ArrayList<>();
 
@@ -66,7 +72,7 @@ final class FiltroDeLocales {
             // alcanza con mirar la columna.
             condiciones.add(cb.isFalse(local.get("fastFood")));
 
-            ordenar(local, consulta, cb, orden);
+            ordenar(local, consulta, cb, orden, ubicacion);
 
             // Sin nombre ni barrio queda solo la de las cadenas: todas las hamburgueserías.
             return cb.and(condiciones.toArray(new Predicate[0]));
@@ -95,10 +101,15 @@ final class FiltroDeLocales {
      * pero armar las subconsultas para nada es gasto.
      */
     private static void ordenar(Root<BurgerJoint> local, CriteriaQuery<?> consulta, CriteriaBuilder cb,
-                                OrdenDeLocales orden) {
+                                OrdenDeLocales orden, Ubicacion ubicacion) {
         Class<?> tipo = consulta.getResultType();
         if (tipo == Long.class || tipo == long.class) {
             return;
+        }
+
+        // Sin desde dónde medir no hay "cercanas": se ordena por relevancia, como siempre.
+        if (orden == OrdenDeLocales.CERCANAS && ubicacion == null) {
+            orden = OrdenDeLocales.RELEVANTES;
         }
 
         Subquery<Double> promedio = consulta.subquery(Double.class);
@@ -116,8 +127,16 @@ final class FiltroDeLocales {
             .otherwise(0);
 
         List<Order> criterios = new ArrayList<>();
+        if (orden == OrdenDeLocales.CERCANAS) {
+            criterios.add(cb.asc(franjaDeDistancia(local, cb, ubicacion)));
+        }
         criterios.add(cb.asc(sinResenias));
         switch (orden) {
+            // Dentro de cada franja, la calificación (#288): igual que "mejores valoradas".
+            case CERCANAS -> {
+                criterios.add(cb.desc(promedio));
+                criterios.add(cb.desc(cuantas));
+            }
             case RELEVANTES -> {
                 criterios.add(cb.desc(cuantas));
                 criterios.add(cb.desc(promedio));
@@ -134,6 +153,34 @@ final class FiltroDeLocales {
         criterios.add(cb.asc(local.get("nombreParaBuscar")));
         criterios.add(cb.asc(local.get("id")));
         consulta.orderBy(criterios);
+    }
+
+    /**
+     * En qué franja de distancia cae el local: 0 es la más cercana. Los que no tienen
+     * coordenadas van en una franja propia, al final.
+     *
+     * La cuenta es la de {@code Distancias.metrosEntre} (la Tierra tratada como un plano,
+     * que a estas distancias se equivoca en centímetros) pero comparando contra el
+     * cuadrado de cada franja, así no hace falta la raíz en SQL. Corre en la base: son
+     * cuatrocientos y pico locales, y no hay llamada a ningún servicio externo.
+     */
+    private static Expression<Integer> franjaDeDistancia(Root<BurgerJoint> local, CriteriaBuilder cb,
+                                                          Ubicacion ubicacion) {
+        Expression<Double> dx = cb.prod(
+            cb.diff(local.<Double>get("longitude"), ubicacion.longitud()),
+            Distancias.METROS_POR_GRADO_DE_LONGITUD);
+        Expression<Double> dy = cb.prod(
+            cb.diff(local.<Double>get("latitude"), ubicacion.latitud()),
+            Distancias.METROS_POR_GRADO_DE_LATITUD);
+        Expression<Double> cuadrado = cb.sum(cb.prod(dx, dx), cb.prod(dy, dy));
+
+        CriteriaBuilder.Case<Integer> franja = cb.<Integer>selectCase();
+        franja.when(cb.or(cb.isNull(local.get("latitude")), cb.isNull(local.get("longitude"))),
+            FRANJAS_EN_METROS.length + 1);
+        for (int i = 0; i < FRANJAS_EN_METROS.length; i++) {
+            franja.when(cb.lessThan(cuadrado, FRANJAS_EN_METROS[i] * FRANJAS_EN_METROS[i]), i);
+        }
+        return franja.otherwise(FRANJAS_EN_METROS.length);
     }
 
     private static boolean tieneAlgo(String valor) {

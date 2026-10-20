@@ -1,5 +1,6 @@
 package com.hamburguesas.repository;
 
+import com.hamburguesas.geo.Ubicacion;
 import com.hamburguesas.model.BurgerJoint;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -69,8 +70,8 @@ public interface BurgerJointRepository
      * ocho. El porqué de armar la condición en vez de escribirla está en FiltroDeLocales.
      */
     default Page<BurgerJoint> buscar(String nombre, List<String> barrios, OrdenDeLocales orden,
-                                     Pageable pagina) {
-        return findAll(FiltroDeLocales.con(nombre, barrios, orden), pagina);
+                                     Ubicacion ubicacion, Pageable pagina) {
+        return findAll(FiltroDeLocales.con(nombre, barrios, orden, ubicacion), pagina);
     }
 
     Optional<BurgerJoint> findByPlaceId(String placeId);

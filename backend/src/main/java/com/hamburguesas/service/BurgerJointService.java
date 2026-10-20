@@ -3,6 +3,7 @@ package com.hamburguesas.service;
 import com.hamburguesas.dto.BurgerJointDto;
 import com.hamburguesas.dto.HorarioDto;
 import com.hamburguesas.exception.ResourceNotFoundException;
+import com.hamburguesas.geo.Ubicacion;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.OrdenDeLocales;
@@ -31,7 +32,16 @@ public class BurgerJointService {
      */
     public Page<BurgerJointDto> search(String query, List<String> areas, OrdenDeLocales orden,
                                        Long userId, Pageable pageable) {
-        Page<BurgerJoint> pagina = burgerJointRepository.buscar(query, areas, orden, pageable);
+        return search(query, areas, orden, null, userId, pageable);
+    }
+
+    /**
+     * Con la ubicación de quien mira, para el orden por cercanía (#288). Se usa solo
+     * para ordenar: no se guarda ni se le pregunta nada a Google.
+     */
+    public Page<BurgerJointDto> search(String query, List<String> areas, OrdenDeLocales orden,
+                                       Ubicacion ubicacion, Long userId, Pageable pageable) {
+        Page<BurgerJoint> pagina = burgerJointRepository.buscar(query, areas, orden, ubicacion, pageable);
         // Las fichas de toda la página juntas: de a una eran dos o tres consultas por
         // local (#101).
         List<BurgerJointDto> fichas = fichaDeLocal.para(pagina.getContent(), userId);
