@@ -35,7 +35,11 @@ h1.m{font-size:84px}
 .rayas{position:absolute;width:60px;height:80px}
 .rayas i{position:absolute;height:7px;border-radius:4px;background:#b23a2e;transform-origin:left center}
 .sticker{position:absolute;left:112px;width:340px;height:340px;border-radius:50%;background:#3a2a1e;color:#f7efd8;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:60px;line-height:1.05;transform:rotate(-9deg);box-shadow:0 18px 30px rgba(43,26,16,.35);z-index:4}
-.sello-chico{position:absolute;z-index:5}
+.sello{position:absolute;z-index:5}
+.sello .disco{position:absolute;inset:0;border-radius:50%;background:#3a2a1e;color:#f7efd8;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-weight:800;line-height:1.08;transform:rotate(-9deg);box-shadow:0 20px 34px rgba(43,26,16,.38)}
+.sello .disco span{display:block;white-space:nowrap}
+.sello .disco u{display:block;height:.14em;border-radius:6px;background:#f4ca2c;margin-top:.22em;transform:rotate(-4deg)}
+.sello i{position:absolute;width:9px;border-radius:5px;background:#2b1a10;transform-origin:center}
 .sticker u{display:block;width:230px;height:9px;border-radius:6px;background:#f2b705;margin-top:10px;text-decoration:none;transform:rotate(-4deg)}
 .burst{position:absolute;z-index:4}
 .burst i{position:absolute;width:9px;border-radius:5px;background:#2b1a10;transform-origin:center}
@@ -164,28 +168,28 @@ const HOJA_COMPARTIR = `<div style="width:430px;font-family:Roboto,Arial,sans-se
   </div></div>`
 
 const LAMINAS = [
-  { id: '01-portada', h: 'Todo lo que podés hacer en Burgómetro', m: true, sub: '+1.200 hamburgueserías en Buenos Aires y alrededores, en un solo lugar.', subTop: 470, sticker: ['deslizá', '→'], stTop: 790, phone: { img: 'explorar.png', notas: [
+  { id: '01-portada', h: 'Todo lo que podés hacer en Burgómetro', m: true, sub: '+1.200 hamburgueserías en Buenos Aires y alrededores, en un solo lugar.', subTop: 470, sticker: ['Deslizá', '→'], stTop: 790, phone: { img: 'explorar.png', notas: [
     { ring: [16, 122, 343, 46], chip: { t: 'Buscá acá' } },
     { ring: [16, 178, 169, 44], chip: { t: 'Filtrá por barrio' } },
   ] } },
-  { id: '02-sugerir-local', h: '¿Falta tu hamburguesería?', sub: '<b>En Explorar:</b> si buscás tu local y no aparece, sumalo. Pasanos el dato y lo agregamos.', subTop: 400, sticker: ['pasanos', 'el dato'], stTop: 700, phone: { img: 'sugerir-local.png', barra: '#9b958b', notas: [
+  { id: '02-sugerir-local', h: '¿Falta tu hamburguesería?', sub: '<b>En Explorar:</b> si buscás tu local y no aparece, sumalo. Pasanos el dato y lo agregamos.', subTop: 400, sticker: ['Pasanos', 'el dato'], stTop: 700, phone: { img: 'sugerir-local.png', barra: '#9b958b', notas: [
     { ring: [20, 338, 335, 138], chip: { t: 'Completá los datos' } },
     { ring: [20, 743, 335, 48], chip: { t: 'Enviá la sugerencia' } },
   ] } },
-  { id: '03a-instalar-android', h: 'Instalala<br>en Android', sub: 'Queda con el ícono y el nombre de Burgómetro.', subSize: 35, subW: 440, subTop: 400, sticker: ['como', 'una app'], stTop: 700, phone: { html: MENU_CHROME, barra: '#f1f3f4' } },
+  { id: '03a-instalar-android', h: 'Instalala<br>en Android', sub: 'Queda con el ícono y el nombre de Burgómetro.', subSize: 35, subW: 440, subTop: 400, sticker: ['Como', 'una app'], stTop: 700, phone: { html: MENU_CHROME, barra: '#f1f3f4' } },
   { id: '03b-instalar-iphone', h: 'Instalala<br>en iPhone', sub: 'Queda con el ícono de Burgómetro en tu inicio.', subSize: 35, subW: 440, subTop: 400, hoja: true, phone: { html: MENU_SAFARI, barra: '#f5f0e1' } },
-  { id: '04-recorrido', h: 'Armá tu<br>recorrido', sub: '<b>En Tour.</b> Elegí paradas y distancia. Te armamos la ruta.', subTop: 400, sticker: ['a pie', 'o en auto'], stTop: 700, phone: { img: 'tour.png', notas: [
+  { id: '04-recorrido', h: 'Armá tu<br>recorrido', sub: '<b>En Tour.</b> Elegí paradas y distancia. Te armamos la ruta.', subTop: 400, sticker: ['A pie', 'o en auto'], stTop: 700, phone: { img: 'tour.png', notas: [
     { ring: [32, 94, 311, 52], chip: { t: 'Elegí a pie o en auto' } },
     { ring: [32, 612, 311, 44], chip: { t: 'Tocá «Armar tour»' } },
   ] } },
-  { id: '05-buscar-gente', h: 'Buscá gente y seguila', sub: '<b>En Feed.</b> Encontrá a otros fanáticos y mirá qué recomiendan.', subTop: 400, sticker: ['mirá qué', 'comen'], stTop: 700, phone: { img: 'buscar-gente.png', notas: [
+  { id: '05-buscar-gente', h: 'Buscá gente y seguila', sub: '<b>En Feed.</b> Encontrá a otros fanáticos y mirá qué recomiendan.', subTop: 400, sticker: ['Mirá qué', 'comen'], stTop: 700, phone: { img: 'buscar-gente.png', notas: [
     { ring: [16, 79, 343, 52], chip: { t: 'Buscá por usuario' } },
     { ring: [258, 391, 89, 35], chip: { t: 'Tocá «Seguir»' } },
   ] } },
-  { id: '06-avatar', h: 'Armá tu hamburguesa', sub: '<b>En Perfil.</b> Es tu cara en Burgómetro.', subTop: 400, sticker: ['a tu', 'gusto'], stTop: 700, phone: { img: 'avatar.png', notas: [
+  { id: '06-avatar', h: 'Armá tu hamburguesa', sub: '<b>En Perfil.</b> Es tu cara en Burgómetro.', subTop: 400, sticker: ['A tu', 'gusto'], stTop: 700, phone: { img: 'avatar.png', notas: [
     { ring: [12, 486, 351, 276], chip: { t: 'Elegí fondo, pan y queso' } },
   ] } },
-  { id: '07-guardadas', h: 'Guardá las<br>que te debés', sub: '<b>En Perfil.</b> Tocá el corazón y encontralas en Guardadas.', subTop: 400, sticker: ['para', 'después'], stTop: 700, phone: { img: 'guardadas.png', notas: [
+  { id: '07-guardadas', h: 'Guardá las<br>que te debés', sub: '<b>En Perfil.</b> Tocá el corazón y encontralas en Guardadas.', subTop: 400, sticker: ['Para', 'después'], stTop: 700, phone: { img: 'guardadas.png', notas: [
     { ring: [303, 142, 44, 44], chip: { t: 'Tocá el corazón' } },
   ] } },
   { id: '09-compartir-resenia', h: 'Compartí<br>tu reseña', sub: '<b>Aparece cuando ves tu reseña.</b> Un toque y te armamos la historia.', subTop: 400, historia: 'historia-generada.png', phone: { img: 'resenia-compartir.png', notas: [
@@ -210,6 +214,35 @@ const run = () => {
   })
   const x = document.getElementById('extra')
   if (x) x.style.top = (window.ARRIBA ? Math.max(sb.bottom + 30, first - x.offsetHeight - 24) : prev - 6) + 'px'
+  const S = document.getElementById('sello')
+  if (S) {
+    const portada = S.dataset.portada === '1'
+    let fondo = sb.bottom
+    if (P) P.querySelectorAll('.pc').forEach(c => { fondo = Math.max(fondo, c.getBoundingClientRect().bottom) })
+    const ex = document.getElementById('extra'); if (ex) fondo = Math.max(fondo, ex.getBoundingClientRect().bottom)
+    const logoTop = document.querySelector('.logo').getBoundingClientRect().top
+    const hueco = logoTop - fondo - 60
+    const size = Math.max(150, Math.min(hueco, portada ? 380 : 330))
+    const cx = 273, cy = fondo + 30 + (hueco - size) / 2 + size / 2
+    S.style.left = (cx - size / 2) + 'px'; S.style.top = (cy - size / 2) + 'px'; S.style.width = size + 'px'; S.style.height = size + 'px'
+    const d = document.createElement('div'); d.className = 'disco'
+    d.innerHTML = '<span>' + S.dataset.a + '</span><span' + (S.dataset.b === '→' ? ' style="font-size:1.7em;line-height:.8"' : '') + '>' + S.dataset.b + '</span><u></u>'
+    S.appendChild(d)
+    // letra proporcional al círculo: la línea más ancha ocupa el 70 % del diámetro, siempre
+    d.style.fontSize = '100px'
+    const w = Math.max(...[...d.querySelectorAll('span')].map(e => e.getBoundingClientRect().width))
+    const fs = Math.min(100 * (size * 0.70) / w, size * 0.26)
+    d.style.fontSize = fs + 'px'
+    d.querySelector('u').style.width = (Math.max(...[...d.querySelectorAll('span')].map(e => e.getBoundingClientRect().width)) * 0.85) + 'px'
+    // rayitas negras radiales, arriba a la derecha
+    for (let k = 0; k < 4; k++) {
+      const a = (-66 + k * 24) * Math.PI / 180, r0 = size * 0.54
+      const l = document.createElement('i')
+      l.style.left = (size / 2 + Math.cos(a) * r0 - 4) + 'px'; l.style.top = (size / 2 + Math.sin(a) * r0) + 'px'
+      l.style.height = (size * 0.14 - k * 3) + 'px'; l.style.transform = 'rotate(' + (a * 180 / Math.PI + 90) + 'deg)'
+      S.appendChild(l)
+    }
+  }
   const svg = document.getElementById('flechas'), bajo = document.getElementById('flechasBajo')
   svg.setAttribute('height', document.documentElement.clientHeight)
   bajo.setAttribute('height', document.documentElement.clientHeight)
@@ -249,7 +282,7 @@ function html(l, F) {
 ${rayas(486, subTop - 12, -60)}
 <svg id="flechasBajo" xmlns="http://www.w3.org/2000/svg"></svg>
 ${phone}
-${esPortada ? `<div class="sticker" style="top:${stTop}px">${l.sticker[0]}<br>${l.sticker[1]}<u></u></div>${destello(282, stTop + 170, 215)}` : `<div id="pasos"></div>${extra}${l.sticker ? `<div class="sello-chico" style="left:70px;top:${F.alto - F.logo - 94 - F.sello - 34}px"><div class="sticker" style="position:absolute;left:0;top:0;transform-origin:top left;transform:rotate(-9deg) scale(${F.sello / 340})">${l.sticker[0]}<br>${l.sticker[1]}<u></u></div>${destello(F.sello * 0.62, F.sello * 0.1, F.sello * 0.52)}</div>` : ''}`}
+${esPortada ? '' : '<div id="pasos"></div>' + extra}${l.sticker ? `<div id="sello" class="sello" data-a="${l.sticker[0]}" data-b="${l.sticker[1]}" data-portada="${esPortada ? 1 : 0}"></div>` : ''}
 <svg id="flechas" xmlns="http://www.w3.org/2000/svg"></svg>
 <div class="logo">${ISOTIPO}<span>Burgómetro</span></div><script>window.APILAR=true;window.ARRIBA=${!!l.historia};window.TOPE=${F.alto - F.logo - 130}</script>${SCRIPT}`
 }
