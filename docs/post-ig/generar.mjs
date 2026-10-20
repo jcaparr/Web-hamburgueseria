@@ -188,7 +188,7 @@ const LAMINAS = [
   { id: '07-guardadas', h: 'Guardá las<br>que te debés', sub: '<b>En Perfil.</b> Tocá el corazón y encontralas en Guardadas.', subTop: 400, sticker: ['para', 'después'], stTop: 700, phone: { img: 'guardadas.png', notas: [
     { ring: [303, 142, 44, 44], chip: { t: 'Tocá el corazón' } },
   ] } },
-  { id: '09-compartir-resenia', h: 'Compartí<br>tu reseña', sub: '<b>En Perfil.</b> Un toque y te armamos la historia.', subTop: 400, historia: 'historia-generada.png', phone: { img: 'resenia-compartir.png', notas: [
+  { id: '09-compartir-resenia', h: 'Compartí<br>tu reseña', sub: '<b>Aparece cuando ves tu reseña.</b> Un toque y te armamos la historia.', subTop: 400, historia: 'historia-generada.png', phone: { img: 'resenia-compartir.png', notas: [
     { ring: [32, 541, 190, 44], chip: { t: 'Tocá «Compartir en historias»' } },
   ] } },
 ]
