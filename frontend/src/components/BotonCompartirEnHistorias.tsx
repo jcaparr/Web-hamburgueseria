@@ -61,7 +61,7 @@ export function BotonCompartirEnHistorias({
     <div className="flex flex-col items-start gap-1">
       <button type="button" onClick={compartir} disabled={armando} className="btn btn-outline btn-sm min-h-11 gap-2">
         <IconShare size={16} />
-        {armando ? 'Armando la imagen…' : 'Compartir en historias'}
+        {armando ? 'Armando la imagen…' : 'Compartir reseña'}
       </button>
       {aviso && (
         <p role="status" className="text-xs text-base-content/70">

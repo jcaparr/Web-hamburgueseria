@@ -12,11 +12,13 @@ const ANCHO = 1080
 const ALTO = 1920
 const MARGEN = 64
 /**
- * Instagram tapa con su barra de arriba y con el campo de respuesta de abajo: ningún
- * texto llega a esos bordes (unos 250 px de cada lado en una historia de 1920).
+ * Instagram tapa arriba con la fila del usuario (hasta unos 140 px de una historia de
+ * 1920) y abajo con «Enviar mensaje». En el celular de Juan ese campo queda debajo de la
+ * imagen, así que la línea del usuario puede apoyar casi en el borde de abajo; la marca
+ * va pegada bajo la fila del usuario.
  */
-const BORDE_LIBRE_ARRIBA = 250
-const BORDE_LIBRE_ABAJO = 300
+const MARCA_ARRIBA = 150
+const BORDE_LIBRE_ABAJO = 160
 const MAXIMO_DEL_COMENTARIO = 150
 
 const TINTA = '#3a2a1e'
@@ -109,8 +111,10 @@ function dibujarFondoSinFoto(ctx: CanvasRenderingContext2D, logo: HTMLImageEleme
 
 function dibujarVelos(ctx: CanvasRenderingContext2D) {
   const velo = ctx.createLinearGradient(0, 0, 0, ALTO)
-  velo.addColorStop(0, 'rgba(28,21,17,0.55)')
-  velo.addColorStop(0.22, 'rgba(28,21,17,0)')
+  // Con la marca más arriba, el velo se sostiene hasta debajo de ella: sobre una foto
+  // blanca, el texto blanco da 5 : 1 (calculado con la fórmula de WCAG).
+  velo.addColorStop(0, 'rgba(28,21,17,0.7)')
+  velo.addColorStop(0.17, 'rgba(28,21,17,0.62)')
   velo.addColorStop(0.3, 'rgba(28,21,17,0)')
   // Más cerrado que el del diseño de muestra: sobre una foto clara (queso, pan) el
   // nombre en blanco se perdía a media altura.
@@ -185,11 +189,11 @@ export async function armarTarjetaDeHistoria(datos: DatosDeLaTarjeta): Promise<B
   ctx.textBaseline = 'alphabetic'
   ctx.textAlign = 'left'
 
-  // La marca, arriba a la izquierda y fuera del borde que tapa Instagram.
-  if (logo) ctx.drawImage(logo, MARGEN, BORDE_LIBRE_ARRIBA, 118, 100)
+  // La marca, arriba a la izquierda, justo debajo del encabezado de Instagram.
+  if (logo) ctx.drawImage(logo, MARGEN, MARCA_ARRIBA, 118, 100)
   ctx.fillStyle = '#ffffff'
   ctx.font = `700 52px ${FUENTE}`
-  ctx.fillText('Burgómetro', MARGEN + 118 + 20, BORDE_LIBRE_ARRIBA + 68)
+  ctx.fillText('Burgómetro', MARGEN + 118 + 20, MARCA_ARRIBA + 68)
 
   // El bloque de abajo se arma de abajo hacia arriba, desde el borde libre.
   const ancho = ANCHO - MARGEN * 2
