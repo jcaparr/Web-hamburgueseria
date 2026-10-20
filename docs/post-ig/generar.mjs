@@ -168,27 +168,27 @@ const LAMINAS = [
     { ring: [16, 122, 343, 46], chip: { t: 'Buscá acá' } },
     { ring: [16, 178, 169, 44], chip: { t: 'Filtrá por barrio' } },
   ] } },
-  { id: '02-sugerir-local', h: '¿Falta tu hamburguesería?', sub: 'Sumala a nuestro mapa y ayudanos a que más personas descubran tu lugar.', subTop: 400, sticker: ['pasanos', 'el dato'], stTop: 700, phone: { img: 'sugerir-local.png', barra: '#9b958b', notas: [
+  { id: '02-sugerir-local', h: '¿Falta tu hamburguesería?', sub: '<b>En Explorar.</b> Sumala a nuestro mapa y ayudanos a que más personas descubran tu lugar.', subTop: 400, sticker: ['pasanos', 'el dato'], stTop: 700, phone: { img: 'sugerir-local.png', barra: '#9b958b', notas: [
     { ring: [20, 338, 335, 138], chip: { t: 'Completá los datos' } },
     { ring: [20, 743, 335, 48], chip: { t: 'Enviá la sugerencia' } },
   ] } },
   { id: '03a-instalar-android', h: 'Instalala<br>en Android', sub: 'Queda con el ícono y el nombre de Burgómetro.', subSize: 35, subW: 440, subTop: 400, sticker: ['como', 'una app'], stTop: 700, phone: { html: MENU_CHROME, barra: '#f1f3f4' } },
   { id: '03b-instalar-iphone', h: 'Instalala<br>en iPhone', sub: 'Queda con el ícono de Burgómetro en tu inicio.', subSize: 35, subW: 440, subTop: 400, hoja: true, phone: { html: MENU_SAFARI, barra: '#f5f0e1' } },
-  { id: '04-recorrido', h: 'Armá tu<br>recorrido', sub: 'Elegí paradas y distancia. Te armamos la ruta.', subTop: 400, sticker: ['a pie', 'o en auto'], stTop: 700, phone: { img: 'tour.png', notas: [
+  { id: '04-recorrido', h: 'Armá tu<br>recorrido', sub: '<b>En Tour.</b> Elegí paradas y distancia. Te armamos la ruta.', subTop: 400, sticker: ['a pie', 'o en auto'], stTop: 700, phone: { img: 'tour.png', notas: [
     { ring: [32, 94, 311, 52], chip: { t: 'Elegí a pie o en auto' } },
     { ring: [32, 612, 311, 44], chip: { t: 'Tocá «Armar tour»' } },
   ] } },
-  { id: '05-buscar-gente', h: 'Buscá gente y seguila', sub: 'Encontrá a otros fanáticos y mirá qué recomiendan.', subTop: 400, sticker: ['mirá qué', 'comen'], stTop: 700, phone: { img: 'buscar-gente.png', notas: [
+  { id: '05-buscar-gente', h: 'Buscá gente y seguila', sub: '<b>En Feed.</b> Encontrá a otros fanáticos y mirá qué recomiendan.', subTop: 400, sticker: ['mirá qué', 'comen'], stTop: 700, phone: { img: 'buscar-gente.png', notas: [
     { ring: [16, 79, 343, 52], chip: { t: 'Buscá por usuario' } },
     { ring: [258, 391, 89, 35], chip: { t: 'Tocá «Seguir»' } },
   ] } },
-  { id: '06-avatar', h: 'Armá tu hamburguesa', sub: 'Es tu cara en Burgómetro.', subTop: 400, sticker: ['a tu', 'gusto'], stTop: 700, phone: { img: 'avatar.png', notas: [
+  { id: '06-avatar', h: 'Armá tu hamburguesa', sub: '<b>En Perfil.</b> Es tu cara en Burgómetro.', subTop: 400, sticker: ['a tu', 'gusto'], stTop: 700, phone: { img: 'avatar.png', notas: [
     { ring: [12, 486, 351, 276], chip: { t: 'Elegí fondo, pan y queso' } },
   ] } },
-  { id: '07-guardadas', h: 'Guardá las<br>que te debés', sub: 'Tocá el corazón y encontralas después en Guardadas.', subTop: 400, sticker: ['para', 'después'], stTop: 700, phone: { img: 'guardadas.png', notas: [
+  { id: '07-guardadas', h: 'Guardá las<br>que te debés', sub: '<b>En Explorar o en la ficha.</b> Tocá el corazón y encontralas en Perfil, en Guardadas.', subTop: 400, sticker: ['para', 'después'], stTop: 700, phone: { img: 'guardadas.png', notas: [
     { ring: [303, 142, 44, 44], chip: { t: 'Tocá el corazón' } },
   ] } },
-  { id: '09-compartir-resenia', h: 'Compartí<br>tu reseña', sub: 'Un toque y te armamos la historia.', subTop: 400, historia: 'historia-generada.png', phone: { img: 'resenia-compartir.png', notas: [
+  { id: '09-compartir-resenia', h: 'Compartí<br>tu reseña', sub: '<b>En tu reseña</b> (ficha del local o Perfil). Un toque y te armamos la historia.', subTop: 400, historia: 'historia-generada.png', phone: { img: 'resenia-compartir.png', notas: [
     { ring: [32, 541, 190, 44], chip: { t: 'Tocá «Compartir en historias»' } },
   ] } },
 ]
