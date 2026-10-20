@@ -12,13 +12,13 @@ const ANCHO = 1080
 const ALTO = 1920
 const MARGEN = 64
 /**
- * Instagram tapa con su barra de arriba (la fila del usuario, unos 200 px) y con el campo
- * de respuesta de abajo (unos 250 px de una historia de 1920): ningún texto llega a esos
- * bordes. La marca va pegada debajo de la barra y la línea del usuario justo encima del
- * recuadro «Enviar mensaje».
+ * Instagram tapa arriba con la fila del usuario (hasta unos 140 px de una historia de
+ * 1920) y abajo con «Enviar mensaje». En el celular de Juan ese campo queda debajo de la
+ * imagen, así que la línea del usuario puede apoyar casi en el borde de abajo; la marca
+ * va pegada bajo la fila del usuario.
  */
-const MARCA_ARRIBA = 215
-const BORDE_LIBRE_ABAJO = 250
+const MARCA_ARRIBA = 150
+const BORDE_LIBRE_ABAJO = 110
 const MAXIMO_DEL_COMENTARIO = 150
 
 const TINTA = '#3a2a1e'
