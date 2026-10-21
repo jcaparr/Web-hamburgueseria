@@ -13,6 +13,7 @@ import { ScoreBadge } from './ScoreBadge'
  * @param nota    la que se muestra en el sello: el promedio del local, o la que le
  *                puso alguien en su reseña
  * @param detalle una línea chica debajo, como la fecha de la reseña
+ * @param a       otro destino que la ficha a secas, como la reseña puntual (#294)
  */
 export function TarjetaChicaDeLocal({
   id,
@@ -20,16 +21,18 @@ export function TarjetaChicaDeLocal({
   foto,
   nota,
   detalle,
+  a,
 }: {
   id: number
   nombre: string
   foto: string | null
   nota: number | null
   detalle?: ReactNode
+  a?: string
 }) {
   return (
     <Link
-      to={`/burger-joints/${id}`}
+      to={a ?? `/burger-joints/${id}`}
       className="flex h-full flex-col overflow-hidden tarjeta transition-shadow hover:tarjeta-alzada focus-visible:-outline-offset-2"
     >
       <JointPhoto src={foto} name={nombre} className="aspect-[4/3] w-full object-cover" />
