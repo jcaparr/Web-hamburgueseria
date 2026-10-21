@@ -8,6 +8,7 @@ import { BarraDePestanias, GrillaDeLocales, VerTodas } from '../components/Pesta
 import { SavedTourCard } from '../components/SavedTourCard'
 import { AvisoVacio } from '../components/Seccion'
 import { TarjetaChicaDeLocal } from '../components/TarjetaChicaDeLocal'
+import { aLaResenia } from '../utils/aLaResenia'
 import { useAuth } from '../context/useAuth'
 import { useTitulo } from '../hooks/useTitulo'
 import type { BurgerJoint, ReseniaDePerfil, ProfileStats, SavedTour } from '../types'
@@ -159,6 +160,7 @@ export function Profile() {
                         foto={r.photoUrl}
                         nota={r.score}
                         detalle={fechaYHora(r.createdAt)}
+                        a={aLaResenia(r.burgerJointId, r.id)}
                       />
                     </li>
                   ))}
