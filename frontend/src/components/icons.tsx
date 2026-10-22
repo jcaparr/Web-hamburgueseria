@@ -183,3 +183,24 @@ export function IconReaccionar({ size = 18, className }: IconProps) {
     </svg>
   )
 }
+
+/** Instagram: la cámara con su visor y el punto del flash. */
+export function IconInstagram({ size = 20, className }: IconProps) {
+  return (
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.2" cy="6.8" r="0.6" fill="currentColor" />
+    </svg>
+  )
+}
+
+/** TikTok: la nota musical con su colita. */
+export function IconTikTok({ size = 20, className }: IconProps) {
+  return (
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M14 3.5v11.2a3.7 3.7 0 1 1-3.7-3.7" />
+      <path d="M14 3.5c.3 2.4 1.9 4 4.5 4.2" />
+    </svg>
+  )
+}

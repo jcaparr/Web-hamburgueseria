@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
+import { PieDeLaPagina } from './components/PieDeLaPagina'
 import { RequireAuth } from './components/RequireAuth'
 import { TopBar } from './components/TopBar'
 import { AuthProvider } from './context/AuthContext'
@@ -48,7 +49,7 @@ export default function App() {
           <main
             id="contenido"
             tabIndex={-1}
-            className="mx-auto w-full max-w-[480px] flex-1 pb-[calc(4.5rem_+_env(safe-area-inset-bottom))] focus:outline-none md:max-w-[75rem] md:px-6 md:pb-8 md:pt-6"
+            className="mx-auto w-full max-w-[480px] flex-1 focus:outline-none md:max-w-[75rem] md:px-6 md:pb-8 md:pt-6"
           >
             <Routes>
               <Route path="/" element={<Explore />} />
@@ -78,6 +79,7 @@ export default function App() {
               <Route path="*" element={<NoEncontrada />} />
             </Routes>
           </main>
+          <PieDeLaPagina />
           <BottomNav />
         </div>
       </BrowserRouter>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { CuentasBloqueadas } from './CuentasBloqueadas'
 import { IconSettings } from './icons'
+import { LinksDeRedes } from './LinksDeRedes'
 import { MostrarMisListas } from './MostrarMisListas'
 import { PanelDeBarra } from './PanelDeBarra'
 import { SelectorDeTema } from './SelectorDeTema'
@@ -28,6 +29,10 @@ export function PanelDeAjustes() {
       {armado && (
         <div className="flex flex-col gap-1">
           <SelectorDeTema />
+          <div className="px-2">
+            <h3 className="text-sm font-semibold">Seguinos</h3>
+            <LinksDeRedes className="-mx-3" />
+          </div>
           {user ? (
             <>
               <MostrarMisListas />
