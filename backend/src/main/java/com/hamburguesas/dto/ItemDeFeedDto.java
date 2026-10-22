@@ -19,6 +19,8 @@ public record ItemDeFeedDto(
     /** La hamburguesa de su avatar, o null si no eligió ninguna. */
     String autorHamburguesa,
     Long burgerJointId,
+    /** La dirección linda del local (#305), o null si aún no tiene. */
+    String slug,
     String burgerJointName,
     String photoUrl,
     String area,
@@ -48,24 +50,25 @@ public record ItemDeFeedDto(
      * con una consulta para toda la página.
      */
     public ItemDeFeedDto(Long ratingId, Long autorId, String autorUsername, String autorHamburguesa,
-                         Long burgerJointId, String burgerJointName, String photoUrl, String area,
+                         Long burgerJointId, String slug, String burgerJointName, String photoUrl,
+                         String area,
                          Double promedioDelLocal, Integer score, String comment, String portada,
                          Instant createdAt, boolean editada) {
-        this(ratingId, autorId, autorUsername, autorHamburguesa, burgerJointId, burgerJointName,
-            photoUrl, area, promedioDelLocal, score, comment,
+        this(ratingId, autorId, autorUsername, autorHamburguesa, burgerJointId, slug,
+            burgerJointName, photoUrl, area, promedioDelLocal, score, comment,
             portada == null ? List.of() : List.of(portada), createdAt, editada,
             ReaccionesDto.NINGUNA);
     }
 
     public ItemDeFeedDto conFotos(List<String> fotos) {
         return new ItemDeFeedDto(ratingId, autorId, autorUsername, autorHamburguesa, burgerJointId,
-            burgerJointName, photoUrl, area, promedioDelLocal, score, comment, fotos, createdAt,
+            slug, burgerJointName, photoUrl, area, promedioDelLocal, score, comment, fotos, createdAt,
             editada, reacciones);
     }
 
     public ItemDeFeedDto conReacciones(ReaccionesDto nuevas) {
         return new ItemDeFeedDto(ratingId, autorId, autorUsername, autorHamburguesa, burgerJointId,
-            burgerJointName, photoUrl, area, promedioDelLocal, score, comment, fotosDeLaResenia,
+            slug, burgerJointName, photoUrl, area, promedioDelLocal, score, comment, fotosDeLaResenia,
             createdAt, editada, nuevas);
     }
 }

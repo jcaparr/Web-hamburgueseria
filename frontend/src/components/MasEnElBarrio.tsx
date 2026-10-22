@@ -52,6 +52,7 @@ export function MasEnElBarrio({ barrio, sinEste }: { barrio: string | null; sinE
           <LugarEnLaFila key={local.id}>
             <TarjetaChicaDeLocal
               id={local.id}
+              slug={local.slug}
               nombre={local.name}
               foto={local.photoUrl}
               nota={local.averageScore}

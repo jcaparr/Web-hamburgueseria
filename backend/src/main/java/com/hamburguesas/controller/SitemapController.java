@@ -45,8 +45,9 @@ public class SitemapController {
         for (String camino : FIJAS) {
             url(xml, camino);
         }
-        for (Long id : burgerJointRepository.idsDeTodos()) {
-            url(xml, "/burger-joints/" + id);
+        for (Object[] fila : burgerJointRepository.idsYSlugs()) {
+            // La dirección linda si ya la tiene; si no, la de siempre (#305).
+            url(xml, fila[1] != null ? "/" + fila[1] : "/burger-joints/" + fila[0]);
         }
         xml.append("</urlset>\n");
 

@@ -156,11 +156,12 @@ export function Profile() {
                     <li key={r.id}>
                       <TarjetaChicaDeLocal
                         id={r.burgerJointId}
+                        slug={r.slug}
                         nombre={r.burgerJointName}
                         foto={r.photoUrl}
                         nota={r.score}
                         detalle={fechaYHora(r.createdAt)}
-                        a={aLaResenia(r.burgerJointId, r.id)}
+                        a={aLaResenia({ id: r.burgerJointId, slug: r.slug }, r.id)}
                       />
                     </li>
                   ))}
@@ -180,7 +181,7 @@ export function Profile() {
                 <GrillaDeLocales>
                   {favorites.slice(0, CUANTAS_EN_LA_GRILLA).map((b) => (
                     <li key={b.id}>
-                      <TarjetaChicaDeLocal id={b.id} nombre={b.name} foto={b.photoUrl} nota={b.averageScore} />
+                      <TarjetaChicaDeLocal id={b.id} slug={b.slug} nombre={b.name} foto={b.photoUrl} nota={b.averageScore} />
                     </li>
                   ))}
                 </GrillaDeLocales>

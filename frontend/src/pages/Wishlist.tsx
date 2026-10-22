@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { rutaDelLocal } from '../utils/rutaDelLocal'
 import { apiClient } from '../api/client'
 import { IconHeart, IconPin } from '../components/icons'
 import { LoadError } from '../components/LoadError'
@@ -56,7 +57,7 @@ export function Wishlist() {
         {items.map((b) => (
           <li key={b.id} className="tarjeta">
             <div className="flex items-center gap-3 p-3 pb-0">
-              <Link to={`/burger-joints/${b.id}`} className="flex flex-1 items-center gap-3 overflow-hidden">
+              <Link to={rutaDelLocal(b)} className="flex flex-1 items-center gap-3 overflow-hidden">
                 <JointPhoto
                   src={b.photoUrl}
                   name={b.name}

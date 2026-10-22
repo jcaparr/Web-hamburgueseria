@@ -22,9 +22,19 @@ public interface BurgerJointRepository
     /** Los que todavía no tienen foto, para completarlas en la próxima sincronización. */
     List<BurgerJoint> findByPhotoUrlIsNull();
 
+    Optional<BurgerJoint> findBySlug(String slug);
+
+    /** Los que todavía no tienen su dirección linda (#305). */
+    List<BurgerJoint> findBySlugIsNull();
+
+    /** Los slugs ya usados, para no repetir uno al armar los nuevos. */
+    @Query("select b.slug from BurgerJoint b where b.slug is not null")
+    List<String> slugsEnUso();
+
     /** Todos los locales, para el mapa del sitio: cada uno tiene su ficha pública. */
-    @Query("select b.id from BurgerJoint b order by b.id")
-    List<Long> idsDeTodos();
+    /** Id y slug de cada local, para el mapa del sitio (el slug es nulo si falta armarlo). */
+    @Query("select b.id, b.slug from BurgerJoint b order by b.id")
+    List<Object[]> idsYSlugs();
 
     /**
      * Los locales a los que todavía no les preguntamos cuántas fotos tiene Google.

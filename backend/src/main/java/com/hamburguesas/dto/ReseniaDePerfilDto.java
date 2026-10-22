@@ -5,6 +5,7 @@ import java.time.Instant;
 public record ReseniaDePerfilDto(
     Long id,
     Long burgerJointId,
+    String slug,
     String burgerJointName,
     String photoUrl,
     Integer score,

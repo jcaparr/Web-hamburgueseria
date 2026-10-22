@@ -75,6 +75,7 @@ class FeedQueryTest {
         return burgerJointRepository.findByPlaceId("place-del-test-de-feed")
             .orElseGet(() -> burgerJointRepository.save(BurgerJoint.builder()
                 .name("Un local").address("Una calle 123").area("Palermo")
+                .slug("un-local-del-test-de-feed")
                 .placeId("place-del-test-de-feed").build()));
     }
 
@@ -96,6 +97,8 @@ class FeedQueryTest {
             assertThat(item.burgerJointName()).isEqualTo("Un local");
             assertThat(item.area()).isEqualTo("Palermo");
             assertThat(item.score()).isEqualTo(4);
+            // La dirección linda del local viaja con la reseña, para enlazar sin pedirla (#305).
+            assertThat(item.slug()).isEqualTo(local.getSlug());
         });
     }
 

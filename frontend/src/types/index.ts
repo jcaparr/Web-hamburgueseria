@@ -1,5 +1,7 @@
 export interface BurgerJoint {
   id: number
+  /** La dirección linda (burgometro.com.ar/slug); nulo si todavía no se la armaron (#305). */
+  slug: string | null
   /** El identificador del local en Google, para abrir su ficha en Maps. */
   placeId: string | null
   name: string
@@ -98,6 +100,8 @@ export interface Notificacion {
   loSigo: boolean
   reaccion: TipoDeReaccion | null
   localId: number | null
+  /** La dirección linda del local de la reseña (#305); nulo si aún no la tiene. */
+  localSlug: string | null
   localNombre: string | null
 }
 
@@ -157,6 +161,8 @@ export interface Horario {
 
 export interface RankingItem {
   burgerJointId: number
+  /** La dirección linda del local (#305); nula si aún no la tiene. */
+  slug: string | null
   placeId: string | null
   name: string
   address: string
@@ -207,6 +213,8 @@ export interface ProfileStats {
 export interface ReseniaDePerfil {
   id: number
   burgerJointId: number
+  /** La dirección linda del local (#305); nula si aún no la tiene. */
+  slug: string | null
   burgerJointName: string
   photoUrl: string | null
   score: number
@@ -246,6 +254,8 @@ export interface ItemDeFeed {
   autorUsername: string
   autorHamburguesa: string | null
   burgerJointId: number
+  /** La dirección linda del local (#305); nula si aún no la tiene. */
+  slug: string | null
   burgerJointName: string
   photoUrl: string | null
   area: string | null

@@ -19,7 +19,7 @@ export function ListaDeReseniasDePerfil({ resenias }: { resenias: ReseniaDePerfi
       {resenias.map((r) => (
         <li key={r.id}>
           <Link
-            to={aLaResenia(r.burgerJointId, r.id)}
+            to={aLaResenia({ id: r.burgerJointId, slug: r.slug }, r.id)}
             className="flex flex-col gap-2 tarjeta p-3 transition-shadow hover:tarjeta-alzada"
           >
             <span className="flex items-center gap-3">

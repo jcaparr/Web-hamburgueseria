@@ -1,3 +1,4 @@
+import { rutaDelLocal } from '../utils/rutaDelLocal'
 import { Link } from 'react-router-dom'
 import type { BurgerJoint } from '../types'
 import { shortAddress } from '../utils/address'
@@ -35,7 +36,7 @@ export function TarjetaDeLocal({
           (4:3 también en el teléfono): es lo que hace que alguien quiera ir, y en 16:10
           ocupaba menos de la mitad de la tarjeta. */}
       <Link
-        to={`/burger-joints/${local.id}`}
+        to={rutaDelLocal(local)}
         onClick={onAbrir}
         className="flex h-full flex-col rounded-box p-1.5 focus-visible:-outline-offset-2"
       >

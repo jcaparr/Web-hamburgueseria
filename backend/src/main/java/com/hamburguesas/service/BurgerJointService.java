@@ -59,6 +59,12 @@ public class BurgerJointService {
         return fichaDeLocal.para(burgerJoint, userId);
     }
 
+    public BurgerJointDto getPorSlug(String slug, Long userId) {
+        BurgerJoint burgerJoint = burgerJointRepository.findBySlug(slug)
+            .orElseThrow(() -> new ResourceNotFoundException("Burger joint not found"));
+        return fichaDeLocal.para(burgerJoint, userId);
+    }
+
     /**
      * El horario del local, aparte de su ficha.
      *

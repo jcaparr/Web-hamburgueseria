@@ -7,6 +7,7 @@ import { TopBar } from './components/TopBar'
 import { AuthProvider } from './context/AuthContext'
 import { ArmarHamburguesa } from './pages/ArmarHamburguesa'
 import { BurgerJointDetail } from './pages/BurgerJointDetail'
+import { FichaPorSlug } from './pages/FichaPorSlug'
 import { Explore } from './pages/Explore'
 import { Feed } from './pages/Feed'
 import { GenteDeUnPerfil } from './pages/GenteDeUnPerfil'
@@ -76,6 +77,10 @@ export default function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/terminos" element={<Terminos />} />
               <Route path="/privacidad" element={<Privacidad />} />
+              {/* La dirección linda de un local, burgometro.com.ar/<slug> (#305). Última de
+                  las de un tramo: las pantallas de arriba ganan, y SlugsDeLocales no le da
+                  a ningún local el nombre de una. */}
+              <Route path="/:slug" element={<FichaPorSlug />} />
               <Route path="*" element={<NoEncontrada />} />
             </Routes>
           </main>

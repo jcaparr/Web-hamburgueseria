@@ -12,6 +12,7 @@ import { useTitulo } from '../hooks/useTitulo'
 import type { PageResponse, RankingItem } from '../types'
 import { shortAddress } from '../utils/address'
 import { nota } from '../utils/numeros'
+import { rutaDelLocal } from '../utils/rutaDelLocal'
 
 type Vista = 'nota' | 'resenias' | 'mio'
 
@@ -180,7 +181,7 @@ function PrimerPuesto({ puesto }: { puesto: Puesto }) {
   const { item, nota, detalle } = puesto
   return (
     <Link
-      to={`/burger-joints/${item.burgerJointId}`}
+      to={rutaDelLocal({ id: item.burgerJointId, slug: item.slug })}
       className="flex flex-col overflow-hidden tarjeta transition-shadow hover:tarjeta-alzada"
     >
       <div className="relative">
@@ -228,7 +229,7 @@ function FilaDelRanking({ puesto }: { puesto: Puesto }) {
   const { item, posicion, nota, detalle } = puesto
   return (
     <Link
-      to={`/burger-joints/${item.burgerJointId}`}
+      to={rutaDelLocal({ id: item.burgerJointId, slug: item.slug })}
       className="-mx-2 flex items-center gap-3 rounded-field px-2 py-3 transition-colors hover:bg-base-100"
     >
       {/* El segundo y el tercero en kétchup, como el podio que les falta: el primero

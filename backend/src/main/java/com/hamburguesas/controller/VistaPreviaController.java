@@ -61,17 +61,29 @@ public class VistaPreviaController {
         this.sitio = sitio.replaceAll("/+$", "");
     }
 
+    /** Para los enlaces viejos, con el id. */
     @GetMapping("/{id}/vista-previa")
     public ResponseEntity<String> vistaPrevia(@PathVariable Long id) {
+        return armar(burgerJointRepository.findById(id).orElse(null));
+    }
+
+    /** Para los enlaces lindos, burgometro.com.ar/<slug> (#305). */
+    @GetMapping("/por-slug/{slug}/vista-previa")
+    public ResponseEntity<String> vistaPreviaPorSlug(@PathVariable String slug) {
+        return armar(burgerJointRepository.findBySlug(slug).orElse(null));
+    }
+
+    private ResponseEntity<String> armar(BurgerJoint local) {
         // Un 404 pelado y no la excepción de siempre: esa responde JSON, y un lector que
         // pide solo text/html lo transformaba en un 500.
-        BurgerJoint local = burgerJointRepository.findById(id).orElse(null);
         if (local == null) {
             return ResponseEntity.notFound().build();
         }
         var ficha = fichaDeLocal.para(local, null);
 
-        String enlace = sitio + "/burger-joints/" + id;
+        // Con el slug si ya lo tiene: es la dirección que se comparte ahora.
+        String enlace = sitio + (local.getSlug() != null
+            ? "/" + local.getSlug() : "/burger-joints/" + local.getId());
         String descripcion = descripcion(local.getName(), local.getArea(),
             ficha.averageScore(), ficha.ratingsCount());
         String imagen = sitio + imagenDe(local);
@@ -94,7 +106,7 @@ public class VistaPreviaController {
             <meta property="og:url" content="%3$s">
             <meta property="og:image" content="%4$s">
             <meta property="og:image:alt" content="Foto de %1$s">
-            <meta name="twitter:card" content="summary_large_image">
+            <meta name="twitter:card" content="summary">
             <meta name="twitter:title" content="%1$s">
             <meta name="twitter:description" content="%2$s">
             <meta name="twitter:image" content="%4$s">

@@ -30,8 +30,14 @@ const ABRIR_OPINION = 'opinar'
 /** Cómo se marca la reseña a la que se llegó por el ancla (#260), mientras se la busca con la vista. */
 const RESALTADA = ['outline-2', 'outline-offset-4', 'outline-primary']
 
-export function BurgerJointDetail() {
-  const { id } = useParams()
+/**
+ * @param idDelLocal el id cuando la ficha se abre por su dirección linda (/<slug>), que
+ *   ya lo resolvió; sin él, sale de /burger-joints/:id.
+ */
+export function BurgerJointDetail({ idDelLocal }: { idDelLocal?: string }) {
+  const params = useParams()
+  const id = idDelLocal ?? params.id
+  const llegoPorId = idDelLocal === undefined
   const { user } = useAuth()
   const navigate = useNavigate()
   const [parametros, setParametros] = useSearchParams()
@@ -61,6 +67,14 @@ export function BurgerJointDetail() {
   useDescripcion(burgerJoint ? descripcionDe(burgerJoint) : null)
   useDatosEstructurados(burgerJoint ? restauranteDe(burgerJoint, horario, window.location.origin) : null)
   useNoIndexar(isNotFound(loadError))
+
+  // Un enlace viejo (con el id) pasa a la dirección linda, con lo que traía (#305).
+  // replace: "atrás" no vuelve al enlace viejo ni queda en un bucle.
+  useEffect(() => {
+    if (llegoPorId && burgerJoint?.slug) {
+      navigate(`/${burgerJoint.slug}${location.search}${location.hash}`, { replace: true })
+    }
+  }, [llegoPorId, burgerJoint, navigate, location.search, location.hash])
 
   function load() {
     // Juntas: si cualquiera de las dos falla, la página no está completa. Antes cada

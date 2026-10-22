@@ -69,6 +69,12 @@ public class BurgerJointController {
         return burgerJointService.get(id, CurrentUser.idOrNull());
     }
 
+    /** La ficha por su dirección linda (#305): la web la usa para abrir burgometro.com.ar/<slug>. */
+    @GetMapping("/por-slug/{slug}")
+    public BurgerJointDto getPorSlug(@PathVariable String slug) {
+        return burgerJointService.getPorSlug(slug, CurrentUser.idOrNull());
+    }
+
     /** Público como el resto del local: el horario se mira sin cuenta. */
     @GetMapping("/{id}/horario")
     public HorarioDto horario(@PathVariable Long id) {

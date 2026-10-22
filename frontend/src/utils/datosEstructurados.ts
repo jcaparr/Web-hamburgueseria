@@ -1,4 +1,5 @@
 import type { BurgerJoint, Horario } from '../types'
+import { rutaDelLocal } from './rutaDelLocal'
 import { nota } from './numeros'
 import { shortAddress } from './address'
 
@@ -25,7 +26,7 @@ export function restauranteDe(local: BurgerJoint, horario: Horario | null, orige
     '@context': 'https://schema.org',
     '@type': 'Restaurant',
     name: local.name,
-    url: `${origen}/burger-joints/${local.id}`,
+    url: `${origen}${rutaDelLocal(local)}`,
     servesCuisine: 'Hamburguesas',
     ...(local.photoUrl ? { image: `${origen}${local.photoUrl}` } : {}),
     address: {

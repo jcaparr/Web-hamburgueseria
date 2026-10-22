@@ -58,6 +58,15 @@ public class BurgerJoint {
         return valor == null ? null : Texto.paraComparar(valor);
     }
 
+    /**
+     * La dirección del local en la web: burgometro.com.ar/<slug> (#305).
+     *
+     * Se arma una vez y no cambia aunque cambie el nombre, para que un enlace ya
+     * compartido siga andando. Nulo hasta que SlugsDeLocales se lo arma.
+     */
+    @Column(name = "slug", length = 160)
+    private String slug;
+
     @Column(nullable = false, length = 250)
     private String address;
 

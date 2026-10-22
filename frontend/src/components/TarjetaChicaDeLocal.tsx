@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { JointPhoto } from './JointPhoto'
 import { ScoreBadge } from './ScoreBadge'
+import { rutaDelLocal } from '../utils/rutaDelLocal'
 
 /**
  * Una hamburguesería en chico: la foto, el nombre y la nota.
@@ -17,6 +18,7 @@ import { ScoreBadge } from './ScoreBadge'
  */
 export function TarjetaChicaDeLocal({
   id,
+  slug,
   nombre,
   foto,
   nota,
@@ -24,6 +26,7 @@ export function TarjetaChicaDeLocal({
   a,
 }: {
   id: number
+  slug?: string | null
   nombre: string
   foto: string | null
   nota: number | null
@@ -32,7 +35,7 @@ export function TarjetaChicaDeLocal({
 }) {
   return (
     <Link
-      to={a ?? `/burger-joints/${id}`}
+      to={a ?? rutaDelLocal({ id, slug: slug ?? null })}
       className="flex h-full flex-col overflow-hidden tarjeta transition-shadow hover:tarjeta-alzada focus-visible:-outline-offset-2"
     >
       <JointPhoto src={foto} name={nombre} className="aspect-[4/3] w-full object-cover" />

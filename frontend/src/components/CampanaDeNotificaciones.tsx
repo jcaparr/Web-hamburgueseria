@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { rutaDelLocal } from '../utils/rutaDelLocal'
 import { apiClient } from '../api/client'
 import type { Buzon, Notificacion } from '../types'
 import { reaccion } from '../utils/reacciones'
@@ -190,9 +191,13 @@ function ReaccionA({ aviso }: { aviso: Notificacion }) {
         </>
       )}{' '}
       a tu reseña de{' '}
-      <Link to={`/burger-joints/${aviso.localId}`} className="font-semibold hover:underline">
-        {aviso.localNombre}
-      </Link>
+      {aviso.localId !== null ? (
+        <Link to={rutaDelLocal({ id: aviso.localId, slug: aviso.localSlug })} className="font-semibold hover:underline">
+          {aviso.localNombre}
+        </Link>
+      ) : (
+        aviso.localNombre
+      )}
     </>
   )
 }

@@ -2,6 +2,7 @@ package com.hamburguesas.dto;
 
 public record RankingItemDto(
     Long burgerJointId,
+    String slug,
     /** Ver el comentario en BurgerJointDto: sirve para abrir la ficha en Maps. */
     String placeId,
     String name,
