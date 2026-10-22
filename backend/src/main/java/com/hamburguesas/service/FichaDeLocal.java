@@ -70,7 +70,7 @@ public class FichaDeLocal {
             .map(local -> {
                 NotaDeLocalDto nota = notas.get(local.getId());
                 return new BurgerJointDto(
-                    local.getId(), local.getPlaceId(), local.getName(), local.getAddress(),
+                    local.getId(), local.getSlug(), local.getPlaceId(), local.getName(), local.getAddress(),
                     local.getArea(), local.getPhotoUrl(), local.getLatitude(), local.getLongitude(),
                     nota == null ? null : nota.promedio(),
                     nota == null ? 0L : nota.cuantas(),

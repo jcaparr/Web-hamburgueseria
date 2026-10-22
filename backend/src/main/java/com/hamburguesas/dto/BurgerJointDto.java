@@ -2,6 +2,8 @@ package com.hamburguesas.dto;
 
 public record BurgerJointDto(
     Long id,
+    /** La dirección linda del local (burgometro.com.ar/slug); nulo si todavía no se la armaron. */
+    String slug,
     /**
      * El identificador del local en Google. Es público —viaja en cualquier enlace a
      * Maps— y es lo que permite abrir la ficha del local en vez de un pin sin nombre.

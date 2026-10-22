@@ -66,6 +66,20 @@
 		reverse_proxy backend:8080
 	}
 
+	# Lo mismo para la dirección linda, burgometro.com.ar/<slug> (#305). Un solo tramo
+	# de letras, números y guiones, salvo las pantallas de la app: esas siguen siendo la
+	# app. La lista es la de SlugsDeLocales.RESERVADAS (un test las compara). Un slug
+	# que no existe da 404 en el backend.
+	@vistaprevia_slug {
+		path_regexp slug ^/([a-z0-9][a-z0-9-]*)/?$
+		not path_regexp reservada ^/(api|assets|e|u|cadenas|burger-joints|ranking|tour|buscar|feed|profile|reviews|wishlist|login|register|verify-email|forgot-password|terminos|privacidad)/?$
+		header_regexp ua User-Agent (?i)(whatsapp|facebookexternalhit|facebot|meta-externalagent|twitterbot|telegrambot|slackbot|discordbot|linkedinbot|skypeuripreview|pinterest|redditbot)
+	}
+	handle @vistaprevia_slug {
+		rewrite * /api/burger-joints/por-slug/{re.slug.1}/vista-previa
+		reverse_proxy backend:8080
+	}
+
 	handle {
 		root * /srv
 		# Hashed asset filenames change on every build, so they can be cached forever.

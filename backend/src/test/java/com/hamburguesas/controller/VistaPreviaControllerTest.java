@@ -36,7 +36,7 @@ class VistaPreviaControllerTest {
             .photoUrl(fotoUrl).build();
         when(repo.findById(7L)).thenReturn(Optional.of(local));
         when(ficha.para(any(BurgerJoint.class), any())).thenReturn(new BurgerJointDto(
-            7L, "p", nombre, "Honduras 5509", "Palermo", fotoUrl, null, null, promedio, cuantas, false));
+            7L, null, "p", nombre, "Honduras 5509", "Palermo", fotoUrl, null, null, promedio, cuantas, false));
         return controlador.vistaPrevia(7L).getBody();
     }
 
@@ -57,7 +57,21 @@ class VistaPreviaControllerTest {
             .contains("content=\"Nota 4,5 de 5 con 12 reseñas en Burgómetro. Palermo.\"")
             .contains("<meta property=\"og:image\" content=\"https://burgometro.com.ar/api/place-photos/abc.jpg?v=1\">")
             .contains("<meta property=\"og:url\" content=\"https://burgometro.com.ar/burger-joints/7\">")
-            .contains("<meta name=\"twitter:card\" content=\"summary_large_image\">");
+            .contains("<meta name=\"twitter:card\" content=\"summary\">");
+    }
+
+    @Test
+    void porSlugUsaLaDireccionLinda() {
+        BurgerJoint local = BurgerJoint.builder().id(7L).slug("la-birra-bar").name("La Birra Bar")
+            .area("Palermo").build();
+        when(repo.findBySlug("la-birra-bar")).thenReturn(Optional.of(local));
+        when(ficha.para(any(BurgerJoint.class), any())).thenReturn(new BurgerJointDto(
+            7L, "la-birra-bar", "p", "La Birra Bar", "Honduras 5509", "Palermo", null, null, null, null, 0L, false));
+
+        String html = controlador.vistaPreviaPorSlug("la-birra-bar").getBody();
+
+        assertThat(html).contains("<meta property=\"og:url\" content=\"https://burgometro.com.ar/la-birra-bar\">");
+        assertThat(controlador.vistaPreviaPorSlug("no-existe").getStatusCode().value()).isEqualTo(404);
     }
 
     @Test

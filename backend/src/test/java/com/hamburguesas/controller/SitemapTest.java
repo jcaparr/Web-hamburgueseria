@@ -12,15 +12,15 @@ import static org.mockito.Mockito.when;
 /** El mapa del sitio que leen los buscadores. */
 class SitemapTest {
 
-    private String sitemap(String sitio, List<Long> ids) {
+    private String sitemap(String sitio, List<Object[]> ids) {
         BurgerJointRepository repo = mock(BurgerJointRepository.class);
-        when(repo.idsDeTodos()).thenReturn(ids);
+        when(repo.idsYSlugs()).thenReturn(ids);
         return new SitemapController(repo, sitio).sitemap().getBody();
     }
 
     @Test
     void tieneLasPaginasPublicasYLaFichaDeCadaLocal() {
-        String xml = sitemap("https://burgometro.com.ar", List.of(9L, 42L));
+        String xml = sitemap("https://burgometro.com.ar", List.of(new Object[]{9L, null}, new Object[]{42L, "la-birra-bar"}));
 
         assertThat(xml)
             .startsWith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
@@ -29,7 +29,7 @@ class SitemapTest {
             .contains("<loc>https://burgometro.com.ar/tour</loc>")
             .contains("<loc>https://burgometro.com.ar/privacidad</loc>")
             .contains("<loc>https://burgometro.com.ar/burger-joints/9</loc>")
-            .contains("<loc>https://burgometro.com.ar/burger-joints/42</loc>")
+            .contains("<loc>https://burgometro.com.ar/la-birra-bar</loc>")
             .endsWith("</urlset>\n");
     }
 
@@ -43,7 +43,7 @@ class SitemapTest {
 
     @Test
     void unaBarraDeMasEnLaConfiguracionNoDuplicaLasBarras() {
-        String xml = sitemap("https://burgometro.com.ar/", List.of(9L));
+        String xml = sitemap("https://burgometro.com.ar/", java.util.Collections.singletonList(new Object[]{9L, null}));
 
         assertThat(xml)
             .contains("<loc>https://burgometro.com.ar/burger-joints/9</loc>")

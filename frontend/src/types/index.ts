@@ -1,5 +1,7 @@
 export interface BurgerJoint {
   id: number
+  /** La dirección linda (burgometro.com.ar/slug); nulo si todavía no se la armaron (#305). */
+  slug: string | null
   /** El identificador del local en Google, para abrir su ficha en Maps. */
   placeId: string | null
   name: string

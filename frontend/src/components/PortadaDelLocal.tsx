@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { BurgerJoint } from '../types'
+import { rutaDelLocal } from '../utils/rutaDelLocal'
 import { BotonSobreFoto } from './BotonSobreFoto'
 import { IconArrowLeft, IconHeart, IconShare } from './icons'
 import { JointPhoto } from './JointPhoto'
@@ -39,7 +40,7 @@ export function PortadaDelLocal({
   }
 
   async function compartir() {
-    const url = `${window.location.origin}/burger-joints/${local.id}`
+    const url = `${window.location.origin}${rutaDelLocal(local)}`
     if (navigator.share) {
       try {
         await navigator.share({ title: local.name, text: `${local.name} en Burgómetro`, url })
