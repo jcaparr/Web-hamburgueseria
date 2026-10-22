@@ -1,4 +1,5 @@
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { rutaDelLocal } from '../utils/rutaDelLocal'
 import { apiClient } from '../api/client'
 import { IconArrowLeft, IconChevronRight } from '../components/icons'
 import { LoadError } from '../components/LoadError'
@@ -114,7 +115,7 @@ function Grupo({ titulo, cadena, sucursales, chico = false }: {
         {sucursales.map((sucursal) => (
           <li key={sucursal.id}>
             <Link
-              to={`/burger-joints/${sucursal.id}`}
+              to={rutaDelLocal(sucursal)}
               className="list-row items-center rounded-box hover:bg-base-200 focus-visible:-outline-offset-2"
             >
               {/* list-col-grow: sin esto el renglón estira la segunda columna, y la flecha

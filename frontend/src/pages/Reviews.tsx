@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { rutaDelLocal } from '../utils/rutaDelLocal'
 import { apiClient } from '../api/client'
 import { IconPencil } from '../components/icons'
 import { LoadError } from '../components/LoadError'
@@ -47,7 +48,7 @@ export function Reviews() {
       <ul className="flex flex-col gap-3">
         {ratings.map((r) => (
           <li key={r.id} className="tarjeta p-3">
-            <Link to={aLaResenia(r.burgerJointId, r.id)} className="flex items-center gap-3">
+            <Link to={aLaResenia({ id: r.burgerJointId, slug: r.slug }, r.id)} className="flex items-center gap-3">
               <JointPhoto
                 src={r.photoUrl}
                 name={r.burgerJointName}
@@ -63,7 +64,7 @@ export function Reviews() {
             {/* Lleva a la ficha del local con la ventana de reseñar ya abierta. Editar
                 era: entrar al local y bajar a buscar el formulario. */}
             <Link
-              to={`/burger-joints/${r.burgerJointId}?opinar=1`}
+              to={`${rutaDelLocal({ id: r.burgerJointId, slug: r.slug })}?opinar=1`}
               className="btn btn-ghost btn-sm mt-2 gap-1.5 text-base-content/70"
             >
               <IconPencil size={14} />

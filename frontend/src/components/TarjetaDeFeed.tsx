@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { rutaDelLocal } from '../utils/rutaDelLocal'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
 import { FotosDeResenia } from './FotosDeResenia'
 import { IconPin } from './icons'
@@ -24,11 +25,11 @@ import type { ItemDeFeed } from '../types'
  * tarjeta que lleve a un solo lado obliga a volver atrás para la otra.
  */
 export function TarjetaDeFeed({ item, esMia }: { item: ItemDeFeed; esMia: boolean }) {
-  const aLaFicha = `/burger-joints/${item.burgerJointId}`
+  const aLaFicha = rutaDelLocal({ id: item.burgerJointId, slug: item.slug })
   const alPerfil = `/u/${item.autorUsername}`
   // Las fotos son la reseña: tocarlas lleva a esa reseña en la ficha, y el nombre del
   // local, al principio de la ficha (#260).
-  const aEstaResenia = aLaResenia(item.burgerJointId, item.ratingId)
+  const aEstaResenia = aLaResenia({ id: item.burgerJointId, slug: item.slug }, item.ratingId)
 
   return (
     <article className="overflow-hidden tarjeta">

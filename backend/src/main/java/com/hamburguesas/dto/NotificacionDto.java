@@ -15,6 +15,7 @@ import java.time.Instant;
  *                   seguir de vuelta
  * @param reaccion   solo en una reacción: cuál
  * @param localId    solo en una reacción: el local de la reseña, para llevar a su ficha
+ * @param localSlug  solo en una reacción: la dirección linda de ese local (#305), o null si aún no tiene
  * @param localNombre solo en una reacción
  */
 public record NotificacionDto(
@@ -27,6 +28,7 @@ public record NotificacionDto(
     boolean loSigo,
     TipoDeReaccion reaccion,
     Long localId,
+    String localSlug,
     String localNombre
 ) {
 

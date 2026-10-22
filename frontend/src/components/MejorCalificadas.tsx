@@ -50,6 +50,7 @@ export function MejorCalificadas() {
             <LugarEnLaFila key={local.burgerJointId}>
               <TarjetaChicaDeLocal
                 id={local.burgerJointId}
+                slug={local.slug}
                 nombre={local.name}
                 foto={local.photoUrl}
                 nota={local.averageScore}

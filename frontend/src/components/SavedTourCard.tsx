@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { rutaDelLocal } from '../utils/rutaDelLocal'
 import { IconRoute } from './icons'
 import { JointPhoto } from './JointPhoto'
 import type { SavedTour } from '../types'
@@ -59,7 +60,7 @@ export function SavedTourCard({
         {tour.paradas.map((parada) => (
           <li key={parada.local.id}>
             <Link
-              to={`/burger-joints/${parada.local.id}`}
+              to={rutaDelLocal(parada.local)}
               className="flex items-center gap-2 rounded-full bg-base-200 py-1 pl-1 pr-3"
             >
               <JointPhoto

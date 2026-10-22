@@ -5,6 +5,8 @@
  * había que buscarla entre las demás, y si era vieja ni siquiera estaba en la página.
  * El ancla dice cuál es; la ficha la trae si hace falta, baja hasta ella y la marca.
  */
+import { rutaDelLocal } from './rutaDelLocal'
+
 const PREFIJO = 'resenia-'
 
 /** El id del elemento de la reseña en la ficha. */
@@ -13,8 +15,8 @@ export function anclaDeResenia(ratingId: number) {
 }
 
 /** La dirección de la ficha, ya en esa reseña. */
-export function aLaResenia(burgerJointId: number, ratingId: number) {
-  return `/burger-joints/${burgerJointId}#${anclaDeResenia(ratingId)}`
+export function aLaResenia(local: { id: number; slug: string | null }, ratingId: number) {
+  return `${rutaDelLocal(local)}#${anclaDeResenia(ratingId)}`
 }
 
 /** La reseña que pide el ancla de la dirección, o null si no pide ninguna. */

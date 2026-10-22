@@ -58,37 +58,37 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
      */
     @Query("""
         select new com.hamburguesas.dto.RankingItemDto(
-            b.id, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude,
+            b.id, b.slug, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude,
             avg(r.score), count(r), null)
         from Rating r join r.burgerJoint b
         where (:area is null or b.area = :area)
           and b.fastFood = false
-        group by b.id, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude
+        group by b.id, b.slug, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude
         order by avg(r.score) desc, count(r) desc, b.name, b.id
         """)
     Page<RankingItemDto> rankingByScore(@Param("area") String area, Pageable pageable);
 
     @Query("""
         select new com.hamburguesas.dto.RankingItemDto(
-            b.id, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude,
+            b.id, b.slug, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude,
             avg(r.score), count(r), null)
         from Rating r join r.burgerJoint b
         where (:area is null or b.area = :area)
           and b.fastFood = false
-        group by b.id, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude
+        group by b.id, b.slug, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude
         order by count(r) desc, avg(r.score) desc, b.name, b.id
         """)
     Page<RankingItemDto> rankingByPopularity(@Param("area") String area, Pageable pageable);
 
     @Query("""
         select new com.hamburguesas.dto.RankingItemDto(
-            b.id, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude,
+            b.id, b.slug, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude,
             avg(r.score), count(r), max(case when r.user.id = :userId then r.score else null end))
         from Rating r join r.burgerJoint b
         where b.id in (
             select r2.burgerJoint.id from Rating r2 where r2.user.id = :userId
         )
-        group by b.id, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude
+        group by b.id, b.slug, b.placeId, b.name, b.address, b.area, b.photoUrl, b.latitude, b.longitude
         order by max(case when r.user.id = :userId then r.score else null end) desc, b.name, b.id
         """)
     Page<RankingItemDto> personalRanking(@Param("userId") Long userId, Pageable pageable);
@@ -188,7 +188,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
 
     @Query("""
         select new com.hamburguesas.dto.ReseniaDePerfilDto(
-            r.id, b.id, b.name, b.photoUrl, r.score, r.comment, r.createdAt)
+            r.id, b.id, b.slug, b.name, b.photoUrl, r.score, r.comment, r.createdAt)
         from Rating r join r.burgerJoint b
         where r.user.id = :userId
         order by r.createdAt desc
@@ -203,7 +203,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
      */
     @Query("""
         select new com.hamburguesas.dto.ReseniaDePerfilDto(
-            r.id, b.id, b.name, b.photoUrl, r.score, r.comment, r.createdAt)
+            r.id, b.id, b.slug, b.name, b.photoUrl, r.score, r.comment, r.createdAt)
         from Rating r join r.burgerJoint b
         where r.user.id = :userId
         order by r.createdAt desc
@@ -242,7 +242,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
      */
     @Query("""
         select new com.hamburguesas.dto.ItemDeFeedDto(
-            r.id, u.id, u.username, u.hamburguesa, b.id, b.name, b.photoUrl, b.area,
+            r.id, u.id, u.username, u.hamburguesa, b.id, b.slug, b.name, b.photoUrl, b.area,
             (select avg(otra.score) from Rating otra where otra.burgerJoint.id = b.id),
             r.score, r.comment, r.photoUrl, r.createdAt,
             case when r.updatedAt is not null then true else false end)
@@ -265,7 +265,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
      */
     @Query("""
         select new com.hamburguesas.dto.ItemDeFeedDto(
-            r.id, u.id, u.username, u.hamburguesa, b.id, b.name, b.photoUrl, b.area,
+            r.id, u.id, u.username, u.hamburguesa, b.id, b.slug, b.name, b.photoUrl, b.area,
             (select avg(otra.score) from Rating otra where otra.burgerJoint.id = b.id),
             r.score, r.comment, r.photoUrl, r.createdAt,
             case when r.updatedAt is not null then true else false end)

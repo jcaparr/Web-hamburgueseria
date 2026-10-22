@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { rutaDelLocal } from '../utils/rutaDelLocal'
 import type { SavedTour, Tour } from '../types'
 import { shortAddress } from '../utils/address'
 import { kilometros } from '../utils/numeros'
@@ -68,7 +69,7 @@ export function Recorrido({
               {parada.orden}
             </span>
 
-            <Link to={`/burger-joints/${parada.local.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+            <Link to={rutaDelLocal(parada.local)} className="flex min-w-0 flex-1 items-center gap-3">
               <figure className="h-14 w-14 flex-none overflow-hidden rounded-xl bg-base-200">
                 <JointPhoto
                   src={parada.local.photoUrl}

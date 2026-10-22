@@ -30,7 +30,7 @@ export function GuardadasDeOtraPersona({ username }: { username: string }) {
     <GrillaDeLocales>
       {pedido.datos.map((b) => (
         <li key={b.id}>
-          <TarjetaChicaDeLocal id={b.id} nombre={b.name} foto={b.photoUrl} nota={b.averageScore} />
+          <TarjetaChicaDeLocal id={b.id} slug={b.slug} nombre={b.name} foto={b.photoUrl} nota={b.averageScore} />
         </li>
       ))}
     </GrillaDeLocales>
