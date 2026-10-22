@@ -8,11 +8,11 @@ import { LinksDeRedes } from './LinksDeRedes'
  * (antes lo ponía el contenido de la página).
  */
 export function PieDeLaPagina() {
-  const enlace = 'inline-flex min-h-11 items-center rounded-field px-2 text-base-content/70 hover:text-base-content hover:underline md:px-3'
+  const enlace = 'inline-flex min-h-11 items-center rounded-field px-2 font-medium text-base-content/70 hover:text-primary md:px-3'
   return (
     <footer className="mx-auto flex w-full max-w-[480px] flex-col items-center border-t border-base-content/10 px-4 pb-[calc(4.5rem_+_env(safe-area-inset-bottom))] pt-3 md:max-w-[75rem] md:flex-row md:justify-between md:px-6 md:pb-4">
       <LinksDeRedes />
-      <nav aria-label="Legales" className="flex flex-wrap justify-center text-sm">
+      <nav aria-label="Legales" className="flex flex-wrap justify-center text-sm md:gap-2">
         <Link to="/terminos" className={enlace}>
           Términos y condiciones
         </Link>
