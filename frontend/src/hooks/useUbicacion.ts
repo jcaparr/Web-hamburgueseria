@@ -7,6 +7,9 @@ export interface Ubicacion {
 
 const CLAVE = 'ubicacion.actual'
 
+/** Cuánto se espera la respuesta del navegador antes de mostrar la lista sin ubicación. */
+const TOPE_DE_ESPERA_MS = 2_000
+
 /** Con tres decimales (unos 100 m) alcanza para ordenar por cercanía, y no mandamos más. */
 function redondeada(n: number) {
   return Math.round(n * 1000) / 1000
@@ -35,6 +38,10 @@ function guardada(): Ubicacion | null {
  * enseguida. Con el cartel del navegador en pantalla no se espera: la lista no puede
  * quedar tapada hasta que la persona decida.
  *
+ * La espera tiene un tope propio (#304): si el navegador no contesta —la app se abre con la
+ * pantalla en segundo plano, o el GPS está en frío— la lista no puede quedar sin pedirse.
+ * Pasado el tope sale por relevancia, y si la ubicación llega después, se reordena.
+ *
  * Negarse, o un navegador sin ubicación, es una respuesta válida: la lista sale por
  * relevancia, como antes.
  */
@@ -45,11 +52,13 @@ export function useUbicacion(): { ubicacion: Ubicacion | null; esperando: boolea
   useEffect(() => {
     if (ubicacion || !navigator.geolocation) return
     let vigente = true
+    let tope: ReturnType<typeof setTimeout> | undefined
 
     function pedir() {
       navigator.geolocation.getCurrentPosition(
         ({ coords }) => {
           if (!vigente) return
+          clearTimeout(tope)
           const encontrada = { lat: redondeada(coords.latitude), lon: redondeada(coords.longitude) }
           try {
             window.sessionStorage.setItem(CLAVE, JSON.stringify(encontrada))
@@ -60,6 +69,7 @@ export function useUbicacion(): { ubicacion: Ubicacion | null; esperando: boolea
           setEsperando(false)
         },
         () => {
+          clearTimeout(tope)
           if (vigente) setEsperando(false)
         },
         { timeout: 8_000, maximumAge: 5 * 60_000 },
@@ -73,7 +83,10 @@ export function useUbicacion(): { ubicacion: Ubicacion | null; esperando: boolea
       permisos
         .then((estado) => {
           if (!vigente || estado.state === 'denied') return
-          if (estado.state === 'granted') setEsperando(true)
+          if (estado.state === 'granted') {
+            setEsperando(true)
+            tope = setTimeout(() => setEsperando(false), TOPE_DE_ESPERA_MS)
+          }
           pedir()
         })
         .catch(() => {
@@ -83,6 +96,7 @@ export function useUbicacion(): { ubicacion: Ubicacion | null; esperando: boolea
 
     return () => {
       vigente = false
+      clearTimeout(tope)
     }
     // Solo al entrar: si la ubicación llega, el efecto no tiene nada más que hacer.
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -438,9 +438,10 @@ export function Explore() {
               </li>
             ))}
           </ul>
-        ) : loading ? (
+        ) : loading || esperandoUbicacion ? (
           // La forma de las tarjetas mientras llegan, la primera vez: con el texto
-          // "Buscando…" solo, la página quedaba vacía y después saltaba.
+          // "Buscando…" solo, la página quedaba vacía y después saltaba. También mientras
+          // se espera la ubicación, que no pide la lista todavía (#304).
           <ul aria-hidden="true" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
             {[0, 1, 2].map((n) => (
               <li key={n}>
