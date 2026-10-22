@@ -213,17 +213,6 @@ export function Profile() {
           )}
         </section>
       </div>
-
-      {/* Al pie, solo lo legal (#270): el tema, la privacidad y los bloqueados viven en la
-          tuerca de la barra, y cerrar sesión, en la barra también. */}
-      <nav aria-label="Legales" className="flex flex-wrap gap-x-5 border-t border-base-content/10 text-sm">
-        <Link to="/terminos" className="inline-flex min-h-11 items-center rounded-field text-base-content/70 hover:text-base-content hover:underline">
-          Términos y condiciones
-        </Link>
-        <Link to="/privacidad" className="inline-flex min-h-11 items-center rounded-field text-base-content/70 hover:text-base-content hover:underline">
-          Política de privacidad
-        </Link>
-      </nav>
     </div>
   )
 }
