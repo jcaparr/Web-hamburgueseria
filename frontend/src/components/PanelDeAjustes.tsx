@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { CuentasBloqueadas } from './CuentasBloqueadas'
 import { IconSettings } from './icons'
+import { LinksDeRedes } from './LinksDeRedes'
 import { MostrarMisListas } from './MostrarMisListas'
 import { PanelDeBarra } from './PanelDeBarra'
 import { SelectorDeTema } from './SelectorDeTema'
@@ -13,8 +13,8 @@ import { SelectorDeTema } from './SelectorDeTema'
  *
  * El tema está para todos, con o sin sesión: antes solo se podía cambiar desde el
  * perfil, y quien no tenía cuenta no podía. Lo que depende de la cuenta aparece solo
- * con sesión, y sin ella quedan a mano los textos legales, que en el perfil están al
- * pie. "Cerrar sesión" no se repite acá: ya está en la barra.
+ * con sesión. Los textos legales viven en el pie de la página, no acá. "Cerrar sesión"
+ * no se repite: ya está en la barra.
  *
  * El contenido se arma recién la primera vez que se abre: el estado de privacidad y la lista de bloqueados
  * son pedidos al servidor y no tienen por qué hacerse en cada pantalla; después queda armado, así que no vuelve a decir "Cargando…".
@@ -28,20 +28,15 @@ export function PanelDeAjustes() {
       {armado && (
         <div className="flex flex-col gap-1">
           <SelectorDeTema />
-          {user ? (
+          <div className="px-2">
+            <h3 className="text-sm font-semibold">Seguinos</h3>
+            <LinksDeRedes className="-mx-3" />
+          </div>
+          {user && (
             <>
               <MostrarMisListas />
               <CuentasBloqueadas />
             </>
-          ) : (
-            <nav aria-label="Legales" className="flex flex-wrap gap-x-5 px-2 text-sm">
-              <Link to="/terminos" className="inline-flex min-h-11 items-center rounded-field text-base-content/70 hover:text-base-content hover:underline">
-                Términos y condiciones
-              </Link>
-              <Link to="/privacidad" className="inline-flex min-h-11 items-center rounded-field text-base-content/70 hover:text-base-content hover:underline">
-                Política de privacidad
-              </Link>
-            </nav>
           )}
         </div>
       )}
