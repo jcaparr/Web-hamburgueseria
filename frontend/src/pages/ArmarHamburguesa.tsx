@@ -224,7 +224,7 @@ function Eleccion<T extends string | number>({
               key={opcion.id}
               className={`relative flex min-h-11 flex-1 items-center justify-center gap-1 rounded-full px-2 text-center text-sm font-semibold transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary ${
                 bloqueada
-                  ? 'cursor-not-allowed text-base-content/60'
+                  ? 'cursor-not-allowed text-base-content/70'
                   : valor === opcion.id
                     ? 'cursor-pointer bg-base-100 shadow-[var(--sombra-tarjeta)]'
                     : 'cursor-pointer text-base-content/70 hover:text-base-content'
@@ -286,7 +286,7 @@ function ExtrasDeNivel({
             <label
               key={extra.id}
               className={`flex min-h-11 items-center justify-between gap-3 rounded-field bg-base-200 px-3 text-sm font-semibold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary ${
-                bloqueado ? 'cursor-not-allowed text-base-content/60' : 'cursor-pointer'
+                bloqueado ? 'cursor-not-allowed' : 'cursor-pointer'
               }`}
             >
               <span className="flex items-center gap-2">
@@ -294,15 +294,18 @@ function ExtrasDeNivel({
                 {extra.texto}
               </span>
               {bloqueado ? (
-                <span className="text-xs font-normal">Se desbloquea en el nivel {extra.nivel}</span>
-              ) : (
-                <input
-                  type="checkbox"
-                  checked={receta[extra.id]}
-                  onChange={(e) => onCambio(extra.id, e.target.checked)}
-                  className="checkbox checkbox-primary"
-                />
-              )}
+                <span id={`desbloqueo-${extra.id}`} className="text-sm font-normal text-base-content/70">
+                  Se desbloquea en el nivel {extra.nivel}
+                </span>
+              ) : null}
+              <input
+                type="checkbox"
+                checked={!bloqueado && receta[extra.id]}
+                disabled={bloqueado}
+                aria-describedby={bloqueado ? `desbloqueo-${extra.id}` : undefined}
+                onChange={(e) => onCambio(extra.id, e.target.checked)}
+                className={`checkbox checkbox-primary ${bloqueado ? 'sr-only' : ''}`}
+              />
             </label>
           )
         })}

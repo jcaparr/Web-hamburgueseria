@@ -33,7 +33,7 @@ class HamburguesaDelAvatarTest {
         userRepository = mock(UserRepository.class);
         service = new ProfileService(mock(RatingRepository.class), mock(FollowRepository.class), userRepository);
         yo = User.builder().id(7L).username("juanca").email("juanca@example.com").build();
-        when(userRepository.findById(7L)).thenReturn(Optional.of(yo));
+        when(userRepository.bloquear(7L)).thenReturn(Optional.of(yo));
     }
 
     /** Lo que se guarda vuelve en la respuesta, que es con lo que el navegador redibuja el avatar. */
