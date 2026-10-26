@@ -43,12 +43,24 @@ export const QUESOS = { cheddar: '#f2b705', dambo: '#f6dd8f', sin: null } as con
 
 export const VERDURAS = ['nada', 'lechuga', 'tomate', 'completa'] as const
 
+/** El color de cada fondo, para lo que se dibuja encima (los rayos del nivel 15). Mismo orden que FONDOS. */
+export const COLORES_DE_FONDOS = ['#e5674f', '#f2b705', '#8fb56a', '#8cc0c9', '#f3e8cf'] as const
+
+/**
+ * El nivel en que se desbloquea cada premio de la hamburguesa (#313): el huevo frito, el
+ * bacon, la cuarta carne y el fondo de rayos de impacto. Los mismos de `Premios.java`.
+ */
+export const NIVEL_DE = { huevo: 3, bacon: 5, cuartaCarne: 10, rayos: 15 } as const
+
 export interface Receta {
   fondo: number
   pan: keyof typeof PANES
   queso: keyof typeof QUESOS
   verdura: (typeof VERDURAS)[number]
-  carnes: 1 | 2 | 3
+  carnes: 1 | 2 | 3 | 4
+  huevo: boolean
+  bacon: boolean
+  rayos: boolean
 }
 
 /**
@@ -79,40 +91,69 @@ export function recetaDe(username: string): Receta {
     queso: ORDEN_DE_QUESOS[elegir(2)],
     verdura: VERDURAS[elegir(VERDURAS.length)],
     carnes: ([1, 2, 3] as const)[elegir(3)],
+    // Los premios no salen del nombre: se ganan, y cada uno elige si los usa.
+    huevo: false,
+    bacon: false,
+    rayos: false,
   }
 }
 
 /*
  * Cómo viaja una receta: cinco cifras, una por cosa y en este orden: fondo, pan, queso,
- * lo verde y carnes. Es lo que guarda el servidor, que no sabe qué es cada número; el
- * orden de estas listas es el contrato, así que a una opción nueva se la agrega al
+ * lo verde y carnes (de 1 a 4). Si usa algún premio, tres más al final: huevo, bacon y
+ * fondo de rayos, 0 o 1. Es lo que guarda el servidor, que no sabe qué es cada número;
+ * el orden de estas listas es el contrato, así que a una opción nueva se la agrega al
  * final, nunca en el medio.
+ *
+ * Sin premios se escriben las cinco cifras de siempre, así las pestañas viejas siguen
+ * entendiendo el código.
  */
 const ORDEN_DE_PANES = ['clasico', 'papa', 'negro'] as const
 const ORDEN_DE_QUESOS = ['cheddar', 'dambo', 'sin'] as const
-const CODIGO = /^([0-4])([0-2])([0-2])([0-3])([1-3])$/
+const CODIGO = /^([0-4])([0-2])([0-2])([0-3])([1-4])([01]{3})?$/
 
 export function codigoDe(receta: Receta): string {
-  return [
+  const base = [
     receta.fondo,
     ORDEN_DE_PANES.indexOf(receta.pan),
     ORDEN_DE_QUESOS.indexOf(receta.queso),
     VERDURAS.indexOf(receta.verdura),
     receta.carnes,
   ].join('')
+  if (!receta.huevo && !receta.bacon && !receta.rayos) return base
+  return base + [receta.huevo, receta.bacon, receta.rayos].map((usa) => (usa ? 1 : 0)).join('')
 }
 
 /** Null si el código no es uno que se pueda dibujar. */
 function recetaDeCodigo(codigo: string): Receta | null {
   const partes = CODIGO.exec(codigo)
   if (!partes) return null
-  const [fondo, pan, queso, verdura, carnes] = partes.slice(1).map(Number)
+  const [fondo, pan, queso, verdura, carnes] = partes.slice(1, 6).map(Number)
+  const extras = partes[6] ?? '000'
   return {
     fondo,
     pan: ORDEN_DE_PANES[pan],
     queso: ORDEN_DE_QUESOS[queso],
     verdura: VERDURAS[verdura],
     carnes: carnes as Receta['carnes'],
+    huevo: extras[0] === '1',
+    bacon: extras[1] === '1',
+    rayos: extras[2] === '1',
+  }
+}
+
+/**
+ * La hamburguesa sin los premios que este nivel todavía no alcanza (#313). El servidor ya
+ * no deja guardar una bloqueada y recorta al bajar de nivel; esto es la defensa de acá,
+ * por si llega una vieja: se dibuja lo que corresponde y no se rompe nada.
+ */
+export function recetaVisible(receta: Receta, nivel: number): Receta {
+  return {
+    ...receta,
+    huevo: receta.huevo && nivel >= NIVEL_DE.huevo,
+    bacon: receta.bacon && nivel >= NIVEL_DE.bacon,
+    carnes: receta.carnes === 4 && nivel < NIVEL_DE.cuartaCarne ? 3 : receta.carnes,
+    rayos: receta.rayos && nivel >= NIVEL_DE.rayos,
   }
 }
 
