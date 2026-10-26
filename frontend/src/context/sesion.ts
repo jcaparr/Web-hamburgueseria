@@ -15,6 +15,11 @@ export interface AuthContextValue {
    */
   loginWithGoogle: (credential: string, username?: string) => Promise<void>
   logout: () => Promise<void>
+  /**
+   * Vuelve a preguntarle al servidor quién es y qué XP tiene, y devuelve eso (#312). Se llama
+   * después de algo que cambia la XP, como publicar o borrar una reseña.
+   */
+  refrescar: () => Promise<User | null>
   /** Guarda la hamburguesa del avatar; con null vuelve a la que sale del nombre. */
   cambiarHamburguesa: (receta: string | null) => Promise<void>
 }

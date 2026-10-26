@@ -15,6 +15,7 @@ import type { BurgerJoint, ReseniaDePerfil, ProfileStats, SavedTour } from '../t
 import { isSessionExpired } from '../utils/errors'
 import { PANEL_DEL_PERFIL, pestaniaDe, type Pestania } from '../utils/pestaniasDePerfil'
 import { cantidad, nota } from '../utils/numeros'
+import { nivelDe, reseniasParaJuntar, xpParaSiguiente } from '../utils/niveles'
 import { fechaYHora } from '../utils/fechaYHora'
 
 /** Cuántas reseñas y guardadas se asoman en el perfil; el resto, en "Ver todas". */
@@ -91,13 +92,16 @@ export function Profile() {
         // Debajo del nombre, al lado de la hamburguesa: es donde se la mira y donde se
         // busca cómo cambiarla.
         bajada={
-          <Link
-            to="/profile/hamburguesa"
-            className="-my-2 inline-flex min-h-11 w-fit items-center gap-1.5 rounded-field text-sm font-semibold text-primary hover:underline"
-          >
-            <IconPencil size={14} />
-            Cambiar tu hamburguesa
-          </Link>
+          <>
+            <ProgresoDeNivel xp={user.xp} />
+            <Link
+              to="/profile/hamburguesa"
+              className="-my-2 inline-flex min-h-11 w-fit items-center gap-1.5 rounded-field text-sm font-semibold text-primary hover:underline"
+            >
+              <IconPencil size={14} />
+              Cambiar tu hamburguesa
+            </Link>
+          </>
         }
         cifras={[
           {
@@ -215,6 +219,28 @@ export function Profile() {
           )}
         </section>
       </div>
+    </div>
+  )
+}
+
+/**
+ * El nivel y la XP debajo del avatar, y cuánto falta para pasar de nivel (#312).
+ *
+ * El "cuánto falta" se cuenta en reseñas completas (100 XP), que es lo que la persona
+ * puede hacer; en el nivel 20 no hay a dónde seguir y se dice.
+ */
+function ProgresoDeNivel({ xp }: { xp: number }) {
+  const faltan = xpParaSiguiente(xp)
+  return (
+    <div className="flex flex-col items-center gap-0.5 text-sm md:items-start">
+      <p className="font-semibold tabular-nums">
+        Nivel {nivelDe(xp)} · {cantidad(xp)} XP
+      </p>
+      <p className="max-w-[28ch] text-base-content/70 md:max-w-none">
+        {faltan === null
+          ? 'Llegaste al nivel máximo.'
+          : `Te faltan ${cantidad(faltan)} XP (${reseniasParaJuntar(faltan)} ${reseniasParaJuntar(faltan) === 1 ? 'reseña' : 'reseñas'}) para pasar de nivel.`}
+      </p>
     </div>
   )
 }

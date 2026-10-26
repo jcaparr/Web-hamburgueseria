@@ -83,7 +83,9 @@ export function TopBar() {
                   teléfono, que ya tiene cinco botones. */}
               <CampanaDeNotificaciones />
               <PanelDeAjustes />
-              <span className="hidden font-medium sm:inline">@{user.username}</span>
+              <span className="hidden font-medium sm:inline" data-destino-xp>
+                @{user.username}
+              </span>
               <button type="button" onClick={handleLogout} className="btn btn-ghost px-3">
                 <span className="sm:hidden">Salir</span>
                 <span className="hidden sm:inline">Cerrar sesión</span>

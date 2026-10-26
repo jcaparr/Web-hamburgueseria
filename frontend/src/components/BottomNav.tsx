@@ -45,7 +45,7 @@ export function BottomNav() {
           >
             {/* Un hueco fijo de 26 px que comparten las cinco pestañas, así los íconos y los
                 rótulos quedan alineados aunque el de Perfil sea la hamburguesa con su anillo. */}
-            <span className="grid h-[26px] w-[26px] place-items-center">
+            <span className="grid h-[26px] w-[26px] place-items-center" data-destino-xp={to === '/profile' ? '' : undefined}>
               {to === '/profile' && user ? (
                 <AvatarDeUsuario username={user.username} hamburguesa={user.hamburguesa} xp={user.xp} sinCirculo size={18} />
               ) : (

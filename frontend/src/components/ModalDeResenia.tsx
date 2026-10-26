@@ -1,9 +1,21 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { apiClient } from '../api/client'
+import { useAuth } from '../context/useAuth'
 import { SelectorDeFotos, type FotosElegidas } from './SelectorDeFotos'
 import { Stars } from './Stars'
 import type { Rating } from '../types'
+import { avisarXpGanada } from '../utils/avisosDeXp'
 import { isSessionExpired } from '../utils/errors'
+import {
+  LETRAS_MINIMAS,
+  medirComentario,
+  nivelDe,
+  PALABRAS_MINIMAS,
+  XP_CON_COMENTARIO,
+  XP_DE_BIENVENIDA,
+  xpDeComentario,
+  xpSinLaResenia,
+} from '../utils/niveles'
 
 /**
  * Reseñar un local, en una ventana sobre la pantalla.
@@ -38,6 +50,7 @@ export function ModalDeResenia({
   onSesionVencida: () => void
 }) {
   const dialogo = useRef<HTMLDialogElement>(null)
+  const { user, refrescar } = useAuth()
   // Arranca con lo que ya tenía la reseña, si había. Quien la abre le cambia la key a
   // la ventana cada vez que la abre, así que siempre se arma de cero: antes se volvía
   // a llenar desde un efecto al abrirse, un dibujo de más (#109).
@@ -52,6 +65,24 @@ export function ModalDeResenia({
   const idDelTitulo = useId()
   const zonaDelPuntaje = useRef<HTMLDivElement>(null)
   const zonaDeLaFoto = useRef<HTMLDivElement>(null)
+
+  // Cuánta XP da lo que está escrito. Sin XP todavía (y sin reseña de este local) es la
+  // primera de la cuenta: suma también la bienvenida.
+  const xpDeEsta = xpDeComentario(comment)
+  const esLaPrimera = !miResenia && (user?.xp ?? 0) === 0
+  const xpQueDa = xpDeEsta + (esLaPrimera ? XP_DE_BIENVENIDA : 0)
+
+  // El servidor recalcula la XP al confirmar; se vuelve a pedir quién sos y se avisa lo
+  // que cambió, después de cerrar la ventana.
+  async function anunciarXp(antes: number) {
+    const yo = await refrescar()
+    if (!yo) return
+    const ganada = yo.xp - antes
+    if (ganada <= 0) return
+    const nivelAntes = nivelDe(antes)
+    const nivelAhora = nivelDe(yo.xp)
+    avisarXpGanada({ ganada, nivelNuevo: nivelAhora > nivelAntes ? nivelAhora : null })
+  }
 
   // El estado de la ventana lo maneja el navegador, así que hay que empujarlo: showModal
   // es lo que da el foco atrapado y el fondo inerte, y no hay forma de pedirlo con JSX.
@@ -132,6 +163,7 @@ export function ModalDeResenia({
 
       onGuardada()
       onCerrar()
+      void anunciarXp(user?.xp ?? 0)
     } catch (err: any) {
       if (isSessionExpired(err)) {
         onSesionVencida()
@@ -146,6 +178,18 @@ export function ModalDeResenia({
   }
 
   /**
+   * Lo que cuesta borrar en XP, para decirlo antes de confirmar (#312): bajar de nivel o,
+   * si no baja, cuántos puntos se van. Con el motor de logros se suman los que se pierden.
+   */
+  function loQueSePierde(): string {
+    if (!user || !miResenia) return ''
+    const despues = xpSinLaResenia(user.xp, xpDeComentario(miResenia.comment))
+    const nivelDespues = nivelDe(despues)
+    if (nivelDespues < nivelDe(user.xp)) return `\n\nVolvés al nivel ${nivelDespues}.`
+    return `\n\nPerdés ${user.xp - despues} XP.`
+  }
+
+  /**
    * Borrar la reseña propia, con su foto (#180).
    *
    * Pregunta antes porque no hay vuelta atrás: las fotos no se pueden recuperar. Después
@@ -154,7 +198,7 @@ export function ModalDeResenia({
    */
   async function borrar() {
     if (!miResenia) return
-    if (!confirm(`¿Borrar tu reseña de ${nombreDelLocal}? Se pierden la nota, el comentario y las fotos, y no se puede deshacer.`)) return
+    if (!confirm(`¿Borrar tu reseña de ${nombreDelLocal}? Se pierden la nota, el comentario y las fotos, y no se puede deshacer.${loQueSePierde()}`)) return
 
     setBorrando(true)
     setError(null)
@@ -162,6 +206,7 @@ export function ModalDeResenia({
       await apiClient.delete(`/burger-joints/${localId}/ratings`)
       onGuardada()
       onCerrar()
+      void refrescar()
     } catch (err: any) {
       if (isSessionExpired(err)) {
         onSesionVencida()
@@ -243,6 +288,9 @@ export function ModalDeResenia({
             />
           </div>
 
+          {/* Cuánta XP da lo que escribiste, mientras lo escribís. */}
+          <XpDeLaResenia xp={xpQueDa} comentario={comment} editando={!!miResenia} primera={esLaPrimera} />
+
           {error && !error.campo && (
             <p role="alert" className="text-sm text-error">
               {error.texto}
@@ -280,5 +328,51 @@ export function ModalDeResenia({
         </button>
       </form>
     </dialog>
+  )
+}
+
+/**
+ * La XP que da la reseña, al lado de la pista de cuánto falta para los 100 (#312).
+ *
+ * Con foto sola son 70; con un comentario de 80 letras y 10 palabras, 100. La primera
+ * reseña de la cuenta suma además la bienvenida. Al editar no se dice "+": la reseña ya
+ * estaba, y lo que se muestra es lo que vale ahora.
+ */
+function XpDeLaResenia({
+  xp,
+  comentario,
+  editando,
+  primera,
+}: {
+  xp: number
+  comentario: string
+  editando: boolean
+  primera: boolean
+}) {
+  const { letras, palabras } = medirComentario(comentario)
+  const faltaLetras = Math.max(0, LETRAS_MINIMAS - letras)
+  const faltaPalabras = Math.max(0, PALABRAS_MINIMAS - palabras)
+  const completa = xpDeComentario(comentario) === XP_CON_COMENTARIO
+
+  const faltan = [
+    faltaLetras > 0 ? `${faltaLetras} ${faltaLetras === 1 ? 'letra' : 'letras'}` : null,
+    faltaPalabras > 0 ? `${faltaPalabras} ${faltaPalabras === 1 ? 'palabra' : 'palabras'}` : null,
+  ].filter(Boolean)
+  const pista = completa
+    ? 'Reseña completa: vale 100 XP.'
+    : letras === 0
+      ? 'Con un comentario de 80 letras y 10 palabras, la reseña vale 100 XP.'
+      : `Te faltan ${faltan.join(' y ')} para que la reseña valga 100 XP.`
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-field bg-base-200 px-3 py-2.5 text-sm">
+      <p className="min-w-0 text-base-content/70" aria-live="polite">
+        {pista}
+        {primera && <span className="block">Incluye {XP_DE_BIENVENIDA} XP de bienvenida.</span>}
+      </p>
+      <strong className="flex-none whitespace-nowrap rounded-full bg-[#f2b705] px-3 py-1 font-bold tabular-nums text-[#3a2a1e]">
+        {editando ? `Vale ${xp} XP` : `+${xp} XP`}
+      </strong>
+    </div>
   )
 }
