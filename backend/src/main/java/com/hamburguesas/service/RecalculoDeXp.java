@@ -44,6 +44,9 @@ public class RecalculoDeXp {
     /** Devuelve la XP que quedó. */
     @Transactional
     public int recalcular(Long userId) {
+        // La fila de la cuenta se bloquea: dos recálculos casi juntos se esperan en vez de pisarse
+        // con un número viejo.
+        userRepository.bloquear(userId);
         int xp = Niveles.xpTotal(ratingRepository.comentariosDe(userId));
         userRepository.ponerXp(userId, xp);
         return xp;

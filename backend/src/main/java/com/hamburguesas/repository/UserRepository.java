@@ -20,12 +20,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByUsername(String username);
 
+    /** Toma el lock de la fila para serializar los recálculos de la XP de una misma cuenta. */
+    @Query("select u from User u where u.id = :id")
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    Optional<User> bloquear(@Param("id") Long id);
+
     /**
      * Escribe la XP (#310). Es un update dirigido y no un save: la columna no se escribe
      * desde la entidad, así que un guardado del usuario no puede pisar el número que dejó
      * el recálculo mientras tanto.
      */
-    @Modifying(clearAutomatically = true)
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("update User u set u.xp = :xp where u.id = :id")
     int ponerXp(@Param("id") Long id, @Param("xp") int xp);
 
