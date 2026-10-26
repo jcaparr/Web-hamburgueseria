@@ -312,3 +312,22 @@ export interface PantallaDeLogros {
   xpDelSiguiente: number | null
   logros: LogroDeLaPantalla[]
 }
+
+/** Un puesto del podio de personas (#318). */
+export interface PuestoDelPodio {
+  puesto: number
+  userId: number
+  username: string
+  hamburguesa: string | null
+  /** La XP total, para dibujar el nivel. */
+  xp: number
+  /** La XP ganada en el período (en General, la total). */
+  xpDelPeriodo: number
+}
+
+export interface Podio {
+  periodo: 'semana' | 'mes' | 'general'
+  top: PuestoDelPodio[]
+  /** El puesto de quien mira, aunque esté fuera del top; null si no ganó XP en el período. */
+  yo: PuestoDelPodio | null
+}
