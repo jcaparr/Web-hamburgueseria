@@ -204,3 +204,27 @@ export function IconTikTok({ size = 20, className }: IconProps) {
     </svg>
   )
 }
+
+/**
+ * El ícono de Logros (#315): una chapita dentada con una estrella, el mismo dibujo de las
+ * medallas de la pantalla. Trazo fino, como los demás íconos de la barra.
+ */
+export function IconLogros({ size = 24, className }: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="-3 -3 54 54"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.6}
+      strokeLinejoin="round"
+      strokeLinecap="round"
+      className={className}
+    >
+      <path d="M24.00 3.00Q27.91 -1.94 30.19 3.93Q35.38 0.36 35.83 6.65Q41.84 4.77 40.42 10.91Q46.72 10.88 43.55 16.33Q49.58 18.16 44.94 22.43Q50.16 25.96 44.47 28.67Q48.42 33.58 42.19 34.50Q44.51 40.36 38.28 39.39Q38.78 45.68 33.11 42.92Q31.73 49.07 27.13 44.77Q24.00 50.23 20.87 44.77Q16.27 49.07 14.89 42.92Q9.22 45.68 9.72 39.39Q3.49 40.36 5.81 34.50Q-0.42 33.58 3.53 28.67Q-2.16 25.96 3.06 22.43Q-1.58 18.16 4.45 16.33Q1.28 10.88 7.58 10.91Q6.16 4.77 12.17 6.65Q12.62 0.36 17.81 3.93Q20.09 -1.94 24.00 3.00Z" />
+      <path d="M24 7l5 10 11 1.6-8 7.8 2 11-10-5.3-10 5.3 2-11-8-7.8L19 17z" transform="translate(9 9) scale(.625)" />
+    </svg>
+  )
+}
