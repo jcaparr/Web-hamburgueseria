@@ -51,7 +51,7 @@ class ListasDeSeguidoresTest {
         when(ratingRepository.contarPorUsuario(anyCollection())).thenReturn(List.of());
 
         service = new SocialService(
-            userRepository, followRepository, ratingRepository, mock(BlockRepository.class), bloqueos);
+            userRepository, followRepository, ratingRepository, mock(BlockRepository.class), bloqueos, mock(org.springframework.context.ApplicationEventPublisher.class));
     }
 
     private static User persona(Long id, String username) {

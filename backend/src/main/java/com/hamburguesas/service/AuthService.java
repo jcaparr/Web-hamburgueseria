@@ -1,6 +1,8 @@
 package com.hamburguesas.service;
 
 import com.hamburguesas.auth.AuthRateLimits;
+import com.hamburguesas.logros.LogrosPorRecalcular;
+import org.springframework.context.ApplicationEventPublisher;
 import com.hamburguesas.auth.SessionRevoker;
 import com.hamburguesas.auth.Usernames;
 import com.hamburguesas.auth.VerificationService;
@@ -56,6 +58,7 @@ public class AuthService {
     private final VerificationService verificationService;
     private final AuthRateLimits rateLimits;
     private final UsernameService usernameService;
+    private final ApplicationEventPublisher eventos;
 
     @Transactional
     public MessageResponse register(RegisterRequest request) {
@@ -104,6 +107,7 @@ public class AuthService {
             .passwordHash(passwordEncoder.encode(request.password()))
             .emailVerified(false)
             .build());
+        eventos.publishEvent(LogrosPorRecalcular.de(user.getId()));
 
         // Inside the transaction on purpose: if the email cannot be sent, the account
         // is rolled back rather than left stranded with no way to activate it.

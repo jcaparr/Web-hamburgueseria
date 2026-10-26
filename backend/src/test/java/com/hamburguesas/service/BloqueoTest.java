@@ -64,7 +64,7 @@ class BloqueoTest {
         when(bloqueos.queNoPuedeVerNiASiMismo(any())).thenReturn(List.of(-1L));
 
         service = new SocialService(
-            userRepository, followRepository, ratingRepository, blockRepository, bloqueos);
+            userRepository, followRepository, ratingRepository, blockRepository, bloqueos, mock(org.springframework.context.ApplicationEventPublisher.class));
     }
 
     private User persona(Long id, String username) {

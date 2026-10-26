@@ -1,6 +1,8 @@
 package com.hamburguesas.service;
 
 import com.hamburguesas.auth.SessionIssuer;
+import com.hamburguesas.logros.LogrosPorRecalcular;
+import org.springframework.context.ApplicationEventPublisher;
 import com.hamburguesas.dto.AuthResponse;
 import com.hamburguesas.dto.ProfileStatsDto;
 import com.hamburguesas.dto.ReseniaDePerfilDto;
@@ -23,6 +25,7 @@ public class ProfileService {
     private final RatingRepository ratingRepository;
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventos;
 
     public ProfileStatsDto stats(Long userId) {
         long ratingsCount = ratingRepository.countByUser_Id(userId);
@@ -57,6 +60,8 @@ public class ProfileService {
             throw new ConflictException(bloqueado);
         }
         user.setHamburguesa(receta);
+        // Picasso: armar la hamburguesa por primera vez.
+        eventos.publishEvent(LogrosPorRecalcular.de(userId));
         return SessionIssuer.quienEs(user);
     }
 }

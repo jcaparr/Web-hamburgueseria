@@ -31,7 +31,7 @@ class HamburguesaDelAvatarTest {
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
-        service = new ProfileService(mock(RatingRepository.class), mock(FollowRepository.class), userRepository);
+        service = new ProfileService(mock(RatingRepository.class), mock(FollowRepository.class), userRepository, mock(org.springframework.context.ApplicationEventPublisher.class));
         yo = User.builder().id(7L).username("juanca").email("juanca@example.com").build();
         when(userRepository.bloquear(7L)).thenReturn(Optional.of(yo));
     }

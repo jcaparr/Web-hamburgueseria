@@ -52,7 +52,7 @@ class CambioDeContraseniaTest {
             userRepository, sessionRevoker, passwordEncoder,
             mock(AuthenticationManager.class), verificationService,
             mock(AuthRateLimits.class),
-            mock(UsernameService.class));
+            mock(UsernameService.class), mock(org.springframework.context.ApplicationEventPublisher.class));
 
         usuario = User.builder()
             .id(7L).username("juan").email("juan@example.com")

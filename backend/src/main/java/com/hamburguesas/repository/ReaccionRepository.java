@@ -13,6 +13,9 @@ import java.util.Optional;
 
 public interface ReaccionRepository extends JpaRepository<Reaccion, Long> {
 
+    @org.springframework.data.jpa.repository.Query("select re.user.id from Reaccion re where re.rating.id = :ratingId")
+    java.util.List<Long> quienesReaccionaron(@org.springframework.data.repository.query.Param("ratingId") Long ratingId);
+
     Optional<Reaccion> findByRating_IdAndUser_Id(Long ratingId, Long userId);
 
     /**

@@ -110,6 +110,10 @@ public class BurgerJoint {
      * arrancar, a partir de la lista de marcas de la configuración: el rubro que
      * declara Google no alcanza, porque clasifica desparejo dentro de una cadena.
      */
+    /** Alguna vez tuvo una reseña (#314): de ahí se sabe si la próxima es la primera, aunque se borre la anterior. */
+    @Column(name = "tuvo_resenias", nullable = false)
+    private boolean tuvoResenias;
+
     @Column(name = "fast_food", nullable = false)
     private boolean fastFood;
 

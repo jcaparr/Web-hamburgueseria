@@ -44,7 +44,7 @@ class RegistroConNombreDeUsuarioTest {
             userRepository, mock(SessionRevoker.class), passwordEncoder,
             mock(AuthenticationManager.class), mock(VerificationService.class),
             mock(AuthRateLimits.class),
-            new UsernameService(userRepository));
+            new UsernameService(userRepository), mock(org.springframework.context.ApplicationEventPublisher.class));
     }
 
     private RegisterRequest pidiendo(String username) {
