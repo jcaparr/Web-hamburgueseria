@@ -3,6 +3,7 @@ package com.hamburguesas.repository;
 import com.hamburguesas.model.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -18,6 +19,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
 
     boolean existsByUsername(String username);
+
+    /**
+     * Escribe la XP (#310). Es un update dirigido y no un save: la columna no se escribe
+     * desde la entidad, así que un guardado del usuario no puede pisar el número que dejó
+     * el recálculo mientras tanto.
+     */
+    @Modifying(clearAutomatically = true)
+    @Query("update User u set u.xp = :xp where u.id = :id")
+    int ponerXp(@Param("id") Long id, @Param("xp") int xp);
 
     /**
      * Busca gente por un pedazo de su nombre de usuario.

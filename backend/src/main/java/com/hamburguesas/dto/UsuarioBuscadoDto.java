@@ -12,6 +12,7 @@ public record UsuarioBuscadoDto(
     Long userId,
     String username,
     String hamburguesa,
+    int xp,
     long resenias,
     boolean loSigo
 ) {}

@@ -16,6 +16,7 @@ import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +46,7 @@ public class RatingService {
     private final FotosDeResenias fotos;
     private final Bloqueos bloqueos;
     private final Reacciones reacciones;
+    private final ApplicationEventPublisher eventos;
 
     /**
      * Las fotos son parte de la reseña, no un agregado posterior.
@@ -85,6 +87,7 @@ public class RatingService {
         rating.ponerFotos(rutas);
 
         rating = ratingRepository.save(rating);
+        eventos.publishEvent(new XpPorRecalcular(userId));
         return toResponse(rating, ReaccionesDto.NINGUNA);
     }
 
@@ -129,6 +132,8 @@ public class RatingService {
 
         rating.setScore(request.score());
         rating.setComment(request.comment());
+        // Agregarle el comentario la pasa de 70 a 100: la XP se recalcula al confirmar.
+        eventos.publishEvent(new XpPorRecalcular(userId));
         return conReacciones(List.of(rating), userId).get(0);
     }
 
@@ -151,6 +156,7 @@ public class RatingService {
 
         List<String> suyas = rating.todasLasFotos();
         ratingRepository.delete(rating);
+        eventos.publishEvent(new XpPorRecalcular(userId));
 
         suyas.forEach(foto -> despuesDeConfirmar(() -> fotos.borrar(foto)));
     }
@@ -341,7 +347,7 @@ public class RatingService {
 
     private RatingResponse toResponse(Rating r, ReaccionesDto susReacciones) {
         return new RatingResponse(
-            r.getId(), r.getUser().getId(), r.getUser().getUsername(), r.getUser().getHamburguesa(),
+            r.getId(), r.getUser().getId(), r.getUser().getUsername(), r.getUser().getHamburguesa(), r.getUser().getXp(),
             r.getScore(), r.getComment(), r.todasLasFotos(), r.getCreatedAt(), susReacciones
         );
     }

@@ -85,6 +85,7 @@ public class SocialService {
             persona.getId(),
             persona.getUsername(),
             persona.getHamburguesa(),
+            persona.getXp(),
             ratingRepository.countByUser_Id(persona.getId()),
             ratingRepository.averageScoreByUser(persona.getId()),
             followRepository.countByFollowed_Id(persona.getId()),
@@ -230,7 +231,7 @@ public class SocialService {
         Map<Long, Long> resenias = reseniasDe(gente);
 
         return gente.stream()
-            .map(u -> new UsuarioBuscadoDto(u.getId(), u.getUsername(), u.getHamburguesa(),
+            .map(u -> new UsuarioBuscadoDto(u.getId(), u.getUsername(), u.getHamburguesa(), u.getXp(),
                 resenias.getOrDefault(u.getId(), 0L), sigue.contains(u.getId())))
             .toList();
     }

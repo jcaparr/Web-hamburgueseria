@@ -9,6 +9,8 @@ public record RatingResponse(
     String username,
     /** La hamburguesa del avatar de quien la escribió, o null. */
     String hamburguesa,
+    /** La XP de quien la escribió, para dibujar su nivel (#310). */
+    int xp,
     Integer score,
     String comment,
     /** Las fotos que sacó quien la escribió, en orden: la primera es la portada. */

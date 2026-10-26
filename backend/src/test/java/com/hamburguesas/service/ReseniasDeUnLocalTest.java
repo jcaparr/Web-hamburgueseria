@@ -1,5 +1,6 @@
 package com.hamburguesas.service;
 
+import org.springframework.context.ApplicationEventPublisher;
 import com.hamburguesas.dto.NotaYComentarioDto;
 import com.hamburguesas.dto.NotaYCuantasDto;
 import com.hamburguesas.dto.RatingResponse;
@@ -66,7 +67,7 @@ class ReseniasDeUnLocalTest {
 
         service = new RatingService(
             ratingRepository, mock(BurgerJointRepository.class), mock(UserRepository.class),
-            mock(FotosDeResenias.class), bloqueos, mock(Reacciones.class)
+            mock(FotosDeResenias.class), bloqueos, mock(Reacciones.class), mock(ApplicationEventPublisher.class)
         );
     }
 

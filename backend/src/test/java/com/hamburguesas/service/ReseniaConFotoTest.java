@@ -1,5 +1,6 @@
 package com.hamburguesas.service;
 
+import org.springframework.context.ApplicationEventPublisher;
 import com.hamburguesas.dto.RatingRequest;
 import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.fotos.FotosDeResenias;
@@ -52,7 +53,7 @@ class ReseniaConFotoTest {
         when(fotos.guardar(any())).thenReturn("/api/rating-photos/nueva.jpg");
 
         service = new RatingService(ratingRepository, burgerJointRepository, userRepository, fotos,
-            mock(Bloqueos.class), mock(Reacciones.class));
+            mock(Bloqueos.class), mock(Reacciones.class), mock(ApplicationEventPublisher.class));
     }
 
     private MultipartFile unaFoto() {

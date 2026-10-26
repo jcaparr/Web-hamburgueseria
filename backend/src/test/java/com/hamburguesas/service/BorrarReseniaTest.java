@@ -1,5 +1,6 @@
 package com.hamburguesas.service;
 
+import org.springframework.context.ApplicationEventPublisher;
 import com.hamburguesas.exception.ResourceNotFoundException;
 import com.hamburguesas.fotos.FotosDeResenias;
 import com.hamburguesas.model.BurgerJoint;
@@ -33,16 +34,18 @@ class BorrarReseniaTest {
 
     private RatingRepository ratingRepository;
     private FotosDeResenias fotos;
+    private ApplicationEventPublisher eventos;
     private RatingService service;
 
     @BeforeEach
     void setUp() {
         ratingRepository = mock(RatingRepository.class);
         fotos = mock(FotosDeResenias.class);
+        eventos = mock(ApplicationEventPublisher.class);
         when(ratingRepository.findByUser_IdAndBurgerJoint_Id(any(), any())).thenReturn(Optional.empty());
         service = new RatingService(ratingRepository, mock(BurgerJointRepository.class),
             mock(UserRepository.class), fotos, mock(Bloqueos.class),
-            mock(Reacciones.class));
+            mock(Reacciones.class), eventos);
     }
 
     @AfterEach
@@ -79,6 +82,16 @@ class BorrarReseniaTest {
 
         verify(ratingRepository).delete(mia);
         verify(fotos, never()).borrar(anyString());
+    }
+
+    /** Borrar baja la XP: se pide recalcularla (#310). */
+    @Test
+    void alBorrarPideRecalcularLaXpDeQuienLaEscribio() {
+        reseniaDe(YO, null);
+
+        service.borrar(YO, LOCAL);
+
+        verify(eventos).publishEvent(new XpPorRecalcular(YO));
     }
 
     /** Se busca por quien pide: la de otro en el mismo local no aparece por ningún lado. */

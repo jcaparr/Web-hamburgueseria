@@ -17,6 +17,7 @@ public record PerfilPublicoDto(
     Long userId,
     String username,
     String hamburguesa,
+    int xp,
     long resenias,
     Double promedio,
     long seguidores,
