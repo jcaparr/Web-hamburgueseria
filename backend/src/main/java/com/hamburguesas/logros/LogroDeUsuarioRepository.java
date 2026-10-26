@@ -12,6 +12,19 @@ public interface LogroDeUsuarioRepository extends JpaRepository<LogroDeUsuario, 
     @Query("select u.id from User u where not exists (select 1 from LogroDeUsuario l where l.id.userId = u.id)")
     List<Long> cuentasSinLogros();
 
+    /** Los ganados hoy cuyo aviso falta, sin los de la carga inicial (#317). */
+    @Query("select l from LogroDeUsuario l where l.id.userId = :userId and l.activo = true and l.vistoEl is null and l.retroactivo = false order by l.ganadoEl")
+    List<LogroDeUsuario> sinVer(@Param("userId") Long userId);
+
+    @Query("select count(l) from LogroDeUsuario l where l.id.userId = :userId and l.activo = true and l.vistoEl is null and l.retroactivo = true")
+    long retroactivosSinVer(@Param("userId") Long userId);
+
+    @Query("select count(l) from LogroDeUsuario l where l.id.userId = :userId and l.activo = true and l.vistoEl is null and l.retroactivo = false")
+    long contarSinVer(@Param("userId") Long userId);
+
+    @Query("select l from LogroDeUsuario l where l.id.userId = :userId and l.activo = true and l.vistoEl is null and l.retroactivo = true")
+    List<LogroDeUsuario> retroactivosSinMarcar(@Param("userId") Long userId);
+
     @Query("select l from LogroDeUsuario l where l.id.userId = :userId")
     List<LogroDeUsuario> deLaCuenta(@Param("userId") Long userId);
 }
