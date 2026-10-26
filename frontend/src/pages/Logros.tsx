@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { apiClient } from '../api/client'
 import { LoadError } from '../components/LoadError'
+import { PodioDePersonas } from '../components/PodioDePersonas'
+import { useAuth } from '../context/useAuth'
 import { MedallaDeLogro } from '../components/MedallaDeLogro'
 import { usePedido } from '../hooks/usePedido'
 import { useTitulo } from '../hooks/useTitulo'
@@ -8,14 +10,13 @@ import type { LogroDeLaPantalla, PantallaDeLogros } from '../types'
 import { CATALOGO, GRUPOS, POR_CODIGO, VISIBLES, nombreDe } from '../utils/logros'
 
 /**
- * La pantalla de Logros (#316): dónde estás en los niveles, lo que te falta poco para
+ * La pestaña Mis logros (#316): dónde estás en los niveles, lo que te falta poco para
  * ganar y todo el catálogo por grupos. Tocar un logro abre su hoja.
  *
  * Los secretos se ven como "???" hasta ganarlos, y no cuentan en el total del título.
  * El servidor recalcula antes de responder, así que lo que se ve es lo de hoy.
  */
-export function Logros() {
-  useTitulo('Logros')
+function MisLogros() {
   const pedido = usePedido('logros', () => apiClient.get<PantallaDeLogros>('/logros').then((r) => r.data))
   const [abierto, setAbierto] = useState<string | null>(null)
   // A qué tarjeta volver el foco al cerrar la hoja.
@@ -50,7 +51,7 @@ export function Logros() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:mx-auto md:max-w-3xl md:p-0 md:pt-6">
+    <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
         <h1 className="titulo-pagina">
           Logros <span className="font-normal text-base-content/70 tabular-nums">({ganados} de {VISIBLES})</span>
@@ -256,4 +257,35 @@ function fechaCorta(fecha: string | null | undefined): string {
 
 function fechaLarga(fecha: string | null): string {
   return fecha ? new Date(fecha).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+}
+
+/**
+ * La pantalla de Logros: dos pestañas, Mis logros y el Podio de personas (#318).
+ */
+export function Logros() {
+  useTitulo('Logros')
+  const { user } = useAuth()
+  const [pestania, setPestania] = useState<'logros' | 'podio'>('logros')
+  if (!user) return null
+  return (
+    <div className="flex flex-col gap-4 p-4 md:mx-auto md:max-w-3xl md:p-0 md:pt-6">
+      <div role="tablist" aria-label="Logros" className="flex rounded-full bg-base-200 p-1">
+        {([['logros', 'Mis logros'], ['podio', 'Podio']] as const).map(([id, texto]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={pestania === id}
+            onClick={() => setPestania(id)}
+            className={`flex min-h-11 flex-1 items-center justify-center rounded-full text-sm font-semibold ${
+              pestania === id ? 'bg-base-100 shadow-[var(--sombra-tarjeta)]' : 'text-base-content/70'
+            }`}
+          >
+            {texto}
+          </button>
+        ))}
+      </div>
+      {pestania === 'logros' ? <MisLogros /> : <PodioDePersonas yoId={user.userId} />}
+    </div>
+  )
 }
