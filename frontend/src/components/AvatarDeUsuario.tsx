@@ -82,7 +82,7 @@ function circuloDe(size: number, dosCifras: boolean) {
  * hamburguesa, así cuelga sin tapar el pan. En los chicos (el feed y las listas) el
  * circulito sobresale hacia abajo pero el bloque no crece: el renglón mide lo mismo que
  * sin nivel. Los amarillos y marrones son fijos, como los fondos de la hamburguesa: el
- * contraste del número (marrón sobre amarillo, 8,5 : 1) tiene que darse en los dos temas.
+ * contraste del número (marrón sobre amarillo, 7,5 : 1) tiene que darse en los dos temas.
  */
 function AvatarConNivel({
   size,
@@ -130,7 +130,7 @@ function AvatarConNivel({
           r={radio}
           fill="none"
           strokeWidth={grosor}
-          style={{ stroke: 'color-mix(in oklab, var(--color-base-content) 22%, transparent)' }}
+          style={{ stroke: 'color-mix(in oklab, var(--color-base-content) 30%, transparent)' }}
         />
         {avance > 0 && (
           <circle
@@ -150,13 +150,13 @@ function AvatarConNivel({
         {children}
       </span>
       {!sinCirculo && (
-      <span
-        aria-hidden
-        className="absolute flex -translate-x-1/2 items-center justify-center rounded-full border-2 border-base-100 bg-[#f2b705] font-display font-bold leading-none text-[#3a2a1e] tabular-nums"
-        style={{ left: '50%', top: centroY - diametro / 2, width: diametro, height: diametro, fontSize: letra }}
-      >
-        {nivel}
-      </span>
+        <span
+          aria-hidden
+          className="absolute flex -translate-x-1/2 items-center justify-center rounded-full border-2 border-base-100 bg-[#f2b705] font-display font-bold leading-none text-[#3a2a1e] tabular-nums"
+          style={{ left: '50%', top: centroY - diametro / 2, width: diametro, height: diametro, fontSize: letra }}
+        >
+          {nivel}
+        </span>
       )}
     </span>
   )

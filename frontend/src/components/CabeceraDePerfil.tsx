@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useMediaQuery } from '../hooks/useMediaQuery'
+import { nivelDe } from '../utils/niveles'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
 
 /**
@@ -53,6 +54,7 @@ export function CabeceraDePerfil({
             <h1 className="max-w-full titulo-pagina [overflow-wrap:anywhere] md:text-[1.875rem]">
               <span className="text-base-content/60">@</span>
               {username}
+              <span className="sr-only">, nivel {nivelDe(xp)}</span>
             </h1>
             {bajada}
           </div>
