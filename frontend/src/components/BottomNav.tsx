@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { useHideOnScroll } from '../hooks/useScrollDirection'
+import { AvatarDeUsuario } from './AvatarDeUsuario'
 import { IconFeed, IconMedal, IconRoute, IconSearch, IconUser } from './icons'
 
 const ITEMS = [
@@ -42,7 +43,15 @@ export function BottomNav() {
               `flex flex-1 flex-col items-center gap-0.5 rounded-[1.375rem] pb-2 pt-2.5 focus-visible:-outline-offset-4 ${isActive ? 'text-primary' : 'text-base-content/70'}`
             }
           >
-            <Icon size={21} />
+            {/* Un hueco fijo de 26 px que comparten las cinco pestañas, así los íconos y los
+                rótulos quedan alineados aunque el de Perfil sea la hamburguesa con su anillo. */}
+            <span className="grid h-[26px] w-[26px] place-items-center">
+              {to === '/profile' && user ? (
+                <AvatarDeUsuario username={user.username} hamburguesa={user.hamburguesa} xp={user.xp} sinCirculo size={18} />
+              ) : (
+                <Icon size={21} />
+              )}
+            </span>
             <span className="font-nav text-xs font-semibold">{label}</span>
           </NavLink>
         ))}

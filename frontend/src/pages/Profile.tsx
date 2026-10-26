@@ -87,6 +87,7 @@ export function Profile() {
       <CabeceraDePerfil
         username={user.username}
         hamburguesa={user.hamburguesa}
+        xp={user.xp}
         // Debajo del nombre, al lado de la hamburguesa: es donde se la mira y donde se
         // busca cómo cambiarla.
         bajada={

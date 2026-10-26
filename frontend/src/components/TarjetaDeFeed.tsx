@@ -37,7 +37,7 @@ export function TarjetaDeFeed({ item, esMia }: { item: ItemDeFeed; esMia: boolea
         {/* Lleva al mismo perfil que el nombre de al lado: fuera del Tab y del lector de
             pantalla, para no pasar dos veces por el mismo enlace. */}
         <Link to={alPerfil} tabIndex={-1} aria-hidden="true" className="flex-none rounded-full">
-          <AvatarDeUsuario username={item.autorUsername} hamburguesa={item.autorHamburguesa} size={38} />
+          <AvatarDeUsuario username={item.autorUsername} hamburguesa={item.autorHamburguesa} xp={item.autorXp} size={38} />
         </Link>
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Un renglón que se corta al final con puntos suspensivos: con un nombre de

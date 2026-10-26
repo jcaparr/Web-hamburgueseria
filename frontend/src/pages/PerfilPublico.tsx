@@ -103,6 +103,7 @@ export function PerfilPublico() {
       <CabeceraDePerfil
         username={perfil.username}
         hamburguesa={perfil.hamburguesa}
+        xp={perfil.xp}
         cifras={[
           {
             // Lleva a todas sus reseñas (#247), como seguidores lleva a quiénes son.
