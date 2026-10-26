@@ -47,7 +47,7 @@ class GoogleConNombreDeUsuarioTest {
         when(userRepository.existsByUsername(anyString())).thenReturn(false);
         when(userRepository.save(any(User.class))).thenAnswer(llamada -> llamada.getArgument(0));
 
-        service = new GoogleAuthService(verifier, userRepository, new UsernameService(userRepository));
+        service = new GoogleAuthService(verifier, userRepository, new UsernameService(userRepository), mock(org.springframework.context.ApplicationEventPublisher.class));
     }
 
     @Test

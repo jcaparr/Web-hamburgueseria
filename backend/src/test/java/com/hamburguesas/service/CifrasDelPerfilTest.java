@@ -22,7 +22,7 @@ class CifrasDelPerfilTest {
         when(follows.countByFollowed_Id(7L)).thenReturn(5L);
         when(follows.countByFollower_Id(7L)).thenReturn(7L);
 
-        ProfileStatsDto cifras = new ProfileService(ratings, follows, mock(UserRepository.class)).stats(7L);
+        ProfileStatsDto cifras = new ProfileService(ratings, follows, mock(UserRepository.class), mock(org.springframework.context.ApplicationEventPublisher.class)).stats(7L);
 
         assertThat(cifras.seguidores()).isEqualTo(5);
         assertThat(cifras.siguiendo()).isEqualTo(7);

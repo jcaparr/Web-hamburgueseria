@@ -86,6 +86,32 @@ class ReseniaConFotoTest {
         verify(eventos, org.mockito.Mockito.times(2)).publishEvent(new XpPorRecalcular(YO));
     }
 
+    /**
+     * Ansioso (#314): la primera reseña de un local, con comentario, queda marcada al
+     * publicar. El local recuerda que ya tuvo una, así que la siguiente no hereda nada.
+     */
+    @Test
+    void laPrimeraConComentarioQuedaMarcadaYLaSiguienteNo() {
+        service.rate(YO, LOCAL, loEscrito(), List.of(unaFoto()));
+        service.rate(YO, LOCAL, loEscrito(), List.of(unaFoto()));
+
+        org.mockito.ArgumentCaptor<Rating> guardadas = org.mockito.ArgumentCaptor.forClass(Rating.class);
+        verify(ratingRepository, org.mockito.Mockito.times(2)).save(guardadas.capture());
+        assertThat(guardadas.getAllValues().get(0).isPrimeraConComentario()).isTrue();
+        assertThat(guardadas.getAllValues().get(1).isPrimeraConComentario()).isFalse();
+    }
+
+    @Test
+    void unaPrimeraSinComentarioNoDaAnsiosoPeroGastaElLugar() {
+        service.rate(YO, LOCAL, new RatingRequest(4, "  "), List.of(unaFoto()));
+        service.rate(YO, LOCAL, loEscrito(), List.of(unaFoto()));
+
+        org.mockito.ArgumentCaptor<Rating> guardadas = org.mockito.ArgumentCaptor.forClass(Rating.class);
+        verify(ratingRepository, org.mockito.Mockito.times(2)).save(guardadas.capture());
+        assertThat(guardadas.getAllValues().get(0).isPrimeraConComentario()).isFalse();
+        assertThat(guardadas.getAllValues().get(1).isPrimeraConComentario()).isFalse();
+    }
+
     @Test
     void unaReseniaNuevaSeGuardaConSuFoto() {
         var respuesta = service.rate(YO, LOCAL, loEscrito(), List.of(unaFoto()));

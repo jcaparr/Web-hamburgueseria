@@ -8,6 +8,7 @@ import com.hamburguesas.dto.ResumenDeReseniasDto;
 import com.hamburguesas.dto.TemaDeReseniasDto;
 import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.fotos.FotosDeResenias;
+import com.hamburguesas.logros.LogrosPorRecalcular;
 import com.hamburguesas.exception.ResourceNotFoundException;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.Rating;
@@ -86,8 +87,15 @@ public class RatingService {
             .build();
         rating.ponerFotos(rutas);
 
+        // Ansioso: la primera reseña del local con comentario. El local recuerda que ya tuvo una,
+        // así que borrarla no deja el lugar libre para que otro la herede.
+        boolean primeraDelLocal = !burgerJoint.isTuvoResenias();
+        rating.setPrimeraConComentario(primeraDelLocal && request.comment() != null && !request.comment().isBlank());
+        burgerJoint.setTuvoResenias(true);
+
         rating = ratingRepository.save(rating);
         eventos.publishEvent(new XpPorRecalcular(userId));
+        eventos.publishEvent(LogrosPorRecalcular.de(userId));
         return toResponse(rating, ReaccionesDto.NINGUNA);
     }
 
@@ -134,6 +142,7 @@ public class RatingService {
         rating.setComment(request.comment());
         // Agregarle el comentario la pasa de 70 a 100: la XP se recalcula al confirmar.
         eventos.publishEvent(new XpPorRecalcular(userId));
+        eventos.publishEvent(LogrosPorRecalcular.de(userId));
         return conReacciones(List.of(rating), userId).get(0);
     }
 
@@ -155,8 +164,11 @@ public class RatingService {
             .orElseThrow(() -> new ResourceNotFoundException("You haven't rated this burger joint yet"));
 
         List<String> suyas = rating.todasLasFotos();
+        // Quienes reaccionaron, leídos antes de borrar: pueden perder Stalker al irse la reacción.
+        List<Long> quienesReaccionaron = reacciones.quienesReaccionaron(rating.getId());
         ratingRepository.delete(rating);
         eventos.publishEvent(new XpPorRecalcular(userId));
+        eventos.publishEvent(LogrosPorRecalcular.de(userId, quienesReaccionaron));
 
         suyas.forEach(foto -> despuesDeConfirmar(() -> fotos.borrar(foto)));
     }

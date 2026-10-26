@@ -31,6 +31,11 @@ public class Reacciones {
 
     private final ReaccionRepository reaccionRepository;
 
+    /** Quiénes reaccionaron a esta reseña (#314): al borrarla, a ellos les cambia lo que reaccionaron. */
+    public List<Long> quienesReaccionaron(Long ratingId) {
+        return reaccionRepository.quienesReaccionaron(ratingId);
+    }
+
     /**
      * @param quienMira puede ser nulo: sin sesión se ven las cantidades y ninguna es "mía".
      * @return una entrada por cada reseña pedida, con {@link ReaccionesDto#NINGUNA} si no

@@ -1,6 +1,8 @@
 package com.hamburguesas.service;
 
 import com.hamburguesas.auth.Usernames;
+import org.springframework.context.ApplicationEventPublisher;
+import com.hamburguesas.logros.LogrosPorRecalcular;
 import com.hamburguesas.dto.PerfilPublicoDto;
 import com.hamburguesas.dto.ReseniaDePerfilDto;
 import com.hamburguesas.dto.ReseniasPorUsuarioDto;
@@ -56,6 +58,7 @@ public class SocialService {
     private final RatingRepository ratingRepository;
     private final BlockRepository blockRepository;
     private final Bloqueos bloqueos;
+    private final ApplicationEventPublisher eventos;
 
     /**
      * Gente cuyo nombre de usuario contiene lo escrito.
@@ -149,12 +152,15 @@ public class SocialService {
             .follower(userRepository.getReferenceById(quienSigue))
             .followed(seguido)
             .build());
+        eventos.publishEvent(LogrosPorRecalcular.de(seguido.getId(), quienSigue));
     }
 
     /** Dejar de seguir a quien no seguías tampoco es un error, por lo mismo. */
     @Transactional
     public void dejarDeSeguir(String username, Long quienSigue) {
-        followRepository.deleteByFollower_IdAndFollowed_Id(quienSigue, porNombre(username).getId());
+        Long seguido = porNombre(username).getId();
+        followRepository.deleteByFollower_IdAndFollowed_Id(quienSigue, seguido);
+        eventos.publishEvent(LogrosPorRecalcular.de(seguido, quienSigue));
     }
 
     /**
@@ -182,6 +188,7 @@ public class SocialService {
             .blocker(userRepository.getReferenceById(quienBloquea))
             .blocked(bloqueado)
             .build());
+        eventos.publishEvent(LogrosPorRecalcular.de(bloqueado.getId(), quienBloquea));
     }
 
     /**

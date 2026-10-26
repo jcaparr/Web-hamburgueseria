@@ -1,6 +1,8 @@
 package com.hamburguesas.service;
 
 import com.hamburguesas.dto.BurgerJointDto;
+import com.hamburguesas.logros.LogrosPorRecalcular;
+import org.springframework.context.ApplicationEventPublisher;
 import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.exception.ResourceNotFoundException;
 import com.hamburguesas.model.BurgerJoint;
@@ -23,6 +25,7 @@ public class WishlistService {
     private final BurgerJointRepository burgerJointRepository;
     private final UserRepository userRepository;
     private final FichaDeLocal fichaDeLocal;
+    private final ApplicationEventPublisher eventos;
 
     @Transactional(readOnly = true)
     public List<BurgerJointDto> list(Long userId) {
@@ -46,6 +49,7 @@ public class WishlistService {
         wishlistRepository.save(
             WishlistItem.builder().user(user).burgerJoint(burgerJoint).build()
         );
+        eventos.publishEvent(LogrosPorRecalcular.de(userId));
     }
 
     @Transactional
@@ -54,5 +58,6 @@ public class WishlistService {
             .findByUser_IdAndBurgerJoint_Id(userId, burgerJointId)
             .orElseThrow(() -> new ResourceNotFoundException("It wasn't in your wishlist"));
         wishlistRepository.delete(item);
+        eventos.publishEvent(LogrosPorRecalcular.de(userId));
     }
 }
