@@ -121,7 +121,8 @@ public class Logros {
 
     /**
      * La pantalla de Logros (#316): recalcula antes de responder, así lo que se ve es lo que
-     * hay hoy y no lo que quedó de la última vez que algo avisó.
+     * hay hoy y no lo que quedó de la última vez que algo avisó. El recálculo corre dentro de
+     * esta misma transacción (se llama desde la propia clase, sin pasar por el proxy).
      */
     @Transactional
     public PantallaDeLogros pantalla(Long userId) {
