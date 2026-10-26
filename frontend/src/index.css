@@ -423,3 +423,26 @@ body {
   height: 3px;
   background: repeating-conic-gradient(var(--color-primary) 0% 25%, transparent 0% 50%) 0 0 / 8px 8px;
 }
+
+/*
+ * El aviso de logro (#317): la medalla que salta y la capa que cae sobre la hamburguesa. Con
+ * "reducir movimiento" no hay nada de esto: queda la imagen quieta.
+ */
+@keyframes medalla-pop {
+  0% { opacity: 0; transform: scale(0.4) rotate(-14deg); }
+  55% { opacity: 1; transform: scale(1.12) rotate(4deg); }
+  100% { transform: none; }
+}
+@keyframes cae-capa {
+  0% { opacity: 0; transform: translateY(-60px); }
+  15% { opacity: 1; }
+  70% { transform: translateY(2px); }
+  85% { transform: translateY(-3px); }
+  100% { opacity: 1; transform: none; }
+}
+.medalla-aviso { animation: medalla-pop 0.8s cubic-bezier(0.2, 1.5, 0.4, 1) both; }
+.cae-capa [data-capa] { animation: cae-capa 0.9s 0.35s cubic-bezier(0.45, 0, 0.9, 0.5) both; }
+@media (prefers-reduced-motion: reduce) {
+  .medalla-aviso,
+  .cae-capa [data-capa] { animation: none; }
+}

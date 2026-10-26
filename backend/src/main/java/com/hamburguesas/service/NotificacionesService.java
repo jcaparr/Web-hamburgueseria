@@ -1,5 +1,6 @@
 package com.hamburguesas.service;
 
+import com.hamburguesas.logros.LogroDeUsuarioRepository;
 import com.hamburguesas.dto.BuzonDto;
 import com.hamburguesas.dto.NotificacionDto;
 import com.hamburguesas.dto.NotificacionesNuevasDto;
@@ -52,6 +53,7 @@ public class NotificacionesService {
     private final ReaccionRepository reaccionRepository;
     private final UserRepository userRepository;
     private final Bloqueos bloqueos;
+    private final LogroDeUsuarioRepository logroRepository;
 
     /**
      * Los avisos más recientes, mezclados y por fecha.
@@ -89,9 +91,11 @@ public class NotificacionesService {
         // Lo vencido no está en el buzón, así que tampoco cuenta en la campana.
         Instant desde = Collections.max(List.of(desdeCuandoSonNuevas(persona(yo)), corte()));
         List<Long> ocultos = bloqueos.queNoPuedeVer(yo);
+        long logrosSinVer = logroRepository.contarSinVer(yo) + (logroRepository.retroactivosSinVer(yo) > 0 ? 1 : 0);
         return new NotificacionesNuevasDto(
             followRepository.seguimientosNuevosA(yo, ocultos, desde)
-                + reaccionRepository.nuevasALasReseniasDe(yo, ocultos, desde));
+                + reaccionRepository.nuevasALasReseniasDe(yo, ocultos, desde),
+            logrosSinVer);
     }
 
     /** Da por visto todo lo que llegó hasta ahora: la campana vuelve a cero. */

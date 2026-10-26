@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { esAccionQueDaLogros, revisarLogros } from '../utils/avisosDeLogros'
 
 export const SESSION_EXPIRED_EVENT = 'auth:session-expired'
 
@@ -38,7 +39,14 @@ function refreshSession(): Promise<void> {
 }
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Una acción propia que pudo dar un logro (#317): el aviso pide las novedades. Se espera un
+    // instante para que el servidor haya recalculado antes de que se pregunte.
+    if (esAccionQueDaLogros(response.config.method, response.config.url)) {
+      window.setTimeout(revisarLogros, 300)
+    }
+    return response
+  },
   async (error) => {
     const config = error.config
     const status = error.response?.status
