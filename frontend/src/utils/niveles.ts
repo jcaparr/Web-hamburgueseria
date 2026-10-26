@@ -58,8 +58,7 @@ export function medirComentario(texto: string): { letras: number; palabras: numb
   const letras = (texto.match(/\p{L}/gu) ?? []).length
   const limpio = texto.trim()
   // Solo espacios ASCII entre palabras, como el servidor: un espacio no separable no suma una palabra.
-  return { letras, palabras: limpio === '' ? 0 : limpio.split(/[ 	
-]+/).length }
+  return { letras, palabras: limpio === '' ? 0 : limpio.split(/[ \t\n\x0B\f\r]+/).length }
 }
 
 /** Cuánta XP da una reseña con este comentario (puede estar vacío). */
