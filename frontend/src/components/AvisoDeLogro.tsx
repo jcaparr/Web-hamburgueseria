@@ -34,6 +34,11 @@ export function AvisoDeLogro() {
   const [paso, setPaso] = useState(0)
   const dialogo = useRef<HTMLDialogElement>(null)
   const pidiendo = useRef(false)
+  // Llegó otro pedido mientras uno estaba en vuelo: se repite al terminar, porque el primero pudo ser anterior al recálculo.
+  const repetir = useRef(false)
+  // Lo que ya se mostró o se está mostrando: no vuelve a salir aunque el servidor tarde en marcarlo.
+  const mostrados = useRef(new Set<string>())
+  const abiertoAhora = useRef(false)
   const espera = useRef<number | undefined>(undefined)
 
   const hayUsuario = !!user
@@ -41,15 +46,26 @@ export function AvisoDeLogro() {
   useEffect(() => {
     if (!hayUsuario) return
     async function pedir() {
-      if (pidiendo.current) return
+      if (pidiendo.current) {
+        repetir.current = true
+        return
+      }
       pidiendo.current = true
       try {
         const { data } = await apiClient.get<Novedades>('/logros/novedades')
-        if (data.sinVer.length > 0 || data.retroactivos > 0) mostrarCuandoSePueda(data)
+        const nuevos = data.sinVer.filter((c) => !mostrados.current.has(c))
+        const retro = data.retroactivos > 0 && !mostrados.current.has('retroactivos')
+        if (!abiertoAhora.current && (nuevos.length > 0 || retro)) {
+          mostrarCuandoSePueda({ ...data, sinVer: nuevos, retroactivos: retro ? data.retroactivos : 0 })
+        }
       } catch {
         // Sin aviso no pasa nada: la próxima acción vuelve a preguntar.
       } finally {
         pidiendo.current = false
+        if (repetir.current) {
+          repetir.current = false
+          void pedir()
+        }
       }
     }
     function mostrarCuandoSePueda(data: Novedades) {
@@ -60,6 +76,7 @@ export function AvisoDeLogro() {
         return
       }
       setPaso(0)
+      abiertoAhora.current = true
       setNovedades(data)
     }
     window.addEventListener(EVENTO_REVISAR_LOGROS, pedir)
@@ -73,21 +90,37 @@ export function AvisoDeLogro() {
   const pasos = novedades ? ordenar(novedades) : []
   const actual = pasos[paso]
 
-  // Se abre al tener algo para mostrar y se marca como visto después de dibujarlo: si el dibujo
-  // fallara, no se perdería el aviso.
+  // Se abre al tener algo para mostrar.
   useEffect(() => {
     const ventana = dialogo.current
     if (!ventana || !novedades) return
     if (!ventana.open) ventana.showModal()
-    apiClient
-      .post('/logros/vistos', { codigos: novedades.sinVer, retroactivos: novedades.retroactivos > 0 })
-      .catch(() => {})
   }, [novedades])
+
+  // Cada paso se marca como visto después de dibujarlo, y solo ese: si se cierra con Esc o la
+  // pestaña, lo que no se llegó a ver queda pendiente para la próxima vez.
+  useEffect(() => {
+    if (!novedades || !actual) return
+    mostrados.current.add(actual)
+    const cuerpo = actual === 'retroactivos' ? { codigos: [], retroactivos: true } : { codigos: [actual], retroactivos: false }
+    apiClient.post('/logros/vistos', cuerpo).catch(() => {})
+  }, [novedades, actual])
 
   function cerrar() {
     dialogo.current?.close()
+    abiertoAhora.current = false
     setNovedades(null)
   }
+
+  // Si se pierde la sesión con el aviso abierto, no queda una ventana vacía tapando todo.
+  useEffect(() => {
+    if (!hayUsuario && abiertoAhora.current) {
+      dialogo.current?.close()
+      abiertoAhora.current = false
+      setNovedades(null)
+    }
+    if (!hayUsuario) mostrados.current.clear()
+  }, [hayUsuario])
 
   if (!user || !novedades || !actual) return <dialog ref={dialogo} />
 
@@ -101,7 +134,7 @@ export function AvisoDeLogro() {
       }}
       className="fixed inset-0 m-auto h-dvh max-h-none w-screen max-w-none bg-transparent p-0 backdrop:bg-[rgb(32_26_21/0.97)]"
     >
-      <div className="flex h-full flex-col items-center justify-center gap-4 overflow-y-auto px-6 pb-8 pt-6 text-center text-[#f3e8cf]">
+      <div className="flex h-full flex-col items-center gap-4 overflow-y-auto px-6 pb-8 pt-6 text-center text-[#f3e8cf] [&>*:first-child]:mt-auto [&>*:last-child]:mb-auto">
         {actual === 'retroactivos' ? (
           <Retroactivos cuantos={novedades.retroactivos} onCerrar={cerrar} />
         ) : (
@@ -124,7 +157,7 @@ export function AvisoDeLogro() {
 
 /** Los códigos a mostrar, con el de los retroactivos al final como un solo paso. */
 function ordenar(n: Novedades): string[] {
-  const nivel = n.sinVer.filter((c) => c.startsWith('NIVEL_'))
+  const nivel = n.sinVer.filter((c) => c.startsWith('NIVEL_')).sort((a, b) => Number(a.slice(6)) - Number(b.slice(6)))
   const resto = n.sinVer.filter((c) => !c.startsWith('NIVEL_'))
   return [...nivel, ...resto, ...(n.retroactivos > 0 ? ['retroactivos'] : [])]
 }

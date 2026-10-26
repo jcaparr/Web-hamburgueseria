@@ -137,7 +137,8 @@ public class Logros {
     @Transactional
     public void marcarVistos(Long userId, LogrosVistos vistos) {
         Instant ahora = Instant.now();
-        Set<String> codigos = Set.copyOf(vistos.codigos() == null ? List.of() : vistos.codigos());
+        Set<String> codigos = vistos.codigos() == null ? Set.of()
+            : vistos.codigos().stream().filter(java.util.Objects::nonNull).collect(Collectors.toSet());
         for (LogroDeUsuario fila : repository.sinVer(userId)) {
             if (codigos.contains(fila.getId().logro())) {
                 fila.setVistoEl(ahora);

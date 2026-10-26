@@ -109,7 +109,7 @@ const IC_CHICO: Record<string, string> = {
 
 /** Lo que dice el aviso al ganarlo, en pasado y hablándole a quien lo ganó. */
 export const AVISOS: Record<string, string> = {
-  NIVEL_1: 'Bienvenida a Burgómetro. Armá tu hamburguesa y empezá a reseñar.',
+  NIVEL_1: 'Te damos la bienvenida a Burgómetro. Armá tu hamburguesa y empezá a reseñar.',
   NIVEL_3: 'Llegaste al nivel 3. Ya podés ponerle huevo frito a tu hamburguesa.',
   NIVEL_5: 'Llegaste al nivel 5. Ya podés ponerle bacon a tu hamburguesa.',
   NIVEL_10: 'Llegaste al nivel 10. Ya podés sumarle la cuarta carne.',
