@@ -93,6 +93,43 @@ class PantallaDeLogrosTest {
     }
 
     @Test
+    void elMenuCompletoCuentaLosDemasSobreTreintaYSiete() {
+        PantallaDeLogros p = logros.pantalla(ana.getId());
+
+        assertThat(item(p, Logro.MENU_COMPLETO).meta()).isEqualTo(Logro.values().length - 1);
+        assertThat(item(p, Logro.MENU_COMPLETO).actual()).isEqualTo((int) p.logros().stream()
+            .filter(i -> i.ganado() && !i.codigo().equals(Logro.MENU_COMPLETO.name())).count());
+    }
+
+    @Test
+    void elIntendenteLlevaElBarrio() {
+        BurgerJoint uno = burgerJointRepository.findByPlaceId("pantalla-i1").orElseGet(() ->
+            burgerJointRepository.save(BurgerJoint.builder().name("A").address("c").area("Villa Urquiza")
+                .slug("pantalla-i1").placeId("pantalla-i1").build()));
+        BurgerJoint dos = burgerJointRepository.findByPlaceId("pantalla-i2").orElseGet(() ->
+            burgerJointRepository.save(BurgerJoint.builder().name("B").address("c").area("Villa Urquiza")
+                .slug("pantalla-i2").placeId("pantalla-i2").build()));
+        ratingRepository.save(Rating.builder().user(ana).burgerJoint(uno).score(4).comment("ok")
+            .createdAt(Instant.parse("2026-10-20T15:00:00Z")).build());
+        ratingRepository.save(Rating.builder().user(ana).burgerJoint(dos).score(4).comment("ok")
+            .createdAt(Instant.parse("2026-10-20T16:00:00Z")).build());
+
+        PantallaDeLogros p = logros.pantalla(ana.getId());
+
+        assertThat(item(p, Logro.INTENDENTE).ganado()).isTrue();
+        assertThat(item(p, Logro.INTENDENTE).detalle()).isEqualTo("Villa Urquiza");
+    }
+
+    @Test
+    void unPropioSinGanarNoTraeFechaNiDetalle() {
+        PantallaDeLogros p = logros.pantalla(ana.getId());
+
+        assertThat(item(p, Logro.PLANIFICADOR).ganado()).isFalse();
+        assertThat(item(p, Logro.PLANIFICADOR).fecha()).isNull();
+        assertThat(item(p, Logro.PLANIFICADOR).detalle()).isNull();
+    }
+
+    @Test
     void recalculaAntesDeResponder() {
         BurgerJoint local = burgerJointRepository.findByPlaceId("pantalla-1").orElseGet(() ->
             burgerJointRepository.save(BurgerJoint.builder().name("L").address("c").area("Palermo")

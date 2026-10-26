@@ -158,17 +158,23 @@ function Tarjeta({
   const secreto = !!POR_CODIGO[codigo]?.secreto
   const oculto = secreto && !ganado
   const nombre = oculto ? '???' : nombreDe(codigo, datos?.detalle)
-  const pie = ganado ? fechaCorta(datos?.fecha) : oculto ? 'Secreto' : datos ? medidaDe(datos) : ''
+  // En la tarjeta el avance va corto, sin el sustantivo: con tres columnas en 320 px no entra más.
+  const pie = ganado ? fechaCorta(datos?.fecha) : oculto ? 'Secreto' : datos ? avanceCorto(datos) : ''
+  const etiqueta = oculto
+    ? 'Logro secreto, sin ganar'
+    : `${nombre}, ${ganado ? `ganado el ${fechaLarga(datos?.fecha ?? null)}` : `sin ganar${datos ? `, ${medidaDe(datos)}` : ''}`}`
   return (
     <button
       type="button"
       onClick={(e) => onAbrir(codigo, e.currentTarget)}
-      aria-label={`${nombre}${ganado ? ', ganado' : ''}`}
+      aria-label={etiqueta}
       className="tarjeta flex h-36 w-full flex-col items-center px-1.5 pb-2 pt-3 text-center"
     >
-      <MedallaDeLogro codigo={codigo} ganado={ganado} size={56} sinNumero={oculto} />
-      <strong className="mt-4 flex h-8 items-center text-[0.8125rem] font-bold leading-4">{nombre}</strong>
-      <span className="text-[0.8125rem] leading-4 text-base-content/70">{pie}</span>
+      <MedallaDeLogro codigo={codigo} ganado={ganado} size={56} oculto={oculto} />
+      <strong className="mt-4 flex h-8 w-full items-center justify-center text-[0.8125rem] font-bold leading-4">
+        <span className="line-clamp-2 [overflow-wrap:anywhere]">{nombre}</span>
+      </strong>
+      <span className="whitespace-nowrap text-[0.8125rem] leading-4 text-base-content/70">{pie}</span>
     </button>
   )
 }
@@ -200,9 +206,9 @@ function HojaDeLogro({ logro, onCerrar }: { logro: LogroDeLaPantalla | null; onC
       <div className="modal-box flex flex-col items-center gap-4 text-center">
         {logro && datos && (
           <>
-            <MedallaDeLogro codigo={logro.codigo} ganado={logro.ganado} size={96} sinNumero={oculto} />
+            <MedallaDeLogro codigo={logro.codigo} ganado={logro.ganado} size={96} oculto={oculto} />
             <h2 id="titulo-hoja" className="font-display text-xl font-bold">
-              {oculto ? '???' : nombreDe(logro.codigo, logro.detalle)}
+              {oculto ? 'Logro secreto' : nombreDe(logro.codigo, logro.detalle)}
             </h2>
             <p className="max-w-[34ch] text-sm text-base-content/80">
               {oculto ? 'Es un secreto: se muestra cuando lo ganes.' : datos.texto}
@@ -235,6 +241,13 @@ function HojaDeLogro({ logro, onCerrar }: { logro: LogroDeLaPantalla | null; onC
 function medidaDe(logro: LogroDeLaPantalla): string {
   const medida = POR_CODIGO[logro.codigo]?.medida
   return medida && logro.actual !== null && logro.meta !== null ? medida(logro.actual, logro.meta) : ''
+}
+
+/** "2 de 3", sin lo que cuenta: el sustantivo va en la hoja. */
+function avanceCorto(logro: LogroDeLaPantalla): string {
+  return logro.actual !== null && logro.meta !== null
+    ? `${logro.actual.toLocaleString('es-AR')} de ${logro.meta.toLocaleString('es-AR')}`
+    : ''
 }
 
 function fechaCorta(fecha: string | null | undefined): string {
