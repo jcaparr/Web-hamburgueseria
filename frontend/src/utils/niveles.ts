@@ -57,7 +57,9 @@ export function reseniasParaJuntar(xp: number): number {
 export function medirComentario(texto: string): { letras: number; palabras: number } {
   const letras = (texto.match(/\p{L}/gu) ?? []).length
   const limpio = texto.trim()
-  return { letras, palabras: limpio === '' ? 0 : limpio.split(/\s+/).length }
+  // Solo espacios ASCII entre palabras, como el servidor: un espacio no separable no suma una palabra.
+  return { letras, palabras: limpio === '' ? 0 : limpio.split(/[ 	
+]+/).length }
 }
 
 /** Cuánta XP da una reseña con este comentario (puede estar vacío). */
