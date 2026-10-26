@@ -33,7 +33,7 @@ export function PanelDeAjustes() {
   }
 
   return (
-    <PanelDeBarra etiqueta="Ajustes" icono={<IconSettings size={21} />} titulo="Ajustes" angosto onCambio={(abierto) => abierto && setArmado(true)}>
+    <PanelDeBarra key={user ? 'con-sesion' : 'sin-sesion'} etiqueta="Ajustes" icono={<IconSettings size={21} />} titulo="Ajustes" angosto onCambio={(abierto) => abierto && setArmado(true)}>
       {armado && (
         <div className="flex flex-col gap-1">
           <SelectorDeTema />
