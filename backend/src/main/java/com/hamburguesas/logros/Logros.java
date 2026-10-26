@@ -8,6 +8,7 @@ import com.hamburguesas.service.Niveles;
 import com.hamburguesas.texto.Texto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -55,7 +56,10 @@ public class Logros {
      *   existían al lanzar los logros. Se avisa con un solo mensaje, sin animación.
      * @return los logros que quedaron activos
      */
-    @Transactional
+    // En una transacción propia siempre: el recálculo corre después de confirmar el cambio que lo
+    // pidió (no se puede escribir en esa transacción) y cada cuenta tiene la suya, así una que falla
+    // no arrastra a las demás ni se toman dos locks de cuentas en la misma transacción.
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Set<Logro> recalcular(Long userId, boolean retroactivo) {
         // La fila de la cuenta se bloquea: dos recálculos de la misma cuenta se esperan.
         User cuenta = userRepository.bloquear(userId).orElse(null);

@@ -255,10 +255,12 @@ class LogrosEnLaBaseTest {
         assertThat(fila(ana, Logro.PRIMERA_RESENIA).isRetroactivo()).isTrue();
         assertThat(fila(ana, Logro.PRIMERA_RESENIA).getVistoEl()).isNull();
 
-        // Con logros ya cargados no vuelve a correr.
+        // La carga es por cuenta: una que ya tiene logros no se toca, y una sin ninguno la recibe.
+        Instant antes = fila(ana, Logro.PRIMERA_RESENIA).getGanadoEl();
         User beto = cuenta("logros_carga_b");
         recalculoDeLogros.run(null);
-        assertThat(logroRepository.deLaCuenta(beto.getId())).isEmpty();
+        assertThat(fila(ana, Logro.PRIMERA_RESENIA).getGanadoEl()).isEqualTo(antes);
+        assertThat(fila(beto, Logro.NIVEL_1).isRetroactivo()).isTrue();
     }
 
     @Test
