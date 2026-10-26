@@ -4,6 +4,7 @@ import com.hamburguesas.auth.SessionIssuer;
 import com.hamburguesas.dto.AuthResponse;
 import com.hamburguesas.dto.ProfileStatsDto;
 import com.hamburguesas.dto.ReseniaDePerfilDto;
+import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.exception.ResourceNotFoundException;
 import com.hamburguesas.model.User;
 import com.hamburguesas.repository.FollowRepository;
@@ -48,6 +49,11 @@ public class ProfileService {
     public AuthResponse cambiarHamburguesa(Long userId, String receta) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("No encontramos tu cuenta"));
+        // Un premio que todavía no ganó no se puede usar, aunque el pedido venga armado a mano.
+        String bloqueado = Premios.bloqueado(receta, Niveles.nivelDe(user.getXp()));
+        if (bloqueado != null) {
+            throw new ConflictException(bloqueado);
+        }
         user.setHamburguesa(receta);
         return SessionIssuer.quienEs(user);
     }

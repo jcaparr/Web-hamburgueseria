@@ -31,6 +31,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * el recálculo mientras tanto.
      */
     @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("update User u set u.hamburguesa = :nueva where u.id = :id and u.hamburguesa = :vieja")
+    int recortarHamburguesa(@Param("id") Long id, @Param("vieja") String vieja, @Param("nueva") String nueva);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("update User u set u.xp = :xp where u.id = :id")
     int ponerXp(@Param("id") Long id, @Param("xp") int xp);
 

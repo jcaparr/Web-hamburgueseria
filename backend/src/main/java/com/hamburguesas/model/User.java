@@ -52,11 +52,11 @@ public class User {
     private boolean emailVerified = false;
 
     /**
-     * La hamburguesa que eligió para su avatar, en cinco cifras (ver
+     * La hamburguesa que eligió para su avatar, en cinco u ocho cifras (ver
      * {@link com.hamburguesas.dto.HamburguesaRequest}). Null mientras no elija ninguna:
      * el navegador dibuja la que sale de su nombre.
      */
-    @Column(length = 5)
+    @Column(length = 8)
     private String hamburguesa;
 
     /**
