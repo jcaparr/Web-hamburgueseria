@@ -147,7 +147,8 @@ public class CifrasDeLogros {
                     """, Object[].class).setParameter("barrio", barrio).getResultList();
             Object[] ganador = todos.stream()
                 .max(Comparator.<Object[], Long>comparing(f -> (Long) f[1])
-                    .thenComparing(f -> (Instant) f[2], Comparator.reverseOrder()))
+                    .thenComparing(f -> (Instant) f[2], Comparator.reverseOrder())
+                    .thenComparing(f -> (Long) f[0], Comparator.reverseOrder()))
                 .orElse(null);
             if (ganador != null && id.equals(ganador[0])) {
                 donde.add(barrio);
