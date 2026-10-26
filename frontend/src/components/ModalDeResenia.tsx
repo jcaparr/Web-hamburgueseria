@@ -366,7 +366,7 @@ function XpDeLaResenia({
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-field bg-base-200 px-3 py-2.5 text-sm">
-      <p className="min-w-0 text-base-content/70" aria-live="polite">
+      <p className="min-w-0 text-base-content/70">
         {pista}
         {primera && <span className="block">Incluye {XP_DE_BIENVENIDA} XP de bienvenida.</span>}
       </p>

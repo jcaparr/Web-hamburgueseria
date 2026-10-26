@@ -7,34 +7,48 @@ import { EVENTO_DE_XP, type XpGanada } from '../utils/avisosDeXp'
  *
  * Se monta una vez en App y escucha el evento de {@link avisarXpGanada}, así salta en
  * cualquier pantalla. Si el modal de reseña sigue abierto espera a que se cierre: el
- * `<dialog>` modal tapa todo lo demás, y un aviso detrás no lo vería nadie.
+ * `<dialog>` modal tapa todo lo demás, y un aviso detrás no lo vería nadie. Los avisos
+ * que llegan mientras tanto se suman en uno solo, sin perder el de nivel.
  *
  * Con "reducir movimiento" no hay vuelo: queda el texto quieto unos segundos, que es lo
  * que importa.
+ *
+ * El contenedor `role="status"` está siempre montado y solo cambia lo de adentro: un
+ * aviso que aparece ya con su contenido no siempre lo anuncian los lectores de pantalla.
  */
 export function AvisoDeXp() {
   const [aviso, setAviso] = useState<XpGanada | null>(null)
   const pendiente = useRef<XpGanada | null>(null)
+  const espera = useRef<number | undefined>(undefined)
   const chip = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
     function mostrarCuandoSePueda() {
-      const dialogoAbierto = document.querySelector('dialog[open]')
-      if (dialogoAbierto) {
-        window.setTimeout(mostrarCuandoSePueda, 150)
+      espera.current = undefined
+      if (!pendiente.current) return
+      if (document.querySelector('dialog[open]')) {
+        espera.current = window.setTimeout(mostrarCuandoSePueda, 150)
         return
       }
-      if (pendiente.current) {
-        setAviso(pendiente.current)
-        pendiente.current = null
-      }
+      setAviso(pendiente.current)
+      pendiente.current = null
     }
     function alGanar(e: Event) {
-      pendiente.current = (e as CustomEvent<XpGanada>).detail
-      mostrarCuandoSePueda()
+      const nuevo = (e as CustomEvent<XpGanada>).detail
+      const previo = pendiente.current
+      pendiente.current = previo
+        ? {
+            ganada: previo.ganada + nuevo.ganada,
+            nivelNuevo: Math.max(previo.nivelNuevo ?? 0, nuevo.nivelNuevo ?? 0) || null,
+          }
+        : nuevo
+      if (espera.current === undefined) mostrarCuandoSePueda()
     }
     window.addEventListener(EVENTO_DE_XP, alGanar)
-    return () => window.removeEventListener(EVENTO_DE_XP, alGanar)
+    return () => {
+      window.removeEventListener(EVENTO_DE_XP, alGanar)
+      window.clearTimeout(espera.current)
+    }
   }, [])
 
   // El vuelo hacia el avatar, y se limpia solo al terminar.
@@ -55,7 +69,7 @@ export function AvisoDeXp() {
         [
           { transform: 'translate(0, 0) scale(1)', opacity: 1, offset: 0 },
           { transform: 'translate(0, 0) scale(1)', opacity: 1, offset: 0.35 },
-          { transform: `translate(${dx}px, ${dy}px) scale(0.5)`, opacity: 0.2, offset: 1 },
+          { transform: `translate(${dx}px, ${dy}px) scale(0.5)`, opacity: 0, offset: 1 },
         ],
         { duration: 1500, easing: 'ease-in-out', fill: 'forwards' },
       )
@@ -68,24 +82,26 @@ export function AvisoDeXp() {
     }
   }, [aviso])
 
-  if (!aviso) return null
-
   return (
     <div
       role="status"
       aria-live="polite"
       className="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex flex-col items-center gap-3 px-4 md:bottom-12"
     >
-      <span
-        ref={chip}
-        className="rounded-full bg-[#f2b705] px-4 py-1.5 font-display text-base font-bold tabular-nums text-[#3a2a1e] shadow-lg"
-      >
-        +{aviso.ganada} XP
-      </span>
-      {aviso.nivelNuevo && (
-        <span className="rounded-box bg-neutral px-4 py-2.5 text-sm font-semibold text-neutral-content shadow-lg">
-          Subiste al nivel {aviso.nivelNuevo}
-        </span>
+      {aviso && (
+        <>
+          <span
+            ref={chip}
+            className="rounded-full bg-[#f2b705] px-4 py-1.5 font-display text-base font-bold tabular-nums text-[#3a2a1e] shadow-lg"
+          >
+            +{aviso.ganada} XP
+          </span>
+          {aviso.nivelNuevo && (
+            <span className="rounded-box bg-neutral px-4 py-2.5 text-sm font-semibold text-neutral-content shadow-lg">
+              Subiste al nivel {aviso.nivelNuevo}
+            </span>
+          )}
+        </>
       )}
     </div>
   )
