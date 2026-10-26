@@ -1,6 +1,7 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { useHideOnScroll } from '../hooks/useScrollDirection'
+import { BotonDeLogros } from './BotonDeLogros'
 import { CampanaDeNotificaciones } from './CampanaDeNotificaciones'
 import { MarcaBurgometro } from './MarcaBurgometro'
 import { PanelDeAjustes } from './PanelDeAjustes'
@@ -16,27 +17,17 @@ const NAV_LINKS = [
 ]
 
 export function TopBar() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const links = NAV_LINKS.filter((link) => user || !link.soloConSesion)
-  const navigate = useNavigate()
   const hidden = useHideOnScroll()
-
-  async function handleLogout() {
-    // Navigate first. Clearing the user while a private page is still mounted lets
-    // RequireAuth fire and send the person to /login, so logging out would land
-    // somewhere different depending on which page you were on. The revocation below
-    // happens either way.
-    navigate('/')
-    await logout()
-  }
 
   return (
     <div
       className={`sticky top-0 z-20 transition-colors duration-300 ${hidden ? 'bg-base-200/85 backdrop-blur-md' : 'bg-base-200'}`}
     >
-      <header className="flex items-center justify-between gap-2 px-4 py-2 md:px-6">
+      <header className="flex items-center justify-between gap-1 py-2 pl-3 pr-1.5 sm:gap-2 sm:px-4 md:px-6">
         <NavLink to="/" end className="flex min-h-11 min-w-0 items-center gap-1.5 rounded-field sm:gap-2">
-          <MarcaBurgometro className="h-8 w-[38px] flex-none" />
+          <MarcaBurgometro className="h-[29px] w-[34px] flex-none sm:h-8 sm:w-[38px]" />
           {/* Con mayúscula y en Lexend, como en el logo nuevo (#255): es lo que tiene
               que reconocerse igual en la barra, en la pestaña y en un mail.
 
@@ -60,6 +51,7 @@ export function TopBar() {
                 <NavLink
                   to={link.to}
                   end={link.to === '/'}
+                  data-destino-xp={link.to === '/profile' ? '' : undefined}
                   className={({ isActive }) =>
                     `font-nav flex min-h-11 items-center rounded-full px-5 text-sm font-semibold transition-colors lg:px-7 ${
                       isActive ? 'bg-neutral text-secondary' : 'text-base-content hover:text-primary'
@@ -81,15 +73,9 @@ export function TopBar() {
             <>
               {/* La campana del buzón (#210): arriba y no en la barra de abajo del
                   teléfono, que ya tiene cinco botones. */}
+              <BotonDeLogros />
               <CampanaDeNotificaciones />
               <PanelDeAjustes />
-              <span className="hidden font-medium sm:inline" data-destino-xp>
-                @{user.username}
-              </span>
-              <button type="button" onClick={handleLogout} className="btn btn-ghost px-3">
-                <span className="sm:hidden">Salir</span>
-                <span className="hidden sm:inline">Cerrar sesión</span>
-              </button>
             </>
           ) : (
             <>

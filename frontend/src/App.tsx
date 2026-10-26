@@ -14,6 +14,7 @@ import { Feed } from './pages/Feed'
 import { GenteDeUnPerfil } from './pages/GenteDeUnPerfil'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { Login } from './pages/Login'
+import { Logros } from './pages/Logros'
 import { NoEncontrada } from './pages/NoEncontrada'
 import { PaginaDeCadena } from './pages/PaginaDeCadena'
 import { PerfilPublico } from './pages/PerfilPublico'
@@ -69,6 +70,7 @@ export default function App() {
               {/* Buscar gente vive en el Feed: /buscar queda para los enlaces viejos. */}
               <Route path="/buscar" element={<Navigate to="/feed" replace />} />
               <Route path="/feed" element={<RequireAuth><Feed /></RequireAuth>} />
+              <Route path="/logros" element={<RequireAuth><Logros /></RequireAuth>} />
               <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
               <Route path="/profile/hamburguesa" element={<RequireAuth><ArmarHamburguesa /></RequireAuth>} />
               <Route path="/reviews" element={<RequireAuth><Reviews /></RequireAuth>} />
