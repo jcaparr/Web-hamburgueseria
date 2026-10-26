@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { avanceDe, nivelDe } from '../utils/niveles'
 import { FONDOS, PANES, QUESOS, recetaPara, type Receta } from '../utils/recetas'
 
 /**
@@ -17,12 +18,22 @@ import { FONDOS, PANES, QUESOS, recetaPara, type Receta } from '../utils/recetas
 export function AvatarDeUsuario({
   username,
   hamburguesa,
+  xp,
+  sinCirculo = false,
   size = 40,
   className,
 }: {
   username: string
   /** La que eligió, en cinco cifras; sin ella, la que sale de su nombre. */
   hamburguesa?: string | null
+  /**
+   * Su XP (#311). Con ella se dibuja el anillo de avance y el circulito del nivel; sin
+   * ella, la hamburguesa sola, así cada pantalla puede adoptarlo de a una. Pide `size`:
+   * la geometría del anillo sale del tamaño en píxeles.
+   */
+  xp?: number
+  /** Solo el anillo, sin el número: para la pestaña Perfil, donde no hay lugar para él. */
+  sinCirculo?: boolean
   size?: number
   /**
    * Clases de tamaño en vez de `size`, para que cambie con la pantalla: la cabecera del
@@ -31,7 +42,7 @@ export function AvatarDeUsuario({
   className?: string
 }) {
   const receta = recetaPara(username, hamburguesa)
-  return (
+  const disco = (
     <div
       className={`flex-none overflow-hidden rounded-full ${FONDOS[receta.fondo]} ${className ?? ''}`}
       style={className ? undefined : { width: size, height: size }}
@@ -39,6 +50,115 @@ export function AvatarDeUsuario({
     >
       <Hamburguesa receta={receta} />
     </div>
+  )
+  if (xp === undefined || className) return disco
+  return (
+    <AvatarConNivel size={size} xp={xp} anillo={anilloDe(size)} sinCirculo={sinCirculo}>
+      {disco}
+    </AvatarConNivel>
+  )
+}
+
+/** El hueco entre el avatar y el anillo, y lo grueso del anillo, según el tamaño. */
+function anilloDe(size: number) {
+  if (size <= 48) return { hueco: 1.5, grosor: 2.5 }
+  if (size <= 96) return { hueco: 3, grosor: 5 }
+  return { hueco: 4, grosor: 6 }
+}
+
+/** El diámetro del circulito del nivel y su letra. Con dos cifras, el chico se ensancha. */
+function circuloDe(size: number, dosCifras: boolean) {
+  if (size <= 48) return { diametro: dosCifras ? 20 : 18, letra: 12 }
+  if (size <= 84) return { diametro: 26, letra: 14 }
+  if (size <= 96) return { diametro: 28, letra: 15 }
+  return { diametro: 32, letra: 17 }
+}
+
+/**
+ * El avatar con su nivel: un anillo que se llena hacia el siguiente y, colgando abajo
+ * al centro, el circulito amarillo con el número.
+ *
+ * El borde de arriba del circulito queda 3 px por encima del borde de abajo de la
+ * hamburguesa, así cuelga sin tapar el pan. En los chicos (el feed y las listas) el
+ * circulito sobresale hacia abajo pero el bloque no crece: el renglón mide lo mismo que
+ * sin nivel. Los amarillos y marrones son fijos, como los fondos de la hamburguesa: el
+ * contraste del número (marrón sobre amarillo, 8,5 : 1) tiene que darse en los dos temas.
+ */
+function AvatarConNivel({
+  size,
+  xp,
+  anillo,
+  sinCirculo,
+  children,
+}: {
+  size: number
+  xp: number
+  anillo: { hueco: number; grosor: number }
+  sinCirculo: boolean
+  children: ReactNode
+}) {
+  const nivel = nivelDe(xp)
+  const { hueco, grosor } = anillo
+  const margen = hueco + grosor
+  const caja = size + 2 * margen
+  const centro = caja / 2
+  const radio = centro - grosor / 2
+  const circunferencia = 2 * Math.PI * radio
+  const avance = avanceDe(xp)
+
+  const { diametro, letra } = circuloDe(size, nivel > 9)
+  const baja = margen + size
+  const chico = size <= 48
+  const centroY = chico
+    ? Math.min(baja + diametro / 2 - 2, caja + 12 - diametro / 2)
+    : baja + diametro / 2 - 3
+  const alto = chico || sinCirculo ? caja : centroY + diametro / 2
+
+  return (
+    <span className="relative block flex-none" style={{ width: caja, height: alto }}>
+      <svg
+        width={caja}
+        height={caja}
+        viewBox={`0 0 ${caja} ${caja}`}
+        className="absolute left-0 top-0"
+        aria-hidden
+        focusable="false"
+      >
+        <circle
+          cx={centro}
+          cy={centro}
+          r={radio}
+          fill="none"
+          strokeWidth={grosor}
+          style={{ stroke: 'color-mix(in oklab, var(--color-base-content) 22%, transparent)' }}
+        />
+        {avance > 0 && (
+          <circle
+            cx={centro}
+            cy={centro}
+            r={radio}
+            fill="none"
+            strokeWidth={grosor}
+            strokeLinecap="round"
+            strokeDasharray={`${avance * circunferencia} ${circunferencia}`}
+            transform={`rotate(-90 ${centro} ${centro})`}
+            className="stroke-primary"
+          />
+        )}
+      </svg>
+      <span className="absolute" style={{ left: margen, top: margen }}>
+        {children}
+      </span>
+      {!sinCirculo && (
+      <span
+        aria-hidden
+        className="absolute flex -translate-x-1/2 items-center justify-center rounded-full border-2 border-base-100 bg-[#f2b705] font-display font-bold leading-none text-[#3a2a1e] tabular-nums"
+        style={{ left: '50%', top: centroY - diametro / 2, width: diametro, height: diametro, fontSize: letra }}
+      >
+        {nivel}
+      </span>
+      )}
+    </span>
   )
 }
 
