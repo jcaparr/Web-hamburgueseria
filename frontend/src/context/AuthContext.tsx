@@ -26,6 +26,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     saveSession(data)
   }
 
+  async function refrescar(): Promise<User | null> {
+    try {
+      const { data } = await apiClient.get<User>('/auth/me')
+      saveSession(data)
+      return data
+    } catch {
+      return null
+    }
+  }
+
   async function login(email: string, password: string) {
     const { data } = await apiClient.post('/auth/login', { email, password })
     saveSession(data)
@@ -88,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, verifyEmail, loginWithGoogle, logout, cambiarHamburguesa }}
+      value={{ user, loading, login, register, verifyEmail, loginWithGoogle, logout, refrescar, cambiarHamburguesa }}
     >
       {children}
     </AuthContext.Provider>
