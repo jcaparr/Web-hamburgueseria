@@ -66,8 +66,9 @@ class RecalculoUnicoDeXpTest {
     }
 
     @Test
-    void unComentarioDeCincoANueveLetrasPasaDeSetentaACien() {
-        User ana = cuenta("xp5_ana", 100); // 70 de la reseña + 30 de bienvenida, con la regla vieja
+    void unComentarioDeCincoANueveDePalabrasPasaDeSetentaACien() {
+        // 70 de la reseña + 30 de bienvenida con la regla vieja; con la nueva, 100 + 30.
+        User ana = cuenta("xp5_ana", 100);
         resenia(ana, local("xp5-1"), "muy buena la carne eh");
 
         RecalculoUnicoDeXp.Resultado resultado = recalculo.ejecutar();
@@ -105,10 +106,12 @@ class RecalculoUnicoDeXpTest {
     @Test
     void sinReseniasNoSeToca() {
         User sin = cuenta("xp5_sin", 0);
+        User conXpYSinResenias = cuenta("xp5_sinresenias", 500);
 
         recalculo.ejecutar();
 
         assertThat(xpDe(sin)).isZero();
+        assertThat(xpDe(conXpYSinResenias)).isEqualTo(500);
     }
 
     @Test

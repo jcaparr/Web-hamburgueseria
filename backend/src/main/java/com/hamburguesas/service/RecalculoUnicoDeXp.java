@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -27,7 +29,9 @@ import java.time.Instant;
  *
  * <ul>
  *   <li>Solo sube: si la XP que da la regla es menor que la guardada, la cuenta no se toca
- *   y se avisa en el log. La regla nueva es más laxa, así que no debería pasar.</li>
+ *   y se avisa en el log. Es raro: la regla nueva es más laxa, salvo un comentario con 80
+ *   letras repartidas en pocas palabras y el resto números o signos, que antes contaba y
+ *   ahora no. Esas cuentas quedan identificadas por id en el log.</li>
  *   <li>Idempotente: correrla de nuevo no cambia nada. Igual se anota en
  *   {@code tareas_unicas} para no recorrer todas las cuentas en cada arranque.</li>
  *   <li>Si una cuenta falla se sigue con las demás y no se anota como hecha: el próximo
@@ -38,6 +42,9 @@ import java.time.Instant;
  */
 @Slf4j
 @Component
+// Después de la carga inicial de logros: una cuenta sin ningún logro tiene que recibirlos juntos
+// ("Ya tenías N logros") y no de a uno por el aviso de este recálculo.
+@Order(Ordered.LOWEST_PRECEDENCE)
 @RequiredArgsConstructor
 public class RecalculoUnicoDeXp implements ApplicationRunner {
 
