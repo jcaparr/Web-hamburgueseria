@@ -14,7 +14,7 @@ const DIAS_TRAS_TRES_CIERRES = 30
 const CIERRES_PARA_ESPERAR_MAS = 3
 
 /** Segundos en la primera pantalla antes de mostrarla. */
-export const SEGUNDOS_DE_ESPERA = 20
+export const SEGUNDOS_DE_ESPERA = 5
 
 /** Pantallas donde ya se está entrando o creando la cuenta, o que son texto legal. */
 const SIN_INVITACION = ['/login', '/register', '/verify-email', '/forgot-password', '/terminos', '/privacidad']

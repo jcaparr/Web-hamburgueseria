@@ -21,7 +21,7 @@ import {
  * No es un formulario: el botón de Google es el de Google, y el email lleva a las
  * pantallas de siempre, así hay un solo lugar donde se arma una cuenta.
  *
- * Cuándo sale está en utils/invitacionARegistrarse. Aparece a los 20 segundos o al
+ * Cuándo sale está en utils/invitacionARegistrarse. Aparece a los 5 segundos o al
  * pasar a una segunda pantalla; si se entró por un link directo a un local o una reseña,
  * solo al pasar a otra, para que primero vea lo que le mandaron. Se arma en el
  * navegador, así que los bots y las vistas previas no la ven.
