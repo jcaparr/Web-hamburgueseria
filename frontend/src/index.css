@@ -321,6 +321,20 @@ body {
  * lo que sobresale.
  */
 @layer base {
+  /*
+   * La manito en todo lo que se toca. Tailwind 4 dejó de poner cursor:pointer en los botones
+   * (queda la flecha), y solo los de daisyUI (.btn) la traen: una pastilla, una pestaña o una
+   * tarjeta que es un botón no avisaba que se podía tocar. Los deshabilitados siguen sin ella.
+   */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='tab'],
+  summary,
+  label:has(> input[type='radio']:not(:disabled)),
+  label:has(> input[type='checkbox']:not(:disabled)) {
+    cursor: pointer;
+  }
+
   :where(a, button, summary, [tabindex]):focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
