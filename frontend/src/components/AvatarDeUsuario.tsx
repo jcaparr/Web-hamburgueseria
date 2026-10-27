@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { avanceDe, nivelDe } from '../utils/niveles'
+import { avanceDe, NIVEL_MAXIMO, nivelDe } from '../utils/niveles'
 import { COLORES_DE_FONDOS, FONDOS, PANES, QUESOS, recetaPara, recetaVisible, type Receta } from '../utils/recetas'
 
 /**
@@ -55,16 +55,17 @@ export function AvatarDeUsuario({
   )
   if (xp === undefined || className) return disco
   return (
-    <AvatarConNivel size={size} xp={xp} anillo={anilloDe(size)} sinCirculo={sinCirculo}>
+    <AvatarConNivel size={size} xp={xp} anillo={anilloDe(size, nivelDe(xp) >= NIVEL_MAXIMO)} sinCirculo={sinCirculo}>
       {disco}
     </AvatarConNivel>
   )
 }
 
 /** El hueco entre el avatar y el anillo, y lo grueso del anillo, según el tamaño. */
-function anilloDe(size: number) {
-  if (size <= 48) return { hueco: 1.5, grosor: 2.5 }
-  if (size <= 96) return { hueco: 3, grosor: 5 }
+function anilloDe(size: number, marco: boolean) {
+  // En el nivel 20 el marco punteado es un poco más grueso, para que se lea el dibujo.
+  if (size <= 48) return { hueco: 1.5, grosor: marco ? 3.5 : 2.5 }
+  if (size <= 96) return { hueco: 3, grosor: marco ? 5.5 : 5 }
   return { hueco: 4, grosor: 6 }
 }
 
@@ -107,6 +108,9 @@ function AvatarConNivel({
   const radio = centro - grosor / 2
   const circunferencia = 2 * Math.PI * radio
   const avance = avanceDe(xp)
+  // Nivel 20 (#321): el anillo de avance se cambia por un marco punteado rojo y blanco, sin huecos.
+  const marco = nivel >= NIVEL_MAXIMO
+  const rayas = circunferencia / 44
 
   const { diametro, letra } = circuloDe(size, nivel > 9)
   const baja = margen + size
@@ -126,15 +130,33 @@ function AvatarConNivel({
         aria-hidden
         focusable="false"
       >
-        <circle
-          cx={centro}
-          cy={centro}
-          r={radio}
-          fill="none"
-          strokeWidth={grosor}
-          style={{ stroke: 'color-mix(in oklab, var(--color-base-content) 30%, transparent)' }}
-        />
-        {avance > 0 && (
+        {marco ? (
+          <>
+            <circle cx={centro} cy={centro} r={radio} fill="none" strokeWidth={grosor} style={{ stroke: '#fffdf8' }} />
+            <circle
+              cx={centro}
+              cy={centro}
+              r={radio}
+              fill="none"
+              strokeWidth={grosor}
+              strokeDasharray={`${rayas} ${rayas}`}
+              // Solo se anima con stroke-dashoffset, una vez, y en los tamaños grandes: en el feed y las
+              // listas queda quieto para no cargar a los celulares baratos.
+              className={`stroke-primary ${size > 48 ? 'marco-gira' : ''}`}
+              style={{ ['--giro' as string]: `${-2 * rayas}` }}
+            />
+          </>
+        ) : (
+          <circle
+            cx={centro}
+            cy={centro}
+            r={radio}
+            fill="none"
+            strokeWidth={grosor}
+            style={{ stroke: 'color-mix(in oklab, var(--color-base-content) 30%, transparent)' }}
+          />
+        )}
+        {!marco && avance > 0 && (
           <circle
             cx={centro}
             cy={centro}
