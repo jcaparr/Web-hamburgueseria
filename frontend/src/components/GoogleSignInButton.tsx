@@ -69,11 +69,14 @@ export function GoogleSignInButton({
   onCredential,
   onError,
   text = 'continue_with',
+  separador = true,
 }: {
   onCredential: (credential: string) => void
   onError: (message: string) => void
   /** Google's own wording options, so the button reads right on each screen. */
   text?: 'continue_with' | 'signin_with' | 'signup_with'
+  /** La "o" de arriba, que lo separa del formulario. Sin formulario arriba, sobra (#346). */
+  separador?: boolean
 }) {
   const container = useRef<HTMLDivElement>(null)
   // Kept in a ref so re-renders do not re-initialise Google's script with a stale
@@ -117,11 +120,13 @@ export function GoogleSignInButton({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <span className="h-px flex-1 bg-base-300" />
-        <span className="text-xs text-base-content/70">o</span>
-        <span className="h-px flex-1 bg-base-300" />
-      </div>
+      {separador && (
+        <div className="flex items-center gap-3">
+          <span className="h-px flex-1 bg-base-300" />
+          <span className="text-xs text-base-content/70">o</span>
+          <span className="h-px flex-1 bg-base-300" />
+        </div>
+      )}
       <div ref={container} className="flex justify-center" />
     </div>
   )

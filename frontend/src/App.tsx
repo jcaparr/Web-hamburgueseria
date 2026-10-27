@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom'
 import { AvisoDeLogro } from './components/AvisoDeLogro'
 import { AvisoDeXp } from './components/AvisoDeXp'
+import { InvitacionARegistrarse } from './components/InvitacionARegistrarse'
 import { BottomNav } from './components/BottomNav'
 import { PieDeLaPagina } from './components/PieDeLaPagina'
 import { RequireAuth } from './components/RequireAuth'
@@ -94,6 +95,7 @@ export default function App() {
           </main>
           <PieDeLaPagina />
           <BottomNav />
+          <InvitacionARegistrarse />
         </div>
         </ReseniaRapidaProvider>
       </BrowserRouter>
