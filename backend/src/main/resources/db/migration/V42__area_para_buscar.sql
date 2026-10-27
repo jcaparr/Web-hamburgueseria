@@ -9,7 +9,7 @@ update burger_joints
 set area_para_buscar = lower(btrim(regexp_replace(translate(
     area,
     'áéíóúüñÁÉÍÓÚÜÑàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛäëïöÄËÏÖçÇ',
-    'aeiouunAEIOUUNaeiouAEIOUaeiouAEIOUaeioAEIOcC'), 's+', ' ', 'g')))
+    'aeiouunAEIOUUNaeiouAEIOUaeiouAEIOUaeioAEIOcC'), '\s+', ' ', 'g')))
 where area is not null;
 
 comment on column burger_joints.area_para_buscar is
