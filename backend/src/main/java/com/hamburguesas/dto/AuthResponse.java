@@ -11,5 +11,7 @@ public record AuthResponse(
     String hamburguesa,
     String email,
     /** La experiencia que suman sus reseñas (#310); de ahí sale el nivel. */
-    int xp
+    int xp,
+    /** El logro que muestra en su perfil (#319), o null. */
+    String logroExhibido
 ) {}

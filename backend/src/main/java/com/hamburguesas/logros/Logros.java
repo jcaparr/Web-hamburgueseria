@@ -93,6 +93,12 @@ public class Logros {
             activosDespues.add(Logro.MENU_COMPLETO);
         }
 
+        // El logro exhibido que ya no se tiene se saca del perfil.
+        if (cuenta.getLogroExhibido() != null
+            && !activosDespues.stream().map(Logro::name).collect(Collectors.toSet()).contains(cuenta.getLogroExhibido())) {
+            cuenta.setLogroExhibido(null);
+        }
+
         Instant ahora = Instant.now();
         for (Logro logro : Logro.values()) {
             if (DEL_PODIO.contains(logro)) {
@@ -117,6 +123,50 @@ public class Logros {
             }
         }
         return activosDespues;
+    }
+
+    /**
+     * Elige (o saca, con null) el logro que se muestra en el perfil (#319). Solo uno que tenga
+     * ganado y activo hoy.
+     */
+    @Transactional
+    public User exhibir(Long userId, String codigo) {
+        User cuenta = userRepository.bloquear(userId).orElseThrow();
+        if (codigo != null) {
+            boolean existe = java.util.Arrays.stream(Logro.values()).anyMatch(l -> l.name().equals(codigo));
+            boolean loTiene = existe && repository.findById(new LogroDeUsuarioId(userId, codigo))
+                .map(LogroDeUsuario::isActivo).orElse(false);
+            if (!loTiene) {
+                throw new com.hamburguesas.exception.ConflictException("Todavía no ganaste ese logro");
+            }
+        }
+        cuenta.setLogroExhibido(codigo);
+        return cuenta;
+    }
+
+    /** Los logros del perfil de alguien, sin lo que su dueño no quiere mostrar (#319). */
+    @Transactional(readOnly = true)
+    public PerfilDeLogros paraPerfil(Long duenioId, Long quienMira) {
+        User duenio = userRepository.findById(duenioId).orElseThrow();
+        boolean soyYo = duenioId.equals(quienMira);
+        Set<String> ocultos = new java.util.HashSet<>();
+        if (!soyYo) {
+            // Slider es de todas las cuentas: no dice nada de nadie.
+            ocultos.add(Logro.NIVEL_1.name());
+            if (!duenio.isMuestraListas()) {
+                ocultos.add(Logro.PLANIFICADOR.name());
+                ocultos.add(Logro.PRIMER_TOUR.name());
+                ocultos.add(Logro.GUIA.name());
+            }
+        }
+        List<String> activos = repository.deLaCuenta(duenioId).stream()
+            .filter(LogroDeUsuario::isActivo)
+            .map(l -> l.getId().logro())
+            .filter(c -> !ocultos.contains(c))
+            .sorted()
+            .toList();
+        String exhibido = duenio.getLogroExhibido();
+        return new PerfilDeLogros(exhibido != null && !ocultos.contains(exhibido) ? exhibido : null, activos);
     }
 
     /** Qué hay para avisar: lo ganado sin ver y cuántos de la carga inicial (#317). */

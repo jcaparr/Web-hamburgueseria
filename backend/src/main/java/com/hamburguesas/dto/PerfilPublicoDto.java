@@ -27,5 +27,15 @@ public record PerfilPublicoDto(
     boolean soyYo,
     List<ReseniaDePerfilDto> ultimasResenias,
     /** Si quien mira puede ver sus guardadas y sus recorridos (#264). Las propias, siempre. */
-    boolean seVenSusListas
-) {}
+    boolean seVenSusListas,
+    /** El logro que eligió mostrar (#319), o null. Respeta lo que su dueño oculta. */
+    String logroExhibido,
+    /** Sus logros activos que quien mira puede ver, para la hoja del perfil. */
+    List<String> logros
+) {
+
+    public PerfilPublicoDto conLogros(String exhibido, List<String> activos) {
+        return new PerfilPublicoDto(userId, username, hamburguesa, xp, resenias, promedio, seguidores, siguiendo,
+            loSigo, soyYo, ultimasResenias, seVenSusListas, exhibido, activos);
+    }
+}

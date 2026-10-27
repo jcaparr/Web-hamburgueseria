@@ -3,6 +3,7 @@ import { apiClient } from '../api/client'
 import { BotonBloquear } from '../components/BotonBloquear'
 import { BotonSeguir } from '../components/BotonSeguir'
 import { CabeceraDePerfil } from '../components/CabeceraDePerfil'
+import { PastillaDeLogro } from '../components/PastillaDeLogro'
 import { GuardadasDeOtraPersona, RecorridosDeOtraPersona } from '../components/ListasDeOtraPersona'
 import { ListaDeReseniasDePerfil } from '../components/ListaDeReseniasDePerfil'
 import { LoadError } from '../components/LoadError'
@@ -104,6 +105,7 @@ export function PerfilPublico() {
         username={perfil.username}
         hamburguesa={perfil.hamburguesa}
         xp={perfil.xp}
+        pastilla={<PastillaDeLogro exhibido={perfil.logroExhibido} propia={false} logros={perfil.logros} />}
         cifras={[
           {
             // Lleva a todas sus reseñas (#247), como seguidores lleva a quiénes son.

@@ -19,6 +19,7 @@ import { CATALOGO, GRUPOS, POR_CODIGO, VISIBLES, nombreDe } from '../utils/logro
 function MisLogros() {
   const pedido = usePedido('logros', () => apiClient.get<PantallaDeLogros>('/logros').then((r) => r.data))
   const [abierto, setAbierto] = useState<string | null>(null)
+  const { user, exhibirLogro } = useAuth()
   // A qué tarjeta volver el foco al cerrar la hoja.
   const origen = useRef<HTMLElement | null>(null)
 
@@ -105,6 +106,8 @@ function MisLogros() {
 
       <HojaDeLogro
         logro={abierto ? porCodigo.get(abierto) ?? null : null}
+        exhibido={user?.logroExhibido ?? null}
+        onExhibir={(codigo) => exhibirLogro(codigo).catch(() => {})}
         onCerrar={() => {
           setAbierto(null)
           origen.current?.focus()
@@ -181,7 +184,17 @@ function Tarjeta({
 }
 
 /** La hoja de un logro: qué es y cuánto falta, o cuándo se ganó. Se cierra con Esc o tocando afuera. */
-function HojaDeLogro({ logro, onCerrar }: { logro: LogroDeLaPantalla | null; onCerrar: () => void }) {
+function HojaDeLogro({
+  logro,
+  exhibido,
+  onExhibir,
+  onCerrar,
+}: {
+  logro: LogroDeLaPantalla | null
+  exhibido: string | null
+  onExhibir: (codigo: string | null) => void
+  onCerrar: () => void
+}) {
   const dialogo = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -223,6 +236,15 @@ function HojaDeLogro({ logro, onCerrar }: { logro: LogroDeLaPantalla | null; onC
                   <p className="text-sm text-base-content/70">{medidaDe(logro)}</p>
                 </div>
               )
+            )}
+            {logro.ganado && (
+              <button
+                type="button"
+                onClick={() => onExhibir(exhibido === logro.codigo ? null : logro.codigo)}
+                className="btn btn-outline w-full"
+              >
+                {exhibido === logro.codigo ? 'Quitar de mi perfil' : 'Exhibir en mi perfil'}
+              </button>
             )}
             <button type="button" onClick={onCerrar} className="btn btn-primary w-full">
               Cerrar

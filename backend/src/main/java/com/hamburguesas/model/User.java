@@ -68,6 +68,10 @@ public class User {
     @ColumnDefault("0")
     private int xp;
 
+    /** El logro que eligió mostrar en su perfil (#319), o nulo. Solo uno de los que tiene ganados. */
+    @Column(name = "logro_exhibido", length = 40)
+    private String logroExhibido;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

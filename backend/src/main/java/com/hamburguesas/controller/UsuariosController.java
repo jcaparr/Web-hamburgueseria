@@ -2,6 +2,7 @@ package com.hamburguesas.controller;
 
 import com.hamburguesas.dto.BurgerJointDto;
 import com.hamburguesas.dto.PerfilPublicoDto;
+import com.hamburguesas.logros.PerfilDeLogros;
 import com.hamburguesas.dto.ReseniaDePerfilDto;
 import com.hamburguesas.dto.SavedTourDto;
 import com.hamburguesas.dto.UsuarioBloqueadoDto;
@@ -34,6 +35,7 @@ import java.util.List;
 public class UsuariosController {
 
     private final SocialService socialService;
+    private final com.hamburguesas.logros.Logros logrosService;
     private final ListasDelPerfil listasDelPerfil;
 
     @GetMapping
@@ -43,7 +45,11 @@ public class UsuariosController {
 
     @GetMapping("/{username}")
     public PerfilPublicoDto perfil(@PathVariable String username) {
-        return socialService.perfil(username, CurrentUser.requireId());
+        Long yo = CurrentUser.requireId();
+        PerfilPublicoDto perfil = socialService.perfil(username, yo);
+        // Lo mismo que el perfil ya dejó ver: acá se suman los logros respetando lo que oculta su dueño (#319).
+        PerfilDeLogros logros = logrosService.paraPerfil(perfil.userId(), yo);
+        return perfil.conLogros(logros.exhibido(), logros.activos());
     }
 
     /** Todas sus reseñas (#247). */
