@@ -40,6 +40,9 @@ export function fechaYHora(iso: string, ahora: Date = new Date()): string {
  */
 export function diaDeLaVisita(dia: string): string {
   const [anio, mes, d] = dia.split('-').map(Number)
+  if (!anio || !mes || !d) return ''
   const texto = new Date(anio, mes - 1, d).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
-  return texto.replace('.', '').replace(' ', ' de ') + '.'
+  const sinAnio = texto.replace('.', '').replace(' ', ' de ') + '.'
+  // Una visita de hace once meses sin año se leería como la del mes que viene.
+  return anio === new Date().getFullYear() ? sinAnio : `${sinAnio} de ${anio}`
 }
