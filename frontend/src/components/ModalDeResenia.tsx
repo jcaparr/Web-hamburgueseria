@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { apiClient } from '../api/client'
 import { useAuth } from '../context/useAuth'
 import { BuscadorDeLocal } from './BuscadorDeLocal'
+import { DialogoDeConfirmacion } from './DialogoDeConfirmacion'
 import { SelectorDeFotos, type FotosElegidas } from './SelectorDeFotos'
 import { Stars } from './Stars'
 import type { BurgerJoint, DesgloseDeNotas, Rating, ResumenDeResenias } from '../types'
@@ -100,6 +101,8 @@ export function ModalDeResenia({
   // La reseña que se edita. Desde la ficha llega de afuera; con el buscador se pide al
   // elegir el local.
   const [mia, setMia] = useState<Rating | null>(miResenia)
+  // La pregunta de "¿cerrar sin guardar?" (#351), en una ventana propia sobre esta.
+  const [confirmandoCierre, setConfirmandoCierre] = useState(false)
   const [desglose, setDesglose] = useState<DesgloseDeNotas | null>(null)
   // Arranca con lo que ya tenía la reseña, si había. Quien la abre le cambia la key a
   // la ventana cada vez que la abre, así que siempre se arma de cero: antes se volvía
@@ -300,7 +303,15 @@ export function ModalDeResenia({
 
   function intentarCerrar() {
     if (guardando || borrando) return
-    if (hayAlgoEscrito && !confirm('¿Cerrar sin guardar? Vas a perder lo que escribiste.')) return
+    if (hayAlgoEscrito) {
+      setConfirmandoCierre(true)
+      return
+    }
+    onCerrar()
+  }
+
+  function cerrarSinGuardar() {
+    setConfirmandoCierre(false)
     onCerrar()
   }
 
@@ -657,6 +668,16 @@ export function ModalDeResenia({
           Cerrar
         </button>
       </form>
+
+      <DialogoDeConfirmacion
+        abierto={confirmandoCierre}
+        titulo="¿Cerrar sin guardar?"
+        texto="Vas a perder lo que escribiste."
+        textoDeSeguir="Seguir escribiendo"
+        textoDeConfirmar="Cerrar sin guardar"
+        onSeguir={() => setConfirmandoCierre(false)}
+        onConfirmar={cerrarSinGuardar}
+      />
     </dialog>
   )
 }
