@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom'
+import { AvisoDeXp } from './components/AvisoDeXp'
 import { BottomNav } from './components/BottomNav'
 import { PieDeLaPagina } from './components/PieDeLaPagina'
 import { RequireAuth } from './components/RequireAuth'
@@ -39,6 +40,7 @@ export default function App() {
             Saltar al contenido
           </a>
           <AlCambiarDePagina />
+          <AvisoDeXp />
           <TopBar />
           {/* En el teléfono, lo de abajo deja lugar para la barra de navegación, que flota
               encima: 59 px de barra, lo que ocupa la barra de gestos del teléfono si tiene
