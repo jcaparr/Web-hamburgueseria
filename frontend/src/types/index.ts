@@ -204,6 +204,8 @@ export interface User {
   /** La hamburguesa que eligió para su avatar, o null: se dibuja la de su nombre. */
   hamburguesa: string | null
   xp: number
+  /** El logro que muestra en su perfil (#319), o null. */
+  logroExhibido?: string | null
   email: string
 }
 
@@ -251,6 +253,9 @@ export interface PerfilPublico {
   ultimasResenias: ReseniaDePerfil[]
   /** Si se pueden ver sus guardadas y sus recorridos (#264): los muestra, o es tu perfil. */
   seVenSusListas: boolean
+  /** El logro que eligió mostrar (#319) y los que se pueden ver de esa persona. */
+  logroExhibido: string | null
+  logros: string[]
 }
 
 /** Una reseña como se lee en el feed, con quién, dónde y qué dijo. */

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { CabeceraDePerfil } from '../components/CabeceraDePerfil'
+import { PastillaDeLogro } from '../components/PastillaDeLogro'
 import { IconPencil } from '../components/icons'
 import { LoadError } from '../components/LoadError'
 import { BarraDePestanias, GrillaDeLocales, VerTodas } from '../components/PestaniasDePerfil'
@@ -88,6 +89,7 @@ export function Profile() {
         username={user.username}
         hamburguesa={user.hamburguesa}
         xp={user.xp}
+        pastilla={<PastillaDeLogro exhibido={user.logroExhibido ?? null} propia />}
         // Debajo del nombre, al lado de la hamburguesa: es donde se la mira y donde se
         // busca cómo cambiarla.
         bajada={

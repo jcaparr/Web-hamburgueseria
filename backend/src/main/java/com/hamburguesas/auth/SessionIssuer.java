@@ -46,7 +46,7 @@ public class SessionIssuer {
 
     /** Lo único que sale en el cuerpo, en un solo lugar para que no se desarmen entre sí. */
     public static AuthResponse quienEs(User user) {
-        return new AuthResponse(user.getId(), user.getUsername(), user.getHamburguesa(), user.getEmail(), user.getXp());
+        return new AuthResponse(user.getId(), user.getUsername(), user.getHamburguesa(), user.getEmail(), user.getXp(), user.getLogroExhibido());
     }
 
     public ResponseEntity<Void> end() {
