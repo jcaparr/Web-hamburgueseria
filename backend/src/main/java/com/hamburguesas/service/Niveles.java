@@ -74,7 +74,7 @@ public final class Niveles {
             return false;
         }
         long palabras = java.util.Arrays.stream(limpio.split("\\s+"))
-            .filter(palabra -> palabra.chars().anyMatch(Character::isLetter))
+            .filter(palabra -> palabra.codePoints().anyMatch(Character::isLetter))
             .count();
         return palabras >= PALABRAS_MINIMAS;
     }

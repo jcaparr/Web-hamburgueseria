@@ -78,6 +78,14 @@ class NivelesTest {
     }
 
     @Test
+    void losSaltosDeLineaYLosTabsSeparanPalabrasYLasLetrasFueraDelPlanoBasicoCuentan() {
+        assertThat(Niveles.xpDe("muy\nbuena\tla\ncarne\teh")).isEqualTo(100);
+        // Negrita matemática: cada letra son dos unidades de UTF-16, y el front las cuenta bien.
+        String hola = new String(Character.toChars(0x1D421)) + new String(Character.toChars(0x1D428));
+        assertThat(Niveles.xpDe((hola + " ").repeat(5))).isEqualTo(100);
+    }
+
+    @Test
     void sinReseniasNoHayXpNiBienvenida() {
         assertThat(Niveles.xpTotal(List.of())).isZero();
     }
