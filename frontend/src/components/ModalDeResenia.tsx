@@ -18,7 +18,7 @@ import {
   xpSinLaResenia,
 } from '../utils/niveles'
 
-type Campo = 'local' | 'puntaje' | 'foto' | 'fecha'
+type Campo = 'puntaje' | 'foto' | 'fecha'
 
 /** El local sobre el que se reseña: lo que hace falta para mostrarlo y para mandar. */
 interface LocalElegido {
@@ -120,7 +120,11 @@ export function ModalDeResenia({
   // al pie del formulario, donde quedaba lejos de lo que había que corregir.
   const [error, setError] = useState<{ texto: string; campo?: Campo } | null>(null)
   const idDelTitulo = useId()
-  const zonaDelLocal = useRef<HTMLDivElement>(null)
+  // Cuenta los pedidos de "¿ya la reseñaste?": una respuesta que llega después de haber
+  // cambiado de local es de otro local y no se aplica.
+  const pedidoDeMia = useRef(0)
+  const [revisando, setRevisando] = useState(false)
+  const [fallaRevisar, setFallaRevisar] = useState(false)
   const zonaDelPuntaje = useRef<HTMLDivElement>(null)
   const zonaDeLaFoto = useRef<HTMLDivElement>(null)
   const zonaDeLaFecha = useRef<HTMLDivElement>(null)
@@ -247,23 +251,46 @@ export function ModalDeResenia({
     setError(null)
   }
 
-  async function elegirLocal(elegido: BurgerJoint) {
-    vaciar()
-    setDesglose(null)
-    setLocal({ id: elegido.id, nombre: elegido.name, barrio: elegido.area })
-    // Si ya lo reseñaste, se abre para editar: es una reseña por local.
+  /**
+   * Si ya reseñaste este local, abre la reseña para editarla: es una reseña por local.
+   *
+   * Mientras no se sabe no se puede publicar (un POST sobre una reseña que ya existe
+   * es un 409), y si no se pudo saber se dice y se deja reintentar.
+   */
+  async function revisarSiYaReseniaste(id: number | string) {
+    const este = ++pedidoDeMia.current
+    setRevisando(true)
+    setFallaRevisar(false)
     try {
-      const { data, status } = await apiClient.get<Rating>(`/burger-joints/${elegido.id}/ratings/mine`)
+      const { data, status } = await apiClient.get<Rating>(`/burger-joints/${id}/ratings/mine`)
+      if (pedidoDeMia.current !== este) return
       if (status === 200 && data) cargar(data)
     } catch (err) {
+      if (pedidoDeMia.current !== este) return
       if (isSessionExpired(err)) onSesionVencida()
+      else setFallaRevisar(true)
+    } finally {
+      if (pedidoDeMia.current === este) setRevisando(false)
     }
   }
 
+  function elegirLocal(elegido: BurgerJoint) {
+    vaciar()
+    setDesglose(null)
+    setLocal({ id: elegido.id, nombre: elegido.name, barrio: elegido.area })
+    void revisarSiYaReseniaste(elegido.id)
+    // El botón que se tocó desaparece: el foco pasa a lo siguiente que hay que hacer.
+    requestAnimationFrame(() => zonaDelPuntaje.current?.querySelector<HTMLElement>('[role=radio]')?.focus())
+  }
+
   function cambiarDeLocal() {
+    pedidoDeMia.current++
+    setRevisando(false)
+    setFallaRevisar(false)
     vaciar()
     setDesglose(null)
     setLocal(null)
+    requestAnimationFrame(() => dialogo.current?.querySelector<HTMLInputElement>('input[type=search]')?.focus())
   }
 
   function intentarCerrar() {
@@ -279,10 +306,7 @@ export function ModalDeResenia({
 
   async function guardar(e: FormEvent) {
     e.preventDefault()
-    if (!local) {
-      avisar('Elegí el local que querés reseñar.', 'local', zonaDelLocal)
-      return
-    }
+    if (!local || revisando || fallaRevisar) return
     if (score === 0) {
       avisar('Elegí una nota de 1 a 5 estrellas.', 'puntaje', zonaDelPuntaje)
       return
@@ -318,7 +342,10 @@ export function ModalDeResenia({
       cuerpo.append('comment', comment)
       // "Hoy" no manda fecha: queda la de carga, que es la de hoy. Y las tres notas
       // opcionales van solo si se pusieron.
+      // Al editar, "Hoy" se manda: sin el campo el servidor lo borraría y se volvería a
+      // mostrar el día en que se cargó la reseña.
       if (cuando === 'otro') cuerpo.append('visitDate', dia)
+      else if (mia) cuerpo.append('visitDate', hoy)
       if (notaLocal > 0) cuerpo.append('scoreLocal', String(notaLocal))
       if (notaAtencion > 0) cuerpo.append('scoreAtencion', String(notaAtencion))
       if (notaPrecio > 0) cuerpo.append('scorePrecio', String(notaPrecio))
@@ -399,17 +426,18 @@ export function ModalDeResenia({
       className="modal modal-bottom sm:modal-middle"
       // El Esc lo cierra el navegador solo, y eso se llevaría el texto sin preguntar.
       onCancel={(e) => {
+        // El Esc de la ventana de "Sugerí un local", que está adentro de esta, sube hasta acá
+        // en el árbol de React: no es el de esta ventana y no la tiene que cerrar.
+        if (e.target !== e.currentTarget) return
         e.preventDefault()
         intentarCerrar()
       }}
     >
       <div className="modal-box flex flex-col gap-4">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-col">
-            <h2 id={idDelTitulo} className="font-display text-lg font-bold">
-              {mia ? 'Editar tu reseña' : 'Escribir una reseña'}
-            </h2>
-          </div>
+          <h2 id={idDelTitulo} className="font-display text-lg font-bold">
+            {mia ? 'Editar tu reseña' : 'Escribir una reseña'}
+          </h2>
           <button
             type="button"
             onClick={intentarCerrar}
@@ -420,9 +448,13 @@ export function ModalDeResenia({
           </button>
         </div>
 
+        {/* Fuera del formulario de la reseña: el botón de "Sugerí un local" abre su propio
+            formulario, y uno adentro del otro mandaría los dos al enviar. */}
+        {!local && <BuscadorDeLocal onElegir={elegirLocal} />}
+
+        {local && (
         <form onSubmit={guardar} className="flex flex-col gap-4">
-          <div ref={zonaDelLocal} className="flex flex-col gap-3">
-            {local ? (
+          <div className="flex flex-col gap-3">
               <>
                 <div className="flex items-center justify-between gap-3 rounded-field bg-base-200 px-3 py-2">
                   <div className="flex min-w-0 flex-col">
@@ -435,16 +467,21 @@ export function ModalDeResenia({
                     </button>
                   )}
                 </div>
+                {mia && !esFijo && (
+                  <p role="status" className="text-sm text-base-content/70">
+                    Ya reseñaste este local: estás editando tu reseña.
+                  </p>
+                )}
+                {fallaRevisar && (
+                  <div role="alert" className="flex items-center justify-between gap-2 text-sm text-error">
+                    <span>No pudimos revisar si ya reseñaste este local.</span>
+                    <button type="button" onClick={() => void revisarSiYaReseniaste(local.id)} className="btn btn-ghost h-11 min-h-11 px-3">
+                      Reintentar
+                    </button>
+                  </div>
+                )}
                 <AsiLoCalificaron desglose={desglose} />
               </>
-            ) : (
-              <BuscadorDeLocal onElegir={elegirLocal} />
-            )}
-            {error?.campo === 'local' && (
-              <p role="alert" className="text-sm text-error">
-                {error.texto}
-              </p>
-            )}
           </div>
 
           {local && (
@@ -470,8 +507,12 @@ export function ModalDeResenia({
                 open={base.notaLocal + base.notaAtencion + base.notaPrecio > 0}
                 className="rounded-field border border-base-300 px-3"
               >
-                <summary className="flex min-h-12 cursor-pointer items-center font-semibold">Sumá más detalle</summary>
+                <summary className="flex min-h-12 cursor-pointer items-center justify-between font-semibold">
+                  Sumá más detalle
+                  <span aria-hidden="true" className="text-base-content/70 transition-transform in-[details[open]]:rotate-180 motion-reduce:transition-none">▾</span>
+                </summary>
                 <div className="flex flex-col gap-1 pb-3">
+                  <p className="text-xs text-base-content/70">Tocá otra vez la misma estrella para sacarla.</p>
                   <FilaDeNota rotulo="Local" valor={notaLocal} onCambio={alternar(setNotaLocal, notaLocal)} />
                   <FilaDeNota rotulo="Atención" valor={notaAtencion} onCambio={alternar(setNotaAtencion, notaAtencion)} />
                   <FilaDeNota rotulo="Precio" valor={notaPrecio} onCambio={alternar(setNotaPrecio, notaPrecio)} />
@@ -479,7 +520,7 @@ export function ModalDeResenia({
               </details>
 
               <div ref={zonaDeLaFoto} className="flex flex-col gap-1.5">
-                <span className="text-sm font-semibold">Las fotos</span>
+                <span className="text-sm font-semibold">Las fotos <span className="font-normal text-base-content/70">(al menos una)</span></span>
                 <SelectorDeFotos key={mia?.id ?? 'nueva'} yaSubidas={mia?.fotos ?? []} onCambio={elegirFotos} />
                 {error?.campo === 'foto' && (
                   <p role="alert" className="text-sm text-error">
@@ -563,7 +604,7 @@ export function ModalDeResenia({
           {/* El mismo verbo en el botón y mientras trabaja: "Publicar" se vuelve
               "Publicando…", no "Guardando…". */}
           {local && (
-            <button type="submit" disabled={guardando || borrando} className="btn btn-primary">
+            <button type="submit" disabled={guardando || borrando || revisando || fallaRevisar} className="btn btn-primary">
               {mia
                 ? guardando ? 'Guardando…' : 'Guardar cambios'
                 : guardando ? 'Publicando…' : 'Publicar reseña'}
@@ -583,6 +624,7 @@ export function ModalDeResenia({
             </button>
           )}
         </form>
+        )}
       </div>
 
       {/* El clic afuera pasa por el mismo camino que la cruz y que el Esc, así que

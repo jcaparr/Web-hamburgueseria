@@ -127,7 +127,11 @@ public class RatingService {
             .findByUser_IdAndBurgerJoint_Id(userId, burgerJointId)
             .orElseThrow(() -> new ResourceNotFoundException("You haven't rated this burger joint yet"));
 
-        validarFechaDeVisita(request.visitDate(), rating.getVisitDate());
+        // Una reseña de antes no tiene día de visita y se muestra con el de carga: ese día
+        // cuenta como "el que ya tenía", así que al editarla no se rechaza por viejo.
+        LocalDate yaTenia = rating.getVisitDate() != null ? rating.getVisitDate()
+            : rating.getCreatedAt() != null ? rating.getCreatedAt().atZone(Logros.ZONA).toLocalDate() : null;
+        validarFechaDeVisita(request.visitDate(), yaTenia);
 
         List<byte[]> nuevas = leerTodas(fotosSubidas);
         List<String> actuales = rating.todasLasFotos();

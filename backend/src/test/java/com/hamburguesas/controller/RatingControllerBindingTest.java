@@ -1,6 +1,7 @@
 package com.hamburguesas.controller;
 
 import com.hamburguesas.dto.RatingRequest;
+import com.hamburguesas.dto.RatingResponse;
 import com.hamburguesas.model.User;
 import com.hamburguesas.security.UserPrincipal;
 import com.hamburguesas.service.RatingService;
@@ -17,6 +18,7 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -24,6 +26,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -80,6 +84,22 @@ class RatingControllerBindingTest {
         verify(servicio).rate(eq(1L), eq(5L), pedido.capture(), any());
         assertThat(pedido.getValue().visitDate()).isNull();
         assertThat(pedido.getValue().scorePrecio()).isNull();
+    }
+
+    @Test
+    void laReseniaPropiaSeDevuelveOEs204() throws Exception {
+        mvc.perform(get("/api/burger-joints/5/ratings/mine")).andExpect(status().isNoContent());
+
+        when(servicio.mia(1L, 5L)).thenReturn(Optional.of(mock(RatingResponse.class)));
+        mvc.perform(get("/api/burger-joints/5/ratings/mine")).andExpect(status().isOk());
+    }
+
+    @Test
+    void sinSesionNoHayReseniaPropia() {
+        SecurityContextHolder.clearContext();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> mvc.perform(get("/api/burger-joints/5/ratings/mine")))
+            .hasRootCauseInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+        verify(servicio, never()).mia(any(), any());
     }
 
     @Test

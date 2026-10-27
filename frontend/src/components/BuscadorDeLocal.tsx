@@ -29,7 +29,7 @@ export function BuscadorDeLocal({ onElegir }: { onElegir: (local: BurgerJoint) =
 
   useEffect(() => {
     const q = texto.trim()
-    if (!q) return
+    if (q.length < 2) return
     let vigente = true
     const espera = setTimeout(() => {
       setBuscando(true)
@@ -56,7 +56,7 @@ export function BuscadorDeLocal({ onElegir }: { onElegir: (local: BurgerJoint) =
     }
   }, [texto])
 
-  const hayTexto = texto.trim() !== ''
+  const hayTexto = texto.trim().length >= 2
   const sinResultados = hayTexto && !buscando && !fallo && buscado === texto.trim() && resultados.length === 0
 
   return (
@@ -68,12 +68,23 @@ export function BuscadorDeLocal({ onElegir }: { onElegir: (local: BurgerJoint) =
         id={idDelCampo}
         type="search"
         value={texto}
-        onChange={(e) => setTexto(e.target.value)}
+        onChange={(e) => {
+          setTexto(e.target.value)
+          // Vaciado el campo no queda ninguna búsqueda en vuelo que apague el "Buscando…".
+          if (!e.target.value.trim()) {
+            setBuscando(false)
+            setResultados([])
+          }
+        }}
         placeholder="Nombre del local (y barrio, si querés)"
         autoComplete="off"
         enterKeyHint="search"
         className="input input-bordered h-12 w-full focus:border-primary"
       />
+
+      <p role="status" className={buscando ? 'text-sm text-base-content/70' : 'sr-only'}>
+        {buscando ? 'Buscando…' : ''}
+      </p>
 
       {fallo && (
         <p role="alert" className="text-sm text-error">
@@ -90,7 +101,7 @@ export function BuscadorDeLocal({ onElegir }: { onElegir: (local: BurgerJoint) =
                 onClick={() => onElegir(local)}
                 className="flex min-h-14 w-full flex-col items-start justify-center px-3 py-2 text-left hover:bg-base-200 focus-visible:-outline-offset-2"
               >
-                <span className="w-full truncate font-semibold">{local.name}</span>
+                <span className="line-clamp-2 w-full font-semibold">{local.name}</span>
                 {local.area && <span className="w-full truncate text-sm text-base-content/70">{local.area}</span>}
               </button>
             </li>
@@ -98,9 +109,6 @@ export function BuscadorDeLocal({ onElegir }: { onElegir: (local: BurgerJoint) =
         </ul>
       )}
 
-      <p role="status" className="min-h-5 text-sm text-base-content/70">
-        {buscando ? 'Buscando…' : ''}
-      </p>
 
       {sinResultados && (
         <div className="flex flex-col items-start gap-2 rounded-field bg-base-200 p-3">

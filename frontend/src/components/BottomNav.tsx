@@ -13,8 +13,7 @@ const ANTES = [
   { to: '/ranking', label: 'Ranking', Icon: IconMedal },
 ]
 const DESPUES = [
-  // Igual que arriba: sin sesión el feed no tiene "Siguiendo" que mostrar, y sacarlo
-  // deja la barra en cuatro, que es lo que entra cómodo en un teléfono angosto.
+  // Igual que arriba: sin sesión el feed no tiene "Siguiendo" que mostrar.
   { to: '/feed', label: 'Feed', Icon: IconFeed, soloConSesion: true },
   { to: '/profile', label: 'Perfil', Icon: IconUser },
 ]
@@ -76,6 +75,7 @@ export function BottomNav() {
             type="button"
             onClick={abrir}
             aria-label="Escribir una reseña"
+            aria-haspopup="dialog"
             className="-mt-3.5 grid h-14 w-14 place-items-center rounded-[1.125rem] bg-primary text-primary-content shadow-[var(--sombra-de-la-barra)] transition-transform active:scale-95 motion-reduce:transition-none"
           >
             <IconPencil size={24} />
@@ -84,6 +84,8 @@ export function BottomNav() {
         {despues.map((item) => (
           <Pestania key={item.to} {...item} user={user} />
         ))}
+        {/* Sin sesión Feed no está: un hueco del mismo ancho deja el lápiz en el centro. */}
+        {despues.length < DESPUES.length && <div aria-hidden="true" className="flex-1" />}
       </div>
     </nav>
   )

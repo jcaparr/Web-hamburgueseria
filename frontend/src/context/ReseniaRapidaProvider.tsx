@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ModalDeResenia } from '../components/ModalDeResenia'
-import { ReseniaRapidaContext } from './resenia'
+import { RESENIA_GUARDADA, ReseniaRapidaContext } from './resenia'
 import { useAuth } from './useAuth'
 
 /** En la dirección, para que al volver de iniciar sesión la pantalla se abra sola. */
@@ -24,6 +24,9 @@ export function ReseniaRapidaProvider({ children }: { children: ReactNode }) {
   const [vez, setVez] = useState(0)
 
   const abrir = useCallback(() => {
+    // Mientras no se sabe si hay sesión no se manda a entrar: sería sacar a alguien que
+    // ya entró.
+    if (loading) return
     if (!user) {
       // Desde una pantalla de entrar o crear cuenta no se vuelve a ella: se vuelve al inicio.
       const estaEntrando = /^\/(login|register|verify-email|forgot-password)/.test(location.pathname)
@@ -34,7 +37,7 @@ export function ReseniaRapidaProvider({ children }: { children: ReactNode }) {
     }
     setVez((n) => n + 1)
     setAbierto(true)
-  }, [user, navigate, location.pathname, location.search])
+  }, [loading, user, navigate, location.pathname, location.search])
 
   // Abierta por el enlace mientras el parámetro esté y haya sesión: se deduce en vez de
   // prenderla desde un efecto (#109). Al cerrar se saca de la dirección.
@@ -42,11 +45,19 @@ export function ReseniaRapidaProvider({ children }: { children: ReactNode }) {
 
   function cerrar() {
     setAbierto(false)
-    const parametros = new URLSearchParams(location.search)
+    // La dirección de ahora y no la que tenía este dibujo: al publicar ya se navegó a la
+    // ficha, y volver a la anterior pisaría ese destino.
+    const parametros = new URLSearchParams(window.location.search)
     if (!parametros.has(PARAMETRO)) return
     parametros.delete(PARAMETRO)
     const resto = parametros.toString()
-    navigate(`${location.pathname}${resto ? `?${resto}` : ''}`, { replace: true })
+    navigate(`${window.location.pathname}${resto ? `?${resto}` : ''}`, { replace: true })
+  }
+
+  function alGuardar(localId: number | string) {
+    // Si ya se está en la ficha de ese local, navegar no la recarga: se le avisa.
+    window.dispatchEvent(new Event(RESENIA_GUARDADA))
+    navigate(`/burger-joints/${localId}`)
   }
 
   const valor = useMemo(() => ({ abrir }), [abrir])
@@ -60,7 +71,7 @@ export function ReseniaRapidaProvider({ children }: { children: ReactNode }) {
           abierto={abierto || abiertaPorEnlace}
           miResenia={null}
           onCerrar={cerrar}
-          onGuardada={(localId) => navigate(`/burger-joints/${localId}`)}
+          onGuardada={alGuardar}
           onSesionVencida={() => navigate('/login')}
         />
       )}

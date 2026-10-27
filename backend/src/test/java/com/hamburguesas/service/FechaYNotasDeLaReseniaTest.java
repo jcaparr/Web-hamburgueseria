@@ -150,6 +150,22 @@ class FechaYNotasDeLaReseniaTest {
         assertThat(service.resumen(LOCAL, null).desglose()).isEqualTo(desglose);
     }
     @Test
+    void editarUnaReseniaDeAntesDeUnAnioConSuFechaDeCargaNoSeRechaza() {
+        java.time.Instant cargada = hoy().minusYears(1).minusDays(30).atStartOfDay(Logros.ZONA).toInstant();
+        Rating vieja = Rating.builder().id(9L).score(3).comment("vieja").photoUrl("/api/rating-photos/a.jpg")
+            .createdAt(cargada)
+            .user(User.builder().id(YO).username("juanca").build())
+            .burgerJoint(BurgerJoint.builder().id(LOCAL).name("Un local").build())
+            .build();
+        when(ratingRepository.findByUser_IdAndBurgerJoint_Id(YO, LOCAL)).thenReturn(Optional.of(vieja));
+
+        LocalDate diaDeCarga = cargada.atZone(Logros.ZONA).toLocalDate();
+        service.update(YO, LOCAL, con(diaDeCarga, null, null, null), null, null);
+
+        assertThat(vieja.getVisitDate()).isEqualTo(diaDeCarga);
+    }
+
+    @Test
     void laReseniaPropiaSeBuscaPorLocalYPorUsuario() {
         assertThat(service.mia(YO, LOCAL)).isEmpty();
 
