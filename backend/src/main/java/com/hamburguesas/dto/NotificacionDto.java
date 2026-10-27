@@ -30,8 +30,12 @@ public record NotificacionDto(
     TipoDeReaccion reaccion,
     Long localId,
     String localSlug,
-    String localNombre
+    String localNombre,
+    /** Solo en un logro (#320): su código, o RETROACTIVOS en el aviso único de la carga inicial. */
+    String logro,
+    /** Solo en el aviso de retroactivos: cuántos logros eran. */
+    Long cantidad
 ) {
 
-    public enum Tipo { SEGUIMIENTO, REACCION }
+    public enum Tipo { SEGUIMIENTO, REACCION, LOGRO }
 }

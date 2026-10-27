@@ -5,7 +5,10 @@ import { apiClient } from '../api/client'
 import type { Buzon, Notificacion } from '../types'
 import { reaccion } from '../utils/reacciones'
 import { fechaYHora } from '../utils/fechaYHora'
+import { AVISOS, POR_CODIGO, nombreDe } from '../utils/logros'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
+import { IconLogros } from './icons'
+import { MedallaDeLogro } from './MedallaDeLogro'
 import { BotonSeguir } from './BotonSeguir'
 import { IconBell } from './icons'
 import { PanelDeBarra } from './PanelDeBarra'
@@ -144,7 +147,10 @@ function Grupo({ titulo, avisos, onCambioDeSeguimiento }: {
     <section aria-label={titulo ?? 'Notificaciones'}>
       {titulo && <h3 className="px-2 pb-1 pt-2 text-xs font-semibold text-base-content/70">{titulo}</h3>}
       <ul className="flex flex-col">
-        {avisos.map((aviso) => (
+        {avisos.map((aviso) =>
+          aviso.tipo === 'LOGRO' ? (
+            <AvisoDeUnLogro key={`logro-${aviso.logro}-${aviso.cuando}`} aviso={aviso} />
+          ) : (
           <li
             key={`${aviso.tipo}-${aviso.userId}-${aviso.localId ?? ''}-${aviso.cuando}`}
             className={`flex items-center gap-3 rounded-field px-2 py-2 ${aviso.nueva ? 'bg-primary/8' : ''}`}
@@ -172,9 +178,44 @@ function Grupo({ titulo, avisos, onCambioDeSeguimiento }: {
               />
             )}
           </li>
-        ))}
+          ),
+        )}
       </ul>
     </section>
+  )
+}
+
+/**
+ * Un logro en la campana (#320): su medalla y "Ganaste Nano influencer: ya tenés 10 seguidores.".
+ * Tocarlo abre Logros con la hoja de ese logro; el aviso único de los retroactivos lleva a Logros.
+ */
+function AvisoDeUnLogro({ aviso }: { aviso: Notificacion }) {
+  const codigo = aviso.logro ?? ''
+  const retro = codigo === 'RETROACTIVOS'
+  // Un código que este navegador no conoce (servidor más nuevo que la página): no hay qué mostrar.
+  if (!retro && !POR_CODIGO[codigo]) return null
+  // Solo la primera oración del aviso: en la campana va corto.
+  const detalle = (AVISOS[codigo] ?? '').split('. ')[0]
+  const texto = detalle ? detalle.charAt(0).toLowerCase() + detalle.slice(1).replace(/\.$/, '') + '.' : ''
+  return (
+    <li className={`rounded-field ${aviso.nueva ? 'bg-primary/8' : ''}`}>
+      <Link
+        to={retro ? '/logros' : `/logros?abrir=${codigo}`}
+        className="flex min-h-14 items-center gap-3 px-2 py-2"
+      >
+        {retro ? <IconLogros size={36} /> : <MedallaDeLogro codigo={codigo} ganado size={36} sinNumero />}
+        <p className="min-w-0 flex-1 text-sm leading-snug">
+          {retro ? (
+            <>{aviso.cantidad === 1 ? 'Ya tenías 1 logro' : `Ya tenías ${aviso.cantidad} logros`}</>
+          ) : (
+            <>
+              Ganaste <span className="font-semibold">{nombreDe(codigo)}</span>: {texto}
+            </>
+          )}
+          <span className="block text-xs text-base-content/70">{fechaYHora(aviso.cuando)}</span>
+        </p>
+      </Link>
+    </li>
   )
 }
 

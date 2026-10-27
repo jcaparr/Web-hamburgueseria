@@ -91,7 +91,7 @@ export type TipoDeReaccion = 'HAMBRE' | 'FUEGO' | 'APLAUSO' | 'RISA' | 'SORPRESA
  * Los campos de cada tipo vienen vacíos en el otro.
  */
 export interface Notificacion {
-  tipo: 'SEGUIMIENTO' | 'REACCION'
+  tipo: 'SEGUIMIENTO' | 'REACCION' | 'LOGRO'
   cuando: string
   /** Si llegó después de la última vez que se abrió el buzón. */
   nueva: boolean
@@ -106,6 +106,10 @@ export interface Notificacion {
   /** La dirección linda del local de la reseña (#305); nulo si aún no la tiene. */
   localSlug: string | null
   localNombre: string | null
+  /** Solo en un logro (#320): su código, o RETROACTIVOS en el aviso único de la carga inicial. */
+  logro?: string | null
+  /** Solo en el aviso de retroactivos: cuántos eran. */
+  cantidad?: number | null
 }
 
 export interface Buzon {

@@ -25,6 +25,13 @@ public interface LogroDeUsuarioRepository extends JpaRepository<LogroDeUsuario, 
     @Query("select l from LogroDeUsuario l where l.id.userId = :userId and l.activo = true and l.vistoEl is null and l.retroactivo = true")
     List<LogroDeUsuario> retroactivosSinMarcar(@Param("userId") Long userId);
 
+    /** Los activos ganados desde esa fecha, para la campana (#320). */
+    @Query("select l from LogroDeUsuario l where l.id.userId = :userId and l.activo = true and l.ganadoEl >= :desde order by l.ganadoEl desc")
+    List<LogroDeUsuario> ganadosDespuesDe(@Param("userId") Long userId, @Param("desde") java.time.Instant desde);
+
+    @Query("select count(l) from LogroDeUsuario l where l.id.userId = :userId and l.activo = true and l.retroactivo = false and l.ganadoEl > :desde")
+    long ganadosDesde(@Param("userId") Long userId, @Param("desde") java.time.Instant desde);
+
     @Query("select l from LogroDeUsuario l where l.id.userId = :userId")
     List<LogroDeUsuario> deLaCuenta(@Param("userId") Long userId);
 }
