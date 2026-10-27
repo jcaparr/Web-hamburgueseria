@@ -35,7 +35,7 @@ export function BuscadorDeLocal({ onElegir }: { onElegir: (local: BurgerJoint) =
       setBuscando(true)
       apiClient
         .get<PageResponse<BurgerJoint>>('/burger-joints', {
-          params: { q, cadenas: true, orden: 'relevantes', size: MAXIMO_DE_RESULTADOS },
+          params: { q, resenia: true, orden: 'relevantes', size: MAXIMO_DE_RESULTADOS },
         })
         .then(({ data }) => {
           if (!vigente) return
