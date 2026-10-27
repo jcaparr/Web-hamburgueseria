@@ -27,6 +27,7 @@ export function CabeceraDePerfil({
   bajada,
   cifras,
   acciones,
+  pastilla,
 }: {
   username: string
   hamburguesa: string | null
@@ -35,6 +36,8 @@ export function CabeceraDePerfil({
   bajada?: ReactNode
   cifras: { valor: string; etiqueta: string; a?: string }[]
   acciones?: ReactNode
+  /** El logro exhibido, debajo del nombre (#319). */
+  pastilla?: ReactNode
 }) {
   // 96 px en el teléfono y 144 en la compu, como los `size-24 md:size-36` de antes: el
   // anillo se dibuja en píxeles, así que el tamaño tiene que saberse.
@@ -56,10 +59,14 @@ export function CabeceraDePerfil({
               {username}
               <span className="sr-only">, nivel {nivelDe(xp)}</span>
             </h1>
+            {/* El logro exhibido, justo debajo del nombre (#319). */}
+            {pastilla}
             {bajada}
           </div>
         </div>
-        <CifrasDePerfil cifras={cifras} />
+        <div className="flex flex-col gap-3 md:w-64 md:flex-none">
+          <CifrasDePerfil cifras={cifras} />
+        </div>
       </div>
       {acciones}
     </header>

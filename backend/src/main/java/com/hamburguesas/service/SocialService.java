@@ -97,7 +97,7 @@ public class SocialService {
                 && followRepository.existsByFollower_IdAndFollowed_Id(quienMira, persona.getId()),
             soyYo,
             ratingRepository.ultimasDe(persona.getId(), PageRequest.of(0, RESENIAS_EN_EL_PERFIL)),
-            ListasDelPerfil.puedeVer(persona, quienMira));
+            ListasDelPerfil.puedeVer(persona, quienMira), null, List.of());
     }
 
     /**

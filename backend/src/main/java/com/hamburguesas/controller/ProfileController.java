@@ -25,6 +25,7 @@ public class ProfileController {
 
     private final ProfileService profileService;
     private final ListasDelPerfil listasDelPerfil;
+    private final com.hamburguesas.logros.Logros logros;
 
     @GetMapping("/stats")
     public ProfileStatsDto stats() {
@@ -40,6 +41,12 @@ public class ProfileController {
     @PutMapping("/hamburguesa")
     public AuthResponse hamburguesa(@Valid @RequestBody HamburguesaRequest pedido) {
         return profileService.cambiarHamburguesa(CurrentUser.requireId(), pedido.receta());
+    }
+
+    /** Elige el logro que se muestra en tu perfil, o lo saca con null (#319). */
+    @PutMapping("/logro-exhibido")
+    public AuthResponse logroExhibido(@RequestBody com.hamburguesas.dto.LogroExhibidoRequest pedido) {
+        return com.hamburguesas.auth.SessionIssuer.quienEs(logros.exhibir(CurrentUser.requireId(), pedido.logro()));
     }
 
     /** Si mostrás tus guardadas y tus recorridos en tu perfil público (#264). */
