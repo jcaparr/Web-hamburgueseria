@@ -68,9 +68,11 @@ export function TopBar() {
           </ul>
           {/* Reseñar desde cualquier pantalla (#337), igual que el lápiz del celular. Va junto
               al menú y no junto a la campana y los logros, que quedarían apretados. */}
-          <button type="button" onClick={abrir} aria-haspopup="dialog" className="btn btn-primary h-11 min-h-11 gap-2 rounded-full px-5">
+          <button type="button" onClick={abrir} aria-haspopup="dialog" className="btn btn-primary h-11 min-h-11 gap-2 rounded-full px-3 xl:px-5">
             <IconPencil size={18} />
-            Escribir reseña
+            {/* Entre md y xl el menú y los íconos de la derecha no dejan lugar para el texto:
+                queda el lápiz solo (con su nombre para los lectores de pantalla). */}
+            <span className="sr-only xl:not-sr-only">Escribir reseña</span>
           </button>
         </nav>
 

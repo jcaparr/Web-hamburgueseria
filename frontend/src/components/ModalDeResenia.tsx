@@ -476,6 +476,11 @@ export function ModalDeResenia({
                   <div className="flex min-w-0 flex-col">
                     <span className="truncate font-semibold">{local.nombre}</span>
                     {local.barrio && <span className="truncate text-sm text-base-content/70">{local.barrio}</span>}
+                    {mia && !esFijo && (
+                      <span role="status" className="text-xs text-base-content/70">
+                        Ya la reseñaste: estás editando.
+                      </span>
+                    )}
                   </div>
                   {!esFijo && (
                     <button type="button" onClick={cambiarDeLocal} className="btn btn-ghost h-11 min-h-11 flex-none px-3">
@@ -483,11 +488,6 @@ export function ModalDeResenia({
                     </button>
                   )}
                 </div>
-                {mia && !esFijo && (
-                  <p role="status" className="text-sm text-base-content/70">
-                    Ya reseñaste este local: estás editando tu reseña.
-                  </p>
-                )}
                 {fallaRevisar && (
                   <div role="alert" className="flex items-center justify-between gap-2 text-sm text-error">
                     <span>No pudimos revisar si ya reseñaste este local.</span>
