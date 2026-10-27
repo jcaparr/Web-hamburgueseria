@@ -81,7 +81,13 @@ public interface BurgerJointRepository
      */
     default Page<BurgerJoint> buscar(String nombre, List<String> barrios, OrdenDeLocales orden,
                                      Ubicacion ubicacion, Pageable pagina) {
-        return findAll(FiltroDeLocales.con(nombre, barrios, orden, ubicacion), pagina);
+        return buscar(nombre, barrios, orden, ubicacion, false, pagina);
+    }
+
+    /** Igual, pudiendo incluir las cadenas: la pantalla de reseña busca también sucursales (#335). */
+    default Page<BurgerJoint> buscar(String nombre, List<String> barrios, OrdenDeLocales orden,
+                                     Ubicacion ubicacion, boolean conCadenas, Pageable pagina) {
+        return findAll(FiltroDeLocales.con(nombre, barrios, orden, ubicacion, conCadenas), pagina);
     }
 
     Optional<BurgerJoint> findByPlaceId(String placeId);

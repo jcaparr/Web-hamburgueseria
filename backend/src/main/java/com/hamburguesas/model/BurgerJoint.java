@@ -41,6 +41,13 @@ public class BurgerJoint {
     private String nombreParaBuscar;
 
     /**
+     * El barrio listo para buscar, con la misma regla que el nombre (#335): así
+     * "mostaza belgrano" encuentra la sucursal de Belgrano, y "nunez" a las de Núñez.
+     */
+    @Column(name = "area_para_buscar", length = 255)
+    private String areaParaBuscar;
+
+    /**
      * Mantiene el nombre de búsqueda al día.
      *
      * Acá y no en quien guarda: son cinco lugares distintos los que le cambian el nombre
@@ -51,6 +58,7 @@ public class BurgerJoint {
     @PreUpdate
     void prepararElNombreParaBuscar() {
         nombreParaBuscar = sinAcentos(name);
+        areaParaBuscar = sinAcentos(area);
     }
 
     /** Las mismas reglas que aplica el buscador a lo que se escribe, para que coincidan. */

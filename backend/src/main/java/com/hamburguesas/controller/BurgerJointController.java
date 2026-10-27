@@ -37,6 +37,8 @@ public class BurgerJointController {
      *              OrdenDeLocales. Uno que no existe es el de por omisión, no un error.
      * @param lat   dónde está quien mira, para "cercanas" (#288). Solo ordena: no se
      * @param lon   guarda. Sin las dos, "cercanas" se ordena como "relevantes".
+     * @param conCadenas "cadenas=true" suma las sucursales de cadenas (#335); lo pide la
+     *                   pantalla de reseña. Explorar no lo manda y sigue sin verlas.
      */
     @GetMapping
     public Page<BurgerJointDto> search(
@@ -45,10 +47,11 @@ public class BurgerJointController {
         @RequestParam(required = false) String orden,
         @RequestParam(required = false) Double lat,
         @RequestParam(required = false) Double lon,
+        @RequestParam(name = "cadenas", defaultValue = "false") boolean conCadenas,
         @PageableDefault(size = 20) Pageable pageable
     ) {
         return burgerJointService.search(q, areas, OrdenDeLocales.de(orden), Ubicacion.de(lat, lon),
-            CurrentUser.idOrNull(), Paginas.sinOrden(pageable));
+            conCadenas, CurrentUser.idOrNull(), Paginas.sinOrden(pageable));
     }
 
     /**

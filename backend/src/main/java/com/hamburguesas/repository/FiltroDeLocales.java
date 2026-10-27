@@ -40,6 +40,11 @@ final class FiltroDeLocales {
 
     static Specification<BurgerJoint> con(String nombre, List<String> barrios, OrdenDeLocales orden,
                                           Ubicacion ubicacion) {
+        return con(nombre, barrios, orden, ubicacion, false);
+    }
+
+    static Specification<BurgerJoint> con(String nombre, List<String> barrios, OrdenDeLocales orden,
+                                          Ubicacion ubicacion, boolean conCadenas) {
         return (local, consulta, cb) -> {
             List<Predicate> condiciones = new ArrayList<>();
 
@@ -50,9 +55,20 @@ final class FiltroDeLocales {
                 //
                 // El % y el _ que alguien escriba son comodines del LIKE: sin escaparlos,
                 // buscar "%" devuelve el listado entero.
-                String patron = "%" + BurgerJoint.sinAcentos(nombre)
-                    .replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
-                condiciones.add(cb.like(local.get("nombreParaBuscar"), patron, '\\'));
+                //
+                // Cada palabra tiene que aparecer en el nombre o en el barrio (#335):
+                // "mostaza belgrano" pide "mostaza" en uno de los dos y "belgrano" en uno
+                // de los dos, no la frase entera junta.
+                for (String palabra : BurgerJoint.sinAcentos(nombre).split(" ")) {
+                    if (palabra.isEmpty()) {
+                        continue;
+                    }
+                    String patron = "%" + palabra
+                        .replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
+                    condiciones.add(cb.or(
+                        cb.like(local.get("nombreParaBuscar"), patron, '\\'),
+                        cb.like(local.get("areaParaBuscar"), patron, '\\')));
+                }
             }
 
             // Varios barrios se leen como "o": quien marca Palermo y Villa Crespo quiere
@@ -70,7 +86,11 @@ final class FiltroDeLocales {
             // contesta /api/cadenas, con una tarjeta por cadena y no una por sucursal
             // (#206). Quién es cadena lo decide FastFoodMarker al arrancar, así que acá
             // alcanza con mirar la columna.
-            condiciones.add(cb.isFalse(local.get("fastFood")));
+            //
+            // La pantalla de reseña sí las pide (conCadenas): se reseña una sucursal.
+            if (!conCadenas) {
+                condiciones.add(cb.isFalse(local.get("fastFood")));
+            }
 
             ordenar(local, consulta, cb, orden, ubicacion);
 
