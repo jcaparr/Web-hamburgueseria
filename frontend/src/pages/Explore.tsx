@@ -363,7 +363,12 @@ export function Explore() {
         {/* El buscador manda, y los filtros van a su lado con la misma altura (#245):
             más bajos parecían de otra fila. En el teléfono, 44 px para poder tocarlos. */}
         <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:gap-3">
-          <label className="flex min-h-12 flex-1 items-center gap-2 rounded-full bg-base-100 px-4 py-3 shadow-[var(--sombra-control)] focus-within:ring-2 focus-within:ring-primary md:max-w-2xl md:px-5">
+          {/* Tour salió del menú (#337) y vive acá, en color para que se vea. Va junto al
+              buscador y no entre los filtros: con él, los dos filtros ya no entran en una fila
+              a 375 px. En el celular comparte renglón con el buscador; en escritorio, `contents`
+              los deja a los dos como hijos de la fila, buscador, recorrido y filtros. */}
+          <div className="flex items-center gap-2 md:contents">
+          <label className="flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-full bg-base-100 px-4 py-3 shadow-[var(--sombra-control)] focus-within:ring-2 focus-within:ring-primary md:max-w-2xl md:px-5">
             <IconSearch size={18} className="flex-none text-base-content/70" />
             <input
               type="search"
@@ -371,20 +376,19 @@ export function Explore() {
               onChange={(e) => {
                 cambiar({ q: e.target.value, pagina: null })
               }}
-              placeholder="Buscar por nombre…"
+              placeholder="Buscar un local…"
               aria-label="Buscar hamburguesería por nombre"
               autoComplete="off"
               enterKeyHint="search"
               className="w-full bg-transparent text-base outline-none placeholder:text-base-content/70"
             />
           </label>
+          <Link to="/tour" aria-label="Armar recorrido" className={`btn btn-primary flex-none ${CLASE_DE_LOS_FILTROS}`}>
+            <IconRoute size={18} />
+            Recorrido
+          </Link>
+          </div>
           <div className="flex flex-wrap items-center gap-2 md:gap-3">
-            {/* Tour salió de la barra de abajo para dejar lugar al lápiz (#337) y vive acá,
-                primero y en color para que se vea. En escritorio sigue en el menú de arriba. */}
-            <Link to="/tour" className={`btn btn-primary md:hidden ${CLASE_DE_LOS_FILTROS}`}>
-              <IconRoute size={18} />
-              Armar recorrido
-            </Link>
             <SelectorDeBarrios
               barrios={barrios}
               elegidos={barriosElegidos}

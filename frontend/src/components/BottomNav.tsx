@@ -68,15 +68,15 @@ export function BottomNav() {
           <Pestania key={item.to} {...item} user={user} />
         ))}
         {/* El lápiz (#337): reseñar desde cualquier pantalla. Es lo único de la barra que
-            no es una pantalla sino una acción, y por eso se despega: 56 px, color
-            primario y un poco más arriba. Sin sesión lleva a entrar y vuelve. */}
-        <div className="flex flex-none items-start justify-center px-1">
+            no es una pantalla sino una acción, y por eso se destaca: 52 px y color
+            primario, centrado con los demás íconos. Sin sesión lleva a entrar y vuelve. */}
+        <div className="flex flex-none items-center justify-center px-1">
           <button
             type="button"
             onClick={abrir}
             aria-label="Escribir una reseña"
             aria-haspopup="dialog"
-            className="-mt-3.5 grid h-14 w-14 place-items-center rounded-[1.125rem] bg-primary text-primary-content shadow-[var(--sombra-de-la-barra)] transition-transform active:scale-95 motion-reduce:transition-none"
+            className="grid h-[52px] w-[52px] place-items-center rounded-[1.125rem] bg-primary text-primary-content shadow-[var(--sombra-de-la-barra)] transition-transform active:scale-95 motion-reduce:transition-none"
           >
             <IconPencil size={24} />
           </button>

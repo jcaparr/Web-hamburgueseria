@@ -18,7 +18,7 @@ import {
   xpSinLaResenia,
 } from '../utils/niveles'
 
-type Campo = 'puntaje' | 'foto' | 'fecha'
+type Campo = 'local' | 'puntaje' | 'foto' | 'fecha'
 
 /** El local sobre el que se reseña: lo que hace falta para mostrarlo y para mandar. */
 interface LocalElegido {
@@ -128,6 +128,7 @@ export function ModalDeResenia({
   // Cuenta los pedidos de "¿ya la reseñaste?": una respuesta que llega después de haber
   // cambiado de local es de otro local y no se aplica.
   const pedidoDeMia = useRef(0)
+  const zonaDelLocal = useRef<HTMLDivElement>(null)
   const [revisando, setRevisando] = useState(false)
   const [fallaRevisar, setFallaRevisar] = useState(false)
   const zonaDelPuntaje = useRef<HTMLDivElement>(null)
@@ -195,16 +196,15 @@ export function ModalDeResenia({
    * que mientras haya algo puesto se pregunta.
    */
   const hayAlgoEscrito =
-    local !== null &&
-    (fotos.nuevas.length > 0 ||
-      fotos.quedan.length !== (mia?.fotos.length ?? 0) ||
-      score !== base.score ||
-      comment !== base.comment ||
-      notaLocal !== base.notaLocal ||
-      notaAtencion !== base.notaAtencion ||
-      notaPrecio !== base.notaPrecio ||
-      cuando !== base.cuando ||
-      (cuando === 'otro' && dia !== base.dia))
+    fotos.nuevas.length > 0 ||
+    fotos.quedan.length !== (mia?.fotos.length ?? 0) ||
+    score !== base.score ||
+    comment !== base.comment ||
+    notaLocal !== base.notaLocal ||
+    notaAtencion !== base.notaAtencion ||
+    notaPrecio !== base.notaPrecio ||
+    cuando !== base.cuando ||
+    (cuando === 'otro' && dia !== base.dia)
 
   // El aviso de un campo se va en cuanto se corrige ese campo, no recién al volver a
   // apretar Publicar.
@@ -280,7 +280,9 @@ export function ModalDeResenia({
   }
 
   function elegirLocal(elegido: BurgerJoint) {
-    vaciar()
+    // El formulario ya está a la vista y puede tener cosas puestas: elegir el local no las
+    // borra. Si resulta que ya lo reseñaste, `cargar` las reemplaza por la reseña que había.
+    sacarAviso('local')
     setDesglose(null)
     setLocal({ id: elegido.id, nombre: elegido.name, barrio: elegido.area })
     void revisarSiYaReseniaste(elegido.id)
@@ -292,7 +294,8 @@ export function ModalDeResenia({
     pedidoDeMia.current++
     setRevisando(false)
     setFallaRevisar(false)
-    vaciar()
+    // Si se estaba editando la reseña de ese local, lo cargado era de ella y se va con ella.
+    if (mia) vaciar()
     setDesglose(null)
     setLocal(null)
     requestAnimationFrame(() => dialogo.current?.querySelector<HTMLInputElement>('input[type=search]')?.focus())
@@ -309,9 +312,13 @@ export function ModalDeResenia({
     zona.current?.querySelector<HTMLElement>('[role=radio], input, button')?.focus()
   }
 
-  async function guardar(e: FormEvent) {
-    e.preventDefault()
-    if (!local || revisando || fallaRevisar) return
+  async function guardar(e?: FormEvent) {
+    e?.preventDefault()
+    if (!local) {
+      avisar('Elegí el local que querés reseñar.', 'local', zonaDelLocal)
+      return
+    }
+    if (revisando || fallaRevisar) return
     if (score === 0) {
       avisar('Elegí una nota de 1 a 5 estrellas.', 'puntaje', zonaDelPuntaje)
       return
@@ -458,13 +465,12 @@ export function ModalDeResenia({
           </button>
         </div>
 
-        {/* Fuera del formulario de la reseña: el botón de "Sugerí un local" abre su propio
-            formulario, y uno adentro del otro mandaría los dos al enviar. */}
-        {!local && <BuscadorDeLocal onElegir={elegirLocal} />}
-
-        {local && (
-        <form onSubmit={guardar} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3">
+        {/* Un div y no un <form>: "Sugerí un local" abre su propio formulario, y uno adentro
+            del otro mandaría los dos al enviar. Todo el formulario está a la vista desde
+            que se abre: el local se elige arriba y se puede completar el resto antes o después. */}
+        <div className="flex flex-col gap-4">
+          <div ref={zonaDelLocal} className="flex flex-col gap-3">
+            {local ? (
               <>
                 <div className="flex items-center justify-between gap-3 rounded-field bg-base-200 px-3 py-2">
                   <div className="flex min-w-0 flex-col">
@@ -492,10 +498,17 @@ export function ModalDeResenia({
                 )}
                 <AsiLoCalificaron desglose={desglose} />
               </>
+            ) : (
+              <BuscadorDeLocal onElegir={elegirLocal} />
+            )}
+            {error?.campo === 'local' && (
+              <p role="alert" className="text-sm text-error">
+                {error.texto}
+              </p>
+            )}
           </div>
 
-          {local && (
-            <>
+          <>
               <div ref={zonaDelPuntaje} className="flex flex-col gap-1">
                 <span className="text-base font-semibold">¿Cómo estuvo?</span>
                 <div className="-ml-2">
@@ -602,8 +615,7 @@ export function ModalDeResenia({
 
               {/* Cuánta XP da lo que escribiste, mientras lo escribís. */}
               <XpDeLaResenia xp={xpQueDa} comentario={comment} editando={!!mia} primera={esLaPrimera} />
-            </>
-          )}
+          </>
 
           {error && !error.campo && (
             <p role="alert" className="text-sm text-error">
@@ -613,15 +625,18 @@ export function ModalDeResenia({
 
           {/* El mismo verbo en el botón y mientras trabaja: "Publicar" se vuelve
               "Publicando…", no "Guardando…". */}
-          {local && (
-            <button type="submit" disabled={guardando || borrando || revisando || fallaRevisar} className="btn btn-primary">
-              {revisando
-                ? 'Revisando…'
-                : mia
-                  ? guardando ? 'Guardando…' : 'Guardar cambios'
-                  : guardando ? 'Publicando…' : 'Publicar reseña'}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => void guardar()}
+            disabled={guardando || borrando || revisando || fallaRevisar}
+            className="btn btn-primary"
+          >
+            {revisando
+              ? 'Revisando…'
+              : mia
+                ? guardando ? 'Guardando…' : 'Guardar cambios'
+                : guardando ? 'Publicando…' : 'Publicar reseña'}
+          </button>
 
           {/* Debajo y sin relleno: está a mano para quien la busca, pero no compite con
               guardar, que es lo que viene a hacer casi todo el que abre la ventana. */}
@@ -635,8 +650,7 @@ export function ModalDeResenia({
               {borrando ? 'Borrando…' : 'Borrar reseña'}
             </button>
           )}
-        </form>
-        )}
+        </div>
       </div>
 
       {/* El clic afuera pasa por el mismo camino que la cruz y que el Esc, así que

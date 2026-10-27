@@ -1,18 +1,20 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
+import { useReseniaRapida } from '../context/useReseniaRapida'
 import { useHideOnScroll } from '../hooks/useScrollDirection'
 import { BotonDeLogros } from './BotonDeLogros'
 import { CampanaDeNotificaciones } from './CampanaDeNotificaciones'
 import { MarcaBurgometro } from './MarcaBurgometro'
+import { IconPencil } from './icons'
 import { PanelDeAjustes } from './PanelDeAjustes'
 
 const NAV_LINKS = [
   { to: '/', label: 'Explorar' },
+  // Tour ya no está: es el botón "Recorrido" de Explorar (#337), igual que en el celular.
+  { to: '/ranking', label: 'Ranking' },
   // El feed pide sesión: sin ella no hay a quién seguir y la pestaña "Siguiendo" no
   // significa nada, así que aparece recién cuando hay alguien adentro.
   { to: '/feed', label: 'Feed', soloConSesion: true },
-  { to: '/tour', label: 'Tour' },
-  { to: '/ranking', label: 'Ranking' },
   { to: '/profile', label: 'Perfil' },
 ]
 
@@ -20,6 +22,7 @@ export function TopBar() {
   const { user } = useAuth()
   const links = NAV_LINKS.filter((link) => user || !link.soloConSesion)
   const hidden = useHideOnScroll()
+  const { abrir } = useReseniaRapida()
 
   return (
     <div
@@ -44,7 +47,7 @@ export function TopBar() {
         {/* Cada opción es un blanco de 44 px de alto con aire a los costados (#244): lo
             que se toca es toda la píldora, no solo la palabra, así que la letra puede
             quedar en 14 px sin que cueste acertarle. */}
-        <nav aria-label="Principal" className="hidden flex-1 justify-center md:flex">
+        <nav aria-label="Principal" className="hidden flex-1 items-center justify-center gap-3 md:flex">
           <ul className="flex items-center gap-1 rounded-full bg-base-100 p-1 shadow-[var(--sombra-tarjeta)]">
             {links.map((link) => (
               <li key={link.to}>
@@ -63,6 +66,12 @@ export function TopBar() {
               </li>
             ))}
           </ul>
+          {/* Reseñar desde cualquier pantalla (#337), igual que el lápiz del celular. Va junto
+              al menú y no junto a la campana y los logros, que quedarían apretados. */}
+          <button type="button" onClick={abrir} aria-haspopup="dialog" className="btn btn-primary h-11 min-h-11 gap-2 rounded-full px-5">
+            <IconPencil size={18} />
+            Escribir reseña
+          </button>
         </nav>
 
         {/* Botones de alto completo (44 px): son de lo que más se toca, y en la barra
