@@ -9,7 +9,10 @@ import { volverDespuesDeEntrar } from '../utils/volverDespuesDeEntrar'
  * not there. Keeping one handler means the link-confirmation path cannot be
  * implemented on one screen and forgotten on the other.
  */
-export function useGoogleSignIn() {
+export function useGoogleSignIn(
+  /** A dónde ir al terminar; sin esto, a donde pida el estado de la navegación (#346). */
+  destino?: string,
+) {
   const { loginWithGoogle } = useAuth()
   const navigate = useNavigate()
   // Si quien mandó a iniciar sesión dejó a dónde volver (#257).
@@ -31,7 +34,7 @@ export function useGoogleSignIn() {
     setError(null)
     try {
       await loginWithGoogle(credential)
-      navigate(volverDespuesDeEntrar(location.state))
+      navigate(destino ?? volverDespuesDeEntrar(location.state))
     } catch (err: any) {
       const data = err.response?.data
 
@@ -57,7 +60,7 @@ export function useGoogleSignIn() {
     if (!pendiente) return
     await loginWithGoogle(pendiente.credential, username)
     setPendiente(null)
-    navigate(volverDespuesDeEntrar(location.state))
+    navigate(destino ?? volverDespuesDeEntrar(location.state))
   }
 
   function cancelar() {
