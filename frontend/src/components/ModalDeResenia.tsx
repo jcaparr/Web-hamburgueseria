@@ -446,7 +446,9 @@ export function ModalDeResenia({
       className="modal modal-bottom sm:modal-middle"
       // Un segundo Esc cierra el dialog aunque el primero se haya frenado: se avisa para
       // que `abierto` no quede en true con la ventana cerrada.
-      onClose={() => {
+      onClose={(e) => {
+        // El de la confirmación de adentro (#351) sube hasta acá: no es el de esta ventana.
+        if (e.target !== e.currentTarget) return
         if (abierto) onCerrar()
       }}
       // El Esc lo cierra el navegador solo, y eso se llevaría el texto sin preguntar.

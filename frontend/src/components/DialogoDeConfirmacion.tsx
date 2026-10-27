@@ -54,6 +54,12 @@ export function DialogoDeConfirmacion({
       aria-labelledby={idDelTitulo}
       aria-describedby={idDelTexto}
       className="modal"
+      // Si el navegador la cierra por su cuenta (un segundo Esc), `abierto` no puede
+      // quedar en true con la ventana cerrada: la próxima vez no se volvería a abrir.
+      onClose={(e) => {
+        e.stopPropagation()
+        if (abierto) onSeguir()
+      }}
       // El Esc es "seguir". Se frena para que no cierre el dialog por su cuenta y no suba
       // a la ventana de abajo, que lo tomaría como su propio Esc.
       onCancel={(e) => {
