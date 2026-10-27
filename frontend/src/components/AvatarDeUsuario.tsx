@@ -210,7 +210,7 @@ function Hamburguesa({ receta, chico }: { receta: Receta; chico: boolean }) {
     capas.push({
       alto: chico ? 5 : 7,
       pintar: (y) => (
-        <g key="huevo">
+        <g key="huevo" data-capa="HUEVO">
           <path
             d={
               chico
@@ -234,7 +234,7 @@ function Hamburguesa({ receta, chico }: { receta: Receta; chico: boolean }) {
       chico
         ? {
             alto: 4,
-            pintar: (y) => <path key="bacon" d={`M8 ${y + 1.5} L92 ${y} L92 ${y + 2.5} L8 ${y + 4} Z`} fill="#a8432c" />,
+            pintar: (y) => <path key="bacon" data-capa="BACON" d={`M8 ${y + 1.5} L92 ${y} L92 ${y + 2.5} L8 ${y + 4} Z`} fill="#a8432c" />,
           }
         : {
             alto: 8,
@@ -243,7 +243,7 @@ function Hamburguesa({ receta, chico }: { receta: Receta; chico: boolean }) {
               const a = `M7 ${y + 1} Q17.75 ${y + 0.3} 28.5 ${y + 2.5} T50 ${y + 4} T71.5 ${y + 5.5} T93 ${y + 7}`
               const b = `M7 ${y + 7} Q17.75 ${y + 7.7} 28.5 ${y + 5.5} T50 ${y + 4} T71.5 ${y + 2.5} T93 ${y + 1}`
               return (
-                <g key="bacon" fill="none">
+                <g key="bacon" data-capa="BACON" fill="none">
                   {[b, a].map((d) => (
                     <g key={d}>
                       <path d={d} strokeWidth={7.5} />
@@ -274,7 +274,7 @@ function Hamburguesa({ receta, chico }: { receta: Receta; chico: boolean }) {
   for (let i = 0; i < receta.carnes; i++) {
     capas.push({
       alto: 10,
-      pintar: (y) => <rect key={`carne-${i}`} x={IZQ} y={y} width={ANCHO} height={10} rx={5} fill="#7a4526" />,
+      pintar: (y) => <rect key={`carne-${i}`} data-capa={receta.carnes === 4 && i === 0 ? 'CARNE-4' : undefined} x={IZQ} y={y} width={ANCHO} height={10} rx={5} fill="#7a4526" />,
     })
   }
   capas.push({

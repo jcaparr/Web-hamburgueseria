@@ -119,6 +119,38 @@ public class Logros {
         return activosDespues;
     }
 
+    /** Qué hay para avisar: lo ganado sin ver y cuántos de la carga inicial (#317). */
+    @Transactional(readOnly = true)
+    public NovedadesDeLogros novedades(Long userId) {
+        User cuenta = userRepository.findById(userId).orElseThrow();
+        int xp = Niveles.xpTotal(cifras.de(cuenta).resenias().stream().map(Resenia::comentario).toList());
+        return new NovedadesDeLogros(xp,
+            repository.sinVer(userId).stream().map(l -> l.getId().logro()).toList(),
+            repository.retroactivosSinVer(userId));
+    }
+
+    /**
+     * Marca como vistos los avisos que la pantalla ya mostró (#317). Se llama después de
+     * mostrar y no antes: si se marcaran al pedirlos, un error al dibujar el aviso los perdería.
+     * Solo toca los de esta cuenta que están ganados y sin ver.
+     */
+    @Transactional
+    public void marcarVistos(Long userId, LogrosVistos vistos) {
+        Instant ahora = Instant.now();
+        Set<String> codigos = vistos.codigos() == null ? Set.of()
+            : vistos.codigos().stream().filter(java.util.Objects::nonNull).collect(Collectors.toSet());
+        for (LogroDeUsuario fila : repository.sinVer(userId)) {
+            if (codigos.contains(fila.getId().logro())) {
+                fila.setVistoEl(ahora);
+            }
+        }
+        if (vistos.retroactivos()) {
+            for (LogroDeUsuario fila : repository.retroactivosSinMarcar(userId)) {
+                fila.setVistoEl(ahora);
+            }
+        }
+    }
+
     /**
      * La pantalla de Logros (#316): recalcula antes de responder, así lo que se ve es lo que
      * hay hoy y no lo que quedó de la última vez que algo avisó. El recálculo corre dentro de

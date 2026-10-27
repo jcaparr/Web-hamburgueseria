@@ -107,6 +107,55 @@ const IC_CHICO: Record<string, string> = {
   nano: 'M24 23a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM13 38a11 11 0 0 1 22 0',
 }
 
+/** Lo que dice el aviso al ganarlo, en pasado y hablándole a quien lo ganó. */
+export const AVISOS: Record<string, string> = {
+  NIVEL_1: 'Te damos la bienvenida a Burgómetro. Armá tu hamburguesa y empezá a reseñar.',
+  NIVEL_3: 'Llegaste al nivel 3. Ya podés ponerle huevo frito a tu hamburguesa.',
+  NIVEL_5: 'Llegaste al nivel 5. Ya podés ponerle bacon a tu hamburguesa.',
+  NIVEL_10: 'Llegaste al nivel 10. Ya podés sumarle la cuarta carne.',
+  NIVEL_15: 'Llegaste al nivel 15. Ya podés usar el fondo de rayos.',
+  NIVEL_20: 'Llegaste al nivel 20, el máximo. Tu avatar lleva el marco punteado.',
+  SEGUIDORES_10: 'Ya tenés 10 seguidores.',
+  SEGUIDORES_50: 'Ya tenés 50 seguidores.',
+  SEGUIDORES_100: 'Ya tenés 100 seguidores.',
+  SEGUIDORES_500: 'Ya tenés 500 seguidores.',
+  SEGUIDORES_1000: 'Ya tenés 1.000 seguidores.',
+  BARRIO_ESQUINA: 'Reseñaste 3 locales del mismo barrio.',
+  BARRIOS_5: 'Reseñaste locales en 5 barrios distintos.',
+  BARRIOS_15: 'Reseñaste locales en 15 barrios distintos.',
+  BARRIOS_25: 'Reseñaste locales en 25 barrios distintos.',
+  INTENDENTE: 'Sos quien más reseñó en un barrio.',
+  PODIO_SEMANAL: 'Terminaste entre las 3 personas con más XP de la semana.',
+  PRIMERO_DEL_MES: 'Terminaste primero en el ranking del mes.',
+  RACHA_DE_ORO: 'Terminaste primero en el ranking del mes 2 meses seguidos.',
+  PRIMERA_RESENIA: 'Publicaste tu primera reseña.',
+  PICASSO: 'Armaste tu hamburguesa.',
+  ANSIOSO: 'Fuiste la primera persona en reseñar un local.',
+  HAMBRE_AJENA: 'Una reseña tuya juntó 10 reacciones.',
+  PLANIFICADOR: 'Guardaste 10 hamburgueserías.',
+  STALKER: 'Reaccionaste a 30 reseñas distintas.',
+  PRIMER_TOUR: 'Guardaste tu primer recorrido.',
+  GUIA: 'Guardaste 5 recorridos.',
+  ALBUM: 'Publicaste una reseña con 3 fotos.',
+  PROMESA: 'Reseñaste 5 locales que tenías guardados antes de ir.',
+  DE_AUTOR: 'Reseñaste 10 locales que no son cadenas.',
+  PIONERO: 'Fuiste una de las primeras 10 personas en crear su cuenta.',
+  MENU_COMPLETO: 'Ganaste todos los logros de Burgómetro.',
+  COMBO: 'Una reseña tuya recibió los 5 tipos de reacción.',
+  BOCA_EN_BOCA: '3 personas que te siguen reseñaron un local después que vos.',
+  COMEDIANTE: 'Tus reseñas juntaron 10 reacciones de risa.',
+  BAJONERO: 'Publicaste una reseña entre la 1 y las 7 de la mañana.',
+  PATRIOTA: 'Publicaste una reseña el 28 de mayo, Día de la Hamburguesa.',
+  PALADAR: "Reseñaste Burger King, McDonald's y Wendy's. Cadena tras cadena.",
+}
+
+/** Los que cambian la hamburguesa al llegar a su nivel: el aviso muestra la capa cayendo sobre la tuya. */
+export const DESBLOQUEOS: Record<string, { capa: 'HUEVO' | 'BACON' | 'CARNE-4'; premio: 'huevo' | 'bacon' | 'carnes'; boton: string }> = {
+  NIVEL_3: { capa: 'HUEVO', premio: 'huevo', boton: 'Probar el huevo' },
+  NIVEL_5: { capa: 'BACON', premio: 'bacon', boton: 'Probar el bacon' },
+  NIVEL_10: { capa: 'CARNE-4', premio: 'carnes', boton: 'Probar la cuarta carne' },
+}
+
 /** Todos, en el orden en que se muestran dentro de cada grupo. */
 export const CATALOGO: DatosDeLogro[] = [
   logro('NIVEL_1', 'Slider', 'Niveles', KET, ORO, '1', 'Creaste tu cuenta de Burgómetro.', IC.slider),

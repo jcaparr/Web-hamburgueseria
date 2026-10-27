@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { apiClient } from '../api/client'
+import { revisarLogros } from '../utils/avisosDeLogros'
 import { IconLogros } from './icons'
 
 /**
@@ -19,7 +20,10 @@ export function BotonDeLogros() {
     apiClient
       .get<{ logrosSinVer?: number }>('/notificaciones/nuevas')
       .then(({ data }) => {
-        if (vigente) setSinVer(data.logrosSinVer ?? 0)
+        if (!vigente) return
+        setSinVer(data.logrosSinVer ?? 0)
+        // La campana trae logros sin ver: se pide el detalle para mostrar el aviso (#317).
+        if ((data.logrosSinVer ?? 0) > 0) revisarLogros()
       })
       .catch(() => {})
     return () => {
