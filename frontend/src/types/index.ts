@@ -290,3 +290,25 @@ export interface UsuarioBloqueado {
   username: string
   bloqueadoEl: string
 }
+
+/** Un logro en la pantalla de Logros (#316). */
+export interface LogroDeLaPantalla {
+  codigo: string
+  ganado: boolean
+  /** Cuándo lo ganó, si lo tiene. */
+  fecha: string | null
+  /** El avance, en los que se miden con un número. */
+  actual: number | null
+  meta: number | null
+  /** Un dato del logro, como el barrio del Intendente. */
+  detalle: string | null
+}
+
+export interface PantallaDeLogros {
+  nivel: number
+  xp: number
+  xpDelNivel: number
+  /** Null en el último nivel. */
+  xpDelSiguiente: number | null
+  logros: LogroDeLaPantalla[]
+}

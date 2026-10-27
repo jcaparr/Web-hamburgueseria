@@ -119,6 +119,77 @@ public class Logros {
         return activosDespues;
     }
 
+    /**
+     * La pantalla de Logros (#316): recalcula antes de responder, así lo que se ve es lo que
+     * hay hoy y no lo que quedó de la última vez que algo avisó. El recálculo corre dentro de
+     * esta misma transacción (se llama desde la propia clase, sin pasar por el proxy).
+     */
+    @Transactional
+    public PantallaDeLogros pantalla(Long userId) {
+        Set<Logro> activos = recalcular(userId, false);
+        User cuenta = userRepository.findById(userId).orElseThrow();
+        Cifras c = cifras.de(cuenta);
+        int xp = Niveles.xpTotal(c.resenias().stream().map(Resenia::comentario).toList());
+        int nivel = Niveles.nivelDe(xp);
+
+        Map<Logro, LogroDeUsuario> filas = new HashMap<>();
+        for (LogroDeUsuario fila : repository.deLaCuenta(userId)) {
+            filas.put(fila.logro(), fila);
+        }
+        List<PantallaDeLogros.Item> items = java.util.Arrays.stream(Logro.values()).map(logro -> {
+            boolean ganado = activos.contains(logro);
+            LogroDeUsuario fila = filas.get(logro);
+            // De un secreto que todavía no se ganó no se dice nada: ni cuánto falta.
+            int[] avance = ganado || !logro.secreto() ? avance(logro, c, nivel, activos) : null;
+            return new PantallaDeLogros.Item(logro.name(), ganado, ganado && fila != null ? fila.getGanadoEl() : null,
+                avance == null ? null : avance[0], avance == null ? null : avance[1],
+                ganado && fila != null ? fila.getDetalle() : null);
+        }).toList();
+
+        return new PantallaDeLogros(nivel, xp, Niveles.UMBRALES[nivel - 1],
+            nivel < Niveles.NIVEL_MAXIMO ? Niveles.UMBRALES[nivel] : null, items);
+    }
+
+    /** {actual, meta} en los logros que se miden con un número; null en los que se tienen o no. */
+    static int[] avance(Logro logro, Cifras c, int nivel, Set<Logro> activos) {
+        List<Resenia> propias = c.resenias();
+        Map<String, Long> porBarrio = propias.stream()
+            .filter(r -> !r.cadena() && r.area() != null && !r.area().isBlank())
+            .collect(Collectors.groupingBy(Resenia::area, Collectors.counting()));
+        long locales = propias.stream().filter(r -> !r.cadena()).map(Resenia::localId).distinct().count();
+        return switch (logro) {
+            case NIVEL_3 -> par(nivel, 3);
+            case NIVEL_5 -> par(nivel, 5);
+            case NIVEL_10 -> par(nivel, 10);
+            case NIVEL_15 -> par(nivel, 15);
+            case NIVEL_20 -> par(nivel, 20);
+            case SEGUIDORES_10 -> par(c.seguidores(), 10);
+            case SEGUIDORES_50 -> par(c.seguidores(), 50);
+            case SEGUIDORES_100 -> par(c.seguidores(), 100);
+            case SEGUIDORES_500 -> par(c.seguidores(), 500);
+            case SEGUIDORES_1000 -> par(c.seguidores(), 1000);
+            case BARRIO_ESQUINA -> par(porBarrio.values().stream().mapToLong(Long::longValue).max().orElse(0), 3);
+            case BARRIOS_5 -> par(porBarrio.size(), 5);
+            case BARRIOS_15 -> par(porBarrio.size(), 15);
+            case BARRIOS_25 -> par(porBarrio.size(), 25);
+            case HAMBRE_AJENA -> par(c.masReaccionesEnUnaResenia(), 10);
+            case PLANIFICADOR -> par(c.guardadas(), 10);
+            case STALKER -> par(c.reaccionesQueDio(), 30);
+            case GUIA -> par(c.recorridos(), 5);
+            case PROMESA -> par(c.reseniasConGuardadaPrevia(), 5);
+            case DE_AUTOR -> par(locales, 10);
+            case COMEDIANTE -> par(c.risasRecibidas(), 10);
+            case BOCA_EN_BOCA -> par(c.seguidoresQueReseniaronDespues(), 3);
+            case MENU_COMPLETO -> par(activos.stream().filter(l -> l != Logro.MENU_COMPLETO).count(), Logro.values().length - 1);
+            default -> null;
+        };
+    }
+
+    /** El avance nunca pasa de la meta: la barra se llena y no se desborda. */
+    private static int[] par(long actual, int meta) {
+        return new int[] {(int) Math.min(actual, meta), meta};
+    }
+
     /** La regla de cada logro contra las cifras de la cuenta. */
     static boolean cumple(Logro logro, Cifras c) {
         int nivel = Niveles.nivelDe(Niveles.xpTotal(
