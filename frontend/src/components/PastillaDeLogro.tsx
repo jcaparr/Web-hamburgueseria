@@ -80,17 +80,19 @@ function Selector({ exhibido, onListo }: { exhibido: string | null; onListo: () 
   const { exhibirLogro } = useAuth()
   const [ganados, setGanados] = useState<string[] | null>(null)
   const [error, setError] = useState(false)
+  const [errorDeCarga, setErrorDeCarga] = useState(false)
+  const [intento, setIntento] = useState(0)
 
   useEffect(() => {
     let vigente = true
     apiClient
       .get<PantallaDeLogros>('/logros')
       .then(({ data }) => vigente && setGanados(data.logros.filter((l) => l.ganado).map((l) => l.codigo)))
-      .catch(() => vigente && setError(true))
+      .catch(() => vigente && setErrorDeCarga(true))
     return () => {
       vigente = false
     }
-  }, [])
+  }, [intento])
 
   async function elegir(codigo: string | null) {
     try {
@@ -111,10 +113,26 @@ function Selector({ exhibido, onListo }: { exhibido: string | null; onListo: () 
           No pudimos guardarlo. Probá de nuevo.
         </p>
       )}
-      {!ganados ? (
+      {errorDeCarga ? (
+        <div role="alert" className="flex flex-col items-start gap-2">
+          <p className="text-sm text-error">No pudimos cargar tus logros. Probá de nuevo.</p>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline"
+            onClick={() => {
+              setErrorDeCarga(false)
+              setIntento((n) => n + 1)
+            }}
+          >
+            Reintentar
+          </button>
+        </div>
+      ) : !ganados ? (
         <p role="status" className="text-sm text-base-content/70">
           Cargando…
         </p>
+      ) : ganados.length === 0 ? (
+        <p className="text-sm text-base-content/70">Todavía no ganaste ningún logro.</p>
       ) : (
         <ul className="grid grid-cols-3 gap-2">
           {CATALOGO.filter((l) => ganados.includes(l.codigo)).map((l) => (
