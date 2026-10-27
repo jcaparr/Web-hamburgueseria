@@ -1,5 +1,6 @@
 package com.hamburguesas.repository;
 
+import com.hamburguesas.dto.DesgloseDeNotasDto;
 import com.hamburguesas.dto.ItemDeFeedDto;
 import com.hamburguesas.dto.NotaDeLocalDto;
 import com.hamburguesas.dto.NotaYComentarioDto;
@@ -120,6 +121,17 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
         group by r.score
         """)
     List<NotaYCuantasDto> distribucionDeNotas(@Param("burgerJointId") Long burgerJointId);
+
+    /** El promedio de las tres notas opcionales de un local y cuántas reseñas las tienen (#336). */
+    @Query("""
+        select new com.hamburguesas.dto.DesgloseDeNotasDto(
+            avg(r.scoreLocal), count(r.scoreLocal),
+            avg(r.scoreAtencion), count(r.scoreAtencion),
+            avg(r.scorePrecio), count(r.scorePrecio))
+        from Rating r
+        where r.burgerJoint.id = :burgerJointId
+        """)
+    DesgloseDeNotasDto desgloseDeNotas(@Param("burgerJointId") Long burgerJointId);
 
     /**
      * La nota y el texto de cada reseña escrita de un local, para resumir de qué hablan.

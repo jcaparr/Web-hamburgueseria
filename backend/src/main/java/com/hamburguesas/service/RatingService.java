@@ -8,6 +8,7 @@ import com.hamburguesas.dto.ResumenDeReseniasDto;
 import com.hamburguesas.dto.TemaDeReseniasDto;
 import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.fotos.FotosDeResenias;
+import com.hamburguesas.logros.Logros;
 import com.hamburguesas.logros.LogrosPorRecalcular;
 import com.hamburguesas.exception.ResourceNotFoundException;
 import com.hamburguesas.model.BurgerJoint;
@@ -28,6 +29,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +71,8 @@ public class RatingService {
         BurgerJoint burgerJoint = burgerJointRepository.findById(burgerJointId)
             .orElseThrow(() -> new ResourceNotFoundException("Burger joint not found"));
 
+        validarFechaDeVisita(request.visitDate(), null);
+
         List<byte[]> nuevas = leerTodas(fotosSubidas);
         if (nuevas.isEmpty()) {
             throw new ConflictException("Toda reseña lleva una foto de lo que comiste");
@@ -84,6 +88,10 @@ public class RatingService {
             .burgerJoint(burgerJoint)
             .score(request.score())
             .comment(request.comment())
+            .visitDate(request.visitDate())
+            .scoreLocal(request.scoreLocal())
+            .scoreAtencion(request.scoreAtencion())
+            .scorePrecio(request.scorePrecio())
             .build();
         rating.ponerFotos(rutas);
 
@@ -118,6 +126,8 @@ public class RatingService {
             .findByUser_IdAndBurgerJoint_Id(userId, burgerJointId)
             .orElseThrow(() -> new ResourceNotFoundException("You haven't rated this burger joint yet"));
 
+        validarFechaDeVisita(request.visitDate(), rating.getVisitDate());
+
         List<byte[]> nuevas = leerTodas(fotosSubidas);
         List<String> actuales = rating.todasLasFotos();
         List<String> siguen = queSiguen(actuales, quedan, !nuevas.isEmpty());
@@ -140,6 +150,10 @@ public class RatingService {
 
         rating.setScore(request.score());
         rating.setComment(request.comment());
+        rating.setVisitDate(request.visitDate());
+        rating.setScoreLocal(request.scoreLocal());
+        rating.setScoreAtencion(request.scoreAtencion());
+        rating.setScorePrecio(request.scorePrecio());
         // Agregarle el comentario la pasa de 70 a 100: la XP se recalcula al confirmar.
         eventos.publishEvent(new XpPorRecalcular(userId));
         eventos.publishEvent(LogrosPorRecalcular.de(userId));
@@ -191,6 +205,28 @@ public class RatingService {
             throw new ConflictException("Esa foto no es de tu reseña");
         }
         return pedidas;
+    }
+
+    /**
+     * La fecha de la visita no puede ser futura ni de hace más de un año (#336).
+     *
+     * El día se cuenta en hora argentina: de noche en UTC ya es "mañana", y alguien que
+     * fue hoy no tiene que recibir un error por eso.
+     *
+     * Al editar, la que ya tenía se acepta aunque se haya vuelto vieja: corregir una
+     * coma de una reseña de hace trece meses no puede obligar a cambiar el día.
+     */
+    private static void validarFechaDeVisita(LocalDate fecha, LocalDate laQueYaTenia) {
+        if (fecha == null) {
+            return;
+        }
+        LocalDate hoy = LocalDate.now(Logros.ZONA);
+        if (fecha.isAfter(hoy)) {
+            throw new ConflictException("La fecha de la visita no puede ser futura");
+        }
+        if (fecha.isBefore(hoy.minusYears(1)) && !fecha.equals(laQueYaTenia)) {
+            throw new ConflictException("La visita no puede ser de hace más de un año");
+        }
     }
 
     private void exigirQueEntren(int cuantas) {
@@ -313,7 +349,8 @@ public class RatingService {
             .mapToObj(nota -> new NotaYCuantasDto(nota, cuantasPorNota.getOrDefault(nota, 0L)))
             .toList();
 
-        return new ResumenDeReseniasDto(distribucion, temas(burgerJointId));
+        return new ResumenDeReseniasDto(distribucion, temas(burgerJointId),
+            ratingRepository.desgloseDeNotas(burgerJointId));
     }
 
     /**
@@ -360,7 +397,8 @@ public class RatingService {
     private RatingResponse toResponse(Rating r, ReaccionesDto susReacciones) {
         return new RatingResponse(
             r.getId(), r.getUser().getId(), r.getUser().getUsername(), r.getUser().getHamburguesa(), r.getUser().getXp(),
-            r.getScore(), r.getComment(), r.todasLasFotos(), r.getCreatedAt(), susReacciones
+            r.getScore(), r.getComment(), r.todasLasFotos(), r.getCreatedAt(),
+            r.getVisitDate(), r.getScoreLocal(), r.getScoreAtencion(), r.getScorePrecio(), susReacciones
         );
     }
 }

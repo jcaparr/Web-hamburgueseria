@@ -33,3 +33,13 @@ export function fechaYHora(iso: string, ahora: Date = new Date()): string {
   if (dia === enBuenosAires(new Date(ahora.getTime() - UN_DIA)).dia) return `Ayer ${hora}hs`
   return `${dia} ${hora}hs`
 }
+
+/**
+ * El día de la visita, "2026-10-12", como "12 de oct.". Es un día de calendario y no un
+ * instante: se arma a mano para que ninguna zona horaria lo corra un día.
+ */
+export function diaDeLaVisita(dia: string): string {
+  const [anio, mes, d] = dia.split('-').map(Number)
+  const texto = new Date(anio, mes - 1, d).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
+  return texto.replace('.', '').replace(' ', ' de ') + '.'
+}
