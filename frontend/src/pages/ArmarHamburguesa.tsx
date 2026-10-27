@@ -5,7 +5,9 @@ import { IconArrowLeft } from '../components/icons'
 import { useAuth } from '../context/useAuth'
 import { useTitulo } from '../hooks/useTitulo'
 import { isSessionExpired } from '../utils/errors'
-import { FONDOS, codigoDe, recetaPara, type Receta } from '../utils/recetas'
+import { IconLock } from '../components/icons'
+import { nivelDe } from '../utils/niveles'
+import { FONDOS, NIVEL_DE, codigoDe, recetaPara, recetaVisible, type Receta } from '../utils/recetas'
 
 /**
  * Los nombres de los fondos, para el lector de pantalla: en pantalla son círculos de
@@ -28,27 +30,31 @@ export function ArmarHamburguesa() {
   const { user, cambiarHamburguesa } = useAuth()
   useTitulo('Tu hamburguesa')
   const navigate = useNavigate()
-  const [receta, setReceta] = useState<Receta>(() => recetaPara(user?.username ?? '', user?.hamburguesa))
+  const nivel = nivelDe(user?.xp ?? 0)
+  const [receta, setReceta] = useState<Receta>(() =>
+    recetaVisible(recetaPara(user?.username ?? '', user?.hamburguesa), nivel),
+  )
   const [guardando, setGuardando] = useState(false)
-  const [error, setError] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // RequireAuth ya lo garantiza; el compilador no lo ve.
   if (!user) return null
 
   function cambiar<K extends keyof Receta>(cosa: K, valor: Receta[K]) {
     setReceta((previa) => ({ ...previa, [cosa]: valor }))
-    setError(false)
+    setError(null)
   }
 
   async function guardar(codigo: string | null) {
     setGuardando(true)
-    setError(false)
+    setError(null)
     try {
       await cambiarHamburguesa(codigo)
       navigate('/profile')
     } catch (err) {
       if (isSessionExpired(err)) navigate('/login')
-      else setError(true)
+      // El servidor dice cuál premio todavía no está ganado; sin eso, el aviso de siempre.
+      else setError((err as { response?: { data?: { error?: string } } }).response?.data?.error ?? 'No pudimos guardar tu hamburguesa. Probá de nuevo.')
     } finally {
       setGuardando(false)
     }
@@ -145,13 +151,21 @@ export function ArmarHamburguesa() {
               { id: 1, texto: 'Simple' },
               { id: 2, texto: 'Doble' },
               { id: 3, texto: 'Triple' },
+              { id: 4, texto: 'Cuádruple', desbloqueaEn: NIVEL_DE.cuartaCarne },
             ]}
+            nivel={nivel}
             onCambio={(valor) => cambiar('carnes', valor)}
+          />
+
+          <ExtrasDeNivel
+            receta={receta}
+            nivel={nivel}
+            onCambio={(extra, valor) => cambiar(extra, valor)}
           />
 
           {error && (
             <p role="alert" className="text-sm text-error">
-              No pudimos guardar tu hamburguesa. Probá de nuevo.
+              {error}
             </p>
           )}
 
@@ -188,38 +202,113 @@ function Eleccion<T extends string | number>({
   nombre,
   valor,
   opciones,
+  nivel = 99,
   onCambio,
 }: {
   titulo: string
   nombre: string
   valor: T
-  opciones: { id: T; texto: string }[]
+  /** `desbloqueaEn`: el nivel que hay que tener; con menos, la opción se ve con candado. */
+  opciones: { id: T; texto: string; desbloqueaEn?: number }[]
+  nivel?: number
   onCambio: (valor: T) => void
 }) {
   return (
     <fieldset className="flex flex-col gap-2">
       <legend className="mb-2 text-sm font-semibold">{titulo}</legend>
       <div className="flex rounded-full bg-base-200 p-1">
-        {opciones.map((opcion) => (
-          <label
-            key={opcion.id}
-            className={`relative flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full px-2 text-center text-sm font-semibold transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary ${
-              valor === opcion.id
-                ? 'bg-base-100 shadow-[var(--sombra-tarjeta)]'
-                : 'text-base-content/70 hover:text-base-content'
-            }`}
-          >
-            <input
-              type="radio"
-              name={nombre}
-              value={opcion.id}
-              checked={valor === opcion.id}
-              onChange={() => onCambio(opcion.id)}
-              className="sr-only"
-            />
-            {opcion.texto}
-          </label>
-        ))}
+        {opciones.map((opcion) => {
+          const bloqueada = opcion.desbloqueaEn !== undefined && nivel < opcion.desbloqueaEn
+          return (
+            <label
+              key={opcion.id}
+              className={`relative flex min-h-11 flex-1 items-center justify-center gap-1 rounded-full px-2 text-center text-sm font-semibold transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary ${
+                bloqueada
+                  ? 'cursor-not-allowed text-base-content/70'
+                  : valor === opcion.id
+                    ? 'cursor-pointer bg-base-100 shadow-[var(--sombra-tarjeta)]'
+                    : 'cursor-pointer text-base-content/70 hover:text-base-content'
+              }`}
+            >
+              <input
+                type="radio"
+                name={nombre}
+                value={opcion.id}
+                checked={valor === opcion.id}
+                disabled={bloqueada}
+                onChange={() => onCambio(opcion.id)}
+                className="sr-only"
+              />
+              {bloqueada && <IconLock size={14} />}
+              {opcion.texto}
+            </label>
+          )
+        })}
+      </div>
+      {opciones.some((o) => o.desbloqueaEn !== undefined && nivel < o.desbloqueaEn) && (
+        <p className="text-sm text-base-content/70">
+          {opciones
+            .filter((o) => o.desbloqueaEn !== undefined && nivel < o.desbloqueaEn)
+            .map((o) => `${o.texto}: se desbloquea en el nivel ${o.desbloqueaEn}`)
+            .join('. ')}
+        </p>
+      )}
+    </fieldset>
+  )
+}
+
+/**
+ * Los premios que da el nivel (#313): el huevo frito, el bacon y el fondo de rayos. Cada
+ * uno se ve siempre; sin el nivel, con candado y la leyenda de cuándo se desbloquea. Es
+ * elegir si se usa, no obligación: un premio ganado se puede dejar apagado.
+ */
+function ExtrasDeNivel({
+  receta,
+  nivel,
+  onCambio,
+}: {
+  receta: Receta
+  nivel: number
+  onCambio: (extra: 'huevo' | 'bacon' | 'rayos', valor: boolean) => void
+}) {
+  const extras = [
+    { id: 'huevo', texto: 'Huevo frito', nivel: NIVEL_DE.huevo },
+    { id: 'bacon', texto: 'Bacon', nivel: NIVEL_DE.bacon },
+    { id: 'rayos', texto: 'Fondo de rayos', nivel: NIVEL_DE.rayos },
+  ] as const
+  return (
+    <fieldset className="flex flex-col gap-2">
+      <legend className="mb-2 text-sm font-semibold">Extras</legend>
+      <div className="flex flex-col gap-2">
+        {extras.map((extra) => {
+          const bloqueado = nivel < extra.nivel
+          return (
+            <label
+              key={extra.id}
+              className={`flex min-h-11 items-center justify-between gap-3 rounded-field bg-base-200 px-3 text-sm font-semibold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary ${
+                bloqueado ? 'cursor-not-allowed' : 'cursor-pointer'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                {bloqueado && <IconLock size={14} />}
+                {extra.texto}
+              </span>
+              {bloqueado ? (
+                <span id={`desbloqueo-${extra.id}`} className="text-sm font-normal text-base-content/70">
+                  Se desbloquea en el nivel {extra.nivel}
+                </span>
+              ) : null}
+              <input
+                type="checkbox"
+                checked={!bloqueado && receta[extra.id]}
+                disabled={bloqueado}
+                aria-describedby={bloqueado ? `desbloqueo-${extra.id}` : undefined}
+                onChange={(e) => onCambio(extra.id, e.target.checked)}
+                className={`checkbox checkbox-primary ${bloqueado ? 'sr-only' : ''}`}
+              />
+            </label>
+          )
+        })}
       </div>
     </fieldset>
   )

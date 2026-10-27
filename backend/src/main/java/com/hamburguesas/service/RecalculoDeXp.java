@@ -1,5 +1,6 @@
 package com.hamburguesas.service;
 
+import com.hamburguesas.model.User;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,14 +42,31 @@ public class RecalculoDeXp {
         }
     }
 
+    /**
+     * Si bajó de nivel, la hamburguesa pierde lo que ya no alcanza (#313): huevo, bacon,
+     * cuarta carne y rayos. Se escribe con compare-and-set: si en el medio la cambió ella,
+     * el recorte no pisa lo nuevo.
+     */
+    private void recortarLosPremios(User cuenta, int xp) {
+        if (cuenta == null || cuenta.getHamburguesa() == null) {
+            return;
+        }
+        String vieja = cuenta.getHamburguesa();
+        String nueva = Premios.recortar(vieja, Niveles.nivelDe(xp));
+        if (!nueva.equals(vieja)) {
+            userRepository.recortarHamburguesa(cuenta.getId(), vieja, nueva);
+        }
+    }
+
     /** Devuelve la XP que quedó. */
     @Transactional
     public int recalcular(Long userId) {
         // La fila de la cuenta se bloquea: dos recálculos casi juntos se esperan en vez de pisarse
         // con un número viejo.
-        userRepository.bloquear(userId);
+        User cuenta = userRepository.bloquear(userId).orElse(null);
         int xp = Niveles.xpTotal(ratingRepository.comentariosDe(userId));
         userRepository.ponerXp(userId, xp);
+        recortarLosPremios(cuenta, xp);
         return xp;
     }
 }
