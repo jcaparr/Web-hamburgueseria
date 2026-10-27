@@ -57,12 +57,13 @@ export function InvitacionARegistrarse() {
     return () => window.clearTimeout(espera)
   }, [elegible, pathname])
 
-  // Cuenta como mostrada recién cuando se ve, no cuando se programa.
-  useEffect(() => {
-    if (visible) marcarMostradaEnEstaVisita()
-  }, [visible])
-
   const mostrar = visible && elegible
+
+  // Cuenta como mostrada recién cuando se ve, no cuando se programa: si la sesión se
+  // estaba comprobando, programada pero oculta no tiene que gastar la visita.
+  useEffect(() => {
+    if (mostrar) marcarMostradaEnEstaVisita()
+  }, [mostrar])
 
   function cerrar() {
     registrarCierre()
