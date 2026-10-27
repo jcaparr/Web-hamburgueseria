@@ -5,7 +5,7 @@ import { apiClient } from '../api/client'
 import type { Buzon, Notificacion } from '../types'
 import { reaccion } from '../utils/reacciones'
 import { fechaYHora } from '../utils/fechaYHora'
-import { AVISOS, nombreDe } from '../utils/logros'
+import { AVISOS, POR_CODIGO, nombreDe } from '../utils/logros'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
 import { IconLogros } from './icons'
 import { MedallaDeLogro } from './MedallaDeLogro'
@@ -192,8 +192,11 @@ function Grupo({ titulo, avisos, onCambioDeSeguimiento }: {
 function AvisoDeUnLogro({ aviso }: { aviso: Notificacion }) {
   const codigo = aviso.logro ?? ''
   const retro = codigo === 'RETROACTIVOS'
-  const detalle = AVISOS[codigo] ?? ''
-  const texto = detalle ? detalle.charAt(0).toLowerCase() + detalle.slice(1) : ''
+  // Un código que este navegador no conoce (servidor más nuevo que la página): no hay qué mostrar.
+  if (!retro && !POR_CODIGO[codigo]) return null
+  // Solo la primera oración del aviso: en la campana va corto.
+  const detalle = (AVISOS[codigo] ?? '').split('. ')[0]
+  const texto = detalle ? detalle.charAt(0).toLowerCase() + detalle.slice(1).replace(/\.$/, '') + '.' : ''
   return (
     <li className={`rounded-field ${aviso.nueva ? 'bg-primary/8' : ''}`}>
       <Link
@@ -203,7 +206,7 @@ function AvisoDeUnLogro({ aviso }: { aviso: Notificacion }) {
         {retro ? <IconLogros size={36} /> : <MedallaDeLogro codigo={codigo} ganado size={36} sinNumero />}
         <p className="min-w-0 flex-1 text-sm leading-snug">
           {retro ? (
-            <>Ya tenías {aviso.cantidad} logros</>
+            <>{aviso.cantidad === 1 ? 'Ya tenías 1 logro' : `Ya tenías ${aviso.cantidad} logros`}</>
           ) : (
             <>
               Ganaste <span className="font-semibold">{nombreDe(codigo)}</span>: {texto}
