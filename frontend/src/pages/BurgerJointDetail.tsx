@@ -44,6 +44,9 @@ export function BurgerJointDetail({ idDelLocal }: { idDelLocal?: string }) {
   const [parametros, setParametros] = useSearchParams()
   const [burgerJoint, setBurgerJoint] = useState<BurgerJoint | null>(null)
   const [ratings, setRatings] = useState<Rating[]>([])
+  // Tu reseña de este local, pedida aparte (#340): la lista trae solo las primeras veinte
+  // y la tuya puede ser más vieja. null = no dejaste; undefined = no se pudo saber.
+  const [mia, setMia] = useState<Rating | null | undefined>(undefined)
   // Cuántas hay en total, que no es lo mismo que cuántas se trajeron: la lista viene
   // paginada. Sale de la página y no del resumen para que el número del título cuente
   // lo que se puede ver, y no las que el servidor escondió por un bloqueo.
@@ -92,8 +95,17 @@ export function BurgerJointDetail({ idDelLocal }: { idDelLocal?: string }) {
       apiClient.get<BurgerJoint>(`/burger-joints/${id}`),
       apiClient.get<PageResponse<Rating>>(`/burger-joints/${id}/ratings`),
       apiClient.get<ResumenDeResenias>(`/burger-joints/${id}/ratings/resumen`),
+      // Sin sesión no hay reseña propia. Si falla no tumba la ficha: se cae a buscarla
+      // en la lista, como antes.
+      user
+        ? apiClient
+            .get<Rating>(`/burger-joints/${id}/ratings/mine`)
+            .then(({ data, status }) => (status === 200 && data ? data : null))
+            .catch(() => undefined)
+        : Promise.resolve(null),
     ])
-      .then(([jointRes, ratingsRes, resumenRes]) => {
+      .then(([jointRes, ratingsRes, resumenRes, miaRes]) => {
+        setMia(miaRes)
         setBurgerJoint(jointRes.data)
         setRatings(ratingsRes.data.content)
         setCuantasResenias(ratingsRes.data.page.totalElements)
@@ -118,7 +130,7 @@ export function BurgerJointDetail({ idDelLocal }: { idDelLocal?: string }) {
   }
 
   // Con el ancla también: otra reseña del mismo local hay que buscarla (#260).
-  useEffect(load, [id, objetivo])
+  useEffect(load, [id, objetivo, user?.userId])
 
   // Cada ficha empieza arriba. Al pasar de un local a otro desde "Más hamburgueserías
   // en…", que está al final, la página nueva aparecía scrolleada hasta abajo.
@@ -143,9 +155,9 @@ export function BurgerJointDetail({ idDelLocal }: { idDelLocal?: string }) {
     buscada && buscada.local === id && buscada.resenia.id === objetivo && !estaEnLaLista
       ? [buscada.resenia, ...ratings]
       : ratings
-  // De la lista con la buscada: si tu reseña es vieja y llegaste a ella desde "Mis
-  // reseñas", es la buscada, y sin esto la ficha ofrecía escribir otra.
-  const myRating = lista.find((r) => r.userId === user?.userId) ?? null
+  // La que dice el servidor (#340). Solo si no se pudo saber se busca en la lista, que
+  // tiene las primeras veinte y la buscada.
+  const myRating = mia !== undefined ? mia : (lista.find((r) => r.userId === user?.userId) ?? null)
 
   // Salta hasta la reseña, le pasa el foco y la marca un momento, una sola vez por
   // ancla: después de guardar una reseña la lista se vuelve a armar, y no tiene que
