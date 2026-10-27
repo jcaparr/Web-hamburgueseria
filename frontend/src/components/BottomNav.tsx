@@ -1,23 +1,52 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
+import { useReseniaRapida } from '../context/useReseniaRapida'
 import { useHideOnScroll } from '../hooks/useScrollDirection'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
-import { IconFeed, IconMedal, IconRoute, IconSearch, IconUser } from './icons'
+import type { User } from '../types'
+import { IconFeed, IconMedal, IconPencil, IconSearch, IconUser } from './icons'
 
-const ITEMS = [
+// Tour ya no está acá: es el primer botón de la fila de filtros de Explorar (#337). En su
+// lugar, al medio, el lápiz para reseñar desde cualquier pantalla.
+const ANTES = [
   { to: '/', label: 'Explorar', Icon: IconSearch },
-  // Igual que arriba: sin sesión el feed no tiene "Siguiendo" que mostrar, y sacarlo
-  // deja la barra en cuatro, que es lo que entra cómodo en un teléfono angosto.
-  { to: '/feed', label: 'Feed', Icon: IconFeed, soloConSesion: true },
-  { to: '/tour', label: 'Tour', Icon: IconRoute },
+  // Siempre visible: sin sesión lleva a entrar.
+  { to: '/feed', label: 'Feed', Icon: IconFeed },
+]
+const DESPUES = [
   { to: '/ranking', label: 'Ranking', Icon: IconMedal },
   { to: '/profile', label: 'Perfil', Icon: IconUser },
 ]
 
+type Item = { to: string; label: string; Icon: typeof IconSearch }
+
+function Pestania({ to, label, Icon, user }: Item & { user: User | null }) {
+  return (
+    <NavLink
+      to={to}
+      end={to === '/'}
+      className={({ isActive }) =>
+        `flex flex-1 flex-col items-center gap-0.5 rounded-[1.375rem] pb-2 pt-2.5 focus-visible:-outline-offset-4 ${isActive ? 'text-primary' : 'text-base-content/70'}`
+      }
+    >
+      {/* Un hueco fijo de 26 px que comparten las pestañas, así los íconos y los
+          rótulos quedan alineados aunque el de Perfil sea la hamburguesa con su anillo. */}
+      <span className="grid h-[26px] w-[26px] place-items-center" data-destino-xp={to === '/profile' ? '' : undefined}>
+        {to === '/profile' && user ? (
+          <AvatarDeUsuario username={user.username} hamburguesa={user.hamburguesa} xp={user.xp} sinCirculo size={18} />
+        ) : (
+          <Icon size={21} />
+        )}
+      </span>
+      <span className="font-nav text-xs font-semibold">{label}</span>
+    </NavLink>
+  )
+}
+
 export function BottomNav() {
   const { user } = useAuth()
   const hidden = useHideOnScroll()
-  const items = ITEMS.filter((item) => user || !item.soloConSesion)
+  const { abrir } = useReseniaRapida()
 
   return (
     // Apoyada en el borde de abajo, de lado a lado (#216): cuando flotaba separada de los
@@ -34,26 +63,25 @@ export function BottomNav() {
           el blanco era el ícono con su palabra, unos 25 px de ancho, y entre una y otra
           quedaba un hueco que no hacía nada. */}
       <div className="flex px-1">
-        {items.map(({ to, label, Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/'}
-            className={({ isActive }) =>
-              `flex flex-1 flex-col items-center gap-0.5 rounded-[1.375rem] pb-2 pt-2.5 focus-visible:-outline-offset-4 ${isActive ? 'text-primary' : 'text-base-content/70'}`
-            }
+        {ANTES.map((item) => (
+          <Pestania key={item.to} {...item} user={user} />
+        ))}
+        {/* El lápiz (#337): reseñar desde cualquier pantalla. Es lo único de la barra que
+            no es una pantalla sino una acción, y por eso se destaca: 52 px y color
+            primario, centrado con los demás íconos. Sin sesión lleva a entrar y vuelve. */}
+        <div className="flex flex-none items-center justify-center px-1">
+          <button
+            type="button"
+            onClick={abrir}
+            aria-label="Escribir una reseña"
+            aria-haspopup="dialog"
+            className="grid h-[52px] w-[52px] place-items-center rounded-[1.125rem] bg-primary text-primary-content shadow-[var(--sombra-de-la-barra)] transition-transform active:scale-95 motion-reduce:transition-none"
           >
-            {/* Un hueco fijo de 26 px que comparten las cinco pestañas, así los íconos y los
-                rótulos quedan alineados aunque el de Perfil sea la hamburguesa con su anillo. */}
-            <span className="grid h-[26px] w-[26px] place-items-center" data-destino-xp={to === '/profile' ? '' : undefined}>
-              {to === '/profile' && user ? (
-                <AvatarDeUsuario username={user.username} hamburguesa={user.hamburguesa} xp={user.xp} sinCirculo size={18} />
-              ) : (
-                <Icon size={21} />
-              )}
-            </span>
-            <span className="font-nav text-xs font-semibold">{label}</span>
-          </NavLink>
+            <IconPencil size={24} />
+          </button>
+        </div>
+        {DESPUES.map((item) => (
+          <Pestania key={item.to} {...item} user={user} />
         ))}
       </div>
     </nav>

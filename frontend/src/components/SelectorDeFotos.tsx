@@ -209,8 +209,10 @@ function ElegirFotos({
     // El campo de archivo es invisible, así que el anillo de foco lo dibuja la
     // etiqueta: sin esto, con el teclado no se veía dónde se estaba.
     <label
-      className={`group relative flex aspect-square w-full cursor-pointer flex-col items-center justify-center bg-base-200 text-base-content/70 ring-1 ring-inset ring-base-content/10 transition-colors hover:bg-base-300 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-primary ${
-        grande ? 'gap-2 rounded-box' : 'gap-1 rounded-field'
+      className={`group relative flex w-full cursor-pointer flex-col items-center justify-center bg-base-200 text-base-content/70 ring-1 ring-inset ring-base-content/10 transition-colors hover:bg-base-300 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-primary ${
+        // Sin foto todavía es un recuadro bajo: cuadrado ocupaba un tercio de la pantalla y
+        // dejaba la fecha y el comentario fuera de la vista. Las de "sumar otra" siguen cuadradas.
+        grande ? 'h-36 gap-2 rounded-box' : 'aspect-square gap-1 rounded-field'
       }`}
     >
       <IconCamera size={grande ? 34 : 22} />

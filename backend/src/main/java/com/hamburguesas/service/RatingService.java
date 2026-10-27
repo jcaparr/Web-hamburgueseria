@@ -33,6 +33,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -126,7 +127,11 @@ public class RatingService {
             .findByUser_IdAndBurgerJoint_Id(userId, burgerJointId)
             .orElseThrow(() -> new ResourceNotFoundException("You haven't rated this burger joint yet"));
 
-        validarFechaDeVisita(request.visitDate(), rating.getVisitDate());
+        // Una reseña de antes no tiene día de visita y se muestra con el de carga: ese día
+        // cuenta como "el que ya tenía", así que al editarla no se rechaza por viejo.
+        LocalDate yaTenia = rating.getVisitDate() != null ? rating.getVisitDate()
+            : rating.getCreatedAt() != null ? rating.getCreatedAt().atZone(Logros.ZONA).toLocalDate() : null;
+        validarFechaDeVisita(request.visitDate(), yaTenia);
 
         List<byte[]> nuevas = leerTodas(fotosSubidas);
         List<String> actuales = rating.todasLasFotos();
@@ -314,6 +319,18 @@ public class RatingService {
             .deUnLocalSalvo(burgerJointId, bloqueos.queNoPuedeVer(userId), pageable);
         List<RatingResponse> conTodo = conReacciones(pagina.getContent(), userId);
         return new PageImpl<>(conTodo, pagina.getPageable(), pagina.getTotalElements());
+    }
+
+    /**
+     * La reseña de quien pregunta en este local, si dejó una (#337).
+     *
+     * La pantalla de reseña la necesita para abrir en modo edición al elegir un local, y
+     * no puede salir de la lista de la ficha: ahí entran solo las primeras veinte.
+     */
+    @Transactional(readOnly = true)
+    public Optional<RatingResponse> mia(Long userId, Long burgerJointId) {
+        return ratingRepository.findByUser_IdAndBurgerJoint_Id(userId, burgerJointId)
+            .map(r -> conReacciones(List.of(r), userId).get(0));
     }
 
     /**

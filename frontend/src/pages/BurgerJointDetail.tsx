@@ -10,6 +10,7 @@ import { PortadaDelLocal } from '../components/PortadaDelLocal'
 import { ResumenDeCalificaciones } from '../components/ResumenDeCalificaciones'
 import { ScoreBadge } from '../components/ScoreBadge'
 import { TarjetaDeResenia } from '../components/TarjetaDeResenia'
+import { RESENIA_GUARDADA } from '../context/resenia'
 import { useAuth } from '../context/useAuth'
 import { useDatosEstructurados, useDescripcion, useNoIndexar } from '../hooks/useMetadatos'
 import { useTitulo } from '../hooks/useTitulo'
@@ -75,6 +76,13 @@ export function BurgerJointDetail({ idDelLocal }: { idDelLocal?: string }) {
       navigate(`/${burgerJoint.slug}${location.search}${location.hash}`, { replace: true })
     }
   }, [llegoPorId, burgerJoint, navigate, location.search, location.hash])
+
+  // La reseña escrita desde el lápiz mientras se mira esta misma ficha: navegar a la misma
+  // dirección no la recarga, así que se escucha el aviso.
+  useEffect(() => {
+    window.addEventListener(RESENIA_GUARDADA, load)
+    return () => window.removeEventListener(RESENIA_GUARDADA, load)
+  })
 
   function load() {
     // Juntas: si cualquiera de las dos falla, la página no está completa. Antes cada
