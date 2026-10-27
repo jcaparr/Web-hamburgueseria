@@ -72,9 +72,11 @@ public class NotificacionesService {
         List<Reaccion> reacciones = reaccionRepository.aLasReseniasDe(yo, ocultos, corte, primeras);
         Set<Long> sigo = aCualesSigue(yo, seguimientos);
 
-        List<NotificacionDto> avisos = Stream.concat(
+        List<NotificacionDto> avisos = Stream.of(
                 seguimientos.stream().map(f -> deSeguimiento(f, vistas, sigo)),
-                reacciones.stream().map(r -> deReaccion(r, vistas)))
+                reacciones.stream().map(r -> deReaccion(r, vistas)),
+                deLogros(yo, vistas, corte).stream())
+            .flatMap(s -> s)
             .sorted(Comparator.comparing(NotificacionDto::cuando).reversed())
             .limit(CUANTAS)
             .toList();
@@ -91,11 +93,42 @@ public class NotificacionesService {
         // Lo vencido no está en el buzón, así que tampoco cuenta en la campana.
         Instant desde = Collections.max(List.of(desdeCuandoSonNuevas(persona(yo)), corte()));
         List<Long> ocultos = bloqueos.queNoPuedeVer(yo);
+        long logrosNuevos = logroRepository.ganadosDesde(yo, desde);
         long logrosSinVer = logroRepository.contarSinVer(yo) + (logroRepository.retroactivosSinVer(yo) > 0 ? 1 : 0);
         return new NotificacionesNuevasDto(
             followRepository.seguimientosNuevosA(yo, ocultos, desde)
-                + reaccionRepository.nuevasALasReseniasDe(yo, ocultos, desde),
+                + reaccionRepository.nuevasALasReseniasDe(yo, ocultos, desde)
+                + logrosNuevos,
             logrosSinVer);
+    }
+
+    /**
+     * Los logros ganados dentro de la vigencia (#320): la tercera fuente del buzón. Lo que te
+     * dan otros (seguidores, reacciones, podio) llega por acá. Los de la carga inicial no llenan
+     * la campana: van en un solo aviso, "Ya tenías N logros". Si un logro se desactiva, desaparece.
+     */
+    private List<NotificacionDto> deLogros(Long yo, Instant vistas, Instant corte) {
+        List<NotificacionDto> avisos = new java.util.ArrayList<>();
+        long retroactivos = 0;
+        Instant ultimoRetroactivo = null;
+        for (var logro : logroRepository.ganadosDespuesDe(yo, corte)) {
+            if (logro.isRetroactivo()) {
+                retroactivos++;
+                if (ultimoRetroactivo == null || logro.getGanadoEl().isAfter(ultimoRetroactivo)) {
+                    ultimoRetroactivo = logro.getGanadoEl();
+                }
+                continue;
+            }
+            avisos.add(new NotificacionDto(NotificacionDto.Tipo.LOGRO, logro.getGanadoEl(),
+                logro.getGanadoEl().isAfter(vistas), null, null, null, 0, false, null, null, null, null,
+                logro.getId().logro(), null));
+        }
+        if (retroactivos > 0) {
+            avisos.add(new NotificacionDto(NotificacionDto.Tipo.LOGRO, ultimoRetroactivo,
+                false, null, null, null, 0, false, null, null, null, null,
+                "RETROACTIVOS", retroactivos));
+        }
+        return avisos;
     }
 
     /** Da por visto todo lo que llegó hasta ahora: la campana vuelve a cero. */
@@ -131,7 +164,7 @@ public class NotificacionesService {
         User quien = seguimiento.getFollower();
         return new NotificacionDto(NotificacionDto.Tipo.SEGUIMIENTO, seguimiento.getCreatedAt(),
             seguimiento.getCreatedAt().isAfter(vistas), quien.getId(), quien.getUsername(),
-            quien.getHamburguesa(), quien.getXp(), sigo.contains(quien.getId()), null, null, null, null);
+            quien.getHamburguesa(), quien.getXp(), sigo.contains(quien.getId()), null, null, null, null, null, null);
     }
 
     private static NotificacionDto deReaccion(Reaccion reaccion, Instant vistas) {
@@ -139,6 +172,6 @@ public class NotificacionesService {
         var local = reaccion.getRating().getBurgerJoint();
         return new NotificacionDto(NotificacionDto.Tipo.REACCION, reaccion.getCreatedAt(),
             reaccion.getCreatedAt().isAfter(vistas), quien.getId(), quien.getUsername(),
-            quien.getHamburguesa(), quien.getXp(), false, reaccion.getTipo(), local.getId(), local.getSlug(), local.getName());
+            quien.getHamburguesa(), quien.getXp(), false, reaccion.getTipo(), local.getId(), local.getSlug(), local.getName(), null, null);
     }
 }
