@@ -30,6 +30,7 @@ export function DialogoDeConfirmacion({
   onConfirmar: () => void
 }) {
   const dialogo = useRef<HTMLDialogElement>(null)
+  const botonDeSeguir = useRef<HTMLButtonElement>(null)
   const idDelTitulo = useId()
   const idDelTexto = useId()
 
@@ -37,7 +38,12 @@ export function DialogoDeConfirmacion({
   useEffect(() => {
     const ventana = dialogo.current
     if (!ventana) return
-    if (abierto && !ventana.open) ventana.showModal()
+    if (abierto && !ventana.open) {
+      ventana.showModal()
+      // showModal le da el foco al primer botón; el atributo autoFocus de React solo vale
+      // al montar, no al abrir.
+      botonDeSeguir.current?.focus()
+    }
     if (!abierto && ventana.open) ventana.close()
   }, [abierto])
 
@@ -69,7 +75,7 @@ export function DialogoDeConfirmacion({
           <button type="button" onClick={onConfirmar} className="btn btn-ghost min-h-11 text-error">
             {textoDeConfirmar}
           </button>
-          <button type="button" autoFocus onClick={onSeguir} className="btn btn-primary min-h-11">
+          <button type="button" ref={botonDeSeguir} onClick={onSeguir} className="btn btn-primary min-h-11">
             {textoDeSeguir}
           </button>
         </div>
