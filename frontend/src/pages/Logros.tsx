@@ -107,7 +107,7 @@ function MisLogros() {
       <HojaDeLogro
         logro={abierto ? porCodigo.get(abierto) ?? null : null}
         exhibido={user?.logroExhibido ?? null}
-        onExhibir={(codigo) => exhibirLogro(codigo).catch(() => {})}
+        onExhibir={(codigo) => exhibirLogro(codigo)}
         onCerrar={() => {
           setAbierto(null)
           origen.current?.focus()
@@ -192,10 +192,11 @@ function HojaDeLogro({
 }: {
   logro: LogroDeLaPantalla | null
   exhibido: string | null
-  onExhibir: (codigo: string | null) => void
+  onExhibir: (codigo: string | null) => Promise<void>
   onCerrar: () => void
 }) {
   const dialogo = useRef<HTMLDialogElement>(null)
+  const [falla, setFalla] = useState(false)
 
   useEffect(() => {
     const ventana = dialogo.current
@@ -240,11 +241,19 @@ function HojaDeLogro({
             {logro.ganado && (
               <button
                 type="button"
-                onClick={() => onExhibir(exhibido === logro.codigo ? null : logro.codigo)}
+                onClick={() => {
+                  setFalla(false)
+                  onExhibir(exhibido === logro.codigo ? null : logro.codigo).catch(() => setFalla(true))
+                }}
                 className="btn btn-outline w-full"
               >
                 {exhibido === logro.codigo ? 'Quitar de mi perfil' : 'Exhibir en mi perfil'}
               </button>
+            )}
+            {falla && (
+              <p role="alert" className="text-sm text-error">
+                No pudimos guardarlo. Probá de nuevo.
+              </p>
             )}
             <button type="button" onClick={onCerrar} className="btn btn-primary w-full">
               Cerrar
