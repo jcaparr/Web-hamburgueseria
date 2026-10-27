@@ -7,6 +7,7 @@ import { PieDeLaPagina } from './components/PieDeLaPagina'
 import { RequireAuth } from './components/RequireAuth'
 import { TopBar } from './components/TopBar'
 import { AuthProvider } from './context/AuthContext'
+import { ReseniaRapidaProvider } from './context/ReseniaRapidaProvider'
 import { ArmarHamburguesa } from './pages/ArmarHamburguesa'
 import { BurgerJointDetail } from './pages/BurgerJointDetail'
 import { FichaPorSlug } from './pages/FichaPorSlug'
@@ -34,6 +35,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <ReseniaRapidaProvider>
         <div className="flex min-h-dvh flex-col bg-base-200 text-base-content">
           <a
             href="#contenido"
@@ -93,6 +95,7 @@ export default function App() {
           <PieDeLaPagina />
           <BottomNav />
         </div>
+        </ReseniaRapidaProvider>
       </BrowserRouter>
     </AuthProvider>
   )

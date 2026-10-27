@@ -32,6 +32,14 @@ public class RatingController {
         return ratingService.list(burgerJointId, CurrentUser.idOrNull(), Paginas.sinOrden(pageable));
     }
 
+    /** La reseña propia en este local (#337); 204 si todavía no dejó una. */
+    @GetMapping("/mine")
+    public ResponseEntity<RatingResponse> mia(@PathVariable Long burgerJointId) {
+        return ratingService.mia(CurrentUser.requireId(), burgerJointId)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
     /** Una sola, para llevar a ella desde el feed o un perfil aunque no esté entre las primeras (#260). */
     @GetMapping("/{ratingId:\\d+}")
     public RatingResponse una(@PathVariable Long burgerJointId, @PathVariable Long ratingId) {

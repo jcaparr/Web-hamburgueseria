@@ -33,6 +33,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -314,6 +315,18 @@ public class RatingService {
             .deUnLocalSalvo(burgerJointId, bloqueos.queNoPuedeVer(userId), pageable);
         List<RatingResponse> conTodo = conReacciones(pagina.getContent(), userId);
         return new PageImpl<>(conTodo, pagina.getPageable(), pagina.getTotalElements());
+    }
+
+    /**
+     * La reseña de quien pregunta en este local, si dejó una (#337).
+     *
+     * La pantalla de reseña la necesita para abrir en modo edición al elegir un local, y
+     * no puede salir de la lista de la ficha: ahí entran solo las primeras veinte.
+     */
+    @Transactional(readOnly = true)
+    public Optional<RatingResponse> mia(Long userId, Long burgerJointId) {
+        return ratingRepository.findByUser_IdAndBurgerJoint_Id(userId, burgerJointId)
+            .map(r -> conReacciones(List.of(r), userId).get(0));
     }
 
     /**

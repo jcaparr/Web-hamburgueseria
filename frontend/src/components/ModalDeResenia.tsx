@@ -1,9 +1,10 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { apiClient } from '../api/client'
 import { useAuth } from '../context/useAuth'
+import { BuscadorDeLocal } from './BuscadorDeLocal'
 import { SelectorDeFotos, type FotosElegidas } from './SelectorDeFotos'
 import { Stars } from './Stars'
-import type { Rating } from '../types'
+import type { BurgerJoint, DesgloseDeNotas, Rating, ResumenDeResenias } from '../types'
 import { avisarXpGanada } from '../utils/avisosDeXp'
 import { isSessionExpired } from '../utils/errors'
 import {
@@ -17,15 +18,54 @@ import {
   xpSinLaResenia,
 } from '../utils/niveles'
 
+type Campo = 'local' | 'puntaje' | 'foto' | 'fecha'
+
+/** El local sobre el que se reseña: lo que hace falta para mostrarlo y para mandar. */
+interface LocalElegido {
+  id: number | string
+  nombre: string
+  barrio: string | null
+}
+
+/** El día de hoy en Buenos Aires, "2026-10-27": es el que cuenta el servidor. */
+function hoyEnBuenosAires(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' })
+}
+
+/** Hace un año, para el límite de la fecha de visita. */
+function haceUnAnio(hoy: string): string {
+  const [anio, mes, dia] = hoy.split('-')
+  return `${Number(anio) - 1}-${mes}-${dia}`
+}
+
+/**
+ * Con qué arranca el formulario: lo que ya tenía la reseña, o nada.
+ *
+ * Una reseña de antes de la fecha de visita no la tiene: se arranca en el día en que se
+ * cargó, que es lo que la tarjeta muestra, así que guardarla sin tocar nada no cambia lo
+ * que se ve.
+ */
+function valoresDe(r: Rating | null) {
+  const dia = r ? (r.visitDate ?? new Date(r.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' })) : ''
+  return {
+    score: r?.score ?? 0,
+    comment: r?.comment ?? '',
+    notaLocal: r?.scoreLocal ?? 0,
+    notaAtencion: r?.scoreAtencion ?? 0,
+    notaPrecio: r?.scorePrecio ?? 0,
+    cuando: r ? ('otro' as const) : ('hoy' as const),
+    dia,
+  }
+}
+
 /**
  * Reseñar un local, en una ventana sobre la pantalla.
  *
- * Antes era una sección fija en la ficha del local. Ocupaba más alto que la info del
- * local para una acción que se hace una vez por lugar, y solo si fuiste: casi todo el
- * que entra está decidiendo si ir, no escribiendo.
- *
- * Es el mismo modal para crear y para editar. Lo que cambia es que llegue una reseña en
- * `miResenia`: si llega, el formulario arranca con lo que ya había y manda un PUT.
+ * Es la misma pantalla para el lápiz de la barra de abajo y para el botón de la ficha
+ * (#337). Desde la ficha llega con el local ya elegido (`localId`); desde el lápiz llega
+ * sin él y arranca con el buscador. Y es la misma para crear y para editar: si el local
+ * ya tiene una reseña tuya, el formulario arranca con lo que ya había y manda un PUT (una
+ * reseña por local).
  *
  * Es un `<dialog>` y no un div flotante: el navegador se encarga del foco atrapado
  * adentro, del Esc y de dejar inerte lo de atrás, que es todo lo que habría que escribir
@@ -41,36 +81,77 @@ export function ModalDeResenia({
   onSesionVencida,
 }: {
   abierto: boolean
-  localId: number | string
-  nombreDelLocal: string
+  /** El local ya elegido, si llega de su ficha. Sin él se muestra el buscador. */
+  localId?: number | string
+  nombreDelLocal?: string
   /** La reseña que ya dejaste en este local, si dejaste una. */
   miResenia: Rating | null
   onCerrar: () => void
-  onGuardada: () => void
+  /** Se avisa con el local reseñado, para que quien abrió la ventana vuelva a pedir lo suyo. */
+  onGuardada: (localId: number | string) => void
   onSesionVencida: () => void
 }) {
   const dialogo = useRef<HTMLDialogElement>(null)
   const { user, refrescar } = useAuth()
+  const esFijo = localId !== undefined
+  const inicial = valoresDe(miResenia)
+
+  const [local, setLocal] = useState<LocalElegido | null>(
+    esFijo ? { id: localId, nombre: nombreDelLocal ?? '', barrio: null } : null,
+  )
+  // La reseña que se edita. Desde la ficha llega de afuera; con el buscador se pide al
+  // elegir el local.
+  const [mia, setMia] = useState<Rating | null>(miResenia)
+  const [desglose, setDesglose] = useState<DesgloseDeNotas | null>(null)
   // Arranca con lo que ya tenía la reseña, si había. Quien la abre le cambia la key a
   // la ventana cada vez que la abre, así que siempre se arma de cero: antes se volvía
   // a llenar desde un efecto al abrirse, un dibujo de más (#109).
-  const [score, setScore] = useState(miResenia?.score ?? 0)
-  const [comment, setComment] = useState(miResenia?.comment ?? '')
+  const [score, setScore] = useState(inicial.score)
+  const [comment, setComment] = useState(inicial.comment)
+  const [notaLocal, setNotaLocal] = useState(inicial.notaLocal)
+  const [notaAtencion, setNotaAtencion] = useState(inicial.notaAtencion)
+  const [notaPrecio, setNotaPrecio] = useState(inicial.notaPrecio)
+  const [cuando, setCuando] = useState<'hoy' | 'otro'>(inicial.cuando)
+  const [dia, setDia] = useState(inicial.dia)
   const [fotos, setFotos] = useState<FotosElegidas>({ quedan: miResenia?.fotos ?? [], nuevas: [] })
   const [guardando, setGuardando] = useState(false)
   const [borrando, setBorrando] = useState(false)
   // Con el campo al que se refiere, si es de uno: el aviso va al lado de ese campo y no
   // al pie del formulario, donde quedaba lejos de lo que había que corregir.
-  const [error, setError] = useState<{ texto: string; campo?: 'puntaje' | 'foto' } | null>(null)
+  const [error, setError] = useState<{ texto: string; campo?: Campo } | null>(null)
   const idDelTitulo = useId()
+  const zonaDelLocal = useRef<HTMLDivElement>(null)
   const zonaDelPuntaje = useRef<HTMLDivElement>(null)
   const zonaDeLaFoto = useRef<HTMLDivElement>(null)
+  const zonaDeLaFecha = useRef<HTMLDivElement>(null)
+
+  const hoy = hoyEnBuenosAires()
+  const base = valoresDe(mia)
 
   // Cuánta XP da lo que está escrito. Sin XP todavía (y sin reseña de este local) es la
   // primera de la cuenta: suma también la bienvenida.
   const xpDeEsta = xpDeComentario(comment)
-  const esLaPrimera = !miResenia && (user?.xp ?? 0) === 0
+  const esLaPrimera = !mia && (user?.xp ?? 0) === 0
   const xpQueDa = xpDeEsta + (esLaPrimera ? XP_DE_BIENVENIDA : 0)
+
+  // Cómo calificaron los demás este local. Es solo información: si no llega, el bloque
+  // no se muestra y se reseña igual.
+  const idDelLocal = local?.id
+  useEffect(() => {
+    if (idDelLocal === undefined) return
+    let vigente = true
+    apiClient
+      .get<ResumenDeResenias>(`/burger-joints/${idDelLocal}/ratings/resumen`)
+      .then(({ data }) => {
+        if (vigente) setDesglose(data.desglose)
+      })
+      .catch(() => {
+        if (vigente) setDesglose(null)
+      })
+    return () => {
+      vigente = false
+    }
+  }, [idDelLocal])
 
   // El servidor recalcula la XP al confirmar; se vuelve a pedir quién sos y se avisa lo
   // que cambió, después de cerrar la ventana.
@@ -89,7 +170,11 @@ export function ModalDeResenia({
   useEffect(() => {
     const ventana = dialogo.current
     if (!ventana) return
-    if (abierto && !ventana.open) ventana.showModal()
+    if (abierto && !ventana.open) {
+      ventana.showModal()
+      // Sin local elegido lo primero es buscarlo: el cursor ya queda en el buscador.
+      ventana.querySelector<HTMLInputElement>('input[type=search]')?.focus()
+    }
     if (!abierto && ventana.open) ventana.close()
   }, [abierto])
 
@@ -101,23 +186,84 @@ export function ModalDeResenia({
    * que mientras haya algo puesto se pregunta.
    */
   const hayAlgoEscrito =
-    fotos.nuevas.length > 0 ||
-    fotos.quedan.length !== (miResenia?.fotos.length ?? 0) ||
-    score !== (miResenia?.score ?? 0) ||
-    comment !== (miResenia?.comment ?? '')
+    local !== null &&
+    (fotos.nuevas.length > 0 ||
+      fotos.quedan.length !== (mia?.fotos.length ?? 0) ||
+      score !== base.score ||
+      comment !== base.comment ||
+      notaLocal !== base.notaLocal ||
+      notaAtencion !== base.notaAtencion ||
+      notaPrecio !== base.notaPrecio ||
+      cuando !== base.cuando ||
+      (cuando === 'otro' && dia !== base.dia))
 
   // El aviso de un campo se va en cuanto se corrige ese campo, no recién al volver a
   // apretar Publicar.
+  function sacarAviso(campo: Campo) {
+    setError((previo) => (previo?.campo === campo ? null : previo))
+  }
+
   function elegirPuntaje(nuevo: number) {
     setScore(nuevo)
-    setError((previo) => (previo?.campo === 'puntaje' ? null : previo))
+    sacarAviso('puntaje')
   }
 
   function elegirFotos(elegidas: FotosElegidas) {
     setFotos(elegidas)
-    if (elegidas.quedan.length + elegidas.nuevas.length > 0) {
-      setError((previo) => (previo?.campo === 'foto' ? null : previo))
+    if (elegidas.quedan.length + elegidas.nuevas.length > 0) sacarAviso('foto')
+  }
+
+  /** Cada nota opcional se saca volviendo a tocar la misma estrella. */
+  function alternar(poner: (n: number) => void, actual: number) {
+    return (nueva: number) => poner(nueva === actual ? 0 : nueva)
+  }
+
+  /** Vuelca una reseña que ya existía en el formulario, para editarla. */
+  function cargar(r: Rating) {
+    const v = valoresDe(r)
+    setMia(r)
+    setScore(v.score)
+    setComment(v.comment)
+    setNotaLocal(v.notaLocal)
+    setNotaAtencion(v.notaAtencion)
+    setNotaPrecio(v.notaPrecio)
+    setCuando(v.cuando)
+    setDia(v.dia)
+    setFotos({ quedan: r.fotos, nuevas: [] })
+  }
+
+  /** Vuelve al formulario en blanco, para cuando se cambia de local. */
+  function vaciar() {
+    const v = valoresDe(null)
+    setMia(null)
+    setScore(v.score)
+    setComment(v.comment)
+    setNotaLocal(0)
+    setNotaAtencion(0)
+    setNotaPrecio(0)
+    setCuando(v.cuando)
+    setDia(v.dia)
+    setFotos({ quedan: [], nuevas: [] })
+    setError(null)
+  }
+
+  async function elegirLocal(elegido: BurgerJoint) {
+    vaciar()
+    setDesglose(null)
+    setLocal({ id: elegido.id, nombre: elegido.name, barrio: elegido.area })
+    // Si ya lo reseñaste, se abre para editar: es una reseña por local.
+    try {
+      const { data, status } = await apiClient.get<Rating>(`/burger-joints/${elegido.id}/ratings/mine`)
+      if (status === 200 && data) cargar(data)
+    } catch (err) {
+      if (isSessionExpired(err)) onSesionVencida()
     }
+  }
+
+  function cambiarDeLocal() {
+    vaciar()
+    setDesglose(null)
+    setLocal(null)
   }
 
   function intentarCerrar() {
@@ -126,20 +272,40 @@ export function ModalDeResenia({
     onCerrar()
   }
 
+  function avisar(texto: string, campo: Campo, zona: { current: HTMLDivElement | null }) {
+    setError({ texto, campo })
+    zona.current?.querySelector<HTMLElement>('[role=radio], input, button')?.focus()
+  }
+
   async function guardar(e: FormEvent) {
     e.preventDefault()
-
+    if (!local) {
+      avisar('Elegí el local que querés reseñar.', 'local', zonaDelLocal)
+      return
+    }
     if (score === 0) {
-      setError({ texto: 'Elegí una nota de 1 a 5 estrellas.', campo: 'puntaje' })
-      zonaDelPuntaje.current?.querySelector<HTMLElement>('[role=radio]')?.focus()
+      avisar('Elegí una nota de 1 a 5 estrellas.', 'puntaje', zonaDelPuntaje)
       return
     }
     // El servidor lo exige igual; avisarlo acá evita mandar el formulario entero para
     // que vuelva rechazado por algo que ya se sabía antes de salir.
     if (fotos.quedan.length + fotos.nuevas.length === 0) {
-      setError({ texto: 'Falta la foto: toda reseña lleva al menos una de lo que comiste.', campo: 'foto' })
-      zonaDeLaFoto.current?.querySelector<HTMLElement>('input')?.focus()
+      avisar('Falta la foto: toda reseña lleva al menos una de lo que comiste.', 'foto', zonaDeLaFoto)
       return
+    }
+    if (cuando === 'otro') {
+      if (!dia) {
+        avisar('Elegí qué día fuiste.', 'fecha', zonaDeLaFecha)
+        return
+      }
+      if (dia > hoy) {
+        avisar('El día no puede ser futuro.', 'fecha', zonaDeLaFecha)
+        return
+      }
+      if (dia < haceUnAnio(hoy) && dia !== base.dia) {
+        avisar('Solo se pueden reseñar visitas de hasta un año atrás.', 'fecha', zonaDeLaFecha)
+        return
+      }
     }
 
     setGuardando(true)
@@ -150,18 +316,24 @@ export function ModalDeResenia({
       const cuerpo = new FormData()
       cuerpo.append('score', String(score))
       cuerpo.append('comment', comment)
+      // "Hoy" no manda fecha: queda la de carga, que es la de hoy. Y las tres notas
+      // opcionales van solo si se pusieron.
+      if (cuando === 'otro') cuerpo.append('visitDate', dia)
+      if (notaLocal > 0) cuerpo.append('scoreLocal', String(notaLocal))
+      if (notaAtencion > 0) cuerpo.append('scoreAtencion', String(notaAtencion))
+      if (notaPrecio > 0) cuerpo.append('scorePrecio', String(notaPrecio))
       fotos.nuevas.forEach((nueva) => cuerpo.append('foto', nueva))
       // Al editar, las que ya tenía y se quedan, en orden. Si no queda ninguna no va el
       // campo, y el servidor entiende que las nuevas reemplazan a todas.
-      if (miResenia) fotos.quedan.forEach((url) => cuerpo.append('queda', url))
+      if (mia) fotos.quedan.forEach((url) => cuerpo.append('queda', url))
 
-      if (miResenia) {
-        await apiClient.put(`/burger-joints/${localId}/ratings`, cuerpo)
+      if (mia) {
+        await apiClient.put(`/burger-joints/${local.id}/ratings`, cuerpo)
       } else {
-        await apiClient.post(`/burger-joints/${localId}/ratings`, cuerpo)
+        await apiClient.post(`/burger-joints/${local.id}/ratings`, cuerpo)
       }
 
-      onGuardada()
+      onGuardada(local.id)
       onCerrar()
       void anunciarXp(user?.xp ?? 0)
     } catch (err: any) {
@@ -182,8 +354,8 @@ export function ModalDeResenia({
    * si no baja, cuántos puntos se van. Con el motor de logros se suman los que se pierden.
    */
   function loQueSePierde(): string {
-    if (!user || !miResenia) return ''
-    const despues = xpSinLaResenia(user.xp, xpDeComentario(miResenia.comment))
+    if (!user || !mia) return ''
+    const despues = xpSinLaResenia(user.xp, xpDeComentario(mia.comment))
     const nivelDespues = nivelDe(despues)
     if (nivelDespues < nivelDe(user.xp)) return `\n\nVolvés al nivel ${nivelDespues}.`
     return `\n\nPerdés ${user.xp - despues} XP.`
@@ -197,14 +369,14 @@ export function ModalDeResenia({
    * y con eso la ficha vuelve a ofrecer escribir una.
    */
   async function borrar() {
-    if (!miResenia) return
-    if (!confirm(`¿Borrar tu reseña de ${nombreDelLocal}? Se pierden la nota, el comentario y las fotos, y no se puede deshacer.${loQueSePierde()}`)) return
+    if (!mia || !local) return
+    if (!confirm(`¿Borrar tu reseña de ${local.nombre}? Se pierden la nota, el comentario y las fotos, y no se puede deshacer.${loQueSePierde()}`)) return
 
     setBorrando(true)
     setError(null)
     try {
-      await apiClient.delete(`/burger-joints/${localId}/ratings`)
-      onGuardada()
+      await apiClient.delete(`/burger-joints/${local.id}/ratings`)
+      onGuardada(local.id)
       onCerrar()
       void refrescar()
     } catch (err: any) {
@@ -235,9 +407,8 @@ export function ModalDeResenia({
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col">
             <h2 id={idDelTitulo} className="font-display text-lg font-bold">
-              {miResenia ? 'Editar tu reseña' : 'Escribir una reseña'}
+              {mia ? 'Editar tu reseña' : 'Escribir una reseña'}
             </h2>
-            <span className="truncate text-sm text-base-content/70">{nombreDelLocal}</span>
           </div>
           <button
             type="button"
@@ -249,47 +420,139 @@ export function ModalDeResenia({
           </button>
         </div>
 
-        {/* Las tres partes de reseñar, cada una con su lugar: la nota, las fotos y lo que
-            se quiera contar. Separadas se entiende de un vistazo qué falta. */}
         <form onSubmit={guardar} className="flex flex-col gap-4">
-          <div ref={zonaDelPuntaje} className="flex flex-col gap-1">
-            <span className="text-sm font-semibold">Tu puntaje</span>
-            <div className="-ml-2">
-              <Stars value={score} onChange={elegirPuntaje} size={30} etiqueta="Tu puntaje" />
-            </div>
-            {error?.campo === 'puntaje' && (
+          <div ref={zonaDelLocal} className="flex flex-col gap-3">
+            {local ? (
+              <>
+                <div className="flex items-center justify-between gap-3 rounded-field bg-base-200 px-3 py-2">
+                  <div className="flex min-w-0 flex-col">
+                    <span className="truncate font-semibold">{local.nombre}</span>
+                    {local.barrio && <span className="truncate text-sm text-base-content/70">{local.barrio}</span>}
+                  </div>
+                  {!esFijo && (
+                    <button type="button" onClick={cambiarDeLocal} className="btn btn-ghost h-11 min-h-11 flex-none px-3">
+                      Cambiar
+                    </button>
+                  )}
+                </div>
+                <AsiLoCalificaron desglose={desglose} />
+              </>
+            ) : (
+              <BuscadorDeLocal onElegir={elegirLocal} />
+            )}
+            {error?.campo === 'local' && (
               <p role="alert" className="text-sm text-error">
                 {error.texto}
               </p>
             )}
           </div>
 
-          <div ref={zonaDeLaFoto} className="flex flex-col gap-1.5">
-            <span className="text-sm font-semibold">Las fotos</span>
-            <SelectorDeFotos yaSubidas={miResenia?.fotos ?? []} onCambio={elegirFotos} />
-            {error?.campo === 'foto' && (
-              <p role="alert" className="text-sm text-error">
-                {error.texto}
-              </p>
-            )}
-          </div>
+          {local && (
+            <>
+              <div ref={zonaDelPuntaje} className="flex flex-col gap-1">
+                <span className="text-base font-semibold">¿Cómo estuvo?</span>
+                <div className="-ml-2">
+                  <Stars value={score} onChange={elegirPuntaje} size={36} etiqueta="¿Cómo estuvo?" />
+                </div>
+                {error?.campo === 'puntaje' && (
+                  <p role="alert" className="text-sm text-error">
+                    {error.texto}
+                  </p>
+                )}
+              </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="texto-de-la-resenia" className="text-sm font-semibold">
-              Tu reseña <span className="font-normal text-base-content/70">(opcional)</span>
-            </label>
-            <textarea
-              id="texto-de-la-resenia"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="¿Qué te pareció?"
-              maxLength={1000}
-              className="textarea textarea-bordered min-h-24 focus:border-primary"
-            />
-          </div>
+              {/* Las tres notas son opcionales y no entran en el promedio: van plegadas
+                  para que publicar sea nota y foto, y el detalle lo ponga quien quiere. */}
+              <details
+                // Sin estado propio: lo abre y lo cierra el navegador. Arranca abierto solo
+                // si la reseña que se edita ya tenía notas, y la key lo rearma al cambiar de reseña.
+                key={mia?.id ?? 'nueva'}
+                open={base.notaLocal + base.notaAtencion + base.notaPrecio > 0}
+                className="rounded-field border border-base-300 px-3"
+              >
+                <summary className="flex min-h-12 cursor-pointer items-center font-semibold">Sumá más detalle</summary>
+                <div className="flex flex-col gap-1 pb-3">
+                  <FilaDeNota rotulo="Local" valor={notaLocal} onCambio={alternar(setNotaLocal, notaLocal)} />
+                  <FilaDeNota rotulo="Atención" valor={notaAtencion} onCambio={alternar(setNotaAtencion, notaAtencion)} />
+                  <FilaDeNota rotulo="Precio" valor={notaPrecio} onCambio={alternar(setNotaPrecio, notaPrecio)} />
+                </div>
+              </details>
 
-          {/* Cuánta XP da lo que escribiste, mientras lo escribís. */}
-          <XpDeLaResenia xp={xpQueDa} comentario={comment} editando={!!miResenia} primera={esLaPrimera} />
+              <div ref={zonaDeLaFoto} className="flex flex-col gap-1.5">
+                <span className="text-sm font-semibold">Las fotos</span>
+                <SelectorDeFotos key={mia?.id ?? 'nueva'} yaSubidas={mia?.fotos ?? []} onCambio={elegirFotos} />
+                {error?.campo === 'foto' && (
+                  <p role="alert" className="text-sm text-error">
+                    {error.texto}
+                  </p>
+                )}
+              </div>
+
+              <div ref={zonaDeLaFecha} className="flex flex-col gap-1.5">
+                <span id="cuando-fuiste" className="text-sm font-semibold">
+                  ¿Cuándo fuiste?
+                </span>
+                <div role="group" aria-labelledby="cuando-fuiste" className="flex flex-wrap gap-2">
+                  {(
+                    [
+                      ['hoy', 'Hoy'],
+                      ['otro', 'Elegir día'],
+                    ] as const
+                  ).map(([valor, texto]) => (
+                    <button
+                      key={valor}
+                      type="button"
+                      aria-pressed={cuando === valor}
+                      onClick={() => {
+                        setCuando(valor)
+                        if (valor === 'otro' && !dia) setDia(hoy)
+                        sacarAviso('fecha')
+                      }}
+                      className={`btn h-11 min-h-11 rounded-full px-5 ${cuando === valor ? 'btn-secondary' : 'btn-outline'}`}
+                    >
+                      {texto}
+                    </button>
+                  ))}
+                </div>
+                {cuando === 'otro' && (
+                  <input
+                    type="date"
+                    value={dia}
+                    min={haceUnAnio(hoy)}
+                    max={hoy}
+                    onChange={(e) => {
+                      setDia(e.target.value)
+                      sacarAviso('fecha')
+                    }}
+                    aria-label="Día de la visita"
+                    className="input input-bordered h-12 w-full focus:border-primary"
+                  />
+                )}
+                {error?.campo === 'fecha' && (
+                  <p role="alert" className="text-sm text-error">
+                    {error.texto}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="texto-de-la-resenia" className="text-sm font-semibold">
+                  Tu reseña <span className="font-normal text-base-content/70">(opcional)</span>
+                </label>
+                <textarea
+                  id="texto-de-la-resenia"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="¿Qué te pareció?"
+                  maxLength={1000}
+                  className="textarea textarea-bordered min-h-24 focus:border-primary"
+                />
+              </div>
+
+              {/* Cuánta XP da lo que escribiste, mientras lo escribís. */}
+              <XpDeLaResenia xp={xpQueDa} comentario={comment} editando={!!mia} primera={esLaPrimera} />
+            </>
+          )}
 
           {error && !error.campo && (
             <p role="alert" className="text-sm text-error">
@@ -299,15 +562,17 @@ export function ModalDeResenia({
 
           {/* El mismo verbo en el botón y mientras trabaja: "Publicar" se vuelve
               "Publicando…", no "Guardando…". */}
-          <button type="submit" disabled={guardando || borrando} className="btn btn-primary">
-            {miResenia
-              ? guardando ? 'Guardando…' : 'Guardar cambios'
-              : guardando ? 'Publicando…' : 'Publicar reseña'}
-          </button>
+          {local && (
+            <button type="submit" disabled={guardando || borrando} className="btn btn-primary">
+              {mia
+                ? guardando ? 'Guardando…' : 'Guardar cambios'
+                : guardando ? 'Publicando…' : 'Publicar reseña'}
+            </button>
+          )}
 
           {/* Debajo y sin relleno: está a mano para quien la busca, pero no compite con
               guardar, que es lo que viene a hacer casi todo el que abre la ventana. */}
-          {miResenia && (
+          {mia && (
             <button
               type="button"
               onClick={borrar}
@@ -328,6 +593,51 @@ export function ModalDeResenia({
         </button>
       </form>
     </dialog>
+  )
+}
+
+/** Una nota opcional: el rótulo a la izquierda y las estrellas a la derecha. */
+function FilaDeNota({ rotulo, valor, onCambio }: { rotulo: string; valor: number; onCambio: (n: number) => void }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-sm font-semibold">{rotulo}</span>
+      <Stars value={valor} onChange={onCambio} size={24} etiqueta={rotulo} />
+    </div>
+  )
+}
+
+/** "4,2": un decimal y coma, como se escribe acá. */
+function coma(n: number): string {
+  return n.toFixed(1).replace('.', ',')
+}
+
+/**
+ * Lo que dicen los demás de este local en las tres notas opcionales (#337).
+ *
+ * Solo las que tienen datos; si ninguna, no se muestra nada: un bloque vacío o con
+ * guiones sería ruido justo donde hay que decidir cuántas estrellas poner.
+ */
+function AsiLoCalificaron({ desglose }: { desglose: DesgloseDeNotas | null }) {
+  if (!desglose) return null
+  const notas = [
+    ['Local', desglose.local, desglose.cuantasLocal],
+    ['Atención', desglose.atencion, desglose.cuantasAtencion],
+    ['Precio', desglose.precio, desglose.cuantasPrecio],
+  ].filter((n): n is [string, number, number] => n[1] != null && (n[2] as number) > 0)
+  if (notas.length === 0) return null
+
+  return (
+    <div className="flex flex-col gap-1.5 rounded-field border border-base-300 px-3 py-2">
+      <span className="text-sm text-base-content/70">Así lo calificaron</span>
+      <ul className="flex">
+        {notas.map(([rotulo, promedio]) => (
+          <li key={rotulo} className="flex flex-1 flex-col items-center">
+            <span className="font-display text-xl font-bold tabular-nums">{coma(promedio)}</span>
+            <span className="text-sm text-base-content/70">{rotulo}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 
