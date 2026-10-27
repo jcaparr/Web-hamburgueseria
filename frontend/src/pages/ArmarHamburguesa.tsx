@@ -74,7 +74,7 @@ export function ArmarHamburguesa() {
         {/* La vista previa queda arriba en el teléfono y fija a la izquierda en la compu:
             lo que se elige abajo se tiene que ver cambiar sin correr la pantalla. */}
         <div className="flex flex-col items-center gap-3 tarjeta p-5 md:sticky md:top-24">
-          <AvatarDeUsuario username={user.username} hamburguesa={codigoDe(receta)} size={168} />
+          <AvatarDeUsuario username={user.username} hamburguesa={codigoDe(receta)} xp={user.xp} size={168} />
           <span className="font-display text-lg font-bold">@{user.username}</span>
         </div>
 

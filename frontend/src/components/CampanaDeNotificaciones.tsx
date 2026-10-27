@@ -150,7 +150,7 @@ function Grupo({ titulo, avisos, onCambioDeSeguimiento }: {
             className={`flex items-center gap-3 rounded-field px-2 py-2 ${aviso.nueva ? 'bg-primary/8' : ''}`}
           >
             <Link to={`/u/${aviso.username}`} tabIndex={-1} aria-hidden="true" className="flex-none">
-              <AvatarDeUsuario username={aviso.username} hamburguesa={aviso.hamburguesa} size={36} />
+              <AvatarDeUsuario username={aviso.username} hamburguesa={aviso.hamburguesa} xp={aviso.xp} size={36} />
             </Link>
             <p className="min-w-0 flex-1 text-sm leading-snug">
               <Link to={`/u/${aviso.username}`} className="font-semibold hover:underline">

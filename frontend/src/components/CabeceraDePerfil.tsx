@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { useMediaQuery } from '../hooks/useMediaQuery'
+import { nivelDe } from '../utils/niveles'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
 
 /**
@@ -21,16 +23,22 @@ import { AvatarDeUsuario } from './AvatarDeUsuario'
 export function CabeceraDePerfil({
   username,
   hamburguesa,
+  xp,
   bajada,
   cifras,
   acciones,
 }: {
   username: string
   hamburguesa: string | null
+  /** Su XP: con ella el avatar lleva el anillo y el nivel (#311). */
+  xp: number
   bajada?: ReactNode
   cifras: { valor: string; etiqueta: string; a?: string }[]
   acciones?: ReactNode
 }) {
+  // 96 px en el teléfono y 144 en la compu, como los `size-24 md:size-36` de antes: el
+  // anillo se dibuja en píxeles, así que el tamaño tiene que saberse.
+  const grande = useMediaQuery('(min-width: 48rem)')
   // En el teléfono, la persona arriba y centrada, como el encabezado de una ficha, y las
   // cifras debajo con aire: en una fila, la hamburguesa, el nombre y las capas quedaban
   // pegados y se leían como un solo bloque apretado. En la compu, una al lado de la
@@ -40,12 +48,13 @@ export function CabeceraDePerfil({
     <header className="flex flex-col gap-3">
       <div className="flex flex-col gap-6 tarjeta p-5 md:flex-row md:items-center md:gap-10 md:p-6">
         <div className="flex min-w-0 flex-1 flex-col items-center gap-3 text-center md:flex-row md:gap-6 md:text-left">
-          <AvatarDeUsuario username={username} hamburguesa={hamburguesa} className="size-24 md:size-36" />
+          <AvatarDeUsuario username={username} hamburguesa={hamburguesa} xp={xp} size={grande ? 144 : 96} />
           <div className="flex min-w-0 max-w-full flex-col items-center gap-1.5 md:items-start">
             {/* El arroba más apagado: es de todos los nombres y no dice nada de este. */}
             <h1 className="max-w-full titulo-pagina [overflow-wrap:anywhere] md:text-[1.875rem]">
               <span className="text-base-content/60">@</span>
               {username}
+              <span className="sr-only">, nivel {nivelDe(xp)}</span>
             </h1>
             {bajada}
           </div>
