@@ -87,7 +87,12 @@ export function BurgerJointDetail({ idDelLocal }: { idDelLocal?: string }) {
     return () => window.removeEventListener(RESENIA_GUARDADA, load)
   })
 
+  // Qué carga es la última: al abrir la app `user` llega después y se pide dos veces; si la
+  // anónima contestara última, pisaría tu reseña con "no dejaste ninguna".
+  const cargaVigente = useRef(0)
+
   function load() {
+    const esta = ++cargaVigente.current
     // Juntas: si cualquiera de las dos falla, la página no está completa. Antes cada
     // una iba por su lado y sin manejo de error, así que un local inexistente o un
     // servidor caído dejaban "Cargando..." en pantalla para siempre.
@@ -105,6 +110,7 @@ export function BurgerJointDetail({ idDelLocal }: { idDelLocal?: string }) {
         : Promise.resolve(null),
     ])
       .then(([jointRes, ratingsRes, resumenRes, miaRes]) => {
+        if (cargaVigente.current !== esta) return
         setMia(miaRes)
         setBurgerJoint(jointRes.data)
         setRatings(ratingsRes.data.content)
@@ -126,11 +132,17 @@ export function BurgerJointDetail({ idDelLocal }: { idDelLocal?: string }) {
           .then(({ data }) => setBuscada({ local, resenia: data }))
           .catch(() => setBuscada(null))
       })
-      .catch(setLoadError)
+      .catch((err) => {
+        if (cargaVigente.current === esta) setLoadError(err)
+      })
   }
 
   // Con el ancla también: otra reseña del mismo local hay que buscarla (#260).
-  useEffect(load, [id, objetivo, user?.userId])
+  useEffect(() => {
+    // Otro local u otra persona: la reseña de antes no vale mientras llega la nueva.
+    setMia(undefined)
+    load()
+  }, [id, objetivo, user?.userId])
 
   // Cada ficha empieza arriba. Al pasar de un local a otro desde "Más hamburgueserías
   // en…", que está al final, la página nueva aparecía scrolleada hasta abajo.
