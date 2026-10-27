@@ -10,11 +10,11 @@ import { PanelDeAjustes } from './PanelDeAjustes'
 
 const NAV_LINKS = [
   { to: '/', label: 'Explorar' },
-  // Tour ya no está: es el botón "Recorrido" de Explorar (#337), igual que en el celular.
-  { to: '/ranking', label: 'Ranking' },
   // El feed pide sesión: sin ella no hay a quién seguir y la pestaña "Siguiendo" no
   // significa nada, así que aparece recién cuando hay alguien adentro.
   { to: '/feed', label: 'Feed', soloConSesion: true },
+  // Tour ya no está: es el botón "Recorrido" de Explorar (#337), igual que en el celular.
+  { to: '/ranking', label: 'Ranking' },
   { to: '/profile', label: 'Perfil' },
 ]
 
