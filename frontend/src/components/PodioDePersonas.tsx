@@ -52,6 +52,7 @@ export function PodioDePersonas({ yoId }: { yoId: number }) {
         <p className="tarjeta p-4 text-sm text-base-content/80">{actual.vacio}</p>
       ) : (
         <>
+          {!datos.yo && <p className="text-sm text-base-content/70">Todavía no sumaste XP en este período.</p>}
           <Escalones top={datos.top.slice(0, 3)} yoId={yoId} />
           <ListaDelPodio datos={datos} yoId={yoId} />
         </>
@@ -70,9 +71,12 @@ function Escalones({ top, yoId }: { top: PuestoDelPodio[]; yoId: number }) {
       {orden.map((p, i) =>
         p ? (
           <li key={p.userId} className="flex w-1/3 max-w-32 flex-col items-center gap-1">
-            <Link to={p.userId === yoId ? '/profile' : `/u/${p.username}`} className="flex flex-col items-center gap-1">
+            <Link to={p.userId === yoId ? '/profile' : `/u/${p.username}`} className="flex min-w-0 max-w-full flex-col items-center gap-1">
               <AvatarDeUsuario username={p.username} hamburguesa={p.hamburguesa} xp={p.xp} size={i === 1 ? 56 : 48} />
-              <span className="max-w-full truncate text-sm font-semibold">@{p.username}</span>
+              <span className="max-w-full truncate text-sm font-semibold">
+                @{p.username}
+                {p.userId === yoId && <span className="font-normal text-base-content/70"> (vos)</span>}
+              </span>
             </Link>
             <span className="text-sm tabular-nums text-base-content/70">{p.xpDelPeriodo.toLocaleString('es-AR')} XP</span>
             <div className={`flex w-full items-start justify-center rounded-t-box pt-2 font-display text-2xl font-extrabold ${alto[i]} ${color[i]}`}>
