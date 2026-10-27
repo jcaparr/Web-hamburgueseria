@@ -44,10 +44,10 @@ public class BurgerJointService {
         return search(query, areas, orden, ubicacion, false, userId, pageable);
     }
 
-    /** Con {@code conCadenas}, también las sucursales de cadenas (#335). */
+    /** Con {@code paraResenia}, también las sucursales de cadenas (#335). */
     public Page<BurgerJointDto> search(String query, List<String> areas, OrdenDeLocales orden,
-                                       Ubicacion ubicacion, boolean conCadenas, Long userId, Pageable pageable) {
-        Page<BurgerJoint> pagina = burgerJointRepository.buscar(query, areas, orden, ubicacion, conCadenas, pageable);
+                                       Ubicacion ubicacion, boolean paraResenia, Long userId, Pageable pageable) {
+        Page<BurgerJoint> pagina = burgerJointRepository.buscar(query, areas, orden, ubicacion, paraResenia, pageable);
         // Las fichas de toda la página juntas: de a una eran dos o tres consultas por
         // local (#101).
         List<BurgerJointDto> fichas = fichaDeLocal.para(pagina.getContent(), userId);
