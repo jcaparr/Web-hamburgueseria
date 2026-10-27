@@ -446,3 +446,13 @@ body {
   .medalla-aviso,
   .cae-capa [data-capa] { animation: none; }
 }
+
+/* El marco del nivel 20 (#321): gira una vez al aparecer, solo con stroke-dashoffset. */
+@keyframes marco-gira {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: var(--giro, 0); }
+}
+.marco-gira { animation: marco-gira 1.4s cubic-bezier(0.3, 0.7, 0.3, 1) 1 both; }
+@media (prefers-reduced-motion: reduce) {
+  .marco-gira { animation: none; }
+}
