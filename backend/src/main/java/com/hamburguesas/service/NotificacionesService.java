@@ -127,7 +127,7 @@ public class NotificacionesService {
         User quien = seguimiento.getFollower();
         return new NotificacionDto(NotificacionDto.Tipo.SEGUIMIENTO, seguimiento.getCreatedAt(),
             seguimiento.getCreatedAt().isAfter(vistas), quien.getId(), quien.getUsername(),
-            quien.getHamburguesa(), sigo.contains(quien.getId()), null, null, null, null);
+            quien.getHamburguesa(), quien.getXp(), sigo.contains(quien.getId()), null, null, null, null);
     }
 
     private static NotificacionDto deReaccion(Reaccion reaccion, Instant vistas) {
@@ -135,6 +135,6 @@ public class NotificacionesService {
         var local = reaccion.getRating().getBurgerJoint();
         return new NotificacionDto(NotificacionDto.Tipo.REACCION, reaccion.getCreatedAt(),
             reaccion.getCreatedAt().isAfter(vistas), quien.getId(), quien.getUsername(),
-            quien.getHamburguesa(), false, reaccion.getTipo(), local.getId(), local.getSlug(), local.getName());
+            quien.getHamburguesa(), quien.getXp(), false, reaccion.getTipo(), local.getId(), local.getSlug(), local.getName());
     }
 }

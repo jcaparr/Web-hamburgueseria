@@ -15,6 +15,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       username: data.username,
       hamburguesa: data.hamburguesa ?? null,
       email: data.email,
+      xp: data.xp ?? 0,
     })
   }
 

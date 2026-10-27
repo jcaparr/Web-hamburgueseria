@@ -25,6 +25,7 @@ public record NotificacionDto(
     Long userId,
     String username,
     String hamburguesa,
+    int xp,
     boolean loSigo,
     TipoDeReaccion reaccion,
     Long localId,

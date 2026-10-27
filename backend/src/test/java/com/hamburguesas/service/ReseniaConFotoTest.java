@@ -1,5 +1,6 @@
 package com.hamburguesas.service;
 
+import org.springframework.context.ApplicationEventPublisher;
 import com.hamburguesas.dto.RatingRequest;
 import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.fotos.FotosDeResenias;
@@ -34,12 +35,14 @@ class ReseniaConFotoTest {
 
     private RatingRepository ratingRepository;
     private FotosDeResenias fotos;
+    private ApplicationEventPublisher eventos;
     private RatingService service;
 
     @BeforeEach
     void setUp() {
         ratingRepository = mock(RatingRepository.class);
         fotos = mock(FotosDeResenias.class);
+        eventos = mock(ApplicationEventPublisher.class);
         UserRepository userRepository = mock(UserRepository.class);
         BurgerJointRepository burgerJointRepository = mock(BurgerJointRepository.class);
 
@@ -52,7 +55,7 @@ class ReseniaConFotoTest {
         when(fotos.guardar(any())).thenReturn("/api/rating-photos/nueva.jpg");
 
         service = new RatingService(ratingRepository, burgerJointRepository, userRepository, fotos,
-            mock(Bloqueos.class), mock(Reacciones.class));
+            mock(Bloqueos.class), mock(Reacciones.class), eventos);
     }
 
     private MultipartFile unaFoto() {
@@ -70,6 +73,17 @@ class ReseniaConFotoTest {
             .build();
         when(ratingRepository.findByUser_IdAndBurgerJoint_Id(YO, LOCAL)).thenReturn(Optional.of(mia));
         return mia;
+    }
+
+    /** Publicar y editar cambian la XP: se pide recalcularla (#310). */
+    @Test
+    void alPublicarYAlEditarPideRecalcularLaXp() {
+        service.rate(YO, LOCAL, loEscrito(), List.of(unaFoto()));
+        verify(eventos).publishEvent(new XpPorRecalcular(YO));
+
+        laMiaCon("/api/rating-photos/vieja.jpg");
+        service.update(YO, LOCAL, loEscrito(), null, null);
+        verify(eventos, org.mockito.Mockito.times(2)).publishEvent(new XpPorRecalcular(YO));
     }
 
     @Test

@@ -9,5 +9,7 @@ public record AuthResponse(
     String username,
     /** La hamburguesa del avatar, en cinco cifras, o null si no eligió ninguna. */
     String hamburguesa,
-    String email
+    String email,
+    /** La experiencia que suman sus reseñas (#310); de ahí sale el nivel. */
+    int xp
 ) {}

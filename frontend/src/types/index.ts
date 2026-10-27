@@ -73,6 +73,8 @@ export interface Rating {
   username: string
   /** La hamburguesa de su avatar, en cinco cifras, o null si no eligió ninguna. */
   hamburguesa: string | null
+  /** La experiencia que suman sus reseñas (#310); de ahí sale el nivel. */
+  xp: number
   score: number
   comment: string | null
   /** Las fotos, en orden: la primera es la portada. */
@@ -96,6 +98,7 @@ export interface Notificacion {
   userId: number
   username: string
   hamburguesa: string | null
+  xp: number
   /** Solo en un seguimiento: si ya la seguís, para el botón de seguir de vuelta. */
   loSigo: boolean
   reaccion: TipoDeReaccion | null
@@ -200,6 +203,7 @@ export interface User {
   username: string
   /** La hamburguesa que eligió para su avatar, o null: se dibuja la de su nombre. */
   hamburguesa: string | null
+  xp: number
   email: string
 }
 
@@ -227,6 +231,7 @@ export interface UsuarioBuscado {
   userId: number
   username: string
   hamburguesa: string | null
+  xp: number
   resenias: number
   loSigo: boolean
 }
@@ -236,6 +241,7 @@ export interface PerfilPublico {
   userId: number
   username: string
   hamburguesa: string | null
+  xp: number
   resenias: number
   promedio: number | null
   seguidores: number
@@ -253,6 +259,7 @@ export interface ItemDeFeed {
   autorId: number
   autorUsername: string
   autorHamburguesa: string | null
+  autorXp: number
   burgerJointId: number
   /** La dirección linda del local (#305); nula si aún no la tiene. */
   slug: string | null

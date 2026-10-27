@@ -67,8 +67,8 @@ class ListasDeSeguidoresTest {
             .thenReturn(List.of(new ReseniasPorUsuarioDto(5L, 3L)));
 
         assertThat(service.seguidores("ella", YO)).containsExactly(
-            new UsuarioBuscadoDto(5L, "ana", null, 3, false),
-            new UsuarioBuscadoDto(6L, "beto", null, 0, true));
+            new UsuarioBuscadoDto(5L, "ana", null, 0, 3, false),
+            new UsuarioBuscadoDto(6L, "beto", null, 0, 0, true));
     }
 
     @Test

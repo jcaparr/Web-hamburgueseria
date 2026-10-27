@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
 
@@ -57,6 +58,15 @@ public class User {
      */
     @Column(length = 5)
     private String hamburguesa;
+
+    /**
+     * La experiencia que suman sus reseñas (#310). La deja {@link com.hamburguesas.service.RecalculoDeXp}
+     * con un update dirigido: acá no se inserta ni se actualiza, así Hibernate no la pisa
+     * con el valor viejo que tenga cargado.
+     */
+    @Column(nullable = false, insertable = false, updatable = false)
+    @ColumnDefault("0")
+    private int xp;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

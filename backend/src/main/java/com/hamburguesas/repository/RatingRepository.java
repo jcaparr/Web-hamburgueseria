@@ -183,6 +183,10 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
 
     long countByUser_Id(Long userId);
 
+    /** Los comentarios de sus reseñas (nulos incluidos), de donde sale su XP (#310). */
+    @Query("select r.comment from Rating r where r.user.id = :userId")
+    List<String> comentariosDe(@Param("userId") Long userId);
+
     @Query("select avg(r.score) from Rating r where r.user.id = :userId")
     Double averageScoreByUser(@Param("userId") Long userId);
 
@@ -242,7 +246,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
      */
     @Query("""
         select new com.hamburguesas.dto.ItemDeFeedDto(
-            r.id, u.id, u.username, u.hamburguesa, b.id, b.slug, b.name, b.photoUrl, b.area,
+            r.id, u.id, u.username, u.hamburguesa, u.xp, b.id, b.slug, b.name, b.photoUrl, b.area,
             (select avg(otra.score) from Rating otra where otra.burgerJoint.id = b.id),
             r.score, r.comment, r.photoUrl, r.createdAt,
             case when r.updatedAt is not null then true else false end)
@@ -265,7 +269,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
      */
     @Query("""
         select new com.hamburguesas.dto.ItemDeFeedDto(
-            r.id, u.id, u.username, u.hamburguesa, b.id, b.slug, b.name, b.photoUrl, b.area,
+            r.id, u.id, u.username, u.hamburguesa, u.xp, b.id, b.slug, b.name, b.photoUrl, b.area,
             (select avg(otra.score) from Rating otra where otra.burgerJoint.id = b.id),
             r.score, r.comment, r.photoUrl, r.createdAt,
             case when r.updatedAt is not null then true else false end)
