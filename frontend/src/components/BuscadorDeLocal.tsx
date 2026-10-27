@@ -69,9 +69,13 @@ export function BuscadorDeLocal({ onElegir }: { onElegir: (local: BurgerJoint) =
         type="search"
         value={texto}
         onChange={(e) => {
-          setTexto(e.target.value)
-          // Vaciado el campo no queda ninguna búsqueda en vuelo que apague el "Buscando…".
-          if (!e.target.value.trim()) {
+          const valor = e.target.value
+          setTexto(valor)
+          // Lo escrito cambió: un error o un "no encontramos" de antes ya no habla de esto.
+          setFallo(false)
+          setBuscado('')
+          // Con menos de dos letras no hay búsqueda, y ninguna en vuelo que apague el "Buscando…".
+          if (valor.trim().length < 2) {
             setBuscando(false)
             setResultados([])
           }

@@ -32,12 +32,14 @@ export function ReseniaRapidaProvider({ children }: { children: ReactNode }) {
       const estaEntrando = /^\/(login|register|verify-email|forgot-password)/.test(location.pathname)
       const destino = new URLSearchParams(estaEntrando ? '' : location.search)
       destino.set(PARAMETRO, '1')
-      navigate('/login', { state: { volverA: `${estaEntrando ? '/' : location.pathname}?${destino.toString()}` } })
+      navigate('/login', {
+        state: { volverA: `${estaEntrando ? '/' : location.pathname}?${destino.toString()}${estaEntrando ? '' : location.hash}` },
+      })
       return
     }
     setVez((n) => n + 1)
     setAbierto(true)
-  }, [loading, user, navigate, location.pathname, location.search])
+  }, [loading, user, navigate, location.pathname, location.search, location.hash])
 
   // Abierta por el enlace mientras el parámetro esté y haya sesión: se deduce en vez de
   // prenderla desde un efecto (#109). Al cerrar se saca de la dirección.
@@ -51,7 +53,7 @@ export function ReseniaRapidaProvider({ children }: { children: ReactNode }) {
     if (!parametros.has(PARAMETRO)) return
     parametros.delete(PARAMETRO)
     const resto = parametros.toString()
-    navigate(`${window.location.pathname}${resto ? `?${resto}` : ''}`, { replace: true })
+    navigate(`${window.location.pathname}${resto ? `?${resto}` : ''}${window.location.hash}`, { replace: true })
   }
 
   function alGuardar(localId: number | string) {

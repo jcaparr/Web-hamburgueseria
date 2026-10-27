@@ -35,7 +35,8 @@ function hoyEnBuenosAires(): string {
 /** Hace un año, para el límite de la fecha de visita. */
 function haceUnAnio(hoy: string): string {
   const [anio, mes, dia] = hoy.split('-')
-  return `${Number(anio) - 1}-${mes}-${dia}`
+  // El 29 de febrero no existe el año anterior.
+  return `${Number(anio) - 1}-${mes}-${mes === '02' && dia === '29' ? '28' : dia}`
 }
 
 /**
@@ -120,6 +121,10 @@ export function ModalDeResenia({
   // al pie del formulario, donde quedaba lejos de lo que había que corregir.
   const [error, setError] = useState<{ texto: string; campo?: Campo } | null>(null)
   const idDelTitulo = useId()
+  // Ids propios: en la ficha conviven dos pantallas de reseña, y con ids fijos las
+  // etiquetas apuntarían a los campos de la otra.
+  const idCuando = useId()
+  const idComentario = useId()
   // Cuenta los pedidos de "¿ya la reseñaste?": una respuesta que llega después de haber
   // cambiado de local es de otro local y no se aplica.
   const pedidoDeMia = useRef(0)
@@ -424,6 +429,11 @@ export function ModalDeResenia({
       ref={dialogo}
       aria-labelledby={idDelTitulo}
       className="modal modal-bottom sm:modal-middle"
+      // Un segundo Esc cierra el dialog aunque el primero se haya frenado: se avisa para
+      // que `abierto` no quede en true con la ventana cerrada.
+      onClose={() => {
+        if (abierto) onCerrar()
+      }}
       // El Esc lo cierra el navegador solo, y eso se llevaría el texto sin preguntar.
       onCancel={(e) => {
         // El Esc de la ventana de "Sugerí un local", que está adentro de esta, sube hasta acá
@@ -530,10 +540,10 @@ export function ModalDeResenia({
               </div>
 
               <div ref={zonaDeLaFecha} className="flex flex-col gap-1.5">
-                <span id="cuando-fuiste" className="text-sm font-semibold">
+                <span id={idCuando} className="text-sm font-semibold">
                   ¿Cuándo fuiste?
                 </span>
-                <div role="group" aria-labelledby="cuando-fuiste" className="flex flex-wrap gap-2">
+                <div role="group" aria-labelledby={idCuando} className="flex flex-wrap gap-2">
                   {(
                     [
                       ['hoy', 'Hoy'],
@@ -577,11 +587,11 @@ export function ModalDeResenia({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="texto-de-la-resenia" className="text-sm font-semibold">
+                <label htmlFor={idComentario} className="text-sm font-semibold">
                   Tu reseña <span className="font-normal text-base-content/70">(opcional)</span>
                 </label>
                 <textarea
-                  id="texto-de-la-resenia"
+                  id={idComentario}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="¿Qué te pareció?"
@@ -605,9 +615,11 @@ export function ModalDeResenia({
               "Publicando…", no "Guardando…". */}
           {local && (
             <button type="submit" disabled={guardando || borrando || revisando || fallaRevisar} className="btn btn-primary">
-              {mia
-                ? guardando ? 'Guardando…' : 'Guardar cambios'
-                : guardando ? 'Publicando…' : 'Publicar reseña'}
+              {revisando
+                ? 'Revisando…'
+                : mia
+                  ? guardando ? 'Guardando…' : 'Guardar cambios'
+                  : guardando ? 'Publicando…' : 'Publicar reseña'}
             </button>
           )}
 
