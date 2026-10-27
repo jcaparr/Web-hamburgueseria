@@ -10,8 +10,8 @@ import { IconFeed, IconMedal, IconPencil, IconSearch, IconUser } from './icons'
 // lugar, al medio, el lápiz para reseñar desde cualquier pantalla.
 const ANTES = [
   { to: '/', label: 'Explorar', Icon: IconSearch },
-  // Igual que arriba: sin sesión el feed no tiene "Siguiendo" que mostrar.
-  { to: '/feed', label: 'Feed', Icon: IconFeed, soloConSesion: true },
+  // Siempre visible: sin sesión lleva a entrar.
+  { to: '/feed', label: 'Feed', Icon: IconFeed },
 ]
 const DESPUES = [
   { to: '/ranking', label: 'Ranking', Icon: IconMedal },
@@ -47,7 +47,6 @@ export function BottomNav() {
   const { user } = useAuth()
   const hidden = useHideOnScroll()
   const { abrir } = useReseniaRapida()
-  const antes = ANTES.filter((item) => user || !item.soloConSesion)
 
   return (
     // Apoyada en el borde de abajo, de lado a lado (#216): cuando flotaba separada de los
@@ -64,12 +63,9 @@ export function BottomNav() {
           el blanco era el ícono con su palabra, unos 25 px de ancho, y entre una y otra
           quedaba un hueco que no hacía nada. */}
       <div className="flex px-1">
-        {antes.map((item) => (
+        {ANTES.map((item) => (
           <Pestania key={item.to} {...item} user={user} />
         ))}
-        {/* Sin sesión Feed no está: un hueco del mismo ancho en su lugar deja el lápiz en el
-            centro y cada pestaña donde siempre. */}
-        {antes.length < ANTES.length && <div aria-hidden="true" className="flex-1" />}
         {/* El lápiz (#337): reseñar desde cualquier pantalla. Es lo único de la barra que
             no es una pantalla sino una acción, y por eso se destaca: 52 px y color
             primario, centrado con los demás íconos. Sin sesión lleva a entrar y vuelve. */}

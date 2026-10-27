@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 
 /**
@@ -12,12 +12,14 @@ import { useAuth } from '../context/useAuth'
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/login', { replace: true })
+      // Con a dónde volver: quien toca Feed sin sesión entra y vuelve al Feed (#337).
+      navigate('/login', { replace: true, state: { volverA: `${location.pathname}${location.search}${location.hash}` } })
     }
-  }, [loading, user, navigate])
+  }, [loading, user, navigate, location.pathname, location.search, location.hash])
 
   if (loading || !user) {
     return null

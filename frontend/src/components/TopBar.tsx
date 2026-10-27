@@ -10,9 +10,8 @@ import { PanelDeAjustes } from './PanelDeAjustes'
 
 const NAV_LINKS = [
   { to: '/', label: 'Explorar' },
-  // El feed pide sesión: sin ella no hay a quién seguir y la pestaña "Siguiendo" no
-  // significa nada, así que aparece recién cuando hay alguien adentro.
-  { to: '/feed', label: 'Feed', soloConSesion: true },
+  // Siempre visible: sin sesión lleva a entrar.
+  { to: '/feed', label: 'Feed' },
   // Tour ya no está: es el botón "Recorrido" de Explorar (#337), igual que en el celular.
   { to: '/ranking', label: 'Ranking' },
   { to: '/profile', label: 'Perfil' },
@@ -20,7 +19,7 @@ const NAV_LINKS = [
 
 export function TopBar() {
   const { user } = useAuth()
-  const links = NAV_LINKS.filter((link) => user || !link.soloConSesion)
+  const links = NAV_LINKS
   const hidden = useHideOnScroll()
   const { abrir } = useReseniaRapida()
 
