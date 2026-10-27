@@ -64,7 +64,7 @@ export function AvatarDeUsuario({
 /** El hueco entre el avatar y el anillo, y lo grueso del anillo, según el tamaño. */
 function anilloDe(size: number, marco: boolean) {
   // En el nivel 20 el marco punteado es un poco más grueso, para que se lea el dibujo.
-  if (size <= 48) return { hueco: 1.5, grosor: marco ? 3.5 : 2.5 }
+  if (size <= 48) return { hueco: marco ? 0.5 : 1.5, grosor: marco ? 3.5 : 2.5 }
   if (size <= 96) return { hueco: 3, grosor: marco ? 5.5 : 5 }
   return { hueco: 4, grosor: 6 }
 }
@@ -143,7 +143,7 @@ function AvatarConNivel({
               // Solo se anima con stroke-dashoffset, una vez, y en los tamaños grandes: en el feed y las
               // listas queda quieto para no cargar a los celulares baratos.
               className={`stroke-primary ${size > 48 ? 'marco-gira' : ''}`}
-              style={{ ['--giro' as string]: `${-2 * rayas}` }}
+              style={{ ['--giro' as string]: `${-circunferencia}` }}
             />
           </>
         ) : (
