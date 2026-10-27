@@ -249,9 +249,15 @@ function BotonSacar({ onClick, etiqueta }: { onClick: () => void; etiqueta: stri
       type="button"
       onClick={onClick}
       aria-label={etiqueta}
-      className="btn btn-circle btn-sm absolute right-1.5 top-1.5 border-0 bg-black/60 text-white hover:bg-black/80"
+      className="group absolute right-0 top-0 flex size-11 items-center justify-center text-white"
     >
-      <span aria-hidden="true">✕</span>
+      {/* El blanco para tocar mide 44 px (#341); el círculo que se ve es más chico adentro. */}
+      <span
+        aria-hidden="true"
+        className="flex size-8 items-center justify-center rounded-full bg-black/60 group-hover:bg-black/80 group-focus-visible:outline group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-white"
+      >
+        ✕
+      </span>
     </button>
   )
 }
