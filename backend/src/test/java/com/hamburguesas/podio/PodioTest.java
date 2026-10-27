@@ -200,6 +200,21 @@ class PodioTest {
     }
 
     @Test
+    void unMesSinNadieCortaLaRachaDeOro() {
+        User ana = cuenta("podio_sin_nadie");
+        resenia(ana, LARGO, Instant.parse("2026-08-10T15:00:00Z"));
+        resenia(ana, LARGO, Instant.parse("2026-10-10T15:00:00Z"));
+        resenia(ana, LARGO, Instant.parse("2026-10-11T15:00:00Z"));
+
+        podio.cerrarMes(YearMonth.of(2026, 8));
+        podio.cerrarMes(YearMonth.of(2026, 9)); // nadie ganó XP en septiembre
+        podio.cerrarMes(YearMonth.of(2026, 10));
+
+        assertThat(logroRepository.findById(new LogroDeUsuarioId(ana.getId(), Logro.PRIMERO_DEL_MES.name()))).isPresent();
+        assertThat(logroRepository.findById(new LogroDeUsuarioId(ana.getId(), Logro.RACHA_DE_ORO.name()))).isEmpty();
+    }
+
+    @Test
     void laSemanaVaDeLunesADomingoEnHoraDeBuenosAires() {
         User ana = cuenta("podio_borde");
         // Domingo 13 a las 23:30 en Buenos Aires (02:30 UTC del lunes 14): todavía es de esta semana.

@@ -1,6 +1,7 @@
 package com.hamburguesas.controller;
 
-import com.hamburguesas.exception.ConflictException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import com.hamburguesas.podio.Podio;
 import com.hamburguesas.podio.PodioDto;
 import com.hamburguesas.security.CurrentUser;
@@ -25,7 +26,7 @@ public class PodioController {
     @GetMapping
     public PodioDto podio(@RequestParam(defaultValue = Podio.SEMANA) String periodo) {
         if (!PERIODOS.contains(periodo)) {
-            throw new ConflictException("Ese período no existe");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ese período no existe");
         }
         return podio.de(periodo, CurrentUser.requireId());
     }
