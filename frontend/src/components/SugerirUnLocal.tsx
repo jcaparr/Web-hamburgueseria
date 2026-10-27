@@ -222,7 +222,7 @@ function ModalSugerirUnLocal({
                   maxLength={120}
                   autoComplete="off"
                   enterKeyHint="next"
-                  className="input input-bordered w-full focus:border-primary"
+                  className="input campo w-full"
                 />
               )}
             </Campo>
@@ -236,7 +236,7 @@ function ModalSugerirUnLocal({
                   maxLength={300}
                   autoComplete="off"
                   enterKeyHint="next"
-                  className="input input-bordered w-full focus:border-primary"
+                  className="input campo w-full"
                 />
               )}
             </Campo>
@@ -254,7 +254,7 @@ function ModalSugerirUnLocal({
                   autoCorrect="off"
                   spellCheck={false}
                   enterKeyHint="next"
-                  className="input input-bordered w-full focus:border-primary"
+                  className="input campo w-full"
                 />
               )}
             </Campo>
@@ -268,7 +268,7 @@ function ModalSugerirUnLocal({
                 onChange={(e) => setComentario(e.target.value)}
                 placeholder="¿Qué tiene de bueno?"
                 maxLength={500}
-                className="textarea textarea-bordered min-h-20 w-full focus:border-primary"
+                className="textarea campo min-h-20 w-full"
               />
             </div>
 

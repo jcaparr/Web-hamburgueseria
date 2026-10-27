@@ -25,8 +25,8 @@ export function CampoNombreDeUsuario({
       {/* Un div y no otra etiqueta: con dos, el lector de pantalla anunciaba el campo
           como "arroba, Nombre de usuario". */}
       <div
-        className={`input input-bordered flex items-center gap-0 ${
-          marcado ? 'input-error' : 'focus-within:border-primary'
+        className={`input campo flex items-center gap-0 ${
+          marcado ? 'input-error' : ''
         }`}
       >
         <span aria-hidden="true" className="text-base-content/70">@</span>

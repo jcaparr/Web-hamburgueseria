@@ -586,7 +586,7 @@ export function ModalDeResenia({
                       sacarAviso('fecha')
                     }}
                     aria-label="Día de la visita"
-                    className="input input-bordered h-12 w-full focus:border-primary"
+                    className="input campo h-12 w-full"
                   />
                 )}
                 {error?.campo === 'fecha' && (
@@ -606,7 +606,7 @@ export function ModalDeResenia({
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="¿Qué te pareció?"
                   maxLength={1000}
-                  className="textarea textarea-bordered min-h-24 focus:border-primary"
+                  className="textarea campo min-h-24"
                 />
               </div>
 

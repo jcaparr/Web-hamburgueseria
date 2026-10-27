@@ -248,8 +248,9 @@
      el filo se marca más, para que el movimiento se note. */
   --sombra-tarjeta: inset 0 0 0 1px rgb(58 42 30 / 0.14), 0 1px 2px rgb(58 42 30 / 0.06),
     0 10px 24px -16px rgb(58 42 30 / 0.4);
-  /* El buscador y los filtros, con el filo más marcado: son controles. */
-  --sombra-control: inset 0 0 0 1px rgb(58 42 30 / 0.3), 0 1px 2px rgb(58 42 30 / 0.06);
+  /* El buscador, los filtros y los campos de texto, con el filo más marcado: son controles.
+     Al 55 % (#343) da 3,37 : 1 contra el campo y 3,10 : 1 contra el fondo; al 30 % daba 1,82. */
+  --sombra-control: inset 0 0 0 1px rgb(58 42 30 / 0.55), 0 1px 2px rgb(58 42 30 / 0.06);
   --sombra-alzada: inset 0 0 0 1px rgb(58 42 30 / 0.25), 0 2px 4px rgb(58 42 30 / 0.08),
     0 16px 32px -16px rgb(58 42 30 / 0.5);
   /* La de la barra de abajo del teléfono, que está apoyada en el borde: va hacia arriba. */
@@ -279,6 +280,20 @@
   background-color: var(--color-base-100);
   border-radius: var(--radius-box);
   box-shadow: var(--sombra-tarjeta);
+}
+/*
+ * El borde de los campos de texto (#343). El de daisyUI (base-content al 20 %) daba 1,47 : 1
+ * en claro y 1,77 : 1 en oscuro, y un componente pide 3 : 1. Usa el mismo filo que el
+ * buscador y los filtros de Explorar, así hay un solo estilo de control. Va junto a
+ * `input` o `textarea`; el borde real pasa a ser la sombra. El foco lo sigue marcando el
+ * anillo de daisyUI, y un campo en error se marca en el color de error.
+ */
+@utility campo {
+  border-width: 0;
+  box-shadow: var(--sombra-control);
+  &.input-error {
+    box-shadow: inset 0 0 0 2px var(--color-error);
+  }
 }
 /* La misma, levantada: para el hover de lo que se toca. */
 @utility tarjeta-alzada {
