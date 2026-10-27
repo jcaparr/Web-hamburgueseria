@@ -83,7 +83,7 @@ export function BuscadorDeLocal({ onElegir }: { onElegir: (local: BurgerJoint) =
         placeholder="Nombre del local (y barrio, si querés)"
         autoComplete="off"
         enterKeyHint="search"
-        className="input input-bordered h-12 w-full focus:border-primary"
+        className="input campo h-12 w-full"
       />
 
       <p role="status" className={buscando ? 'text-sm text-base-content/70' : 'sr-only'}>

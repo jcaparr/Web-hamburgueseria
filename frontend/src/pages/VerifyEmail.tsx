@@ -112,7 +112,7 @@ export function VerifyEmail() {
                   value={code}
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                   placeholder="000000"
-                  className="input input-bordered input-xl w-full text-center font-display text-3xl! tracking-[0.5em] indent-[0.5em] focus:border-primary"
+                  className="input campo input-xl w-full text-center font-display text-3xl! tracking-[0.5em] indent-[0.5em]"
                 />
               )}
             </Campo>

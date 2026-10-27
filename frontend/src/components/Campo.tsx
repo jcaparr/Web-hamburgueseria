@@ -52,7 +52,7 @@ export function CampoDeContrasenia({
   return (
     <Campo etiqueta={etiqueta} ayuda={ayuda}>
       {(campo) => (
-        <div className="input input-bordered flex items-center gap-2 pr-1 focus-within:border-primary">
+        <div className="input campo flex items-center gap-2 pr-1">
           <input
             {...props}
             {...campo}

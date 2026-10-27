@@ -73,7 +73,7 @@ export function Register() {
                   enterKeyHint="next"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input input-bordered w-full focus:border-primary"
+                  className="input campo w-full"
                 />
               )}
             </Campo>
