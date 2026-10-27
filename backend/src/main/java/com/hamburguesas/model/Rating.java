@@ -6,8 +6,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +42,30 @@ public class Rating {
 
     @Column(length = 1000)
     private String comment;
+
+    /**
+     * El día que fue (#336), que puede ser anterior al de la carga. Nulo en las reseñas de
+     * antes: se muestra la fecha de carga. No reemplaza a createdAt: los logros que miran
+     * cuándo se reseñó (Bajonero, Patriota) siguen usando esa.
+     */
+    @Column(name = "visit_date")
+    private LocalDate visitDate;
+
+    /**
+     * Las tres notas opcionales, del 1 al 5 (#336). Solo se muestran: la que cuenta para
+     * el promedio, el ranking y las medallas es {@link #score}.
+     */
+    @Column(name = "score_local")
+    @JdbcTypeCode(SqlTypes.SMALLINT)
+    private Integer scoreLocal;
+
+    @Column(name = "score_atencion")
+    @JdbcTypeCode(SqlTypes.SMALLINT)
+    private Integer scoreAtencion;
+
+    @Column(name = "score_precio")
+    @JdbcTypeCode(SqlTypes.SMALLINT)
+    private Integer scorePrecio;
 
     /**
      * La portada: la primera de {@link #fotos}, o null si no tiene ninguna.

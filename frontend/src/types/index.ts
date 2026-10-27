@@ -80,6 +80,12 @@ export interface Rating {
   /** Las fotos, en orden: la primera es la portada. */
   fotos: string[]
   createdAt: string
+  /** El día de la visita, "2026-10-12", o null en las de antes: ahí vale createdAt (#336). */
+  visitDate: string | null
+  /** Las notas opcionales de local, atención y precio (#336). */
+  scoreLocal: number | null
+  scoreAtencion: number | null
+  scorePrecio: number | null
   reacciones: Reacciones
 }
 
@@ -144,6 +150,18 @@ export interface ResumenDeResenias {
   distribucion: NotaYCuantas[]
   /** De qué habla la gente. Vacía mientras no haya reseñas escritas suficientes. */
   temas: TemaDeResenias[]
+  /** El promedio de local, atención y precio, con cuántas reseñas lo pusieron (#336). */
+  desglose: DesgloseDeNotas
+}
+
+/** Promedios nulos si nadie puso esa nota. */
+export interface DesgloseDeNotas {
+  local: number | null
+  cuantasLocal: number
+  atencion: number | null
+  cuantasAtencion: number
+  precio: number | null
+  cuantasPrecio: number
 }
 
 /**

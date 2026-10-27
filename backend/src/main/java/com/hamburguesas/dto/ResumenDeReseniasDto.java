@@ -22,5 +22,7 @@ public record ResumenDeReseniasDto(
      * Vacía mientras no haya reseñas escritas suficientes, que hoy es casi siempre:
      * quien la muestra tiene que estar listo para no mostrar nada.
      */
-    List<TemaDeReseniasDto> temas
+    List<TemaDeReseniasDto> temas,
+    /** El promedio de local, atención y precio, con cuántas reseñas los pusieron (#336). */
+    DesgloseDeNotasDto desglose
 ) {}
