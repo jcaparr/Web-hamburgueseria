@@ -41,7 +41,7 @@ export function PastillaDeLogro({
       <button
         type="button"
         onClick={() => setAbierta(true)}
-        className={`mx-auto mt-1 inline-flex min-h-12 max-w-full items-center gap-2.5 rounded-full px-4 py-1.5 text-sm font-semibold ${
+        className={`mt-0.5 inline-flex min-h-12 max-w-full items-center gap-2.5 rounded-full px-4 py-1.5 text-sm font-semibold ${
           exhibido ? 'bg-base-100 shadow-[var(--sombra-tarjeta)]' : 'text-primary shadow-[inset_0_0_0_1.5px_var(--color-base-300)]'
         }`}
       >
