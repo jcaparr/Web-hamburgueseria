@@ -113,6 +113,10 @@ public class BurgerJoint {
     @Column(name = "fast_food", nullable = false)
     private boolean fastFood;
 
+    /** Alguna vez tuvo una reseña (#314): de ahí se sabe si la próxima es la primera, aunque se borre la anterior. */
+    @Column(name = "tuvo_resenias", nullable = false)
+    private boolean tuvoResenias;
+
     /**
      * Si Google contestó que no tiene ninguna foto de este local.
      *

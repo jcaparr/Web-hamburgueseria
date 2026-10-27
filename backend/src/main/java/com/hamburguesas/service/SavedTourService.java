@@ -1,6 +1,8 @@
 package com.hamburguesas.service;
 
 import com.hamburguesas.dto.BurgerJointDto;
+import com.hamburguesas.logros.LogrosPorRecalcular;
+import org.springframework.context.ApplicationEventPublisher;
 import com.hamburguesas.dto.GuardarTourRequest;
 import com.hamburguesas.dto.SavedTourDto;
 import com.hamburguesas.dto.TourStopDto;
@@ -54,6 +56,7 @@ public class SavedTourService {
     private final RatingRepository ratingRepository;
     private final UserRepository userRepository;
     private final FichaDeLocal fichaDeLocal;
+    private final ApplicationEventPublisher eventos;
 
     @Transactional
     public SavedTourDto guardar(Long userId, GuardarTourRequest request) {
@@ -94,7 +97,9 @@ public class SavedTourService {
         tour.setKilometers(Distancias.aUnDecimal(total));
         tour.setMinutes(request.modo().minutos(total));
 
-        return comoDto(savedTourRepository.save(tour));
+        SavedTour guardado = savedTourRepository.save(tour);
+        eventos.publishEvent(LogrosPorRecalcular.de(userId));
+        return comoDto(guardado);
     }
 
     private boolean yaLoTiene(Long userId, List<Long> ids, ModoDeViaje modo) {
@@ -135,6 +140,7 @@ public class SavedTourService {
         SavedTour tour = savedTourRepository.findByIdAndUser_Id(tourId, userId)
             .orElseThrow(() -> new ResourceNotFoundException("Ese recorrido no existe"));
         savedTourRepository.delete(tour);
+        eventos.publishEvent(LogrosPorRecalcular.de(userId));
     }
 
     /**

@@ -1,6 +1,8 @@
 package com.hamburguesas.service;
 
 import com.hamburguesas.dto.ReaccionesDto;
+import org.springframework.context.ApplicationEventPublisher;
+import com.hamburguesas.logros.LogrosPorRecalcular;
 import com.hamburguesas.exception.ConflictException;
 import com.hamburguesas.exception.ResourceNotFoundException;
 import com.hamburguesas.model.Rating;
@@ -31,6 +33,7 @@ public class ReaccionesService {
     private final UserRepository userRepository;
     private final Bloqueos bloqueos;
     private final Reacciones reacciones;
+    private final ApplicationEventPublisher eventos;
 
     /** Elegir otra reacción reemplaza a la que había: hay una por persona. */
     @Transactional
@@ -50,14 +53,16 @@ public class ReaccionesService {
                 .tipo(tipo)
                 .build()));
 
+        eventos.publishEvent(LogrosPorRecalcular.de(quien, resenia.getUser().getId()));
         return comoQuedo(ratingId, quien);
     }
 
     /** Sacar una reacción que no estaba no es un error: ya estaba como se quería. */
     @Transactional
     public ReaccionesDto sacar(Long ratingId, Long quien) {
-        laQuePuedeVer(ratingId, quien);
+        Rating resenia = laQuePuedeVer(ratingId, quien);
         reaccionRepository.deleteByRating_IdAndUser_Id(ratingId, quien);
+        eventos.publishEvent(LogrosPorRecalcular.de(quien, resenia.getUser().getId()));
         return comoQuedo(ratingId, quien);
     }
 

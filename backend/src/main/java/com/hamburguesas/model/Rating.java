@@ -66,6 +66,14 @@ public class Rating {
     @Builder.Default
     private List<String> fotos = new ArrayList<>();
 
+    /**
+     * Fue la primera reseña de su local y trae comentario (#314): es lo que da Ansioso. Se
+     * escribe al publicar y no cambia, así que nadie hereda el logro si la primera se borra.
+     */
+    @Column(name = "primera_con_comentario", nullable = false)
+    @Builder.Default
+    private boolean primeraConComentario = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

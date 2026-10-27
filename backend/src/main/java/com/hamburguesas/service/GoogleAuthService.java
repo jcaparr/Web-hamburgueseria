@@ -1,6 +1,8 @@
 package com.hamburguesas.service;
 
 import com.hamburguesas.auth.GoogleTokenVerifier;
+import com.hamburguesas.logros.LogrosPorRecalcular;
+import org.springframework.context.ApplicationEventPublisher;
 import com.hamburguesas.auth.Usernames;
 import com.hamburguesas.dto.GoogleLoginRequest;
 import com.hamburguesas.exception.NeedsUsernameException;
@@ -31,6 +33,7 @@ public class GoogleAuthService {
     private final GoogleTokenVerifier tokenVerifier;
     private final UserRepository userRepository;
     private final UsernameService usernameService;
+    private final ApplicationEventPublisher eventos;
 
     /** @return the user, for the caller to turn into a session. */
     @Transactional
@@ -71,6 +74,7 @@ public class GoogleAuthService {
             .googleSub(account.subject())
             .emailVerified(true)
             .build());
+        eventos.publishEvent(LogrosPorRecalcular.de(user.getId()));
 
         return user;
     }

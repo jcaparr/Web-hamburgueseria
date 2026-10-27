@@ -54,7 +54,7 @@ class ReaccionesServiceTest {
         when(userRepository.getReferenceById(YO)).thenReturn(User.builder().id(YO).build());
         when(reaccionRepository.findByRating_IdAndUser_Id(anyLong(), anyLong())).thenReturn(Optional.empty());
 
-        service = new ReaccionesService(reaccionRepository, ratingRepository, userRepository, bloqueos, reacciones);
+        service = new ReaccionesService(reaccionRepository, ratingRepository, userRepository, bloqueos, reacciones, mock(org.springframework.context.ApplicationEventPublisher.class));
     }
 
     @Test
