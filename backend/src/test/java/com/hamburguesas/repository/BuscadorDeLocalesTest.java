@@ -14,8 +14,11 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * El buscador de locales contra H2 (#335): cada palabra tiene que estar en el nombre o
- * en el barrio, sin acentos ni mayúsculas, y las cadenas solo salen si se piden.
+ * El buscador de la pantalla de reseña contra H2 (#335): cada palabra tiene que estar en
+ * el nombre o en el barrio, sin acentos ni mayúsculas, y entran las cadenas.
+ *
+ * Explorar no cambia: busca la frase entera solo contra el nombre y no muestra cadenas.
+ * Los tests de {@code explorar...} lo fijan.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -34,8 +37,15 @@ class BuscadorDeLocalesTest {
             .fastFood(cadena).slug("bus-" + id).placeId("bus-" + id).build());
     }
 
-    private List<String> buscar(String q, boolean conCadenas) {
-        return repository.buscar(q, null, OrdenDeLocales.RELEVANTES, null, conCadenas, PageRequest.of(0, 20))
+    /** Lo que hace la pantalla de reseña. */
+    private List<String> paraResenia(String q) {
+        return repository.buscar(q, null, OrdenDeLocales.RELEVANTES, null, true, PageRequest.of(0, 20))
+            .map(BurgerJoint::getName).getContent();
+    }
+
+    /** Lo que hace Explorar, igual que antes de #335. */
+    private List<String> explorar(String q) {
+        return repository.buscar(q, null, OrdenDeLocales.RELEVANTES, null, PageRequest.of(0, 20))
             .map(BurgerJoint::getName).getContent();
     }
 
@@ -45,37 +55,53 @@ class BuscadorDeLocalesTest {
         local("b", "Átiko", "Palermo", false);
 
         // Una palabra en el nombre y otra en el barrio, sin acentos ni mayúsculas.
-        assertThat(repository.buscar("ATIKO nunez", null, OrdenDeLocales.RELEVANTES, null, PageRequest.of(0, 20))
+        assertThat(repository.buscar("ATIKO nunez", null, OrdenDeLocales.RELEVANTES, null, true, PageRequest.of(0, 20))
             .map(BurgerJoint::getArea).getContent()).containsExactly("Núñez");
         // El orden de las palabras no importa.
-        assertThat(buscar("palermo atiko", false)).containsExactly("Átiko");
+        assertThat(paraResenia("palermo atiko")).containsExactly("Átiko");
         // Solo el barrio también encuentra.
-        assertThat(buscar("nunez", false)).containsExactly("Átiko");
+        assertThat(paraResenia("nunez")).containsExactly("Átiko");
     }
 
     @Test
     void todasLasPalabrasTienenQueAparecer() {
         local("c", "La Birra Bar", "Belgrano", false);
 
-        assertThat(buscar("birra belgrano", false)).hasSize(1);
-        assertThat(buscar("birra palermo", false)).isEmpty();
+        assertThat(paraResenia("birra belgrano")).hasSize(1);
+        assertThat(paraResenia("birra palermo")).isEmpty();
     }
 
     @Test
-    void lasCadenasSoloSalenSiSePiden() {
+    void paraReseniarEntranLasCadenas() {
         local("d", "Mostaza", "Belgrano", true);
 
-        assertThat(buscar("mostaza belgrano", false)).isEmpty();
-        assertThat(buscar("mostaza belgrano", true)).containsExactly("Mostaza");
+        assertThat(paraResenia("mostaza belgrano")).containsExactly("Mostaza");
+    }
+
+    @Test
+    void explorarNoCambia() {
+        local("x", "Átiko", "Núñez", false);
+        local("y", "Mostaza", "Belgrano", true);
+
+        // El barrio no se busca: es la frase entera contra el nombre.
+        assertThat(explorar("nunez")).isEmpty();
+        assertThat(explorar("atiko nunez")).isEmpty();
+        assertThat(explorar("belgrano")).isEmpty();
+        // El nombre sí, sin acentos, y con la frase entera.
+        assertThat(explorar("ATIKO")).containsExactly("Átiko");
+        // Las cadenas siguen sin salir (#206).
+        assertThat(explorar("mostaza")).isEmpty();
     }
 
     @Test
     void losEspaciosDeMasYLosComodinesNoRompen() {
         local("e", "Burger 100%", "Caballito", false);
 
-        assertThat(buscar("  burger   caballito ", false)).hasSize(1);
-        assertThat(buscar("%", false)).hasSize(1);
-        assertThat(buscar("_urger", false)).isEmpty();
+        assertThat(paraResenia("  burger   caballito ")).hasSize(1);
+        assertThat(paraResenia("%")).hasSize(1);
+        assertThat(paraResenia("_urger")).isEmpty();
+        assertThat(explorar("%")).hasSize(1);
+        assertThat(explorar("_urger")).isEmpty();
     }
 
     @Test
@@ -84,8 +110,8 @@ class BuscadorDeLocalesTest {
         l.setArea("Almagro");
         repository.save(l);
 
-        assertThat(buscar("cambia flores", false)).isEmpty();
-        assertThat(buscar("cambia almagro", false)).hasSize(1);
+        assertThat(paraResenia("cambia flores")).isEmpty();
+        assertThat(paraResenia("cambia almagro")).hasSize(1);
     }
 
     @Test
@@ -93,9 +119,9 @@ class BuscadorDeLocalesTest {
         local("g", "Sin Barrio", null, false);
         local("h", "Con Eñe", "Cañuelas", false);
 
-        assertThat(buscar("sin barrio", false)).containsExactly("Sin Barrio");
-        assertThat(buscar("con canuelas", false)).containsExactly("Con Eñe");
-        // Solo espacios es no buscar nada: devuelve todo lo que no es cadena.
-        assertThat(buscar("   ", false)).contains("Sin Barrio", "Con Eñe");
+        assertThat(paraResenia("sin barrio")).containsExactly("Sin Barrio");
+        assertThat(paraResenia("con canuelas")).containsExactly("Con Eñe");
+        // Solo espacios es no buscar nada: devuelve todo.
+        assertThat(paraResenia("   ")).contains("Sin Barrio", "Con Eñe");
     }
 }

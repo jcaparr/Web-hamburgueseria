@@ -37,8 +37,9 @@ public class BurgerJointController {
      *              OrdenDeLocales. Uno que no existe es el de por omisión, no un error.
      * @param lat   dónde está quien mira, para "cercanas" (#288). Solo ordena: no se
      * @param lon   guarda. Sin las dos, "cercanas" se ordena como "relevantes".
-     * @param conCadenas "cadenas=true" suma las sucursales de cadenas (#335); lo pide la
-     *                   pantalla de reseña. Explorar no lo manda y sigue sin verlas.
+     * @param paraResenia "resenia=true" es la búsqueda de la pantalla de reseña (#335): cada
+     *                   palabra puede estar en el nombre o en el barrio, y entran las
+     *                   sucursales de cadenas. Explorar no lo manda y no cambia.
      */
     @GetMapping
     public Page<BurgerJointDto> search(
@@ -47,11 +48,11 @@ public class BurgerJointController {
         @RequestParam(required = false) String orden,
         @RequestParam(required = false) Double lat,
         @RequestParam(required = false) Double lon,
-        @RequestParam(name = "cadenas", defaultValue = "false") boolean conCadenas,
+        @RequestParam(name = "resenia", defaultValue = "false") boolean paraResenia,
         @PageableDefault(size = 20) Pageable pageable
     ) {
         return burgerJointService.search(q, areas, OrdenDeLocales.de(orden), Ubicacion.de(lat, lon),
-            conCadenas, CurrentUser.idOrNull(), Paginas.sinOrden(pageable));
+            paraResenia, CurrentUser.idOrNull(), Paginas.sinOrden(pageable));
     }
 
     /**
