@@ -8,10 +8,7 @@ import type { BurgerJoint, DesgloseDeNotas, Rating, ResumenDeResenias } from '..
 import { avisarXpGanada } from '../utils/avisosDeXp'
 import { isSessionExpired } from '../utils/errors'
 import {
-  LETRAS_MINIMAS,
-  medirComentario,
   nivelDe,
-  PALABRAS_MINIMAS,
   XP_CON_COMENTARIO,
   XP_DE_BIENVENIDA,
   xpDeComentario,
@@ -712,7 +709,7 @@ function AsiLoCalificaron({ desglose }: { desglose: DesgloseDeNotas | null }) {
 /**
  * La XP que da la reseña, al lado de la pista de cuánto falta para los 100 (#312).
  *
- * Con foto sola son 70; con un comentario de 80 letras y 10 palabras, 100. La primera
+ * Con foto sola son 70; con un comentario de 5 palabras, 100 (#344). La primera
  * reseña de la cuenta suma además la bienvenida. Al editar no se dice "+": la reseña ya
  * estaba, y lo que se muestra es lo que vale ahora.
  */
@@ -727,20 +724,13 @@ function XpDeLaResenia({
   editando: boolean
   primera: boolean
 }) {
-  const { letras, palabras } = medirComentario(comentario)
-  const faltaLetras = Math.max(0, LETRAS_MINIMAS - letras)
-  const faltaPalabras = Math.max(0, PALABRAS_MINIMAS - palabras)
   const completa = xpDeComentario(comentario) === XP_CON_COMENTARIO
-
-  const faltan = [
-    faltaLetras > 0 ? `${faltaLetras} ${faltaLetras === 1 ? 'letra' : 'letras'}` : null,
-    faltaPalabras > 0 ? `${faltaPalabras} ${faltaPalabras === 1 ? 'palabra' : 'palabras'}` : null,
-  ].filter(Boolean)
+  // Sin contar letras ni palabras: se dice qué se gana, no cuánto hay que escribir.
   const pista = completa
     ? 'Reseña completa: vale 100 XP.'
-    : letras === 0
-      ? 'Con un comentario de 80 letras y 10 palabras, la reseña vale 100 XP.'
-      : `Te faltan ${faltan.join(' y ')} para que la reseña valga 100 XP.`
+    : comentario.trim() === ''
+      ? 'Sumá un comentario y la reseña vale 100 XP en vez de 70.'
+      : 'Seguí escribiendo y la reseña vale 100 XP en vez de 70.'
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-field bg-base-200 px-3 py-2.5 text-sm">

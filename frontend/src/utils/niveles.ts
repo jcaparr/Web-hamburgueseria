@@ -20,9 +20,8 @@ export const XP_CON_COMENTARIO = 100
 /** Se suma una vez a quien tiene al menos una reseña. */
 export const XP_DE_BIENVENIDA = 30
 
-/** Un comentario cuenta desde estas letras y estas palabras, las dos cosas juntas. */
-export const LETRAS_MINIMAS = 80
-export const PALABRAS_MINIMAS = 10
+/** Un comentario cuenta desde estas palabras (#344); no hay mínimo de letras. */
+export const PALABRAS_MINIMAS = 5
 
 /** El nivel de 1 a 20. La XP sigue sumando pasado el 20, pero el nivel no. */
 export function nivelDe(xp: number): number {
@@ -53,18 +52,21 @@ export function reseniasParaJuntar(xp: number): number {
   return Math.ceil(xp / XP_CON_COMENTARIO)
 }
 
-/** Letras y palabras de un comentario, con la misma cuenta que hace el servidor. */
-export function medirComentario(texto: string): { letras: number; palabras: number } {
-  const letras = (texto.match(/\p{L}/gu) ?? []).length
-  const limpio = texto.trim()
+/**
+ * Cuántas palabras tiene un comentario, con la misma cuenta que hace el servidor: tramos
+ * entre espacios que tengan al menos una letra, así los signos y los números no suman.
+ */
+export function contarPalabras(texto: string): number {
   // Solo espacios ASCII entre palabras, como el servidor: un espacio no separable no suma una palabra.
-  return { letras, palabras: limpio === '' ? 0 : limpio.split(/[ \t\n\v\f\r]+/).length }
+  return texto
+    .trim()
+    .split(/[ \t\n\v\f\r]+/)
+    .filter((palabra) => /\p{L}/u.test(palabra)).length
 }
 
 /** Cuánta XP da una reseña con este comentario (puede estar vacío). */
 export function xpDeComentario(texto: string | null | undefined): number {
-  const { letras, palabras } = medirComentario(texto ?? '')
-  return letras >= LETRAS_MINIMAS && palabras >= PALABRAS_MINIMAS ? XP_CON_COMENTARIO : XP_CON_FOTO
+  return contarPalabras(texto ?? '') >= PALABRAS_MINIMAS ? XP_CON_COMENTARIO : XP_CON_FOTO
 }
 
 /** La XP que queda al sacar una reseña: sin ninguna más, se va también la bienvenida. */

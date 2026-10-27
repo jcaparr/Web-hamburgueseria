@@ -15,8 +15,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class NivelesTest {
 
-    /** 79 letras: una menos que lo que pide el comentario. */
-    private static final String CASI = "aaaaaaaa ".repeat(8) + "aaaaaaa";
     private static final String DE_VERDAD =
         "Muy buena la carne, el pan estaba tostado justo y la salsa me encantó bastante; las papas también salieron crocantes";
 
@@ -55,26 +53,28 @@ class NivelesTest {
     }
 
     @Test
-    void elComentarioNecesitaLasOchentaLetrasYLasDiezPalabrasLasDosCosas() {
-        // 79 letras en 8 palabras de 9: le falta una letra y también palabras.
-        assertThat(Niveles.xpDe(CASI)).isEqualTo(70);
-        // Muchas letras pero pocas palabras.
+    void elComentarioNecesitaCincoPalabras() {
+        // Cuatro palabras: le falta una, por largas que sean.
+        assertThat(Niveles.xpDe("muy buena la carne")).isEqualTo(70);
+        assertThat(Niveles.xpDe(("a".repeat(200) + " ").repeat(4))).isEqualTo(70);
+        // Muchas letras pegadas son una sola palabra.
         assertThat(Niveles.xpDe("a".repeat(200))).isEqualTo(70);
-        // Muchas palabras pero pocas letras.
-        assertThat(Niveles.xpDe("a b c d e f g h i j k l")).isEqualTo(70);
     }
 
     @Test
-    void ochentaLetrasYDiezPalabrasJustasYaCuentan() {
-        String justo = "aaaaaaaa ".repeat(9) + "aaaaaaaa";
-        assertThat(justo.chars().filter(Character::isLetter).count()).isEqualTo(80);
-        assertThat(Niveles.xpDe(justo)).isEqualTo(100);
+    void cincoPalabrasJustasYaCuentanSinMinimoDeLetras() {
+        assertThat(Niveles.xpDe("muy buena la carne eh")).isEqualTo(100);
+        assertThat(Niveles.xpDe("a b c d e")).isEqualTo(100);
+        // Los espacios de los costados y los dobles no suman palabras.
+        assertThat(Niveles.xpDe("  muy   buena  la   carne  ")).isEqualTo(70);
     }
 
     @Test
-    void losSignosYLosNumerosNoSonLetras() {
-        String relleno = "!!!!!!!!!! ".repeat(20) + "1234567890 ".repeat(5);
-        assertThat(Niveles.xpDe(relleno)).isEqualTo(70);
+    void losSignosYLosNumerosNoSonPalabras() {
+        assertThat(Niveles.xpDe("! ! ! ! ! ! !")).isEqualTo(70);
+        assertThat(Niveles.xpDe("1 2 3 4 5 6 7 8 9 10")).isEqualTo(70);
+        // Una palabra con letras y signos sí cuenta.
+        assertThat(Niveles.xpDe("¡ja! ¡ja! ¡ja! ¡ja! ¡ja!")).isEqualTo(100);
     }
 
     @Test

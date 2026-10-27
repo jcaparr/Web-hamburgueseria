@@ -24,9 +24,8 @@ public final class Niveles {
     /** Se suma una vez a quien tiene al menos una reseña. */
     public static final int XP_DE_BIENVENIDA = 30;
 
-    /** Un comentario cuenta desde estas letras y estas palabras, las dos cosas juntas. */
-    public static final int LETRAS_MINIMAS = 80;
-    public static final int PALABRAS_MINIMAS = 10;
+    /** Un comentario cuenta desde estas palabras (#344); no hay mínimo de letras. */
+    public static final int PALABRAS_MINIMAS = 5;
 
     private Niveles() {
     }
@@ -62,18 +61,21 @@ public final class Niveles {
     }
 
     /**
-     * Un comentario cuenta si tiene 80 letras y 10 palabras. Los números y los signos no
-     * son letras: "!!!!!!" repetido no puede comprar los 30 puntos de diferencia.
+     * Un comentario cuenta si tiene 5 palabras. Una palabra es un tramo entre espacios que
+     * tenga al menos una letra: los números y los signos no lo son, así que "! ! ! ! !" no
+     * puede comprar los 30 puntos de diferencia.
      */
     static boolean tieneComentario(String comentario) {
         if (comentario == null) {
             return false;
         }
-        long letras = comentario.chars().filter(Character::isLetter).count();
-        if (letras < LETRAS_MINIMAS) {
+        String limpio = comentario.strip();
+        if (limpio.isEmpty()) {
             return false;
         }
-        String limpio = comentario.strip();
-        return !limpio.isEmpty() && limpio.split("\\s+").length >= PALABRAS_MINIMAS;
+        long palabras = java.util.Arrays.stream(limpio.split("\\s+"))
+            .filter(palabra -> palabra.chars().anyMatch(Character::isLetter))
+            .count();
+        return palabras >= PALABRAS_MINIMAS;
     }
 }
