@@ -24,7 +24,11 @@ function MisLogros() {
   const [parametros, setParametros] = useSearchParams()
   const [abierto, setAbierto] = useState<string | null>(() => parametros.get('abrir'))
   useEffect(() => {
-    if (parametros.has('abrir')) setParametros({}, { replace: true })
+    const codigo = parametros.get('abrir')
+    if (!codigo) return
+    // Si ya estabas en Logros, la pantalla no se vuelve a montar: se abre la hoja desde acá.
+    if (POR_CODIGO[codigo]) setAbierto(codigo)
+    setParametros({}, { replace: true })
   }, [parametros, setParametros])
   // A qué tarjeta volver el foco al cerrar la hoja.
   const origen = useRef<HTMLElement | null>(null)
