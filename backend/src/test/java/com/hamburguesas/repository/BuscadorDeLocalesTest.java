@@ -87,4 +87,15 @@ class BuscadorDeLocalesTest {
         assertThat(buscar("cambia flores", false)).isEmpty();
         assertThat(buscar("cambia almagro", false)).hasSize(1);
     }
+
+    @Test
+    void unBarrioNuloOConEnieYSoloEspaciosNoRompen() {
+        local("g", "Sin Barrio", null, false);
+        local("h", "Con Eñe", "Cañuelas", false);
+
+        assertThat(buscar("sin barrio", false)).containsExactly("Sin Barrio");
+        assertThat(buscar("con canuelas", false)).containsExactly("Con Eñe");
+        // Solo espacios es no buscar nada: devuelve todo lo que no es cadena.
+        assertThat(buscar("   ", false)).contains("Sin Barrio", "Con Eñe");
+    }
 }

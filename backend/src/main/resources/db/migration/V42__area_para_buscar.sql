@@ -6,10 +6,10 @@ alter table burger_joints
     add column area_para_buscar varchar(255);
 
 update burger_joints
-set area_para_buscar = lower(translate(
+set area_para_buscar = lower(btrim(regexp_replace(translate(
     area,
     'áéíóúüñÁÉÍÓÚÜÑàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛäëïöÄËÏÖçÇ',
-    'aeiouunAEIOUUNaeiouAEIOUaeiouAEIOUaeioAEIOcC'))
+    'aeiouunAEIOUUNaeiouAEIOUaeiouAEIOUaeioAEIOcC'), 's+', ' ', 'g')))
 where area is not null;
 
 comment on column burger_joints.area_para_buscar is
