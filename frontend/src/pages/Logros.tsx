@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { LoadError } from '../components/LoadError'
 import { PodioDePersonas } from '../components/PodioDePersonas'
@@ -18,8 +19,13 @@ import { CATALOGO, GRUPOS, POR_CODIGO, VISIBLES, nombreDe } from '../utils/logro
  */
 function MisLogros() {
   const pedido = usePedido('logros', () => apiClient.get<PantallaDeLogros>('/logros').then((r) => r.data))
-  const [abierto, setAbierto] = useState<string | null>(null)
   const { user, exhibirLogro } = useAuth()
+  // Desde la campana (#320): /logros?abrir=CODIGO abre la hoja de ese logro.
+  const [parametros, setParametros] = useSearchParams()
+  const [abierto, setAbierto] = useState<string | null>(() => parametros.get('abrir'))
+  useEffect(() => {
+    if (parametros.has('abrir')) setParametros({}, { replace: true })
+  }, [parametros, setParametros])
   // A qué tarjeta volver el foco al cerrar la hoja.
   const origen = useRef<HTMLElement | null>(null)
 
