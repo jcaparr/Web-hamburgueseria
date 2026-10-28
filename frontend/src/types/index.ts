@@ -90,7 +90,7 @@ export interface Rating {
 }
 
 /** Las reacciones que se le pueden poner a una reseña (#186). */
-export type TipoDeReaccion = 'HAMBRE' | 'FUEGO' | 'APLAUSO' | 'RISA' | 'SORPRESA'
+export type TipoDeReaccion = 'HAMBRE' | 'MARAVILLOSO' | 'ENCANTA' | 'RISA' | 'SORPRESA'
 
 /**
  * Un aviso del buzón (#210): alguien te siguió, o alguien reaccionó a una reseña tuya.

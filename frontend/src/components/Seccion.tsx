@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { IconChevronRight } from './icons'
+import { Personaje } from './Personaje'
 
 /**
  * Una sección de página con su título y, si hace falta, un "Ver todas" a la derecha.
@@ -52,22 +53,37 @@ export function Seccion({
  *
  * Es la misma tarjeta que dice "Todavía nadie la calificó" en la ficha, para que
  * "acá no hay nada" se vea igual en toda la app.
+ *
+ * @param conPersonaje suma a Burgómetro con la lupa (#365). Solo para el vacío de una
+ *   pantalla entera, donde la tarjeta es lo único que hay; en una sección chica de un
+ *   perfil se vería de más.
  */
 export function AvisoVacio({
   children,
   accion,
+  conPersonaje = false,
 }: {
   children: ReactNode
   accion?: { texto: string; a: string }
+  conPersonaje?: boolean
 }) {
-  return (
-    <div className="tarjeta flex flex-col items-start gap-3 p-4">
+  const contenido = (
+    <>
       <p className="text-sm text-base-content/70">{children}</p>
       {accion && (
         <Link to={accion.a} className="btn btn-outline btn-sm">
           {accion.texto}
         </Link>
       )}
+    </>
+  )
+  if (!conPersonaje) {
+    return <div className="tarjeta flex flex-col items-start gap-3 p-4">{contenido}</div>
+  }
+  return (
+    <div className="tarjeta flex items-center gap-4 p-4">
+      <Personaje pose="lupa" className="h-24 w-auto shrink-0" />
+      <div className="flex flex-col items-start gap-3">{contenido}</div>
     </div>
   )
 }

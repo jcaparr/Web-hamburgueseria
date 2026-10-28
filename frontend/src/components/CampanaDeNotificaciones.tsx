@@ -4,6 +4,7 @@ import { rutaDelLocal } from '../utils/rutaDelLocal'
 import { apiClient } from '../api/client'
 import type { Buzon, Notificacion } from '../types'
 import { reaccion } from '../utils/reacciones'
+import { DibujoDeReaccion } from './DibujoDeReaccion'
 import { fechaYHora } from '../utils/fechaYHora'
 import { AVISOS, POR_CODIGO, nombreDe } from '../utils/logros'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
@@ -219,7 +220,7 @@ function AvisoDeUnLogro({ aviso }: { aviso: Notificacion }) {
   )
 }
 
-/** "reaccionó 🔥 a tu reseña de Bmoodie", con el local enlazado a su ficha. */
+/** "reaccionó [dibujo] a tu reseña de Bmoodie", con el local enlazado a su ficha. */
 function ReaccionA({ aviso }: { aviso: Notificacion }) {
   const cual = aviso.reaccion ? reaccion(aviso.reaccion) : null
   return (
@@ -227,7 +228,7 @@ function ReaccionA({ aviso }: { aviso: Notificacion }) {
       reaccionó{' '}
       {cual && (
         <>
-          <span aria-hidden="true">{cual.emoji}</span>
+          <DibujoDeReaccion tipo={cual.tipo} className="inline-block size-6 align-middle" />
           <span className="sr-only">«{cual.nombre}»</span>
         </>
       )}{' '}

@@ -2,6 +2,7 @@ import type { Rating, ResumenDeResenias } from '../types'
 import { notasConDatos } from '../utils/notasOpcionales'
 import { DistribucionDeNotas } from './DistribucionDeNotas'
 import { MedidorGrande } from './MedidorGrande'
+import { Personaje } from './Personaje'
 import { RelojesDeNotas } from './RelojesDeNotas'
 import { Stars } from './Stars'
 import { TemasDeLasResenias } from './TemasDeLasResenias'
@@ -35,12 +36,15 @@ export function ResumenDeCalificaciones({
 }) {
   if (!promedio || cuantas === 0) {
     return (
-      <section className="tarjeta flex flex-col gap-2 p-5">
-        <h2 className="font-display text-lg font-bold">Todavía nadie la calificó</h2>
-        <p className="text-sm text-base-content/70">
-          Si fuiste, contá qué tal estuvo. La primera reseña es la que más ayuda a los
-          que todavía no saben si ir.
-        </p>
+      <section className="tarjeta flex items-center gap-4 p-5">
+        <Personaje pose="lupa" className="h-24 w-auto shrink-0" />
+        <div className="flex flex-col gap-2">
+          <h2 className="font-display text-lg font-bold">Todavía nadie la calificó</h2>
+          <p className="text-sm text-base-content/70">
+            Si fuiste, contá qué tal estuvo. La primera reseña es la que más ayuda a los
+            que todavía no saben si ir.
+          </p>
+        </div>
       </section>
     )
   }
