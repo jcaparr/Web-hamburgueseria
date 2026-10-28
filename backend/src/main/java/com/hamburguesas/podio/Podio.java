@@ -70,8 +70,13 @@ public class Podio {
 
     @Transactional(readOnly = true)
     public PodioDto de(String periodo, Long quienMira) {
-        Instant[] limites = limites(periodo, LocalDate.now(ZONA));
-        List<Marca> ranking = ranking(limites[0], limites[1]);
+        List<Marca> ranking;
+        if (GENERAL.equals(periodo)) {
+            ranking = rankingGeneral();
+        } else {
+            Instant[] limites = limites(periodo, LocalDate.now(ZONA));
+            ranking = ranking(limites[0], limites[1]);
+        }
 
         Set<Long> ocultos = Set.copyOf(bloqueos.queNoPuedeVer(quienMira));
         List<Marca> visible = ranking.stream().filter(m -> !ocultos.contains(m.userId())).toList();
@@ -162,8 +167,8 @@ public class Podio {
     }
 
     /**
-     * Los límites del período que contiene {@code hoy}: [desde, hasta). En General, sin
-     * límites. Semana: de lunes a lunes. Mes: del 1 al 1.
+     * Los límites del período que contiene {@code hoy}: [desde, hasta). Semana: de lunes a
+     * lunes. Mes: del 1 al 1. El General no tiene: va por {@link #rankingGeneral}.
      */
     static Instant[] limites(String periodo, LocalDate hoy) {
         return switch (periodo) {
@@ -176,7 +181,6 @@ public class Podio {
                 yield new Instant[] {mes.atDay(1).atStartOfDay(ZONA).toInstant(),
                     mes.plusMonths(1).atDay(1).atStartOfDay(ZONA).toInstant()};
             }
-            case GENERAL -> new Instant[] {Instant.EPOCH, Instant.parse("9999-12-31T00:00:00Z")};
             default -> throw new IllegalArgumentException("Período desconocido: " + periodo);
         };
     }
@@ -185,28 +189,60 @@ public class Podio {
      * El ranking de un período, de más a menos XP, solo con quienes ganaron algo. La XP de
      * cada reseña es la que corresponde a su comentario; los 30 de bienvenida van en el
      * período de la primera reseña de la cuenta.
+     *
+     * Solo se leen las reseñas del período (con su fecha, sin fotos ni locales) y, de cada
+     * cuenta, la fecha de su primera reseña: no hace falta traer todas las de la base.
      */
     List<Marca> ranking(Instant desde, Instant hasta) {
-        List<Resenia> todas = em.createQuery(
-                "select r.user.id, r.createdAt, r.comment from Rating r order by r.user.id, r.createdAt, r.id",
-                Object[].class)
+        List<Resenia> delPeriodo = em.createQuery(
+                "select r.user.id, r.createdAt, r.comment from Rating r "
+                    + "where r.createdAt >= :desde and r.createdAt < :hasta "
+                    + "order by r.user.id, r.createdAt, r.id", Object[].class)
+            .setParameter("desde", desde)
+            .setParameter("hasta", hasta)
             .getResultList().stream()
             .map(f -> new Resenia((Long) f[0], (Instant) f[1], Niveles.xpDe((String) f[2])))
             .toList();
+        if (delPeriodo.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, Instant> primeraDeCadaCuenta = new HashMap<>();
+        em.createQuery("select r.user.id, min(r.createdAt) from Rating r group by r.user.id", Object[].class)
+            .getResultList().forEach(f -> primeraDeCadaCuenta.put((Long) f[0], (Instant) f[1]));
 
         Map<Long, Integer> xp = new HashMap<>();
         Map<Long, Instant> llego = new HashMap<>();
         Long anterior = null;
-        for (Resenia r : todas) {
-            boolean primeraDeLaCuenta = !r.userId().equals(anterior);
+        for (Resenia r : delPeriodo) {
+            // La primera del período es la primera de la cuenta si tiene esa misma fecha: una
+            // reseña más vieja de la cuenta caería fuera del período y la fecha sería menor.
+            boolean primeraDelPeriodo = !r.userId().equals(anterior);
             anterior = r.userId();
-            boolean enElPeriodo = !r.cuando().isBefore(desde) && r.cuando().isBefore(hasta);
-            int suma = (enElPeriodo ? r.xp() : 0) + (primeraDeLaCuenta && enElPeriodo ? Niveles.XP_DE_BIENVENIDA : 0);
-            if (suma > 0) {
-                xp.merge(r.userId(), suma, Integer::sum);
-                llego.merge(r.userId(), r.cuando(), (a, b) -> b.isAfter(a) ? b : a);
-            }
+            boolean bienvenida = primeraDelPeriodo && r.cuando().equals(primeraDeCadaCuenta.get(r.userId()));
+            xp.merge(r.userId(), r.xp() + (bienvenida ? Niveles.XP_DE_BIENVENIDA : 0), Integer::sum);
+            llego.merge(r.userId(), r.cuando(), (a, b) -> b.isAfter(a) ? b : a);
         }
+        return ordenado(xp, llego);
+    }
+
+    /**
+     * El general: la XP que la cuenta ya tiene guardada, que es la que decide el nivel, y la
+     * fecha de su última reseña para el desempate. No recorre las reseñas una por una.
+     */
+    List<Marca> rankingGeneral() {
+        Map<Long, Integer> xp = new HashMap<>();
+        Map<Long, Instant> llego = new HashMap<>();
+        em.createQuery("select u.id, u.xp, (select max(r.createdAt) from Rating r where r.user = u) "
+                + "from User u where u.xp > 0", Object[].class)
+            .getResultList().forEach(f -> {
+                xp.put((Long) f[0], (Integer) f[1]);
+                llego.put((Long) f[0], f[2] == null ? Instant.EPOCH : (Instant) f[2]);
+            });
+        return ordenado(xp, llego);
+    }
+
+    private static List<Marca> ordenado(Map<Long, Integer> xp, Map<Long, Instant> llego) {
         return xp.entrySet().stream()
             .map(e -> new Marca(e.getKey(), e.getValue(), llego.get(e.getKey())))
             .sorted(Comparator.comparingInt(Marca::xp).reversed()

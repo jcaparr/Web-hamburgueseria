@@ -3,9 +3,11 @@ package com.hamburguesas.podio;
 import com.hamburguesas.logros.Logro;
 import com.hamburguesas.logros.LogroDeUsuarioId;
 import com.hamburguesas.logros.LogroDeUsuarioRepository;
+import com.hamburguesas.model.Block;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.Rating;
 import com.hamburguesas.model.User;
+import com.hamburguesas.repository.BlockRepository;
 import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.ReaccionRepository;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -42,6 +45,7 @@ class PodioTest {
     @Autowired private ReaccionRepository reaccionRepository;
     @Autowired private LogroDeUsuarioRepository logroRepository;
     @Autowired private ResultadoDePodioRepository resultados;
+    @Autowired private BlockRepository blockRepository;
 
     private int contador;
 
@@ -52,6 +56,7 @@ class PodioTest {
 
     @AfterEach
     void limpiar() {
+        blockRepository.deleteAll();
         reaccionRepository.deleteAll();
         ratingRepository.deleteAll();
         logroRepository.deleteAll();
@@ -224,5 +229,58 @@ class PodioTest {
         resenia(beto, "ok", Instant.parse("2026-09-14T03:30:00Z"));
 
         assertThat(semana()).extracting(Podio.Marca::userId).containsExactly(ana.getId());
+    }
+
+    @Test
+    void laBienvenidaNoSeDuplicaSiLaPrimeraYLaSegundaCaenEnElPeriodo() {
+        User ana = cuenta("podio_bienv_unica");
+        resenia(ana, "ok", LUNES_AL_MEDIODIA);
+        resenia(ana, "ok", LUNES_AL_MEDIODIA.plusSeconds(60));
+        resenia(ana, "ok", LUNES_AL_MEDIODIA.plusSeconds(120));
+
+        // 3 x 70 + 30, una sola vez.
+        assertThat(semana()).singleElement().extracting(Podio.Marca::xp).isEqualTo(240);
+    }
+
+    @Test
+    @Transactional // la XP se escribe con un update dirigido; se deshace sola al terminar
+    void elGeneralOrdenaPorLaXpGuardadaDeLaCuenta() {
+        User ana = cuenta("podio_general_a");
+        User beto = cuenta("podio_general_b");
+        userRepository.ponerXp(ana.getId(), 300);
+        userRepository.ponerXp(beto.getId(), 500);
+        resenia(ana, "ok", LUNES_AL_MEDIODIA);
+        resenia(beto, "ok", LUNES_AL_MEDIODIA);
+
+        assertThat(podio.rankingGeneral()).extracting(Podio.Marca::userId)
+            .filteredOn(id -> id.equals(ana.getId()) || id.equals(beto.getId()))
+            .containsExactly(beto.getId(), ana.getId());
+    }
+
+    @Test
+    void elPodioNoMuestraAQuienTieneUnBloqueoConQuienMira() {
+        User ana = cuenta("podio_bloq_ana");
+        User beto = cuenta("podio_bloq_beto");
+        User carla = cuenta("podio_bloq_carla");
+        Instant ahora = Instant.now();
+        resenia(ana, LARGO, ahora.minusSeconds(30));
+        resenia(beto, LARGO, ahora.minusSeconds(20));
+        resenia(carla, LARGO, ahora.minusSeconds(10));
+        blockRepository.save(Block.builder().blocker(ana).blocked(beto).build());
+
+        // Ana bloqueó a Beto: ninguno de los dos ve al otro, Carla los ve a los dos.
+        assertThat(podio.de(Podio.SEMANA, ana.getId()).top()).extracting(PodioDto.Puesto::userId)
+            .contains(ana.getId(), carla.getId()).doesNotContain(beto.getId());
+        assertThat(podio.de(Podio.SEMANA, beto.getId()).top()).extracting(PodioDto.Puesto::userId)
+            .contains(beto.getId(), carla.getId()).doesNotContain(ana.getId());
+        assertThat(podio.de(Podio.SEMANA, carla.getId()).top()).extracting(PodioDto.Puesto::userId)
+            .contains(ana.getId(), beto.getId(), carla.getId());
+    }
+
+    @Test
+    void sinReseniasEnElPeriodoNoHayPuestoPropio() {
+        User ana = cuenta("podio_sin_puesto");
+
+        assertThat(podio.de(Podio.SEMANA, ana.getId()).yo()).isNull();
     }
 }

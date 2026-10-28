@@ -41,10 +41,18 @@ public class CierreDePodio {
 
     @Scheduled(cron = "${app.podio.cron-semana:0 5 0 * * MON}", zone = "America/Argentina/Buenos_Aires")
     public void cerrarLaSemana() {
-        LocalDate hoy = LocalDate.now(Podio.ZONA);
-        LocalDate lunesAnterior = hoy.with(TemporalAdjusters.previous(DayOfWeek.MONDAY));
-        podio.cerrarSemana(lunesAnterior);
-        log.info("Podio: cerrada la semana del {}", lunesAnterior);
+        LocalDate lunes = semanaQueTermino(LocalDate.now(Podio.ZONA));
+        podio.cerrarSemana(lunes);
+        log.info("Podio: cerrada la semana del {}", lunes);
+    }
+
+    /**
+     * El lunes de la última semana ya terminada, sea cual sea el día de hoy. Un lunes es el
+     * lunes de hace siete días; el resto de la semana, el lunes de la semana pasada, y nunca la
+     * que está corriendo: al arrancar el servidor un miércoles no se puede cerrar a medias.
+     */
+    static LocalDate semanaQueTermino(LocalDate hoy) {
+        return hoy.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusWeeks(1);
     }
 
     @Scheduled(cron = "${app.podio.cron-mes:0 5 0 1 * *}", zone = "America/Argentina/Buenos_Aires")
