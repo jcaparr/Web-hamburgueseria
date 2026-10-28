@@ -75,7 +75,7 @@ export function BottomNav() {
             onClick={abrir}
             aria-label="Escribir una reseña"
             aria-haspopup="dialog"
-            className="grid h-[52px] w-[52px] place-items-center rounded-[1.125rem] bg-primary text-primary-content shadow-[var(--sombra-de-la-barra)] transition-transform active:scale-95 motion-reduce:transition-none"
+            className="grid h-[52px] w-[52px] place-items-center rounded-[1.125rem] border-[length:var(--ancho-filo-primario,0px)] border-[color:var(--filo-primario,transparent)] bg-primary text-primary-content shadow-[var(--sombra-de-la-barra),var(--brillo-primario,0_0_0_0_transparent)] transition-transform active:scale-95 motion-reduce:transition-none"
           >
             <IconPencil size={24} />
           </button>

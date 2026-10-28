@@ -71,7 +71,7 @@ export function Wishlist() {
               <button
                 type="button"
                 onClick={() => remove(b.id)}
-                className="btn btn-ghost btn-circle text-primary"
+                className="btn btn-ghost btn-circle text-(--color-accion)"
                 aria-label={`Quitar ${b.name} de guardadas`}
                 title="Quitar de guardadas"
               >

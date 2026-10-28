@@ -203,7 +203,12 @@
   name: "burger-noche";
   prefersdark: true;
   color-scheme: dark;
-  --color-primary: #e5674f;
+  /*
+   * El rojo vivo (#359). El coral anterior (#e5674f) pasaba el contraste (5,2 : 1 contra
+   * la tarjeta) pero se perdía contra el fondo marrón: era pastel. Este da 5,5 : 1 contra
+   * la tarjeta y 6,0 : 1 con el texto oscuro encima.
+   */
+  --color-primary: #ff5a3c;
   --color-primary-content: #17110d;
   --color-secondary: #f2b705;
   --color-secondary-content: #17110d;
@@ -268,6 +273,8 @@
   /* El arco lleno del burgómetro grande: el rojo del tema, con su halo y sin filo. */
   --arco-lleno: var(--color-primary);
   --arco-filo: transparent;
+  /* El texto de los botones fantasma de acción: rojo en claro, crema en oscuro (#358). */
+  --color-accion: var(--color-primary);
 }
 /* En oscuro, el filo de las tarjetas al 22 % y no al 7 (#245): al 7 casi no se veía. El
    del buscador y los filtros, al 40 %: son controles y su borde pide 3 : 1 (da 3,3). */
@@ -277,10 +284,20 @@
   --mostaza-texto: #f2b705;
   --pista: #5a4838;
   --pista-filo: #7a6652;
-  /* En oscuro el rojo del tema (#e5674f) se perdía contra la tarjeta: el arco pasa a un
-     rojo vivo (5,5 : 1 contra la tarjeta) y lleva un filo crema entre él y su halo. */
-  --arco-lleno: #ff5a3c;
+  /* El arco del burgómetro usa el rojo vivo del tema y lleva un filo crema entre él y su halo. */
+  --arco-lleno: var(--color-primary);
   --arco-filo: #f4ead6;
+  /*
+   * Lo rojo sólido en oscuro (#359): botón primario y lápiz de la barra llevan un filo
+   * crema de 1,5 px y un brillo suave, el mismo recurso que el arco; el texto encima
+   * sigue siendo el marrón oscuro. Los botones fantasma que eran de texto rojo pasan a
+   * crema (#358): sobre el fondo del hover, el rojo daba 4,2 : 1 y el crema da más de 11.
+   * En claro estas variables no existen y cada uso cae en su valor de siempre.
+   */
+  --filo-primario: #f4ead6;
+  --ancho-filo-primario: 1.5px;
+  --brillo-primario: 0 0 14px rgb(255 90 60 / 0.4);
+  --color-accion: #f4ead6;
   --calco-del-logo: #fffdf8;
   --sombra-tarjeta: inset 0 0 0 1px rgb(243 232 207 / 0.22);
   --sombra-control: inset 0 0 0 1px rgb(243 232 207 / 0.4);
@@ -293,14 +310,31 @@
     --mostaza-texto: #f2b705;
     --pista: #5a4838;
     --pista-filo: #7a6652;
-    --arco-lleno: #ff5a3c;
+    --arco-lleno: var(--color-primary);
     --arco-filo: #f4ead6;
+    --filo-primario: #f4ead6;
+    --ancho-filo-primario: 1.5px;
+    --brillo-primario: 0 0 14px rgb(255 90 60 / 0.4);
+    --color-accion: #f4ead6;
     --calco-del-logo: #fffdf8;
     --sombra-tarjeta: inset 0 0 0 1px rgb(243 232 207 / 0.22);
   --sombra-control: inset 0 0 0 1px rgb(243 232 207 / 0.4);
     --sombra-alzada: inset 0 0 0 1px rgb(243 232 207 / 0.30);
     --sombra-de-la-barra: inset 0 0 0 1px rgb(243 232 207 / 0.16);
   }
+}
+
+/*
+ * El botón primario con el filo y el brillo del tema (#359). En claro esas variables no
+ * existen y cada propiedad cae en lo que daisyUI ya pone, así que no cambia nada. En
+ * oscuro: borde crema de 1,5 px y un brillo rojo suave por fuera. Solo en el habilitado:
+ * deshabilitado (mientras se envía un formulario) daisyUI lo apaga a gris y no debe
+ * quedar con filo y brillo como si estuviera activo.
+ */
+.btn.btn-primary:not(:disabled, [disabled], .btn-disabled, [aria-disabled="true"]) {
+  border-color: var(--filo-primario, var(--btn-border));
+  border-width: var(--ancho-filo-primario, var(--border));
+  box-shadow: var(--btn-inset) inset, var(--btn-shadow), var(--brillo-primario, 0 0 0 0 transparent);
 }
 
 /* Una superficie: tarjetas, recuadros de la ficha, avisos. */
