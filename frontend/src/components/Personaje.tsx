@@ -5,7 +5,7 @@ import { useId, type ReactNode } from 'react'
  *
  * Es el dibujo del logo con ojos, boca, brazos y patas. Lo usan las reacciones de las
  * reseñas (ver DibujoDeReaccion) y las pantallas de estado: la página que no existe, el
- * error de carga y las listas vacías. El logo de la barra y el ícono de la pestaña siguen
+ * error de carga, las listas vacías y el "¡Listo, gracias!" de la reseña publicada. El logo de la barra y el ícono de la pestaña siguen
  * siendo los de siempre.
  *
  * Es decorativo: el texto de la pantalla ya dice todo, así que el dibujo va oculto para
@@ -76,7 +76,7 @@ export function Cuerpo({ children }: { children: ReactNode }) {
   )
 }
 
-type Pose = 'lupa' | 'mapa' | 'confundido'
+type Pose = 'lupa' | 'mapa' | 'confundido' | 'celu'
 
 const PIEZAS: Record<Pose, { viewBox: string; brazos: ReactNode; cara: ReactNode; delante: ReactNode }> = {
   lupa: {
@@ -224,9 +224,57 @@ const PIEZAS: Record<Pose, { viewBox: string; brazos: ReactNode; cara: ReactNode
       </>
     ),
   },
+  celu: {
+    viewBox: '-64 -26 262 236',
+    brazos: (
+      <>
+        <path d="M4 118Q-18 114 -20 94" fill="none" stroke="#141110" strokeWidth="6" strokeLinecap="round"/>
+        <path d="M126 118Q148 113 150 92" fill="none" stroke="#141110" strokeWidth="6" strokeLinecap="round"/>
+      </>
+    ),
+    cara: (
+      <>
+        <path d="M30 50Q40 38 50 50M80 50Q90 38 100 50" stroke="#141110" strokeWidth="5" fill="none" strokeLinecap="round"/>
+        <path d="M52 68Q65 82 78 68" stroke="#141110" strokeWidth="4" fill="none" strokeLinecap="round"/>
+        <polygon points="75.26,25.81 70.17,55.88 62.26,61.52 59.83,52.12" fill="#e63240" stroke="#141110" strokeWidth="3.5" strokeLinejoin="round"/>
+        <circle cx="65" cy="54" r="8" fill="#5d302a" stroke="#141110" strokeWidth="4"/>
+      </>
+    ),
+    delante: (
+      <>
+        <g transform="translate(-24 84) rotate(-14) scale(-1.24 1.24)">
+          <circle r="9" fill="#ffffff" stroke="#141110" strokeWidth="3.21"/>
+          <path d="M-3.8 -8.4V-2.2M0 -9V-2M3.8 -8.4V-2.2M-8.4 -1.5Q-4.6 -0.6 -4 3.8" stroke="#141110" strokeWidth="1.77" strokeLinecap="round" fill="none"/>
+        </g>
+        <rect x="143" y="42" width="26" height="46" rx="6" fill="#141110"/>
+        <rect x="146" y="47" width="20" height="34" rx="3" fill="#fff3d0"/>
+        <path d="M156 52l2.4 5 5.4.6-4 3.7 1.1 5.4-4.9-2.7-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z" fill="#f2b705" stroke="#141110" strokeWidth="1.5" strokeLinejoin="round"/>
+        <path d="M150 74h12" stroke="#141110" strokeWidth="2.5" strokeLinecap="round"/>
+        <g transform="translate(150 94) rotate(0) scale(1.12 1.12)">
+          <circle r="9" fill="#ffffff" stroke="#141110" strokeWidth="3.57"/>
+          <path d="M-3.8 -8.4V-2.2M0 -9V-2M3.8 -8.4V-2.2M-8.4 -1.5Q-4.6 -0.6 -4 3.8" stroke="#141110" strokeWidth="1.96" strokeLinecap="round" fill="none"/>
+        </g>
+        <path d="M48 140L42 178" stroke="#141110" strokeWidth="6" strokeLinecap="round" fill="none"/>
+        <g transform="translate(42 184) scale(-1 1)">
+          <path d="M-12 -6C-12-13-3-15 3-12C9-9 20-8 23 0C25 7 21 11 15 11H-9C-14 11-15 5-12-6Z" fill="#ffffff" stroke="#141110" strokeWidth="4" strokeLinejoin="round"/>
+          <path d="M-13 5H22" stroke="#141110" strokeWidth="3"/>
+          <path d="M-3 -9l3 5M3 -8l3 5" stroke="#141110" strokeWidth="2" strokeLinecap="round"/>
+        </g>
+        <path d="M82 140L88 178" stroke="#141110" strokeWidth="6" strokeLinecap="round" fill="none"/>
+        <g transform="translate(88 184) scale(1 1)">
+          <path d="M-12 -6C-12-13-3-15 3-12C9-9 20-8 23 0C25 7 21 11 15 11H-9C-14 11-15 5-12-6Z" fill="#ffffff" stroke="#141110" strokeWidth="4" strokeLinejoin="round"/>
+          <path d="M-13 5H22" stroke="#141110" strokeWidth="3"/>
+          <path d="M-3 -9l3 5M3 -8l3 5" stroke="#141110" strokeWidth="2" strokeLinecap="round"/>
+        </g>
+      </>
+    ),
+  },
 }
 
-/** La lupa para lo que no se encontró, el mapa para lo que se perdió y las manos arriba para un error. */
+/**
+ * La lupa para lo que no se encontró, el mapa para lo que se perdió, las manos arriba para
+ * un error y el celular para cuando la reseña salió.
+ */
 export function Personaje({ pose, className = '' }: { pose: Pose; className?: string }) {
   const { viewBox, brazos, cara, delante } = PIEZAS[pose]
   return (

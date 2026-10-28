@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { apiClient } from '../api/client'
 import { useAuth } from '../context/useAuth'
+import { Personaje } from './Personaje'
 import { BuscadorDeLocal } from './BuscadorDeLocal'
 import { DialogoDeConfirmacion } from './DialogoDeConfirmacion'
 import { SelectorDeFotos, type FotosElegidas } from './SelectorDeFotos'
@@ -117,6 +118,8 @@ export function ModalDeResenia({
   const [dia, setDia] = useState(inicial.dia)
   const [fotos, setFotos] = useState<FotosElegidas>({ quedan: miResenia?.fotos ?? [], nuevas: [] })
   const [guardando, setGuardando] = useState(false)
+  // La reseña nueva ya salió: se muestra el "¡Listo, gracias!" en lugar del formulario.
+  const [publicada, setPublicada] = useState(false)
   const [borrando, setBorrando] = useState(false)
   // Con el campo al que se refiere, si es de uno: el aviso va al lado de ese campo y no
   // al pie del formulario, donde quedaba lejos de lo que había que corregir.
@@ -302,8 +305,23 @@ export function ModalDeResenia({
     requestAnimationFrame(() => dialogo.current?.querySelector<HTMLInputElement>('input[type=search]')?.focus())
   }
 
+  /**
+   * Cierra el "¡Listo, gracias!". Recién acá se le avisa a quien abrió la ventana: en la
+   * ficha, avisarle antes cambia la key de la ventana (llega la reseña propia) y se
+   * rearmaría de cero, llevándose la pantalla de gracias.
+   */
+  function terminar() {
+    if (!local) return
+    onGuardada(local.id)
+    onCerrar()
+  }
+
   function intentarCerrar() {
     if (guardando || borrando) return
+    if (publicada) {
+      terminar()
+      return
+    }
     if (hayAlgoEscrito) {
       setConfirmandoCierre(true)
       return
@@ -381,8 +399,14 @@ export function ModalDeResenia({
         await apiClient.post(`/burger-joints/${local.id}/ratings`, cuerpo)
       }
 
-      onGuardada(local.id)
-      onCerrar()
+      // Editar vuelve a donde estaba; publicar una nueva se agradece (#365). La XP se
+      // anuncia igual: el aviso espera a que esta ventana se cierre.
+      if (mia) {
+        onGuardada(local.id)
+        onCerrar()
+      } else {
+        setPublicada(true)
+      }
       void anunciarXp(user?.xp ?? 0)
     } catch (err: any) {
       if (isSessionExpired(err)) {
@@ -462,206 +486,223 @@ export function ModalDeResenia({
       }}
     >
       <div className="modal-box flex flex-col gap-4">
-        <div className="flex items-start justify-between gap-3">
-          <h2 id={idDelTitulo} className="font-display text-lg font-bold">
-            {mia ? 'Editar tu reseña' : 'Escribir una reseña'}
-          </h2>
-          <button
-            type="button"
-            onClick={intentarCerrar}
-            aria-label="Cerrar"
-            className="btn btn-ghost btn-circle -mr-2 -mt-1 flex-none"
-          >
-            <span aria-hidden="true">✕</span>
-          </button>
-        </div>
+        {publicada && local ? (
+          <div role="status" className="flex flex-col items-center gap-3 py-2 text-center">
+            <Personaje pose="celu" className="h-40 w-auto" />
+            <h2 id={idDelTitulo} className="font-display text-xl font-bold">
+              ¡Listo, gracias!
+            </h2>
+            <p className="text-sm text-base-content/70">
+              Tu reseña de {local.nombre} ya está publicada.
+            </p>
+            <button type="button" onClick={terminar} autoFocus className="btn btn-primary mt-1 w-full">
+              {esFijo ? 'Listo' : 'Ver mi reseña'}
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-start justify-between gap-3">
+              <h2 id={idDelTitulo} className="font-display text-lg font-bold">
+                {mia ? 'Editar tu reseña' : 'Escribir una reseña'}
+              </h2>
+              <button
+                type="button"
+                onClick={intentarCerrar}
+                aria-label="Cerrar"
+                className="btn btn-ghost btn-circle -mr-2 -mt-1 flex-none"
+              >
+                <span aria-hidden="true">✕</span>
+              </button>
+            </div>
 
-        {/* Un div y no un <form>: "Sugerí un local" abre su propio formulario, y uno adentro
-            del otro mandaría los dos al enviar. Todo el formulario está a la vista desde
-            que se abre: el local se elige arriba y se puede completar el resto antes o después. */}
-        <div className="flex flex-col gap-4">
-          <div ref={zonaDelLocal} className="flex flex-col gap-3">
-            {local ? (
+            {/* Un div y no un <form>: "Sugerí un local" abre su propio formulario, y uno adentro
+                del otro mandaría los dos al enviar. Todo el formulario está a la vista desde
+                que se abre: el local se elige arriba y se puede completar el resto antes o después. */}
+            <div className="flex flex-col gap-4">
+              <div ref={zonaDelLocal} className="flex flex-col gap-3">
+                {local ? (
+                  <>
+                    <div className="flex items-center justify-between gap-3 rounded-field bg-base-200 px-3 py-2">
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate font-semibold">{local.nombre}</span>
+                        {local.barrio && <span className="truncate text-sm text-base-content/70">{local.barrio}</span>}
+                        {mia && !esFijo && (
+                          <span role="status" className="text-xs text-base-content/70">
+                            Ya la reseñaste: estás editando.
+                          </span>
+                        )}
+                      </div>
+                      {!esFijo && (
+                        <button type="button" onClick={cambiarDeLocal} className="btn btn-ghost h-11 min-h-11 flex-none px-3">
+                          Cambiar
+                        </button>
+                      )}
+                    </div>
+                    {fallaRevisar && (
+                      <div role="alert" className="flex items-center justify-between gap-2 text-sm text-error">
+                        <span>No pudimos revisar si ya reseñaste este local.</span>
+                        <button type="button" onClick={() => void revisarSiYaReseniaste(local.id)} className="btn btn-ghost h-11 min-h-11 px-3">
+                          Reintentar
+                        </button>
+                      </div>
+                    )}
+                    <AsiLoCalificaron desglose={desglose} />
+                  </>
+                ) : (
+                  <BuscadorDeLocal onElegir={elegirLocal} />
+                )}
+                {error?.campo === 'local' && (
+                  <p role="alert" className="text-sm text-error">
+                    {error.texto}
+                  </p>
+                )}
+              </div>
+
               <>
-                <div className="flex items-center justify-between gap-3 rounded-field bg-base-200 px-3 py-2">
-                  <div className="flex min-w-0 flex-col">
-                    <span className="truncate font-semibold">{local.nombre}</span>
-                    {local.barrio && <span className="truncate text-sm text-base-content/70">{local.barrio}</span>}
-                    {mia && !esFijo && (
-                      <span role="status" className="text-xs text-base-content/70">
-                        Ya la reseñaste: estás editando.
-                      </span>
+                  <div ref={zonaDelPuntaje} className="flex flex-col gap-1">
+                    <span className="text-base font-semibold">¿Cómo estuvo?</span>
+                    <div className="-ml-2">
+                      <Stars value={score} onChange={elegirPuntaje} size={36} etiqueta="¿Cómo estuvo?" />
+                    </div>
+                    {error?.campo === 'puntaje' && (
+                      <p role="alert" className="text-sm text-error">
+                        {error.texto}
+                      </p>
                     )}
                   </div>
-                  {!esFijo && (
-                    <button type="button" onClick={cambiarDeLocal} className="btn btn-ghost h-11 min-h-11 flex-none px-3">
-                      Cambiar
-                    </button>
-                  )}
-                </div>
-                {fallaRevisar && (
-                  <div role="alert" className="flex items-center justify-between gap-2 text-sm text-error">
-                    <span>No pudimos revisar si ya reseñaste este local.</span>
-                    <button type="button" onClick={() => void revisarSiYaReseniaste(local.id)} className="btn btn-ghost h-11 min-h-11 px-3">
-                      Reintentar
-                    </button>
+
+                  {/* Las tres notas son opcionales y no entran en el promedio: van plegadas
+                      para que publicar sea nota y foto, y el detalle lo ponga quien quiere. */}
+                  <details
+                    // Sin estado propio: lo abre y lo cierra el navegador. Arranca abierto solo
+                    // si la reseña que se edita ya tenía notas, y la key lo rearma al cambiar de reseña.
+                    key={mia?.id ?? 'nueva'}
+                    open={base.notaLocal + base.notaAtencion + base.notaPrecio > 0}
+                    className="rounded-field border border-base-300 px-3"
+                  >
+                    <summary className="flex min-h-12 cursor-pointer items-center justify-between font-semibold">
+                      Sumá más detalle
+                      <span aria-hidden="true" className="text-base-content/70 transition-transform in-[details[open]]:rotate-180 motion-reduce:transition-none">▾</span>
+                    </summary>
+                    <div className="flex flex-col gap-1 pb-3">
+                      <p className="text-xs text-base-content/70">Tocá otra vez la misma estrella para sacarla.</p>
+                      <FilaDeNota rotulo="Local" valor={notaLocal} onCambio={alternar(setNotaLocal, notaLocal)} />
+                      <FilaDeNota rotulo="Atención" valor={notaAtencion} onCambio={alternar(setNotaAtencion, notaAtencion)} />
+                      <FilaDeNota rotulo="Precio" valor={notaPrecio} onCambio={alternar(setNotaPrecio, notaPrecio)} />
+                    </div>
+                  </details>
+
+                  <div ref={zonaDeLaFoto} className="flex flex-col gap-1.5">
+                    <span className="text-sm font-semibold">Las fotos <span className="font-normal text-base-content/70">(al menos una)</span></span>
+                    <SelectorDeFotos key={mia?.id ?? 'nueva'} yaSubidas={mia?.fotos ?? []} onCambio={elegirFotos} />
+                    {error?.campo === 'foto' && (
+                      <p role="alert" className="text-sm text-error">
+                        {error.texto}
+                      </p>
+                    )}
                   </div>
-                )}
-                <AsiLoCalificaron desglose={desglose} />
+
+                  <div ref={zonaDeLaFecha} className="flex flex-col gap-1.5">
+                    <span id={idCuando} className="text-sm font-semibold">
+                      ¿Cuándo fuiste?
+                    </span>
+                    <div role="group" aria-labelledby={idCuando} className="flex flex-wrap gap-2">
+                      {(
+                        [
+                          ['hoy', 'Hoy'],
+                          ['otro', 'Elegir día'],
+                        ] as const
+                      ).map(([valor, texto]) => (
+                        <button
+                          key={valor}
+                          type="button"
+                          aria-pressed={cuando === valor}
+                          onClick={() => {
+                            setCuando(valor)
+                            if (valor === 'otro' && !dia) setDia(hoy)
+                            sacarAviso('fecha')
+                          }}
+                          className={`btn h-11 min-h-11 rounded-full px-5 ${cuando === valor ? 'btn-secondary' : 'btn-outline'}`}
+                        >
+                          {texto}
+                        </button>
+                      ))}
+                    </div>
+                    {cuando === 'otro' && (
+                      <input
+                        type="date"
+                        value={dia}
+                        min={haceUnAnio(hoy)}
+                        max={hoy}
+                        onChange={(e) => {
+                          setDia(e.target.value)
+                          sacarAviso('fecha')
+                        }}
+                        aria-label="Día de la visita"
+                        className="input campo h-12 w-full"
+                      />
+                    )}
+                    {error?.campo === 'fecha' && (
+                      <p role="alert" className="text-sm text-error">
+                        {error.texto}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor={idComentario} className="text-sm font-semibold">
+                      Tu reseña <span className="font-normal text-base-content/70">(opcional)</span>
+                    </label>
+                    <textarea
+                      id={idComentario}
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      placeholder="¿Qué te pareció?"
+                      maxLength={1000}
+                      className="textarea campo min-h-24"
+                    />
+                  </div>
+
+                  {/* Cuánta XP da lo que escribiste, mientras lo escribís. */}
+                  <XpDeLaResenia xp={xpQueDa} comentario={comment} editando={!!mia} primera={esLaPrimera} />
               </>
-            ) : (
-              <BuscadorDeLocal onElegir={elegirLocal} />
-            )}
-            {error?.campo === 'local' && (
-              <p role="alert" className="text-sm text-error">
-                {error.texto}
-              </p>
-            )}
-          </div>
 
-          <>
-              <div ref={zonaDelPuntaje} className="flex flex-col gap-1">
-                <span className="text-base font-semibold">¿Cómo estuvo?</span>
-                <div className="-ml-2">
-                  <Stars value={score} onChange={elegirPuntaje} size={36} etiqueta="¿Cómo estuvo?" />
-                </div>
-                {error?.campo === 'puntaje' && (
-                  <p role="alert" className="text-sm text-error">
-                    {error.texto}
-                  </p>
-                )}
-              </div>
+              {error && !error.campo && (
+                <p role="alert" className="text-sm text-error">
+                  {error.texto}
+                </p>
+              )}
 
-              {/* Las tres notas son opcionales y no entran en el promedio: van plegadas
-                  para que publicar sea nota y foto, y el detalle lo ponga quien quiere. */}
-              <details
-                // Sin estado propio: lo abre y lo cierra el navegador. Arranca abierto solo
-                // si la reseña que se edita ya tenía notas, y la key lo rearma al cambiar de reseña.
-                key={mia?.id ?? 'nueva'}
-                open={base.notaLocal + base.notaAtencion + base.notaPrecio > 0}
-                className="rounded-field border border-base-300 px-3"
+              {/* El mismo verbo en el botón y mientras trabaja: "Publicar" se vuelve
+                  "Publicando…", no "Guardando…". */}
+              <button
+                type="button"
+                onClick={() => void guardar()}
+                disabled={guardando || borrando || revisando || fallaRevisar}
+                className="btn btn-primary"
               >
-                <summary className="flex min-h-12 cursor-pointer items-center justify-between font-semibold">
-                  Sumá más detalle
-                  <span aria-hidden="true" className="text-base-content/70 transition-transform in-[details[open]]:rotate-180 motion-reduce:transition-none">▾</span>
-                </summary>
-                <div className="flex flex-col gap-1 pb-3">
-                  <p className="text-xs text-base-content/70">Tocá otra vez la misma estrella para sacarla.</p>
-                  <FilaDeNota rotulo="Local" valor={notaLocal} onCambio={alternar(setNotaLocal, notaLocal)} />
-                  <FilaDeNota rotulo="Atención" valor={notaAtencion} onCambio={alternar(setNotaAtencion, notaAtencion)} />
-                  <FilaDeNota rotulo="Precio" valor={notaPrecio} onCambio={alternar(setNotaPrecio, notaPrecio)} />
-                </div>
-              </details>
+                {revisando
+                  ? 'Revisando…'
+                  : mia
+                    ? guardando ? 'Guardando…' : 'Guardar cambios'
+                    : guardando ? 'Publicando…' : 'Publicar reseña'}
+              </button>
 
-              <div ref={zonaDeLaFoto} className="flex flex-col gap-1.5">
-                <span className="text-sm font-semibold">Las fotos <span className="font-normal text-base-content/70">(al menos una)</span></span>
-                <SelectorDeFotos key={mia?.id ?? 'nueva'} yaSubidas={mia?.fotos ?? []} onCambio={elegirFotos} />
-                {error?.campo === 'foto' && (
-                  <p role="alert" className="text-sm text-error">
-                    {error.texto}
-                  </p>
-                )}
-              </div>
-
-              <div ref={zonaDeLaFecha} className="flex flex-col gap-1.5">
-                <span id={idCuando} className="text-sm font-semibold">
-                  ¿Cuándo fuiste?
-                </span>
-                <div role="group" aria-labelledby={idCuando} className="flex flex-wrap gap-2">
-                  {(
-                    [
-                      ['hoy', 'Hoy'],
-                      ['otro', 'Elegir día'],
-                    ] as const
-                  ).map(([valor, texto]) => (
-                    <button
-                      key={valor}
-                      type="button"
-                      aria-pressed={cuando === valor}
-                      onClick={() => {
-                        setCuando(valor)
-                        if (valor === 'otro' && !dia) setDia(hoy)
-                        sacarAviso('fecha')
-                      }}
-                      className={`btn h-11 min-h-11 rounded-full px-5 ${cuando === valor ? 'btn-secondary' : 'btn-outline'}`}
-                    >
-                      {texto}
-                    </button>
-                  ))}
-                </div>
-                {cuando === 'otro' && (
-                  <input
-                    type="date"
-                    value={dia}
-                    min={haceUnAnio(hoy)}
-                    max={hoy}
-                    onChange={(e) => {
-                      setDia(e.target.value)
-                      sacarAviso('fecha')
-                    }}
-                    aria-label="Día de la visita"
-                    className="input campo h-12 w-full"
-                  />
-                )}
-                {error?.campo === 'fecha' && (
-                  <p role="alert" className="text-sm text-error">
-                    {error.texto}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor={idComentario} className="text-sm font-semibold">
-                  Tu reseña <span className="font-normal text-base-content/70">(opcional)</span>
-                </label>
-                <textarea
-                  id={idComentario}
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder="¿Qué te pareció?"
-                  maxLength={1000}
-                  className="textarea campo min-h-24"
-                />
-              </div>
-
-              {/* Cuánta XP da lo que escribiste, mientras lo escribís. */}
-              <XpDeLaResenia xp={xpQueDa} comentario={comment} editando={!!mia} primera={esLaPrimera} />
+              {/* Debajo y sin relleno: está a mano para quien la busca, pero no compite con
+                  guardar, que es lo que viene a hacer casi todo el que abre la ventana. */}
+              {mia && (
+                <button
+                  type="button"
+                  onClick={borrar}
+                  disabled={guardando || borrando}
+                  className="btn btn-ghost text-error"
+                >
+                  {borrando ? 'Borrando…' : 'Borrar reseña'}
+                </button>
+              )}
+            </div>
           </>
-
-          {error && !error.campo && (
-            <p role="alert" className="text-sm text-error">
-              {error.texto}
-            </p>
-          )}
-
-          {/* El mismo verbo en el botón y mientras trabaja: "Publicar" se vuelve
-              "Publicando…", no "Guardando…". */}
-          <button
-            type="button"
-            onClick={() => void guardar()}
-            disabled={guardando || borrando || revisando || fallaRevisar}
-            className="btn btn-primary"
-          >
-            {revisando
-              ? 'Revisando…'
-              : mia
-                ? guardando ? 'Guardando…' : 'Guardar cambios'
-                : guardando ? 'Publicando…' : 'Publicar reseña'}
-          </button>
-
-          {/* Debajo y sin relleno: está a mano para quien la busca, pero no compite con
-              guardar, que es lo que viene a hacer casi todo el que abre la ventana. */}
-          {mia && (
-            <button
-              type="button"
-              onClick={borrar}
-              disabled={guardando || borrando}
-              className="btn btn-ghost text-error"
-            >
-              {borrando ? 'Borrando…' : 'Borrar reseña'}
-            </button>
-          )}
-        </div>
+        )}
       </div>
 
       {/* El clic afuera pasa por el mismo camino que la cruz y que el Esc, así que

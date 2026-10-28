@@ -34,7 +34,7 @@ const DIBUJOS: Record<TipoDeReaccion, { fondo: ReactNode; arriba: ReactNode; car
   },
   MARAVILLOSO: {
     fondo: (
-      <>
+      <g transform="translate(65 0) scale(.72 1) translate(-65 0)">
         <path d="M-8 124A73 115 0 0 1 138 124" fill="none" stroke="#141110" strokeWidth="58"/>
         <path d="M-31 124A96 138 0 0 1 161 124" fill="none" stroke="#e63240" strokeWidth="9.4"/>
         <path d="M-22 124A87 129 0 0 1 152 124" fill="none" stroke="#f28a1c" strokeWidth="9.4"/>
@@ -42,7 +42,7 @@ const DIBUJOS: Record<TipoDeReaccion, { fondo: ReactNode; arriba: ReactNode; car
         <path d="M-4 124A69 111 0 0 1 134 124" fill="none" stroke="#7aa33a" strokeWidth="9.4"/>
         <path d="M5 124A60 102 0 0 1 125 124" fill="none" stroke="#4aa3df" strokeWidth="9.4"/>
         <path d="M14 124A51 93 0 0 1 116 124" fill="none" stroke="#8b5fbf" strokeWidth="9.4"/>
-      </>
+      </g>
     ),
     arriba: null,
     cara: (
