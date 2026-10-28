@@ -6,7 +6,7 @@ import { Stars } from './Stars'
 import { IconPencil } from './icons'
 import { ReaccionesDeResenia } from './ReaccionesDeResenia'
 import type { Rating } from '../types'
-import { diaDeLaVisita, fechaYHora } from '../utils/fechaYHora'
+import { fechaYVisita } from '../utils/fechaYHora'
 
 /**
  * Una reseña de un local, como se ve en la ficha del local.
@@ -56,9 +56,8 @@ export function TarjetaDeResenia({
               @{resenia.username}
               {esMia && <span className="font-normal text-base-content/70"> (vos)</span>}
             </span>
-            <span className="text-xs text-base-content/70">
-              {resenia.visitDate ? `Fue el ${diaDeLaVisita(resenia.visitDate)}` : fechaYHora(resenia.createdAt)}
-            </span>
+            {/* Cuándo se publicó y, si fue otro día, cuándo se fue (#368). */}
+            <span className="text-xs text-base-content/70">{fechaYVisita(resenia)}</span>
           </div>
         </Link>
 
