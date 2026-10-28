@@ -1,4 +1,5 @@
 import type { NotaYCuantas } from '../types'
+import { cantidad } from '../utils/numeros'
 
 /**
  * Cuántas reseñas tiene cada nota, en cinco barras.
@@ -37,7 +38,7 @@ export function DistribucionDeNotas({ distribucion }: { distribucion: NotaYCuant
         // Con al menos un voto, nunca menos de 6 %: si no, un solo voto entre 27 no se ve.
         const ancho = cuantas === 0 ? 0 : Math.max((cuantas / masVotada) * 100, 6)
         return (
-          <li key={nota} className="grid grid-cols-[2rem_1fr_1.75rem] items-center gap-2">
+          <li key={nota} className="grid grid-cols-[2rem_1fr_minmax(1.75rem,auto)] items-center gap-2">
             <span className="sr-only">
               {nota === 1 ? '1 estrella' : `${nota} estrellas`}:{' '}
               {cuantas === 1 ? '1 reseña' : `${cuantas} reseñas`}
@@ -64,7 +65,8 @@ export function DistribucionDeNotas({ distribucion }: { distribucion: NotaYCuant
                   }`}
                   style={{ width: `${ancho}%` }}
                 >
-                  {nota === 5 && <SemillasDelPan />}
+                  {/* En una barra corta las semillas quedarían como astillas pegadas al borde. */}
+                  {nota === 5 && ancho >= 35 && <SemillasDelPan />}
                 </div>
               )}
             </div>
@@ -76,7 +78,7 @@ export function DistribucionDeNotas({ distribucion }: { distribucion: NotaYCuant
                   : 'text-[13px] text-base-content/70'
               }`}
             >
-              {cuantas}
+              {cantidad(cuantas)}
             </span>
           </li>
         )

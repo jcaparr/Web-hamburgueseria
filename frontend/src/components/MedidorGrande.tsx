@@ -66,7 +66,8 @@ export function MedidorGrande({
         ref={tablero}
         viewBox="0 0 200 110"
         aria-hidden="true"
-        className={grande ? 'w-36 md:w-40' : 'w-24'}
+        // Bajo 360 px el tablero grande le dejaba a las barras de la ficha unos 20 px.
+        className={grande ? 'w-36 max-[359px]:w-28 md:w-40' : 'w-24'}
       >
         {/* La pista con su filo (#356): sola, el marrón al 10 % daba 1,3 : 1 contra la
             tarjeta y el arco vacío no se veía. */}

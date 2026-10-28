@@ -26,10 +26,16 @@ export function notasConDatos(desglose: DesgloseDeNotas | null): NotaConDatos[] 
   )
 }
 
-/** Cómo se lee un promedio: de 4,5 para arriba es excelente, y de ahí baja de a medio punto. */
+/**
+ * Cómo se lee un promedio: de 4,5 para arriba es excelente, y de ahí baja de a medio punto.
+ *
+ * Se juzga el número como se ve, con un decimal: el servidor manda el promedio sin
+ * redondear, y un 4,46 que se muestra "4,5" tiene que decir "Excelente" y no "Muy bueno".
+ */
 export function veredicto(promedio: number): string {
-  if (promedio >= 4.5) return 'Excelente'
-  if (promedio >= 4) return 'Muy bueno'
-  if (promedio >= 3.5) return 'Bueno'
+  const visto = Math.round(promedio * 10) / 10
+  if (visto >= 4.5) return 'Excelente'
+  if (visto >= 4) return 'Muy bueno'
+  if (visto >= 3.5) return 'Bueno'
   return 'Regular'
 }
