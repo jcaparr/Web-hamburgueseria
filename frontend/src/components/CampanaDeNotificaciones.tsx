@@ -228,7 +228,7 @@ function ReaccionA({ aviso }: { aviso: Notificacion }) {
       reaccionó{' '}
       {cual && (
         <>
-          <DibujoDeReaccion tipo={cual.tipo} className="inline-block size-6 align-middle" />
+          <DibujoDeReaccion tipo={cual.tipo} className="inline-block h-7 w-8 align-middle" />
           <span className="sr-only">«{cual.nombre}»</span>
         </>
       )}{' '}

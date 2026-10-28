@@ -302,6 +302,7 @@
   --halo-del-personaje: drop-shadow(1.5px 0 0 #f4ead6) drop-shadow(-1.5px 0 0 #f4ead6)
     drop-shadow(0 1.5px 0 #f4ead6) drop-shadow(0 -1.5px 0 #f4ead6);
   --opacidad-sombra-del-piso: 0;
+  --contorno-del-contador: #fffdf8;
   --sombra-tarjeta: inset 0 0 0 1px rgb(243 232 207 / 0.22);
   --sombra-control: inset 0 0 0 1px rgb(243 232 207 / 0.4);
   --sombra-alzada: inset 0 0 0 1px rgb(243 232 207 / 0.30);
@@ -323,6 +324,7 @@
     --halo-del-personaje: drop-shadow(1.5px 0 0 #f4ead6) drop-shadow(-1.5px 0 0 #f4ead6)
       drop-shadow(0 1.5px 0 #f4ead6) drop-shadow(0 -1.5px 0 #f4ead6);
     --opacidad-sombra-del-piso: 0;
+    --contorno-del-contador: #fffdf8;
     --sombra-tarjeta: inset 0 0 0 1px rgb(243 232 207 / 0.22);
   --sombra-control: inset 0 0 0 1px rgb(243 232 207 / 0.4);
     --sombra-alzada: inset 0 0 0 1px rgb(243 232 207 / 0.30);
@@ -341,6 +343,26 @@
 }
 .personaje .sombra-suelo {
   opacity: var(--opacidad-sombra-del-piso, 1);
+}
+
+/*
+ * El número de cada reacción (#365): una píldora mostaza con contorno marrón, como en la
+ * maqueta. El contorno es lo que la separa del chip claro (el mostaza solo da 1,8 : 1);
+ * en oscuro pasa a crema, igual que el filo del personaje.
+ */
+.contador-de-reaccion {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0 0.4rem;
+  border: 2px solid var(--contorno-del-contador, #3a2a1e);
+  border-radius: 999px;
+  background: #f2b705;
+  color: #3a2a1e;
+  font-size: 0.95rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 /*

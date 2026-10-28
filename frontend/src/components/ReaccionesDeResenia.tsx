@@ -72,9 +72,10 @@ export function ReaccionesDeResenia({
     abrir.current?.focus()
   }
 
-  // 44 px de alto: es el mínimo para tocar con el dedo, y el dibujo (40 px) necesita aire.
-  const base = 'inline-flex h-11 items-center gap-1 rounded-full text-sm font-semibold tabular-nums'
-  const chip = `${base} pl-1.5 pr-3`
+  // Como en la maqueta: 64 px de alto para que entre el personaje entero con sus manos, y
+  // el borde de 2 px siempre puesto (transparente si no es la tuya) para que elegir una no
+  // mueva a las demás.
+  const chip = 'inline-flex min-h-16 items-center gap-1.5 rounded-full border-2 pl-1 pr-3.5 text-sm font-semibold'
 
   return (
     <div className="flex flex-col gap-2">
@@ -84,8 +85,8 @@ export function ReaccionesDeResenia({
           const esLaMia = actuales.mia === tipo
           const contenido = (
             <>
-              <DibujoDeReaccion tipo={tipo} className="size-8" />
-              {cuantas}
+              <DibujoDeReaccion tipo={tipo} className="h-[52px] w-14" />
+              <span className="contador-de-reaccion">{cuantas}</span>
             </>
           )
           return puedeReaccionar ? (
@@ -97,16 +98,14 @@ export function ReaccionesDeResenia({
               aria-pressed={esLaMia}
               aria-label={`${nombre}: ${cuantas}`}
               title={nombre}
-              className={`${chip} cursor-pointer border transition-colors ${
-                esLaMia
-                  ? 'border-primary bg-primary/15'
-                  : 'border-transparent bg-base-200 hover:bg-base-300'
+              className={`${chip} cursor-pointer transition-colors ${
+                esLaMia ? 'border-primary bg-base-200' : 'border-transparent bg-base-200 hover:bg-base-300'
               }`}
             >
               {contenido}
             </button>
           ) : (
-            <span key={tipo} role="img" aria-label={`${nombre}: ${cuantas}`} title={nombre} className={`${chip} bg-base-200`}>
+            <span key={tipo} role="img" aria-label={`${nombre}: ${cuantas}`} title={nombre} className={`${chip} border-transparent bg-base-200`}>
               {contenido}
             </span>
           )
@@ -120,7 +119,7 @@ export function ReaccionesDeResenia({
             disabled={guardando}
             aria-expanded={eligiendo}
             aria-label={actuales.mia ? 'Cambiar tu reacción' : 'Reaccionar'}
-            className={`${base} cursor-pointer px-3 text-base-content/70 hover:bg-base-200 hover:text-base-content`}
+            className="inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-base-content/70 hover:bg-base-200 hover:text-base-content"
           >
             <IconReaccionar size={19} />
             {/* Con palabra mientras no haya ninguna: una carita sola, al pie de una
@@ -148,9 +147,9 @@ export function ReaccionesDeResenia({
               // Al abrirse, el foco va a la tuya o a la primera: se elige con Tab y Enter
               // sin tener que volver a buscarlas.
               autoFocus={actuales.mia ? actuales.mia === tipo : i === 0}
-              className={`btn btn-ghost btn-circle size-11 min-h-11 p-0 ${actuales.mia === tipo ? 'bg-primary/20 ring-1 ring-primary' : ''}`}
+              className={`btn btn-ghost h-14 min-h-14 w-14 rounded-full p-0 ${actuales.mia === tipo ? 'bg-primary/20 ring-2 ring-primary' : ''}`}
             >
-              <DibujoDeReaccion tipo={tipo} className="size-8" />
+              <DibujoDeReaccion tipo={tipo} className="h-11 w-12" />
             </button>
           ))}
         </div>
