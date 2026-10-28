@@ -306,6 +306,10 @@
   --sello-filo: #fffdf8;
   --sello-letra: #17110d;
   --calco-del-logo: #fffdf8;
+  --halo-del-personaje: drop-shadow(1.5px 0 0 #f4ead6) drop-shadow(-1.5px 0 0 #f4ead6)
+    drop-shadow(0 1.5px 0 #f4ead6) drop-shadow(0 -1.5px 0 #f4ead6);
+  --opacidad-sombra-del-piso: 0;
+  --contorno-del-contador: #fffdf8;
   --sombra-tarjeta: inset 0 0 0 1px rgb(243 232 207 / 0.22);
   --sombra-control: inset 0 0 0 1px rgb(243 232 207 / 0.4);
   --sombra-alzada: inset 0 0 0 1px rgb(243 232 207 / 0.30);
@@ -327,11 +331,48 @@
     --sello-filo: #fffdf8;
     --sello-letra: #17110d;
     --calco-del-logo: #fffdf8;
+    --halo-del-personaje: drop-shadow(1.5px 0 0 #f4ead6) drop-shadow(-1.5px 0 0 #f4ead6)
+      drop-shadow(0 1.5px 0 #f4ead6) drop-shadow(0 -1.5px 0 #f4ead6);
+    --opacidad-sombra-del-piso: 0;
+    --contorno-del-contador: #fffdf8;
     --sombra-tarjeta: inset 0 0 0 1px rgb(243 232 207 / 0.22);
   --sombra-control: inset 0 0 0 1px rgb(243 232 207 / 0.4);
     --sombra-alzada: inset 0 0 0 1px rgb(243 232 207 / 0.30);
     --sombra-de-la-barra: inset 0 0 0 1px rgb(243 232 207 / 0.16);
   }
+}
+
+/*
+ * Burgómetro, el personaje (#365). Su trazo es negro, y en oscuro se pierde contra el
+ * fondo: lleva el mismo filo crema que el arco del burgómetro y los botones rojos, hecho
+ * con cuatro sombras que se pegan al dibujo. La sombra del piso se apaga: sobre negro se
+ * ve gris, como una mancha.
+ */
+.personaje {
+  filter: var(--halo-del-personaje, none);
+}
+.personaje .sombra-suelo {
+  opacity: var(--opacidad-sombra-del-piso, 1);
+}
+
+/*
+ * El número de cada reacción (#365): una píldora mostaza con contorno marrón, como en la
+ * maqueta. El contorno es lo que la separa del chip claro (el mostaza solo da 1,8 : 1);
+ * en oscuro pasa a crema, igual que el filo del personaje.
+ */
+.contador-de-reaccion {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.25rem;
+  border: 2px solid var(--contorno-del-contador, #3a2a1e);
+  border-radius: 999px;
+  background: #f2b705;
+  color: #3a2a1e;
+  font-size: 0.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 /*

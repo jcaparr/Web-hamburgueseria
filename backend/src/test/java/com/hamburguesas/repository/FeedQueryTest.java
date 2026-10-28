@@ -1,6 +1,7 @@
 package com.hamburguesas.repository;
 
 import com.hamburguesas.dto.ItemDeFeedDto;
+import com.hamburguesas.dto.ReseniaDePerfilDto;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.Rating;
 import com.hamburguesas.model.User;
@@ -13,9 +14,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 /**
  * Las dos consultas del feed, ejecutadas de verdad contra una base.
@@ -100,6 +103,48 @@ class FeedQueryTest {
             // La dirección linda del local viaja con la reseña, para enlazar sin pedirla (#305).
             assertThat(item.slug()).isEqualTo(local.getSlug());
         });
+    }
+
+    /**
+     * El día de la visita viaja con la reseña (#368): es el que muestran el feed y las
+     * listas del perfil, y sin él decían cuándo se escribió y no cuándo se fue.
+     */
+    @Test
+    void traeElDiaDeLaVisitaYNullEnLasDeAntes() {
+        Rating conDia = resenia(autor, 4, Instant.parse("2026-09-20T15:00:00Z"));
+        conDia.setVisitDate(LocalDate.parse("2026-09-12"));
+        ratingRepository.saveAndFlush(conDia);
+        resenia(otro, 5, Instant.parse("2026-09-19T15:00:00Z"));
+
+        assertThat(desdeArriba()).extracting(ItemDeFeedDto::autorUsername, ItemDeFeedDto::visitDate)
+            .containsExactly(
+                tuple("autorfeed", LocalDate.parse("2026-09-12")),
+                tuple("otrofeed", null));
+    }
+
+    /** El orden sigue siendo el de cuándo se escribió: una visita vieja no baja la reseña. */
+    @Test
+    void elDiaDeLaVisitaNoCambiaElOrdenDelFeed() {
+        Rating vieja = resenia(autor, 4, Instant.parse("2026-09-20T15:00:00Z"));
+        vieja.setVisitDate(LocalDate.parse("2026-01-05"));
+        ratingRepository.saveAndFlush(vieja);
+        resenia(otro, 5, Instant.parse("2026-09-19T15:00:00Z"));
+
+        assertThat(desdeArriba()).extracting(ItemDeFeedDto::autorUsername)
+            .containsExactly("autorfeed", "otrofeed");
+    }
+
+    /** Lo mismo en las listas del perfil, que arman otro objeto con otra consulta. */
+    @Test
+    void lasListasDelPerfilTraenElDiaDeLaVisita() {
+        Rating conDia = resenia(autor, 4, Instant.parse("2026-09-20T15:00:00Z"));
+        conDia.setVisitDate(LocalDate.parse("2026-09-12"));
+        ratingRepository.saveAndFlush(conDia);
+
+        assertThat(ratingRepository.findAllByUserOrderByCreatedAtDesc(autor.getId()))
+            .singleElement().extracting(ReseniaDePerfilDto::visitDate).isEqualTo(LocalDate.parse("2026-09-12"));
+        assertThat(ratingRepository.ultimasDe(autor.getId(), PageRequest.of(0, 5)))
+            .singleElement().extracting(ReseniaDePerfilDto::visitDate).isEqualTo(LocalDate.parse("2026-09-12"));
     }
 
     @Test

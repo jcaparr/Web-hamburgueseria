@@ -1,18 +1,18 @@
 import type { Reacciones, TipoDeReaccion } from '../types'
 
 /**
- * Las reacciones, en el orden del selector, con su dibujo y cómo se nombran (#186).
+ * Las reacciones, en el orden del selector, y cómo se nombran (#186).
  *
- * El nombre es lo que lee el lector de pantalla y lo que aparece al dejar el mouse
- * encima: un emoji solo no siempre se entiende igual, y 🤤 no se lee como "me dio
- * hambre" para todo el mundo.
+ * El dibujo de cada una es Burgómetro haciéndola (DibujoDeReaccion, #365). El nombre es
+ * lo que lee el lector de pantalla y lo que aparece al dejar el mouse encima: un dibujo
+ * solo no siempre se entiende igual.
  */
-export const REACCIONES: { tipo: TipoDeReaccion; emoji: string; nombre: string }[] = [
-  { tipo: 'HAMBRE', emoji: '🤤', nombre: 'Me dio hambre' },
-  { tipo: 'FUEGO', emoji: '🔥', nombre: 'Está de fuego' },
-  { tipo: 'APLAUSO', emoji: '👏', nombre: 'Aplausos' },
-  { tipo: 'RISA', emoji: '😂', nombre: 'Me hizo reír' },
-  { tipo: 'SORPRESA', emoji: '😮', nombre: 'Sorpresa' },
+export const REACCIONES: { tipo: TipoDeReaccion; nombre: string }[] = [
+  { tipo: 'HAMBRE', nombre: 'Me dio hambre' },
+  { tipo: 'MARAVILLOSO', nombre: 'Maravilloso' },
+  { tipo: 'ENCANTA', nombre: 'Me encanta' },
+  { tipo: 'RISA', nombre: 'Me hizo reír' },
+  { tipo: 'SORPRESA', nombre: 'Sorpresa' },
 ]
 
 export function reaccion(tipo: TipoDeReaccion) {

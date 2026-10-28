@@ -73,9 +73,9 @@ class ReaccionesServiceTest {
         Reaccion ya = Reaccion.builder().id(5L).tipo(TipoDeReaccion.HAMBRE).build();
         when(reaccionRepository.findByRating_IdAndUser_Id(RESENIA, YO)).thenReturn(Optional.of(ya));
 
-        service.reaccionar(RESENIA, YO, TipoDeReaccion.FUEGO);
+        service.reaccionar(RESENIA, YO, TipoDeReaccion.MARAVILLOSO);
 
-        assertThat(ya.getTipo()).isEqualTo(TipoDeReaccion.FUEGO);
+        assertThat(ya.getTipo()).isEqualTo(TipoDeReaccion.MARAVILLOSO);
         verify(reaccionRepository, never()).save(any());
     }
 
@@ -83,15 +83,15 @@ class ReaccionesServiceTest {
     @Test
     void devuelveComoQuedaronLasDeEsaResenia() {
         ReaccionesDto quedaron = new ReaccionesDto(
-            List.of(new CuantasReaccionesDto(TipoDeReaccion.FUEGO, 4)), TipoDeReaccion.FUEGO);
+            List.of(new CuantasReaccionesDto(TipoDeReaccion.MARAVILLOSO, 4)), TipoDeReaccion.MARAVILLOSO);
         when(reacciones.de(List.of(RESENIA), YO)).thenReturn(Map.of(RESENIA, quedaron));
 
-        assertThat(service.reaccionar(RESENIA, YO, TipoDeReaccion.FUEGO)).isEqualTo(quedaron);
+        assertThat(service.reaccionar(RESENIA, YO, TipoDeReaccion.MARAVILLOSO)).isEqualTo(quedaron);
     }
 
     @Test
     void aLaPropiaNoSePuede() {
-        assertThatThrownBy(() -> service.reaccionar(RESENIA, AUTOR, TipoDeReaccion.APLAUSO))
+        assertThatThrownBy(() -> service.reaccionar(RESENIA, AUTOR, TipoDeReaccion.ENCANTA))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("propia");
 

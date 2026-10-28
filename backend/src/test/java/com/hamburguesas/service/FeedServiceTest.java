@@ -58,7 +58,7 @@ class FeedServiceTest {
 
     private ItemDeFeedDto resenia(long id, Instant cuando) {
         return new ItemDeFeedDto(id, 9L, "juanca", null, 0, 5L, "un-local", "Un local", null, "Palermo",
-            4.2, 4, "buena", "/api/rating-photos/portada.jpg", cuando, false);
+            4.2, 4, "buena", "/api/rating-photos/portada.jpg", cuando, null, false);
     }
 
     /** Tantas como para que sobre una y haya página siguiente. */
@@ -106,7 +106,7 @@ class FeedServiceTest {
         when(ratingRepository.feedDeTodos(any(), any(), anyCollection(), any(Pageable.class)))
             .thenReturn(List.of(resenia(1L, CUANDO), resenia(2L, CUANDO.minusSeconds(1))));
         ReaccionesDto deLaPrimera = new ReaccionesDto(
-            List.of(new CuantasReaccionesDto(TipoDeReaccion.FUEGO, 3)), TipoDeReaccion.FUEGO);
+            List.of(new CuantasReaccionesDto(TipoDeReaccion.MARAVILLOSO, 3)), TipoDeReaccion.MARAVILLOSO);
         when(reacciones.de(List.of(1L, 2L), YO)).thenReturn(Map.of(1L, deLaPrimera));
 
         var pagina = service.ver(FuenteDelFeed.TODOS, null, YO);

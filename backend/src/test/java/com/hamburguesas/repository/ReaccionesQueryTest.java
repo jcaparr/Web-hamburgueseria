@@ -77,14 +77,14 @@ class ReaccionesQueryTest {
     @Test
     void cuentaCadaTipoYMarcaLaDeQuienMira() {
         Rating r = resenia(autor);
-        reacciona(una, r, TipoDeReaccion.FUEGO);
-        reacciona(otra, r, TipoDeReaccion.FUEGO);
+        reacciona(una, r, TipoDeReaccion.MARAVILLOSO);
+        reacciona(otra, r, TipoDeReaccion.MARAVILLOSO);
         reacciona(tercera, r, TipoDeReaccion.HAMBRE);
 
         ReaccionesDto vistas = reacciones.de(List.of(r.getId()), tercera.getId()).get(r.getId());
 
         assertThat(vistas.cuantas()).containsExactly(
-            new CuantasReaccionesDto(TipoDeReaccion.FUEGO, 2),
+            new CuantasReaccionesDto(TipoDeReaccion.MARAVILLOSO, 2),
             new CuantasReaccionesDto(TipoDeReaccion.HAMBRE, 1));
         assertThat(vistas.mia()).isEqualTo(TipoDeReaccion.HAMBRE);
     }
@@ -110,7 +110,7 @@ class ReaccionesQueryTest {
     @Test
     void borrarLaReseniaBorraSusReacciones() {
         Rating r = resenia(autor);
-        reacciona(una, r, TipoDeReaccion.APLAUSO);
+        reacciona(una, r, TipoDeReaccion.ENCANTA);
 
         ratingRepository.delete(ratingRepository.findById(r.getId()).orElseThrow());
         ratingRepository.flush();

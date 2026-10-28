@@ -467,7 +467,7 @@ export function Explore() {
             // el barrio puesto, "con ese nombre" mandaba a cambiar lo que no era. Con
             // varios se nombran todos: si no, no se sabe en cuál no hay nada.
             <div className="flex flex-col items-start gap-3">
-              <AvisoVacio>
+              <AvisoVacio conPersonaje>
                 {barriosElegidos.length > 0
                   ? `No encontramos hamburgueserías en ${enCastellano(barriosElegidos)}${query ? ' con ese nombre' : ''}.`
                   : 'No encontramos hamburgueserías con ese nombre.'}
