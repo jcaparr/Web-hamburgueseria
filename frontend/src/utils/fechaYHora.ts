@@ -45,12 +45,6 @@ export function diaDeLaVisitaAparte({ visitDate, createdAt }: { visitDate: strin
   return visitDate === escrita ? null : `Fue el ${diaDeLaVisita(visitDate)}`
 }
 
-/** Cuándo se publicó y, si fue otro día, cuándo se fue: "Hoy 21:33hs · Fue el 12 de oct.". */
-export function fechaYVisita(resenia: { visitDate: string | null; createdAt: string }): string {
-  const fue = diaDeLaVisitaAparte(resenia)
-  return fue ? `${fechaYHora(resenia.createdAt)} · ${fue}` : fechaYHora(resenia.createdAt)
-}
-
 /**
  * El día de la visita, "2026-10-12", como "12 de oct.". Es un día de calendario y no un
  * instante: se arma a mano para que ninguna zona horaria lo corra un día.
