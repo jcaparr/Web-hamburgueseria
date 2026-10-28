@@ -354,6 +354,8 @@ export interface PuestoDelPodio {
 
 export interface Podio {
   periodo: 'semana' | 'mes' | 'general'
+  /** Cuándo cierra el período (ISO); null en General. */
+  cierraEl: string | null
   top: PuestoDelPodio[]
   /** El puesto de quien mira, aunque esté fuera del top; null si no ganó XP en el período. */
   yo: PuestoDelPodio | null
