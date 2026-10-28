@@ -67,7 +67,9 @@ export function MedidorGrande({
         viewBox="0 0 200 110"
         aria-hidden="true"
         // Bajo 360 px el tablero grande le dejaba a las barras de la ficha unos 20 px.
-        className={grande ? 'w-36 max-[359px]:w-28 md:w-44' : 'w-24'}
+        // overflow-visible: el halo de las puntas redondeadas pasa un pixel del borde de
+        // abajo, y ampliar el viewBox movería el tablero.
+        className={`overflow-visible ${grande ? 'w-36 max-[359px]:w-28 md:w-44' : 'w-24'}`}
       >
         {/* La pista con su filo (#356): sola, el marrón al 10 % daba 1,3 : 1 contra la
             tarjeta y el arco vacío no se veía. */}
@@ -86,13 +88,35 @@ export function MedidorGrande({
           strokeLinecap="round"
           className="stroke-(--pista)"
         />
+        {/* El arco lleno con halo (#356): detrás, el mismo rojo más ancho y al 35 %; en
+            oscuro, entre el halo y el arco, un filo crema. Sin él el rojo se perdía contra
+            el fondo. Los tres comparten largo y animación, así entran juntos con la aguja. */}
+        <path
+          d="M22 100 A78 78 0 0 1 178 100"
+          pathLength={100}
+          fill="none"
+          strokeWidth={22}
+          strokeLinecap="round"
+          opacity={0.35}
+          className="stroke-(--arco-lleno) transition-[stroke-dasharray] duration-1000 ease-out motion-reduce:transition-none"
+          style={{ strokeDasharray: `${ahora} 100` }}
+        />
+        <path
+          d="M22 100 A78 78 0 0 1 178 100"
+          pathLength={100}
+          fill="none"
+          strokeWidth={19}
+          strokeLinecap="round"
+          className="stroke-(--arco-filo) transition-[stroke-dasharray] duration-1000 ease-out motion-reduce:transition-none"
+          style={{ strokeDasharray: `${ahora} 100` }}
+        />
         <path
           d="M22 100 A78 78 0 0 1 178 100"
           pathLength={100}
           fill="none"
           strokeWidth={14}
           strokeLinecap="round"
-          className="stroke-primary transition-[stroke-dasharray] duration-1000 ease-out motion-reduce:transition-none"
+          className="stroke-(--arco-lleno) transition-[stroke-dasharray] duration-1000 ease-out motion-reduce:transition-none"
           style={{ strokeDasharray: `${ahora} 100` }}
         />
         {/* La escala: del cero al cinco, cada semilla mirando al centro. */}

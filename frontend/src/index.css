@@ -265,6 +265,9 @@
   --mostaza-texto: #b87d00;
   --pista: #d8c9a6;
   --pista-filo: #9a8760;
+  /* El arco lleno del burgómetro grande: el rojo del tema, con su halo y sin filo. */
+  --arco-lleno: var(--color-primary);
+  --arco-filo: transparent;
 }
 /* En oscuro, el filo de las tarjetas al 22 % y no al 7 (#245): al 7 casi no se veía. El
    del buscador y los filtros, al 40 %: son controles y su borde pide 3 : 1 (da 3,3). */
@@ -274,6 +277,10 @@
   --mostaza-texto: #f2b705;
   --pista: #5a4838;
   --pista-filo: #7a6652;
+  /* En oscuro el rojo del tema (#e5674f) se perdía contra la tarjeta: el arco pasa a un
+     rojo vivo (5,5 : 1 contra la tarjeta) y lleva un filo crema entre él y su halo. */
+  --arco-lleno: #ff5a3c;
+  --arco-filo: #f4ead6;
   --calco-del-logo: #fffdf8;
   --sombra-tarjeta: inset 0 0 0 1px rgb(243 232 207 / 0.22);
   --sombra-control: inset 0 0 0 1px rgb(243 232 207 / 0.4);
@@ -286,6 +293,8 @@
     --mostaza-texto: #f2b705;
     --pista: #5a4838;
     --pista-filo: #7a6652;
+    --arco-lleno: #ff5a3c;
+    --arco-filo: #f4ead6;
     --calco-del-logo: #fffdf8;
     --sombra-tarjeta: inset 0 0 0 1px rgb(243 232 207 / 0.22);
   --sombra-control: inset 0 0 0 1px rgb(243 232 207 / 0.4);
