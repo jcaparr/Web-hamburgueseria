@@ -74,17 +74,17 @@ export function ReaccionesDeResenia({
 
   // 44 px de alto: es el mínimo para tocar con el dedo, y el dibujo (40 px) necesita aire.
   const base = 'inline-flex h-11 items-center gap-1 rounded-full text-sm font-semibold tabular-nums'
-  const chip = `${base} pl-1 pr-3`
+  const chip = `${base} pl-1.5 pr-3`
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex flex-wrap items-center gap-2">
         {actuales.cuantas.map(({ tipo, cuantas }) => {
           const { nombre } = reaccion(tipo)
           const esLaMia = actuales.mia === tipo
           const contenido = (
             <>
-              <DibujoDeReaccion tipo={tipo} className="size-10" />
+              <DibujoDeReaccion tipo={tipo} className="size-8" />
               {cuantas}
             </>
           )
@@ -135,7 +135,7 @@ export function ReaccionesDeResenia({
           role="group"
           aria-label="Elegí una reacción"
           onKeyDown={conTeclado}
-          className="flex w-fit gap-0.5 rounded-full bg-base-200 p-1 shadow-sm"
+          className="flex w-fit gap-1.5 rounded-full bg-base-200 p-1.5 shadow-sm"
         >
           {REACCIONES.map(({ tipo, nombre }, i) => (
             <button
@@ -148,9 +148,9 @@ export function ReaccionesDeResenia({
               // Al abrirse, el foco va a la tuya o a la primera: se elige con Tab y Enter
               // sin tener que volver a buscarlas.
               autoFocus={actuales.mia ? actuales.mia === tipo : i === 0}
-              className={`btn btn-ghost btn-circle size-12 p-0 ${actuales.mia === tipo ? 'bg-primary/20 ring-1 ring-primary' : ''}`}
+              className={`btn btn-ghost btn-circle size-11 min-h-11 p-0 ${actuales.mia === tipo ? 'bg-primary/20 ring-1 ring-primary' : ''}`}
             >
-              <DibujoDeReaccion tipo={tipo} className="size-10" />
+              <DibujoDeReaccion tipo={tipo} className="size-8" />
             </button>
           ))}
         </div>
