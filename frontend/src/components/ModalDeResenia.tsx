@@ -88,7 +88,10 @@ export function ModalDeResenia({
   /** La reseña que ya dejaste en este local, si dejaste una. */
   miResenia: Rating | null
   onCerrar: () => void
-  /** Se avisa con el local reseñado, para que quien abrió la ventana vuelva a pedir lo suyo. */
+  /**
+   * Se avisa con el local reseñado, para que quien abrió la ventana vuelva a pedir lo suyo.
+   * Con el id de la reseña cuando es nueva: es a la que lleva "Ver mi reseña".
+   */
   onGuardada: (localId: number | string, ratingId?: number) => void
   onSesionVencida: () => void
 }) {
@@ -119,9 +122,7 @@ export function ModalDeResenia({
   const [fotos, setFotos] = useState<FotosElegidas>({ quedan: miResenia?.fotos ?? [], nuevas: [] })
   const [guardando, setGuardando] = useState(false)
   // La reseña nueva ya salió: se muestra el "¡Listo, gracias!" en lugar del formulario.
-  const [publicada, setPublicada] = useState(false)
-  // La reseña recién publicada: "Ver mi reseña" lleva a ella y no al principio de la ficha.
-  const [idPublicada, setIdPublicada] = useState<number | undefined>()
+  const [publicada, setPublicada] = useState<{ ratingId: number } | null>(null)
   const [borrando, setBorrando] = useState(false)
   // Con el campo al que se refiere, si es de uno: el aviso va al lado de ese campo y no
   // al pie del formulario, donde quedaba lejos de lo que había que corregir.
@@ -314,7 +315,7 @@ export function ModalDeResenia({
    */
   function terminar() {
     if (!local) return
-    onGuardada(local.id, idPublicada)
+    onGuardada(local.id, publicada?.ratingId)
     onCerrar()
   }
 
@@ -395,20 +396,15 @@ export function ModalDeResenia({
       // campo, y el servidor entiende que las nuevas reemplazan a todas.
       if (mia) fotos.quedan.forEach((url) => cuerpo.append('queda', url))
 
-      if (mia) {
-        await apiClient.put(`/burger-joints/${local.id}/ratings`, cuerpo)
-      } else {
-        const { data } = await apiClient.post<{ id: number }>(`/burger-joints/${local.id}/ratings`, cuerpo)
-        setIdPublicada(data.id)
-      }
-
       // Editar vuelve a donde estaba; publicar una nueva se agradece (#365). La XP se
       // anuncia igual: el aviso espera a que esta ventana se cierre.
       if (mia) {
+        await apiClient.put(`/burger-joints/${local.id}/ratings`, cuerpo)
         onGuardada(local.id)
         onCerrar()
       } else {
-        setPublicada(true)
+        const { data } = await apiClient.post<Rating>(`/burger-joints/${local.id}/ratings`, cuerpo)
+        setPublicada({ ratingId: data.id })
       }
       void anunciarXp(user?.xp ?? 0)
     } catch (err: any) {
@@ -499,7 +495,7 @@ export function ModalDeResenia({
               Tu reseña de {local.nombre} ya está publicada.
             </p>
             <button type="button" onClick={terminar} autoFocus className="btn btn-primary mt-1 w-full">
-              {esFijo ? 'Listo' : 'Ver mi reseña'}
+              Ver mi reseña
             </button>
           </div>
         ) : (

@@ -5,11 +5,14 @@ import { Cuerpo } from './Personaje'
 /**
  * Burgómetro haciendo cada una de las cinco reacciones (#365).
  *
- * Es la versión chica, pensada para ir en un chip de 40 px: solo el cuerpo con la cara
- * y lo que se pega a la cabeza (el arcoíris de fondo, el signo de admiración), sin
- * brazos ni objetos, que a ese tamaño son manchas. Lo que distingue a cada una está en
- * la cara: la baba del hambre, los ojos brillantes, los de corazón, las lágrimas de la
- * risa y los ojos grandes de la sorpresa.
+ * Es la versión chica, pensada para ir en un chip: solo el cuerpo con la cara y lo que se
+ * pega a la cabeza (el arcoíris de fondo, el signo de admiración), sin brazos ni objetos,
+ * que a ese tamaño son manchas. Lo que distingue a cada una está en la cara: la baba del
+ * hambre, los ojos brillantes, los de corazón, las lágrimas de la risa y los ojos grandes
+ * de la sorpresa.
+ *
+ * El recuadro está centrado en el cuerpo (alto 76). Si se agranda hacia arriba para que
+ * entre algo más, el personaje se ve caído dentro del chip.
  *
  * Decorativo: el nombre de la reacción lo da el botón que lo contiene.
  */
@@ -34,15 +37,15 @@ const DIBUJOS: Record<TipoDeReaccion, { fondo: ReactNode; arriba: ReactNode; car
   },
   MARAVILLOSO: {
     fondo: (
-      <g transform="translate(65 0) scale(.72 1) translate(-65 0)">
-        <path d="M-8 124A73 115 0 0 1 138 124" fill="none" stroke="#141110" strokeWidth="58"/>
-        <path d="M-31 124A96 138 0 0 1 161 124" fill="none" stroke="#e63240" strokeWidth="9.4"/>
-        <path d="M-22 124A87 129 0 0 1 152 124" fill="none" stroke="#f28a1c" strokeWidth="9.4"/>
-        <path d="M-13 124A78 120 0 0 1 143 124" fill="none" stroke="#f2b705" strokeWidth="9.4"/>
-        <path d="M-4 124A69 111 0 0 1 134 124" fill="none" stroke="#7aa33a" strokeWidth="9.4"/>
-        <path d="M5 124A60 102 0 0 1 125 124" fill="none" stroke="#4aa3df" strokeWidth="9.4"/>
-        <path d="M14 124A51 93 0 0 1 116 124" fill="none" stroke="#8b5fbf" strokeWidth="9.4"/>
-      </g>
+      <>
+        <path d="M-10.5 124V98A75.5 100.5 0 0 1 140.5 98V124" fill="none" stroke="#141110" strokeWidth="24.4"/>
+        <path d="M-19 124V98A84 109 0 0 1 149 98V124" fill="none" stroke="#e63240" strokeWidth="3.6"/>
+        <path d="M-15.6 124V98A80.6 105.6 0 0 1 145.6 98V124" fill="none" stroke="#f28a1c" strokeWidth="3.6"/>
+        <path d="M-12.2 124V98A77.2 102.2 0 0 1 142.2 98V124" fill="none" stroke="#f2b705" strokeWidth="3.6"/>
+        <path d="M-8.8 124V98A73.8 98.8 0 0 1 138.8 98V124" fill="none" stroke="#7aa33a" strokeWidth="3.6"/>
+        <path d="M-5.4 124V98A70.4 95.4 0 0 1 135.4 98V124" fill="none" stroke="#4aa3df" strokeWidth="3.6"/>
+        <path d="M-2 124V98A67 92 0 0 1 132 98V124" fill="none" stroke="#8b5fbf" strokeWidth="3.6"/>
+      </>
     ),
     arriba: null,
     cara: (
@@ -92,13 +95,13 @@ const DIBUJOS: Record<TipoDeReaccion, { fondo: ReactNode; arriba: ReactNode; car
   SORPRESA: {
     fondo: null,
     arriba: (
-      <>
+      <g transform="translate(65 6) scale(.5) translate(-65 -6)">
         <path d="M58-8L62-34H68L72-8Z" fill="#f2b705" stroke="#141110" strokeWidth="4" strokeLinejoin="round"/>
         <circle cx="65" cy="-3" r="5" fill="#f2b705" stroke="#141110" strokeWidth="3"/>
         <g stroke="#141110" strokeWidth="5" strokeLinecap="round">
           <path d="M34 -6L26 -16M96 -6L104 -16"/>
         </g>
-      </>
+      </g>
     ),
     cara: (
       <>
@@ -118,7 +121,7 @@ export function DibujoDeReaccion({ tipo, className = '' }: { tipo: TipoDeReaccio
   const { fondo, arriba, cara } = DIBUJOS[tipo]
   return (
     <svg
-      viewBox="-12 -1 154 154"
+      viewBox="-23 -16 176 184"
       aria-hidden="true"
       focusable="false"
       className={`personaje shrink-0 overflow-hidden ${className}`}

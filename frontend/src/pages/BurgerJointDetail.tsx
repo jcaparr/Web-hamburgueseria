@@ -225,6 +225,17 @@ export function BurgerJointDetail({ idDelLocal }: { idDelLocal?: string }) {
     setOpinando(true)
   }
 
+  /**
+   * Vuelve a pedir la ficha y, si la reseña es nueva, baja hasta ella: es lo que promete
+   * el "Ver mi reseña" de la pantalla de gracias (#365).
+   */
+  function alGuardar(_localId: number | string, ratingId?: number) {
+    load()
+    if (ratingId) {
+      navigate({ pathname: location.pathname, search: location.search, hash: `#${anclaDeResenia(ratingId)}` })
+    }
+  }
+
   function cerrarOpinion() {
     setOpinando(false)
     if (parametros.has(ABRIR_OPINION)) {
@@ -388,7 +399,7 @@ export function BurgerJointDetail({ idDelLocal }: { idDelLocal?: string }) {
         nombreDelLocal={burgerJoint.name}
         miResenia={myRating}
         onCerrar={cerrarOpinion}
-        onGuardada={load}
+        onGuardada={alGuardar}
         onSesionVencida={() => navigate('/login')}
       />
     </div>

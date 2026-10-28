@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ModalDeResenia } from '../components/ModalDeResenia'
-import { aLaResenia } from '../utils/aLaResenia'
+import { anclaDeResenia } from '../utils/aLaResenia'
 import { RESENIA_GUARDADA, ReseniaRapidaContext } from './resenia'
 import { useAuth } from './useAuth'
 
@@ -60,8 +60,8 @@ export function ReseniaRapidaProvider({ children }: { children: ReactNode }) {
   function alGuardar(localId: number | string, ratingId?: number) {
     // Si ya se está en la ficha de ese local, navegar no la recarga: se le avisa.
     window.dispatchEvent(new Event(RESENIA_GUARDADA))
-    // Con la reseña recién publicada, la ficha se abre parada en ella.
-    navigate(ratingId ? aLaResenia({ id: Number(localId), slug: null }, ratingId) : `/burger-joints/${localId}`)
+    // Con el ancla de la reseña nueva, para que la ficha baje hasta ella (#260).
+    navigate(`/burger-joints/${localId}${ratingId ? `#${anclaDeResenia(ratingId)}` : ''}`)
   }
 
   const valor = useMemo(() => ({ abrir }), [abrir])
