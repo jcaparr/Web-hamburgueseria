@@ -327,9 +327,11 @@
 /*
  * El botón primario con el filo y el brillo del tema (#359). En claro esas variables no
  * existen y cada propiedad cae en lo que daisyUI ya pone, así que no cambia nada. En
- * oscuro: borde crema de 1,5 px y un brillo rojo suave por fuera.
+ * oscuro: borde crema de 1,5 px y un brillo rojo suave por fuera. Solo en el habilitado:
+ * deshabilitado (mientras se envía un formulario) daisyUI lo apaga a gris y no debe
+ * quedar con filo y brillo como si estuviera activo.
  */
-.btn.btn-primary {
+.btn.btn-primary:not(:disabled, [disabled], .btn-disabled, [aria-disabled="true"]) {
   border-color: var(--filo-primario, var(--btn-border));
   border-width: var(--ancho-filo-primario, var(--border));
   box-shadow: var(--btn-inset) inset, var(--btn-shadow), var(--brillo-primario, 0 0 0 0 transparent);
