@@ -22,14 +22,18 @@
  * armó la mayoría.
  */
 export const FONDOS = [
-  'bg-[#e5674f] text-[#17110d]',
-  'bg-[#f2b705] text-[#17110d]',
-  'bg-[#8fb56a] text-[#17110d]',
-  'bg-[#8cc0c9] text-[#17110d]',
-  // Crema. Sobre la página del tema claro, que es casi del mismo color, el círculo se
+  // Un ingrediente por fondo (#372): un degradado suave, claro arriba a la izquierda y más
+  // hondo abajo a la derecha. El trazo oscuro da 4 : 1 o más sobre el extremo más oscuro de
+  // cada uno (BBQ 4,0; los otros más de 5,7), así que el contorno se lee en las dos puntas.
+  // El orden es el de siempre: se guarda el número, así que lo ya elegido sigue en su lugar.
+  'bg-[linear-gradient(150deg,#f08a62,#c4502f)] text-[#17110d]', // BBQ (antes kétchup)
+  'bg-[linear-gradient(150deg,#ffd84d,#f09a0c)] text-[#17110d]', // cheddar (antes mostaza)
+  'bg-[linear-gradient(150deg,#bfdc8c,#7aa04a)] text-[#17110d]', // pepinillo (antes pepino)
+  'bg-[linear-gradient(150deg,#e8bdec,#b678c4)] text-[#17110d]', // cebolla morada (antes azul)
+  // Papas, el crema. Sobre la página del tema claro, que es casi del mismo color, el círculo se
   // perdía: el borde, fijo, lo marca igual en los dos temas. Borde y no anillo, porque
   // el anillo es lo que marca el elegido en "Armá tu hamburguesa".
-  'bg-[#f3e8cf] text-[#241a13] border border-[#241a13]/20',
+  'bg-[linear-gradient(150deg,#fbf1d8,#ecd8a8)] text-[#241a13] border border-[#241a13]/20',
 ] as const
 
 /** El pan va fijo y no sale del tema, igual que en el logo: es pan, no un color de la marca. */
@@ -43,8 +47,8 @@ export const QUESOS = { cheddar: '#f2b705', dambo: '#f6dd8f', sin: null } as con
 
 export const VERDURAS = ['nada', 'lechuga', 'tomate', 'completa'] as const
 
-/** El color de cada fondo, para lo que se dibuja encima (los rayos del nivel 15). Mismo orden que FONDOS. */
-export const COLORES_DE_FONDOS = ['#e5674f', '#f2b705', '#8fb56a', '#8cc0c9', '#f3e8cf'] as const
+/** El color del medio de cada degradado, para lo que se dibuja encima (los rayos del nivel 15). Mismo orden que FONDOS. */
+export const COLORES_DE_FONDOS = ['#da6d49', '#f8b92d', '#9dbe6b', '#cf9bd8', '#f4e5c0'] as const
 
 /**
  * El nivel en que se desbloquea cada premio de la hamburguesa (#313): el huevo frito, el
