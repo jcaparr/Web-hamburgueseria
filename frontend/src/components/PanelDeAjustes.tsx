@@ -47,7 +47,7 @@ export function PanelDeAjustes() {
               <CuentasBloqueadas />
               {/* Lo último y en kétchup: es lo que se hace pocas veces y no se toca sin querer. */}
               <div className="mt-1 border-t border-base-content/15 pt-1">
-                <button type="button" onClick={cerrarSesion} className="btn btn-ghost w-full justify-start px-2 text-primary">
+                <button type="button" onClick={cerrarSesion} className="btn btn-ghost w-full justify-start px-2 text-(--color-accion)">
                   Cerrar sesión
                 </button>
               </div>

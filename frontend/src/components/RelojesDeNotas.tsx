@@ -32,7 +32,7 @@ export function RelojesDeNotas({ notas }: { notas: NotaConDatos[] }) {
         onClick={() => setAbierto((v) => !v)}
         aria-expanded={abierto}
         aria-controls={idDelDetalle}
-        className="btn btn-ghost mt-3 min-h-11 w-full gap-1.5 font-semibold text-primary"
+        className="btn btn-ghost mt-3 min-h-11 w-full gap-1.5 font-semibold text-(--color-accion)"
       >
         {abierto ? 'Ocultar detalle' : 'Ver detalle de las notas'}
         <IconChevronRight

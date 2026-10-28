@@ -272,7 +272,7 @@ export function Tour() {
             <button
               type="button"
               onClick={() => setBarrios([])}
-              className="btn btn-ghost btn-sm self-start text-primary"
+              className="btn btn-ghost btn-sm self-start text-(--color-accion)"
             >
               Usar mi ubicación
             </button>
