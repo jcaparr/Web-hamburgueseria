@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -100,6 +101,20 @@ class FeedQueryTest {
             // La dirección linda del local viaja con la reseña, para enlazar sin pedirla (#305).
             assertThat(item.slug()).isEqualTo(local.getSlug());
         });
+    }
+
+    /** Cada tarjeta dice el día en que se fue, no el de cuando se cargó la reseña (#365). */
+    @Test
+    void trae_el_dia_de_la_visita_y_null_en_las_de_antes() {
+        Rating conDia = resenia(autor, 4, Instant.parse("2026-09-20T15:00:00Z"));
+        conDia.setVisitDate(LocalDate.of(2026, 9, 12));
+        ratingRepository.save(conDia);
+        resenia(otro, 5, Instant.parse("2026-09-18T10:00:00Z"));
+
+        assertThat(desdeArriba()).extracting(ItemDeFeedDto::autorUsername, ItemDeFeedDto::visitDate)
+            .containsExactly(
+                org.assertj.core.groups.Tuple.tuple("autorfeed", LocalDate.of(2026, 9, 12)),
+                org.assertj.core.groups.Tuple.tuple("otrofeed", null));
     }
 
     @Test

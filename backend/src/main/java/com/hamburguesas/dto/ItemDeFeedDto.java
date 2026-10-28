@@ -1,6 +1,7 @@
 package com.hamburguesas.dto;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -39,6 +40,8 @@ public record ItemDeFeedDto(
     /** Las fotos que sacó quien la escribió, en orden: la primera es la portada. */
     List<String> fotosDeLaResenia,
     Instant createdAt,
+    /** El día de la visita, o null en las de antes: ahí vale createdAt (#336). */
+    LocalDate visitDate,
     boolean editada,
     /** Las reacciones que le pusieron los demás, y la de quien mira (#186). */
     ReaccionesDto reacciones
@@ -55,22 +58,22 @@ public record ItemDeFeedDto(
                          int autorXp, Long burgerJointId, String slug, String burgerJointName, String photoUrl,
                          String area,
                          Double promedioDelLocal, Integer score, String comment, String portada,
-                         Instant createdAt, boolean editada) {
+                         Instant createdAt, LocalDate visitDate, boolean editada) {
         this(ratingId, autorId, autorUsername, autorHamburguesa, autorXp, burgerJointId, slug,
             burgerJointName, photoUrl, area, promedioDelLocal, score, comment,
-            portada == null ? List.of() : List.of(portada), createdAt, editada,
+            portada == null ? List.of() : List.of(portada), createdAt, visitDate, editada,
             ReaccionesDto.NINGUNA);
     }
 
     public ItemDeFeedDto conFotos(List<String> fotos) {
         return new ItemDeFeedDto(ratingId, autorId, autorUsername, autorHamburguesa, autorXp, burgerJointId,
-            slug, burgerJointName, photoUrl, area, promedioDelLocal, score, comment, fotos, createdAt,
+            slug, burgerJointName, photoUrl, area, promedioDelLocal, score, comment, fotos, createdAt, visitDate,
             editada, reacciones);
     }
 
     public ItemDeFeedDto conReacciones(ReaccionesDto nuevas) {
         return new ItemDeFeedDto(ratingId, autorId, autorUsername, autorHamburguesa, autorXp, burgerJointId,
             slug, burgerJointName, photoUrl, area, promedioDelLocal, score, comment, fotosDeLaResenia,
-            createdAt, editada, nuevas);
+            createdAt, visitDate, editada, nuevas);
     }
 }

@@ -118,7 +118,7 @@ export function DibujoDeReaccion({ tipo, className = '' }: { tipo: TipoDeReaccio
   const { fondo, arriba, cara } = DIBUJOS[tipo]
   return (
     <svg
-      viewBox="-12 -40 154 190"
+      viewBox="-12 -1 154 154"
       aria-hidden="true"
       focusable="false"
       className={`personaje shrink-0 overflow-hidden ${className}`}

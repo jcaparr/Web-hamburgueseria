@@ -89,7 +89,7 @@ export function ModalDeResenia({
   miResenia: Rating | null
   onCerrar: () => void
   /** Se avisa con el local reseñado, para que quien abrió la ventana vuelva a pedir lo suyo. */
-  onGuardada: (localId: number | string) => void
+  onGuardada: (localId: number | string, ratingId?: number) => void
   onSesionVencida: () => void
 }) {
   const dialogo = useRef<HTMLDialogElement>(null)
@@ -120,6 +120,8 @@ export function ModalDeResenia({
   const [guardando, setGuardando] = useState(false)
   // La reseña nueva ya salió: se muestra el "¡Listo, gracias!" en lugar del formulario.
   const [publicada, setPublicada] = useState(false)
+  // La reseña recién publicada: "Ver mi reseña" lleva a ella y no al principio de la ficha.
+  const [idPublicada, setIdPublicada] = useState<number | undefined>()
   const [borrando, setBorrando] = useState(false)
   // Con el campo al que se refiere, si es de uno: el aviso va al lado de ese campo y no
   // al pie del formulario, donde quedaba lejos de lo que había que corregir.
@@ -312,7 +314,7 @@ export function ModalDeResenia({
    */
   function terminar() {
     if (!local) return
-    onGuardada(local.id)
+    onGuardada(local.id, idPublicada)
     onCerrar()
   }
 
@@ -396,7 +398,8 @@ export function ModalDeResenia({
       if (mia) {
         await apiClient.put(`/burger-joints/${local.id}/ratings`, cuerpo)
       } else {
-        await apiClient.post(`/burger-joints/${local.id}/ratings`, cuerpo)
+        const { data } = await apiClient.post<{ id: number }>(`/burger-joints/${local.id}/ratings`, cuerpo)
+        setIdPublicada(data.id)
       }
 
       // Editar vuelve a donde estaba; publicar una nueva se agradece (#365). La XP se

@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ModalDeResenia } from '../components/ModalDeResenia'
+import { aLaResenia } from '../utils/aLaResenia'
 import { RESENIA_GUARDADA, ReseniaRapidaContext } from './resenia'
 import { useAuth } from './useAuth'
 
@@ -56,10 +57,11 @@ export function ReseniaRapidaProvider({ children }: { children: ReactNode }) {
     navigate(`${window.location.pathname}${resto ? `?${resto}` : ''}${window.location.hash}`, { replace: true })
   }
 
-  function alGuardar(localId: number | string) {
+  function alGuardar(localId: number | string, ratingId?: number) {
     // Si ya se está en la ficha de ese local, navegar no la recarga: se le avisa.
     window.dispatchEvent(new Event(RESENIA_GUARDADA))
-    navigate(`/burger-joints/${localId}`)
+    // Con la reseña recién publicada, la ficha se abre parada en ella.
+    navigate(ratingId ? aLaResenia({ id: Number(localId), slug: null }, ratingId) : `/burger-joints/${localId}`)
   }
 
   const valor = useMemo(() => ({ abrir }), [abrir])
