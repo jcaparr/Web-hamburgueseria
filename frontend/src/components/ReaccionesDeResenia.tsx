@@ -75,7 +75,7 @@ export function ReaccionesDeResenia({
   // Como en la maqueta: 64 px de alto para que entre el personaje entero con sus manos, y
   // el borde de 2 px siempre puesto (transparente si no es la tuya) para que elegir una no
   // mueva a las demás.
-  const chip = 'inline-flex min-h-12 items-center gap-1 rounded-full border-2 pl-1 pr-3 text-sm font-semibold'
+  const chip = 'inline-flex min-h-10 items-center gap-1 rounded-full border-2 pl-1 pr-2.5 text-sm font-semibold'
 
   return (
     <div className="flex flex-col gap-2">
@@ -85,7 +85,7 @@ export function ReaccionesDeResenia({
           const esLaMia = actuales.mia === tipo
           const contenido = (
             <>
-              <DibujoDeReaccion tipo={tipo} className="h-10 w-12" />
+              <DibujoDeReaccion tipo={tipo} className="h-8 w-10" />
               <span className="contador-de-reaccion">{cuantas}</span>
             </>
           )
@@ -147,9 +147,9 @@ export function ReaccionesDeResenia({
               // Al abrirse, el foco va a la tuya o a la primera: se elige con Tab y Enter
               // sin tener que volver a buscarlas.
               autoFocus={actuales.mia ? actuales.mia === tipo : i === 0}
-              className={`btn btn-ghost h-12 min-h-12 w-12 rounded-full p-0 ${actuales.mia === tipo ? 'bg-primary/20 ring-2 ring-primary' : ''}`}
+              className={`btn btn-ghost h-11 min-h-11 w-11 rounded-full p-0 ${actuales.mia === tipo ? 'bg-primary/20 ring-2 ring-primary' : ''}`}
             >
-              <DibujoDeReaccion tipo={tipo} className="h-9 w-11" />
+              <DibujoDeReaccion tipo={tipo} className="h-7 w-9" />
             </button>
           ))}
         </div>
