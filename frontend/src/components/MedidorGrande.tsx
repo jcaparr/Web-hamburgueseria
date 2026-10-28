@@ -17,17 +17,20 @@ import { nota } from '../utils/numeros'
  * @param valor    la nota, de 1 a 5
  * @param tamanio  lg para la ficha, md para el primer puesto
  * @param etiqueta lo que se le antepone al número para un lector de pantalla
+ * @param conLetraDelLogo el número en Lexend, la letra del logo (#356): la ficha lo pide
  * @param children lo que va debajo del número, como cuántas reseñas lo dicen
  */
 export function MedidorGrande({
   valor,
   tamanio = 'lg',
   etiqueta = 'Promedio',
+  conLetraDelLogo = false,
   children,
 }: {
   valor: number
   tamanio?: 'md' | 'lg'
   etiqueta?: string
+  conLetraDelLogo?: boolean
   children?: ReactNode
 }) {
   const lleno = Math.min(Math.max(valor / 5, 0), 1) * 100
@@ -63,15 +66,19 @@ export function MedidorGrande({
         ref={tablero}
         viewBox="0 0 200 110"
         aria-hidden="true"
-        className={grande ? 'w-36 md:w-40' : 'w-24'}
+        // Bajo 360 px el tablero grande le dejaba a las barras de la ficha unos 20 px.
+        // overflow-visible: el halo de las puntas redondeadas pasa un pixel del borde de
+        // abajo, y ampliar el viewBox movería el tablero.
+        className={`overflow-visible ${grande ? 'w-36 max-[359px]:w-28 md:w-44' : 'w-24'}`}
       >
+        {/* La pista con su filo (#356): sola, el marrón al 10 % daba 1,3 : 1 contra la
+            tarjeta y el arco vacío no se veía. */}
         <path
           d="M22 100 A78 78 0 0 1 178 100"
-          pathLength={100}
           fill="none"
-          strokeWidth={14}
+          strokeWidth={16}
           strokeLinecap="round"
-          className="stroke-base-content/10"
+          className="stroke-(--pista-filo)"
         />
         <path
           d="M22 100 A78 78 0 0 1 178 100"
@@ -79,7 +86,37 @@ export function MedidorGrande({
           fill="none"
           strokeWidth={14}
           strokeLinecap="round"
-          className="stroke-primary transition-[stroke-dasharray] duration-1000 ease-out motion-reduce:transition-none"
+          className="stroke-(--pista)"
+        />
+        {/* El arco lleno con halo (#356): detrás, el mismo rojo más ancho y al 35 %; en
+            oscuro, entre el halo y el arco, un filo crema. Sin él el rojo se perdía contra
+            el fondo. Los tres comparten largo y animación, así entran juntos con la aguja. */}
+        <path
+          d="M22 100 A78 78 0 0 1 178 100"
+          pathLength={100}
+          fill="none"
+          strokeWidth={22}
+          strokeLinecap="round"
+          opacity={0.35}
+          className="stroke-(--arco-lleno) transition-[stroke-dasharray] duration-1000 ease-out motion-reduce:transition-none"
+          style={{ strokeDasharray: `${ahora} 100` }}
+        />
+        <path
+          d="M22 100 A78 78 0 0 1 178 100"
+          pathLength={100}
+          fill="none"
+          strokeWidth={19}
+          strokeLinecap="round"
+          className="stroke-(--arco-filo) transition-[stroke-dasharray] duration-1000 ease-out motion-reduce:transition-none"
+          style={{ strokeDasharray: `${ahora} 100` }}
+        />
+        <path
+          d="M22 100 A78 78 0 0 1 178 100"
+          pathLength={100}
+          fill="none"
+          strokeWidth={14}
+          strokeLinecap="round"
+          className="stroke-(--arco-lleno) transition-[stroke-dasharray] duration-1000 ease-out motion-reduce:transition-none"
           style={{ strokeDasharray: `${ahora} 100` }}
         />
         {/* La escala: del cero al cinco, cada semilla mirando al centro. */}
@@ -106,7 +143,7 @@ export function MedidorGrande({
         <circle cx="100" cy="100" r="3.5" className="fill-base-100" />
       </svg>
       <span
-        className={`font-display font-extrabold leading-none tabular-nums ${grande ? 'mt-1 text-5xl' : 'mt-0.5 text-2xl'}`}
+        className={`${conLetraDelLogo ? 'font-logo' : 'font-display font-extrabold'} leading-none tabular-nums ${grande ? 'mt-2 text-5xl' : 'mt-0.5 text-2xl'}`}
       >
         <span className="sr-only">{etiqueta}: </span>
         {nota(valor)}

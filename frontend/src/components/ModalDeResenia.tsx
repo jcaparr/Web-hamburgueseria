@@ -8,6 +8,7 @@ import { Stars } from './Stars'
 import type { BurgerJoint, DesgloseDeNotas, Rating, ResumenDeResenias } from '../types'
 import { avisarXpGanada } from '../utils/avisosDeXp'
 import { isSessionExpired } from '../utils/errors'
+import { notasConDatos } from '../utils/notasOpcionales'
 import {
   nivelDe,
   XP_CON_COMENTARIO,
@@ -706,19 +707,14 @@ function coma(n: number): string {
  * guiones sería ruido justo donde hay que decidir cuántas estrellas poner.
  */
 function AsiLoCalificaron({ desglose }: { desglose: DesgloseDeNotas | null }) {
-  if (!desglose) return null
-  const notas = [
-    ['Local', desglose.local, desglose.cuantasLocal],
-    ['Atención', desglose.atencion, desglose.cuantasAtencion],
-    ['Precio', desglose.precio, desglose.cuantasPrecio],
-  ].filter((n): n is [string, number, number] => n[1] != null && (n[2] as number) > 0)
+  const notas = notasConDatos(desglose)
   if (notas.length === 0) return null
 
   return (
     <div className="flex flex-col gap-1.5 rounded-field border border-base-300 px-3 py-2">
       <span className="text-sm text-base-content/70">Así lo calificaron</span>
       <ul className="flex">
-        {notas.map(([rotulo, promedio]) => (
+        {notas.map(({ rotulo, promedio }) => (
           <li key={rotulo} className="flex flex-1 flex-col items-center">
             <span className="font-display text-xl font-bold tabular-nums">{coma(promedio)}</span>
             <span className="text-sm text-base-content/70">{rotulo}</span>
