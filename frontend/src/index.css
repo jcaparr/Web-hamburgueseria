@@ -353,14 +353,14 @@
 .contador-de-reaccion {
   display: inline-grid;
   place-items: center;
-  min-width: 1.75rem;
-  height: 1.75rem;
-  padding: 0 0.4rem;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.3rem;
   border: 2px solid var(--contorno-del-contador, #3a2a1e);
   border-radius: 999px;
   background: #f2b705;
   color: #3a2a1e;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
