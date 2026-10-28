@@ -35,6 +35,15 @@ export function fechaYHora(iso: string, ahora: Date = new Date()): string {
 }
 
 /**
+ * Lo que se lee bajo una reseña: "Fue el 12 de oct." si la persona eligió el día que fue,
+ * y si no (las de antes), cuándo se escribió (#368). Es la misma regla en el feed, en las
+ * listas del perfil y en la ficha.
+ */
+export function cuandoFueLaResenia({ visitDate, createdAt }: { visitDate: string | null; createdAt: string }): string {
+  return visitDate ? `Fue el ${diaDeLaVisita(visitDate)}` : fechaYHora(createdAt)
+}
+
+/**
  * El día de la visita, "2026-10-12", como "12 de oct.". Es un día de calendario y no un
  * instante: se arma a mano para que ninguna zona horaria lo corra un día.
  */

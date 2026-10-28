@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { ReseniaDePerfil } from '../types'
 import { aLaResenia } from '../utils/aLaResenia'
-import { fechaYHora } from '../utils/fechaYHora'
+import { cuandoFueLaResenia } from '../utils/fechaYHora'
 import { JointPhoto } from './JointPhoto'
 import { ScoreBadge } from './ScoreBadge'
 
@@ -30,7 +30,7 @@ export function ListaDeReseniasDePerfil({ resenias }: { resenias: ReseniaDePerfi
               />
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate font-semibold">{r.burgerJointName}</span>
-                <span className="text-xs text-base-content/70">{fechaYHora(r.createdAt)}</span>
+                <span className="text-xs text-base-content/70">{cuandoFueLaResenia(r)}</span>
               </span>
               <ScoreBadge score={r.score} size="sm" />
             </span>
