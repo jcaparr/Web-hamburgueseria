@@ -9,10 +9,10 @@ import { Personaje } from './Personaje'
 export function LoadError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
   return (
     <div role="alert" className="flex items-center gap-4 rounded-box bg-base-100 p-4 ring-1 ring-inset ring-error/30">
-      <Personaje pose="confundido" className="h-20 w-auto shrink-0" />
-      <div className="flex flex-col items-start gap-3">
-        <p className="text-sm text-base-content/80">{loadErrorMessage(error)}</p>
-        <button type="button" className="btn btn-sm btn-outline" onClick={onRetry}>
+      <Personaje pose="confundido" className="h-24 w-auto shrink-0" />
+      <div className="flex min-w-0 flex-col items-start gap-3">
+        <p className="break-words text-sm text-base-content/80">{loadErrorMessage(error)}</p>
+        <button type="button" className="btn btn-sm btn-outline min-h-11" onClick={onRetry}>
           Reintentar
         </button>
       </div>

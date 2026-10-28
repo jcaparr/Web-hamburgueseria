@@ -20,7 +20,7 @@ export function NoEncontrada() {
       <p className="text-sm text-base-content/70">
         Puede que el enlace esté mal escrito o que la página ya no esté.
       </p>
-      <Link to="/" className="btn btn-primary">
+      <Link to="/" className="btn btn-primary min-h-11">
         Ir a Explorar
       </Link>
     </div>

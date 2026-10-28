@@ -71,7 +71,7 @@ export function AvisoVacio({
     <>
       <p className="text-sm text-base-content/70">{children}</p>
       {accion && (
-        <Link to={accion.a} className="btn btn-outline btn-sm">
+        <Link to={accion.a} className="btn btn-outline btn-sm min-h-11">
           {accion.texto}
         </Link>
       )}
@@ -83,7 +83,7 @@ export function AvisoVacio({
   return (
     <div className="tarjeta flex items-center gap-4 p-4">
       <Personaje pose="lupa" className="h-24 w-auto shrink-0" />
-      <div className="flex flex-col items-start gap-3">{contenido}</div>
+      <div className="flex min-w-0 flex-col items-start gap-3 break-words">{contenido}</div>
     </div>
   )
 }

@@ -148,7 +148,7 @@ export function ReaccionesDeResenia({
               // Al abrirse, el foco va a la tuya o a la primera: se elige con Tab y Enter
               // sin tener que volver a buscarlas.
               autoFocus={actuales.mia ? actuales.mia === tipo : i === 0}
-              className={`btn btn-ghost btn-circle size-12 p-0 ${actuales.mia === tipo ? 'bg-primary/20' : ''}`}
+              className={`btn btn-ghost btn-circle size-12 p-0 ${actuales.mia === tipo ? 'bg-primary/20 ring-1 ring-primary' : ''}`}
             >
               <DibujoDeReaccion tipo={tipo} className="size-10" />
             </button>

@@ -38,7 +38,7 @@ export function ResumenDeCalificaciones({
     return (
       <section className="tarjeta flex items-center gap-4 p-5">
         <Personaje pose="lupa" className="h-24 w-auto shrink-0" />
-        <div className="flex flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-2">
           <h2 className="font-display text-lg font-bold">Todavía nadie la calificó</h2>
           <p className="text-sm text-base-content/70">
             Si fuiste, contá qué tal estuvo. La primera reseña es la que más ayuda a los
