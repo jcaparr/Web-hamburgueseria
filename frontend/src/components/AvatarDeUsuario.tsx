@@ -71,7 +71,8 @@ function anilloDe(size: number, marco: boolean) {
 
 /** El diámetro del circulito del nivel y su letra. Con dos cifras, el chico se ensancha. */
 function circuloDe(size: number, dosCifras: boolean) {
-  if (size <= 48) return { diametro: dosCifras ? 20 : 18, letra: 12 }
+  // En el feed y las listas (#373) el sello medía casi la mitad del avatar y se veía enorme.
+  if (size <= 48) return { diametro: dosCifras ? 17 : 15, letra: dosCifras ? 9 : 10 }
   if (size <= 84) return { diametro: 26, letra: 14 }
   if (size <= 96) return { diametro: 28, letra: 15 }
   return { diametro: 32, letra: 17 }
@@ -115,9 +116,9 @@ function AvatarConNivel({
   const { diametro, letra } = circuloDe(size, nivel > 9)
   const baja = margen + size
   const chico = size <= 48
-  const centroY = chico
-    ? Math.min(baja + diametro / 2 - 2, caja + 12 - diametro / 2)
-    : baja + diametro / 2 - 3
+  // En los chicos el sello se centra sobre el borde de abajo del anillo (3 px más abajo que
+  // el borde), así queda montado sobre el anillo y no colgando de él.
+  const centroY = chico ? caja - diametro / 2 + 3 : baja + diametro / 2 - 3
   const alto = chico || sinCirculo ? caja : centroY + diametro / 2
 
   return (
