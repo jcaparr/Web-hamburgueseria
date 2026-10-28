@@ -36,7 +36,7 @@ export function FechaDeResenia({
         type="button"
         onClick={() => setAbierta((v) => !v)}
         aria-expanded={abierta}
-        className="-my-1.5 inline-flex flex-none cursor-pointer items-center gap-0.5 py-1.5 underline decoration-dotted underline-offset-2"
+        className="inline-flex flex-none cursor-pointer items-center gap-0.5 py-1 underline decoration-dotted underline-offset-2"
       >
         {fecha}
         <IconChevronRight size={11} className={`transition-transform ${abierta ? 'rotate-90' : ''}`} />

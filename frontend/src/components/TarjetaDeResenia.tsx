@@ -56,7 +56,7 @@ export function TarjetaDeResenia({
           <div className="flex min-w-0 flex-col">
             {/* La fecha va afuera del enlace: si es botón (abre el día en que fue), un toque
                 en ella no puede llevar al perfil. */}
-            <Link to={`/u/${resenia.username}`} className="truncate text-sm font-semibold hover:text-primary">
+            <Link to={`/u/${resenia.username}`} className="self-start truncate text-sm font-semibold hover:text-primary">
               @{resenia.username}
               {esMia && <span className="font-normal text-base-content/70"> (vos)</span>}
             </Link>
