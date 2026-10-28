@@ -67,7 +67,7 @@ export function MedidorGrande({
         viewBox="0 0 200 110"
         aria-hidden="true"
         // Bajo 360 px el tablero grande le dejaba a las barras de la ficha unos 20 px.
-        className={grande ? 'w-36 max-[359px]:w-28 md:w-40' : 'w-24'}
+        className={grande ? 'w-36 max-[359px]:w-28 md:w-44' : 'w-24'}
       >
         {/* La pista con su filo (#356): sola, el marrón al 10 % daba 1,3 : 1 contra la
             tarjeta y el arco vacío no se veía. */}
@@ -119,7 +119,7 @@ export function MedidorGrande({
         <circle cx="100" cy="100" r="3.5" className="fill-base-100" />
       </svg>
       <span
-        className={`${conLetraDelLogo ? 'font-logo' : 'font-display font-extrabold'} leading-none tabular-nums ${grande ? 'mt-1 text-5xl' : 'mt-0.5 text-2xl'}`}
+        className={`${conLetraDelLogo ? 'font-logo' : 'font-display font-extrabold'} leading-none tabular-nums ${grande ? 'mt-2 text-5xl' : 'mt-0.5 text-2xl'}`}
       >
         <span className="sr-only">{etiqueta}: </span>
         {nota(valor)}

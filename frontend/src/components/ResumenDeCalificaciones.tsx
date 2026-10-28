@@ -53,13 +53,13 @@ export function ResumenDeCalificaciones({
 
       {/* Con tope de ancho y centrado: en escritorio la ficha es ancha y, estiradas, las
           barras se volvían tiras de 400 px y los relojes quedaban perdidos en su recuadro. */}
-      <div className="tarjeta p-4">
-        <div className="mx-auto flex w-full max-w-md flex-col gap-3.5">
+      <div className="tarjeta p-4 min-[360px]:p-5 md:p-6">
+        <div className="mx-auto flex w-full max-w-lg flex-col gap-5 md:gap-6">
           {/* El contador se estira a la altura del tablero (items-stretch) y reparte sus filas
               parejo: así el borde de arriba y el de abajo de las dos mitades coinciden. */}
-          <div className="flex items-stretch gap-4 md:gap-6">
+          <div className="flex items-stretch gap-4 md:gap-8">
             <MedidorGrande valor={promedio} conLetraDelLogo>
-              <span className="mt-1 text-xs text-base-content/70">
+              <span className="mt-2 text-xs text-base-content/70">
                 {cuantas === 1 ? '1 reseña' : `${cuantas} reseñas`}
               </span>
             </MedidorGrande>

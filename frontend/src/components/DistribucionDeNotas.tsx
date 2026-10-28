@@ -31,7 +31,7 @@ export function DistribucionDeNotas({ distribucion }: { distribucion: NotaYCuant
     // ("5 estrellas: 3 reseñas"), porque "5 ★ 3" suelto no se entiende.
     <ul
       aria-label="Reseñas por nota"
-      className="flex h-full min-w-0 flex-col justify-between gap-1 py-1"
+      className="flex h-full min-w-0 flex-col justify-between gap-2.5 py-1.5"
     >
       {[...distribucion].reverse().map(({ nota, cuantas }) => {
         const esLaMasVotada = cuantas === masVotada
@@ -54,7 +54,7 @@ export function DistribucionDeNotas({ distribucion }: { distribucion: NotaYCuant
                 comparables las cinco filas de un vistazo. */}
             <div
               aria-hidden="true"
-              className={`relative h-[15px] bg-(--pista) shadow-[inset_0_0_0_1px_var(--pista-filo)] ${FORMA_DE_LA_CAPA[nota] ?? 'rounded'}`}
+              className={`relative h-[18px] bg-(--pista) shadow-[inset_0_0_0_1px_var(--pista-filo)] ${FORMA_DE_LA_CAPA[nota] ?? 'rounded'}`}
             >
               {ancho > 0 && (
                 <div
@@ -89,18 +89,18 @@ export function DistribucionDeNotas({ distribucion }: { distribucion: NotaYCuant
 
 /** Cada nota con la forma de su capa: pan de arriba, el medio (la 4 con un guiño) y pan de abajo. */
 const FORMA_DE_LA_CAPA: Record<number, string> = {
-  5: 'rounded-[15px_15px_4px_4px]',
-  4: 'rounded-[4px_10px_4px_10px]',
-  3: 'rounded-[4px]',
-  2: 'rounded-[4px]',
-  1: 'rounded-[4px_4px_15px_15px]',
+  5: 'rounded-[18px_18px_5px_5px]',
+  4: 'rounded-[5px_12px_5px_12px]',
+  3: 'rounded-[5px]',
+  2: 'rounded-[5px]',
+  1: 'rounded-[5px_5px_18px_18px]',
 }
 
 const SEMILLAS: { izquierda: number; giro: number; arriba: number }[] = [
-  { izquierda: 14, giro: -24, arriba: 2 },
-  { izquierda: 34, giro: 18, arriba: 3 },
-  { izquierda: 54, giro: -14, arriba: 2 },
-  { izquierda: 74, giro: 26, arriba: 3 },
+  { izquierda: 14, giro: -24, arriba: 3 },
+  { izquierda: 34, giro: 18, arriba: 4 },
+  { izquierda: 54, giro: -14, arriba: 3 },
+  { izquierda: 74, giro: 26, arriba: 4 },
 ]
 
 /**
@@ -114,7 +114,7 @@ function SemillasDelPan() {
       {SEMILLAS.map(({ izquierda, giro, arriba }) => (
         <i
           key={izquierda}
-          className="absolute h-[9px] w-[5px] rounded-full bg-[#f7efd8] opacity-90"
+          className="absolute h-[11px] w-[6px] rounded-full bg-[#f7efd8] opacity-90"
           style={{ left: `${izquierda}%`, top: arriba, transform: `rotate(${giro}deg)` }}
         />
       ))}
