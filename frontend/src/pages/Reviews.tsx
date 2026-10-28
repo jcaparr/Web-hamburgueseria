@@ -11,7 +11,7 @@ import { useTitulo } from '../hooks/useTitulo'
 import type { ReseniaDePerfil } from '../types'
 import { aLaResenia } from '../utils/aLaResenia'
 import { isSessionExpired } from '../utils/errors'
-import { cuandoFueLaResenia } from '../utils/fechaYHora'
+import { fechaYVisita } from '../utils/fechaYHora'
 
 export function Reviews() {
   const { user } = useAuth()
@@ -56,7 +56,7 @@ export function Reviews() {
               />
               <div className="flex flex-1 flex-col overflow-hidden">
                 <span className="truncate font-medium">{r.burgerJointName}</span>
-                <span className="text-xs text-base-content/70">{cuandoFueLaResenia(r)}</span>
+                <span className="text-xs text-base-content/70">{fechaYVisita(r)}</span>
               </div>
               <ScoreBadge score={r.score} size="sm" />
             </Link>

@@ -7,7 +7,7 @@ import { ReaccionesDeResenia } from './ReaccionesDeResenia'
 import { ScoreBadge } from './ScoreBadge'
 import { Stars } from './Stars'
 import { aLaResenia } from '../utils/aLaResenia'
-import { cuandoFueLaResenia } from '../utils/fechaYHora'
+import { diaDeLaVisitaAparte, fechaYHora } from '../utils/fechaYHora'
 import type { ItemDeFeed } from '../types'
 
 /**
@@ -53,13 +53,15 @@ export function TarjetaDeFeed({ item, esMia }: { item: ItemDeFeed; esMia: boolea
               {item.burgerJointName}
             </Link>
           </p>
-          <span className="flex min-w-0 items-center gap-2 text-xs text-base-content/70">
+          <span className="flex min-w-0 flex-wrap items-center gap-x-2 text-xs text-base-content/70">
             <span className="flex-none">
-              {cuandoFueLaResenia(item)}
-              {/* La fecha es la de la visita si la persona la eligió, y si no la de cuando
-                  se escribió: esto solo avisa que lo que se está leyendo ya no es lo de ese día. */}
+              {fechaYHora(item.createdAt)}
+              {/* La fecha sigue siendo la de cuando se escribió: esto solo avisa que lo
+                  que se está leyendo ya no es lo de ese día. */}
               {item.editada && ' (editada)'}
             </span>
+            {/* El día que dijo haber ido, aparte, solo si no es el mismo de la publicación (#368). */}
+            {diaDeLaVisitaAparte(item) && <span className="flex-none">· {diaDeLaVisitaAparte(item)}</span>}
             {item.area && (
               <span className="flex min-w-0 items-center gap-0.5">
                 <IconPin size={11} className="flex-none" />

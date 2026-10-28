@@ -35,12 +35,20 @@ export function fechaYHora(iso: string, ahora: Date = new Date()): string {
 }
 
 /**
- * Lo que se lee bajo una reseña: "Fue el 12 de oct." si la persona eligió el día que fue,
- * y si no (las de antes), cuándo se escribió (#368). Es la misma regla en el feed, en las
- * listas del perfil y en la ficha.
+ * "Fue el 12 de oct." cuando la persona eligió un día distinto del que escribió la reseña,
+ * y null si no (#368). Si la escribió el mismo día que fue, la fecha de publicación ya lo
+ * dice y repetirlo sería ruido. El día se compara en Buenos Aires, como todo lo demás.
  */
-export function cuandoFueLaResenia({ visitDate, createdAt }: { visitDate: string | null; createdAt: string }): string {
-  return visitDate ? `Fue el ${diaDeLaVisita(visitDate)}` : fechaYHora(createdAt)
+export function diaDeLaVisitaAparte({ visitDate, createdAt }: { visitDate: string | null; createdAt: string }): string | null {
+  if (!visitDate) return null
+  const escrita = new Date(createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' })
+  return visitDate === escrita ? null : `Fue el ${diaDeLaVisita(visitDate)}`
+}
+
+/** Cuándo se publicó y, si fue otro día, cuándo se fue: "Hoy 21:33hs · Fue el 12 de oct.". */
+export function fechaYVisita(resenia: { visitDate: string | null; createdAt: string }): string {
+  const fue = diaDeLaVisitaAparte(resenia)
+  return fue ? `${fechaYHora(resenia.createdAt)} · ${fue}` : fechaYHora(resenia.createdAt)
 }
 
 /**

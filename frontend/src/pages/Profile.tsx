@@ -16,7 +16,7 @@ import type { BurgerJoint, ReseniaDePerfil, ProfileStats, SavedTour } from '../t
 import { isSessionExpired } from '../utils/errors'
 import { PANEL_DEL_PERFIL, pestaniaDe, type Pestania } from '../utils/pestaniasDePerfil'
 import { cantidad, nota } from '../utils/numeros'
-import { cuandoFueLaResenia } from '../utils/fechaYHora'
+import { fechaYVisita } from '../utils/fechaYHora'
 
 /** Cuántas reseñas y guardadas se asoman en el perfil; el resto, en "Ver todas". */
 const CUANTAS_EN_LA_GRILLA = 6
@@ -163,7 +163,7 @@ export function Profile() {
                         nombre={r.burgerJointName}
                         foto={r.photoUrl}
                         nota={r.score}
-                        detalle={cuandoFueLaResenia(r)}
+                        detalle={fechaYVisita(r)}
                         a={aLaResenia({ id: r.burgerJointId, slug: r.slug }, r.id)}
                       />
                     </li>
