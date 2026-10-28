@@ -176,8 +176,8 @@ function AvatarConNivel({
       {!sinCirculo && (
         <span
           aria-hidden
-          className="absolute flex -translate-x-1/2 items-center justify-center rounded-full border-2 border-base-100 bg-[#f2b705] font-display font-bold leading-none text-[#3a2a1e] tabular-nums"
-          style={{ left: '50%', top: centroY - diametro / 2, width: diametro, height: diametro, fontSize: letra }}
+          className="absolute flex -translate-x-1/2 items-center justify-center rounded-full border-2 bg-[#f2b705] font-logo leading-none tabular-nums"
+          style={{ left: '50%', top: centroY - diametro / 2, width: diametro, height: diametro, fontSize: letra, borderColor: 'var(--sello-filo)', color: 'var(--sello-letra)' }}
         >
           {nivel}
         </span>
