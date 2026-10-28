@@ -248,6 +248,8 @@ export interface ReseniaDePerfil {
   score: number
   comment: string | null
   createdAt: string
+  /** El día de la visita, "2026-10-12", o null en las de antes: ahí vale createdAt (#368). */
+  visitDate: string | null
 }
 
 /** Una persona en los resultados del buscador. */
@@ -301,6 +303,8 @@ export interface ItemDeFeed {
   fotosDeLaResenia: string[]
   /** Cuándo se escribió, no cuándo se editó. */
   createdAt: string
+  /** El día de la visita, "2026-10-12", o null en las de antes: ahí vale createdAt (#368). */
+  visitDate: string | null
   editada: boolean
   reacciones: Reacciones
 }

@@ -3,11 +3,11 @@ import { rutaDelLocal } from '../utils/rutaDelLocal'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
 import { FotosDeResenia } from './FotosDeResenia'
 import { IconPin } from './icons'
+import { FechaDeResenia } from './FechaDeResenia'
 import { ReaccionesDeResenia } from './ReaccionesDeResenia'
 import { ScoreBadge } from './ScoreBadge'
 import { Stars } from './Stars'
 import { aLaResenia } from '../utils/aLaResenia'
-import { fechaYHora } from '../utils/fechaYHora'
 import type { ItemDeFeed } from '../types'
 
 /**
@@ -53,13 +53,8 @@ export function TarjetaDeFeed({ item, esMia }: { item: ItemDeFeed; esMia: boolea
               {item.burgerJointName}
             </Link>
           </p>
-          <span className="flex min-w-0 items-center gap-2 text-xs text-base-content/70">
-            <span className="flex-none">
-              {fechaYHora(item.createdAt)}
-              {/* La fecha sigue siendo la de cuando se escribió: esto solo avisa que lo
-                  que se está leyendo ya no es lo de ese día. */}
-              {item.editada && ' (editada)'}
-            </span>
+          <span className="flex min-w-0 flex-wrap items-center gap-x-2 text-xs text-base-content/70">
+            <FechaDeResenia createdAt={item.createdAt} visitDate={item.visitDate} editada={item.editada} />
             {item.area && (
               <span className="flex min-w-0 items-center gap-0.5">
                 <IconPin size={11} className="flex-none" />

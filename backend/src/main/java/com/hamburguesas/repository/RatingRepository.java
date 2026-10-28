@@ -204,7 +204,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
 
     @Query("""
         select new com.hamburguesas.dto.ReseniaDePerfilDto(
-            r.id, b.id, b.slug, b.name, b.photoUrl, r.score, r.comment, r.createdAt)
+            r.id, b.id, b.slug, b.name, b.photoUrl, r.score, r.comment, r.createdAt, r.visitDate)
         from Rating r join r.burgerJoint b
         where r.user.id = :userId
         order by r.createdAt desc
@@ -219,7 +219,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
      */
     @Query("""
         select new com.hamburguesas.dto.ReseniaDePerfilDto(
-            r.id, b.id, b.slug, b.name, b.photoUrl, r.score, r.comment, r.createdAt)
+            r.id, b.id, b.slug, b.name, b.photoUrl, r.score, r.comment, r.createdAt, r.visitDate)
         from Rating r join r.burgerJoint b
         where r.user.id = :userId
         order by r.createdAt desc
@@ -260,7 +260,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
         select new com.hamburguesas.dto.ItemDeFeedDto(
             r.id, u.id, u.username, u.hamburguesa, u.xp, b.id, b.slug, b.name, b.photoUrl, b.area,
             (select avg(otra.score) from Rating otra where otra.burgerJoint.id = b.id),
-            r.score, r.comment, r.photoUrl, r.createdAt,
+            r.score, r.comment, r.photoUrl, r.createdAt, r.visitDate,
             case when r.updatedAt is not null then true else false end)
         from Rating r join r.user u join r.burgerJoint b
         where u.id not in :ocultos
@@ -283,7 +283,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
         select new com.hamburguesas.dto.ItemDeFeedDto(
             r.id, u.id, u.username, u.hamburguesa, u.xp, b.id, b.slug, b.name, b.photoUrl, b.area,
             (select avg(otra.score) from Rating otra where otra.burgerJoint.id = b.id),
-            r.score, r.comment, r.photoUrl, r.createdAt,
+            r.score, r.comment, r.photoUrl, r.createdAt, r.visitDate,
             case when r.updatedAt is not null then true else false end)
         from Rating r join r.user u join r.burgerJoint b
         where u.id in :autores

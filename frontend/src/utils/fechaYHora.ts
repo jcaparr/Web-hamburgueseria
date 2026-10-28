@@ -35,6 +35,17 @@ export function fechaYHora(iso: string, ahora: Date = new Date()): string {
 }
 
 /**
+ * "Fue el 12 de oct." cuando la persona eligió un día distinto del que escribió la reseña,
+ * y null si no (#368). Si la escribió el mismo día que fue, la fecha de publicación ya lo
+ * dice y repetirlo sería ruido. El día se compara en Buenos Aires, como todo lo demás.
+ */
+export function diaDeLaVisitaAparte({ visitDate, createdAt }: { visitDate: string | null; createdAt: string }): string | null {
+  if (!visitDate) return null
+  const escrita = new Date(createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' })
+  return visitDate === escrita ? null : `Fue el ${diaDeLaVisita(visitDate)}`
+}
+
+/**
  * El día de la visita, "2026-10-12", como "12 de oct.". Es un día de calendario y no un
  * instante: se arma a mano para que ninguna zona horaria lo corra un día.
  */
