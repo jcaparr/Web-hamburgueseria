@@ -18,11 +18,11 @@ export function RelojesDeNotas({ notas }: { notas: NotaConDatos[] }) {
   return (
     <>
       <hr aria-hidden="true" className="border-0 border-t border-dashed border-base-300" />
-      <ul aria-label="Notas por aspecto" className="flex justify-center gap-2 min-[360px]:gap-3">
+      <ul aria-label="Notas por aspecto" className="flex justify-center gap-2 md:gap-3">
         {notas.map(({ rotulo, promedio, votos }) => (
           <li
             key={rotulo}
-            className="flex min-w-0 max-w-[calc((100%-1rem)/3)] flex-1 flex-col items-center gap-1 rounded-field bg-base-200 px-0.5 py-4 text-center min-[360px]:max-w-[calc((100%-1.5rem)/3)]"
+            className="flex min-w-0 max-w-[calc((100%-1rem)/3)] flex-1 flex-col items-center gap-1 rounded-field bg-base-200 px-1 py-4 text-center md:max-w-[calc((100%-1.5rem)/3)]"
           >
             {/* El reloj es para mirar; el lector de pantalla recibe todo junto. */}
             <span className="sr-only">
@@ -40,7 +40,7 @@ export function RelojesDeNotas({ notas }: { notas: NotaConDatos[] }) {
             </span>
             <span
               aria-hidden="true"
-              className="mt-2 whitespace-nowrap rounded-full bg-base-content px-2 py-0.5 text-[11px] font-bold tracking-wide text-base-100"
+              className="mt-2 whitespace-nowrap rounded-full bg-base-content px-1.5 py-0.5 text-[11px] font-bold min-[360px]:px-2 min-[360px]:tracking-wide text-base-100"
             >
               {veredicto(promedio)}
             </span>
