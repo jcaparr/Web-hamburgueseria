@@ -106,7 +106,7 @@ class BuzonDeNotificacionesTest {
     @Test
     void mezclaSeguimientosYReaccionesDeLoMasNuevoALoMasViejo() {
         sigue(ana, yo, HACE_UN_RATO);
-        reacciona(beto, TipoDeReaccion.FUEGO, HACE_UN_RATO.plus(1, ChronoUnit.HOURS));
+        reacciona(beto, TipoDeReaccion.MARAVILLOSO, HACE_UN_RATO.plus(1, ChronoUnit.HOURS));
         sigue(caro, yo, HACE_UN_RATO.plus(2, ChronoUnit.HOURS));
 
         List<NotificacionDto> avisos = service.buzon(yo.getId()).notificaciones();
@@ -136,7 +136,7 @@ class BuzonDeNotificacionesTest {
     @Test
     void siNuncaLoAbrioTodoEsNuevo() {
         sigue(ana, yo, HACE_UN_RATO);
-        reacciona(beto, TipoDeReaccion.FUEGO, HACE_UN_RATO);
+        reacciona(beto, TipoDeReaccion.MARAVILLOSO, HACE_UN_RATO);
 
         BuzonDto buzon = service.buzon(yo.getId());
 
@@ -162,7 +162,7 @@ class BuzonDeNotificacionesTest {
     /** Uno no se avisa a sí mismo: la base no impide reaccionar a lo propio. */
     @Test
     void lasReaccionesPropiasNoAvisan() {
-        reacciona(yo, TipoDeReaccion.APLAUSO, HACE_UN_RATO);
+        reacciona(yo, TipoDeReaccion.ENCANTA, HACE_UN_RATO);
 
         assertThat(service.buzon(yo.getId()).notificaciones()).isEmpty();
         assertThat(service.nuevas(yo.getId()).nuevas()).isZero();
@@ -172,7 +172,7 @@ class BuzonDeNotificacionesTest {
     @Test
     void conUnBloqueoNoSeVe() {
         sigue(ana, yo, HACE_UN_RATO);
-        reacciona(beto, TipoDeReaccion.FUEGO, HACE_UN_RATO);
+        reacciona(beto, TipoDeReaccion.MARAVILLOSO, HACE_UN_RATO);
         blockRepository.save(Block.builder().blocker(yo).blocked(ana).build());
         blockRepository.save(Block.builder().blocker(beto).blocked(yo).build());
 
@@ -210,7 +210,7 @@ class BuzonDeNotificacionesTest {
     void loDeHaceMasDeUnaSemanaNoAparece() {
         Instant haceOchoDias = Instant.now().minus(8, ChronoUnit.DAYS);
         sigue(ana, yo, haceOchoDias);
-        reacciona(beto, TipoDeReaccion.FUEGO, haceOchoDias);
+        reacciona(beto, TipoDeReaccion.MARAVILLOSO, haceOchoDias);
         sigue(caro, yo, Instant.now().minus(6, ChronoUnit.DAYS));
 
         BuzonDto buzon = service.buzon(yo.getId());

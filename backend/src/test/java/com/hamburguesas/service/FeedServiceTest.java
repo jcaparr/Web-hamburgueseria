@@ -106,7 +106,7 @@ class FeedServiceTest {
         when(ratingRepository.feedDeTodos(any(), any(), anyCollection(), any(Pageable.class)))
             .thenReturn(List.of(resenia(1L, CUANDO), resenia(2L, CUANDO.minusSeconds(1))));
         ReaccionesDto deLaPrimera = new ReaccionesDto(
-            List.of(new CuantasReaccionesDto(TipoDeReaccion.FUEGO, 3)), TipoDeReaccion.FUEGO);
+            List.of(new CuantasReaccionesDto(TipoDeReaccion.MARAVILLOSO, 3)), TipoDeReaccion.MARAVILLOSO);
         when(reacciones.de(List.of(1L, 2L), YO)).thenReturn(Map.of(1L, deLaPrimera));
 
         var pagina = service.ver(FuenteDelFeed.TODOS, null, YO);

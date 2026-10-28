@@ -174,7 +174,7 @@ export function Profile() {
                 )}
               </>
             ) : (
-              <AvisoVacio accion={{ texto: 'Buscar una para calificar', a: '/' }}>
+              <AvisoVacio conPersonaje accion={{ texto: 'Buscar una para calificar', a: '/' }}>
                 Todavía no calificaste ninguna hamburguesería.
               </AvisoVacio>
             )
