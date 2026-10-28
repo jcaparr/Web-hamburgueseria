@@ -49,18 +49,22 @@ export function TarjetaDeResenia({
         {/* Desde acá se llega a su perfil, que es de donde sale la gente a seguir:
             alguien que reseñó lo mismo que vos es mejor candidato que cualquiera que
             encuentres buscando a ciegas. */}
-        <Link to={`/u/${resenia.username}`} className="-my-1 flex min-w-0 items-center gap-3 rounded-field py-1">
-          <AvatarDeUsuario username={resenia.username} hamburguesa={resenia.hamburguesa} xp={resenia.xp} size={36} />
+        <div className="flex min-w-0 items-center gap-3">
+          <Link to={`/u/${resenia.username}`} aria-hidden="true" tabIndex={-1} className="flex-none rounded-full">
+            <AvatarDeUsuario username={resenia.username} hamburguesa={resenia.hamburguesa} xp={resenia.xp} size={36} />
+          </Link>
           <div className="flex min-w-0 flex-col">
-            <span className="truncate text-sm font-semibold hover:text-primary">
+            {/* La fecha va afuera del enlace: si es botón (abre el día en que fue), un toque
+                en ella no puede llevar al perfil. */}
+            <Link to={`/u/${resenia.username}`} className="truncate text-sm font-semibold hover:text-primary">
               @{resenia.username}
               {esMia && <span className="font-normal text-base-content/70"> (vos)</span>}
-            </span>
+            </Link>
             <span className="flex flex-wrap items-center gap-x-2 text-xs text-base-content/70">
               <FechaDeResenia createdAt={resenia.createdAt} visitDate={resenia.visitDate} />
             </span>
           </div>
-        </Link>
+        </div>
 
         <div className="ml-auto flex flex-none items-center gap-1">
           <Stars value={resenia.score} size={15} />
