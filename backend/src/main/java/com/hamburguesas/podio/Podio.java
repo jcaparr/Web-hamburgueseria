@@ -71,11 +71,13 @@ public class Podio {
     @Transactional(readOnly = true)
     public PodioDto de(String periodo, Long quienMira) {
         List<Marca> ranking;
+        Instant cierraEl = null;
         if (GENERAL.equals(periodo)) {
             ranking = rankingGeneral();
         } else {
             Instant[] limites = limites(periodo, LocalDate.now(ZONA));
             ranking = ranking(limites[0], limites[1]);
+            cierraEl = limites[1];
         }
 
         Set<Long> ocultos = Set.copyOf(bloqueos.queNoPuedeVer(quienMira));
@@ -96,7 +98,7 @@ public class Podio {
                 yo = puesto(i + 1, visible.get(i), yoMismo, periodo);
             }
         }
-        return new PodioDto(periodo, top, yo);
+        return new PodioDto(periodo, cierraEl, top, yo);
     }
 
     private PodioDto.Puesto puesto(int puesto, Marca marca, User persona, String periodo) {

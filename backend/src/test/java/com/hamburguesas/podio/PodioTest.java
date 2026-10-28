@@ -283,4 +283,46 @@ class PodioTest {
 
         assertThat(podio.de(Podio.SEMANA, ana.getId()).yo()).isNull();
     }
+
+    private static Instant cierreDe(String periodo, Instant ahora) {
+        return Podio.limites(periodo, ahora.atZone(Podio.ZONA).toLocalDate())[1];
+    }
+
+    @Test
+    void laSemanaCierraElLunesALas00DeBuenosAiresCualquierDiaQueSeMire() {
+        // Del lunes 7 al domingo 13 de septiembre de 2026: siempre cierra el lunes 14 a las 00:00 (03:00 UTC).
+        Instant cierre = Instant.parse("2026-09-14T03:00:00Z");
+        for (int dia = 0; dia < 7; dia++) {
+            LocalDate hoy = LUNES.plusDays(dia);
+            assertThat(Podio.limites(Podio.SEMANA, hoy)[1]).as("mirando el %s", hoy).isEqualTo(cierre);
+        }
+    }
+
+    @Test
+    void enElBordeDeLaSemanaElContadorPasaAlPeriodoSiguiente() {
+        // Domingo 23:30 en Buenos Aires: faltan 30 minutos. Lunes 00:30: falta una semana menos media hora.
+        Instant domingoNocturno = Instant.parse("2026-09-14T02:30:00Z");
+        Instant lunesDeMadrugada = Instant.parse("2026-09-14T03:30:00Z");
+
+        assertThat(cierreDe(Podio.SEMANA, domingoNocturno)).isEqualTo(Instant.parse("2026-09-14T03:00:00Z"));
+        assertThat(cierreDe(Podio.SEMANA, lunesDeMadrugada)).isEqualTo(Instant.parse("2026-09-21T03:00:00Z"));
+    }
+
+    @Test
+    void elMesCierraElDia1ALas00DeBuenosAiresTambienEnDiciembre() {
+        assertThat(cierreDe(Podio.MES, Instant.parse("2026-09-15T15:00:00Z"))).isEqualTo(Instant.parse("2026-10-01T03:00:00Z"));
+        // 30 de septiembre 23:30 en Buenos Aires todavía es septiembre.
+        assertThat(cierreDe(Podio.MES, Instant.parse("2026-10-01T02:30:00Z"))).isEqualTo(Instant.parse("2026-10-01T03:00:00Z"));
+        assertThat(cierreDe(Podio.MES, Instant.parse("2026-10-01T03:30:00Z"))).isEqualTo(Instant.parse("2026-11-01T03:00:00Z"));
+        assertThat(cierreDe(Podio.MES, Instant.parse("2026-12-20T15:00:00Z"))).isEqualTo(Instant.parse("2027-01-01T03:00:00Z"));
+    }
+
+    @Test
+    void elPodioMandaLaFechaDeCierreSoloEnSemanaYMes() {
+        User ana = cuenta("podio_cierra");
+
+        assertThat(podio.de(Podio.SEMANA, ana.getId()).cierraEl()).isEqualTo(Podio.limites(Podio.SEMANA, LocalDate.now(Podio.ZONA))[1]);
+        assertThat(podio.de(Podio.MES, ana.getId()).cierraEl()).isEqualTo(Podio.limites(Podio.MES, LocalDate.now(Podio.ZONA))[1]);
+        assertThat(podio.de(Podio.GENERAL, ana.getId()).cierraEl()).isNull();
+    }
 }

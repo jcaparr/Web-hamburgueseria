@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { usePedido } from '../hooks/usePedido'
 import type { Podio, PuestoDelPodio } from '../types'
+import { tiempoParaElCierre } from '../utils/cierreDelPodio'
 import { nivelDe } from '../utils/niveles'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
 import { LoadError } from './LoadError'
@@ -42,6 +43,8 @@ export function PodioDePersonas({ yoId }: { yoId: number }) {
         ))}
       </div>
 
+      {datos?.cierraEl && <CierraEn key={datos.cierraEl} cierraEl={datos.cierraEl} />}
+
       {pedido.error ? (
         <LoadError error={pedido.error} onRetry={pedido.reintentar} />
       ) : !datos ? (
@@ -58,6 +61,27 @@ export function PodioDePersonas({ yoId }: { yoId: number }) {
         </>
       )}
     </div>
+  )
+}
+
+/** Cuánto falta para que cierre el período; se actualiza solo. */
+function CierraEn({ cierraEl }: { cierraEl: string }) {
+  const [ahora, setAhora] = useState(() => Date.now())
+  useEffect(() => {
+    const id = window.setInterval(() => setAhora(Date.now()), 30_000)
+    return () => window.clearInterval(id)
+  }, [])
+  const { texto, ultimaHora } = tiempoParaElCierre(cierraEl, ahora)
+  return (
+    <p className={`flex items-center gap-2 text-sm font-semibold ${ultimaHora ? 'text-primary' : ''}`}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" className="shrink-0">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" />
+      </svg>
+      <span>
+        Cierra en <span className="tabular-nums">{texto}</span>
+      </span>
+    </p>
   )
 }
 
