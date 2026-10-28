@@ -1,6 +1,8 @@
 import type { Rating, ResumenDeResenias } from '../types'
+import { notasConDatos } from '../utils/notasOpcionales'
 import { DistribucionDeNotas } from './DistribucionDeNotas'
 import { MedidorGrande } from './MedidorGrande'
+import { RelojesDeNotas } from './RelojesDeNotas'
 import { Stars } from './Stars'
 import { TemasDeLasResenias } from './TemasDeLasResenias'
 
@@ -12,6 +14,9 @@ import { TemasDeLasResenias } from './TemasDeLasResenias'
  * escalas: el número dice cuánto, las barras dicen si todos coinciden. Antes las
  * barras estaban solas y el promedio, chico, arriba al lado del nombre. Va en el
  * burgómetro grande, el tablero del logo, que es lo que le da sentido al nombre.
+ *
+ * Debajo, las notas de local, atención y precio (#356), solo las que alguien puso: explican
+ * el promedio sin cambiarlo, que sigue siendo la única nota que cuenta para el ranking.
  *
  * Sin calificaciones no hay nada que resumir, y en vez de un bloque vacío se invita a
  * ser quien empieza: es el momento en que una reseña más vale más. Sin botón propio:
@@ -42,19 +47,24 @@ export function ResumenDeCalificaciones({
 
   return (
     <section className="flex flex-col gap-4" aria-labelledby="calificaciones">
-      <h2 id="calificaciones" className="font-display text-lg font-bold">
+      <h2 id="calificaciones" className="font-logo text-lg">
         Calificaciones
       </h2>
 
-      <div className="flex items-center gap-4 tarjeta p-4 md:gap-6">
-        <MedidorGrande valor={promedio}>
-          <span className="mt-1 text-xs text-base-content/70">
-            {cuantas === 1 ? '1 reseña' : `${cuantas} reseñas`}
-          </span>
-        </MedidorGrande>
-        <div className="min-w-0 flex-1">
-          {resumen && <DistribucionDeNotas distribucion={resumen.distribucion} />}
+      <div className="tarjeta flex flex-col gap-3.5 p-4">
+        {/* El contador se estira a la altura del tablero (items-stretch) y reparte sus filas
+            parejo: así el borde de arriba y el de abajo de las dos mitades coinciden. */}
+        <div className="flex items-stretch gap-4 md:gap-6">
+          <MedidorGrande valor={promedio} conLetraDelLogo>
+            <span className="mt-1 text-xs text-base-content/70">
+              {cuantas === 1 ? '1 reseña' : `${cuantas} reseñas`}
+            </span>
+          </MedidorGrande>
+          <div className="min-w-0 flex-1">
+            {resumen && <DistribucionDeNotas distribucion={resumen.distribucion} />}
+          </div>
         </div>
+        <RelojesDeNotas notas={notasConDatos(resumen?.desglose ?? null)} />
       </div>
 
       {resumen && <TemasDeLasResenias temas={resumen.temas} />}
