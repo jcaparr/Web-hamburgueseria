@@ -15,7 +15,7 @@ import { FONDOS, NIVEL_DE, codigoDe, recetaPara, recetaVisible, type Receta } fr
  * color del tema. El último era "Tinta" cuando en el tema claro salía marrón; desde
  * #195 es crema en los dos.
  */
-const NOMBRES_DE_FONDOS = ['Kétchup', 'Mostaza', 'Pepino', 'Azul', 'Crema']
+const NOMBRES_DE_FONDOS = ['Kétchup', 'Mostaza', 'Pepino', 'Azul', 'Crema', 'Frutilla', 'Uva', 'Naranja', 'Menta', 'Durazno']
 
 /**
  * Donde cada uno arma la hamburguesa de su avatar (#151).

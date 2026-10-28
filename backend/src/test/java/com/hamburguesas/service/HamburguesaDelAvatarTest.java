@@ -57,14 +57,14 @@ class HamburguesaDelAvatarTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"00011", "42233", "20131", "20134", "20134101", "20131000", "42234111"})
+    @ValueSource(strings = {"00011", "50131", "90131", "42233", "20131", "20134", "20134101", "20131000", "42234111"})
     void aceptaCincoCifrasDentroDeSuRango(String receta) {
         assertThat(VALIDADOR.validate(new HamburguesaRequest(receta))).isEmpty();
     }
 
     /** Lo que no se puede dibujar no se guarda: el navegador no tendría qué pintar. */
     @ParameterizedTest
-    @ValueSource(strings = {"50131", "23131", "20431", "20141", "20130", "20135", "2013", "20131 01", "201311", "201312345", "201312", "abcde", ""})
+    @ValueSource(strings = {"a0131", "23131", "20431", "20141", "20130", "20135", "2013", "20131 01", "201311", "201312345", "201312", "abcde", ""})
     void rechazaLoQueNoSePuedeDibujar(String receta) {
         assertThat(VALIDADOR.validate(new HamburguesaRequest(receta))).isNotEmpty();
     }

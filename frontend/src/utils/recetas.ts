@@ -6,31 +6,36 @@
  */
 
 /**
- * El fondo y, con él, el color del contorno.
- *
- * El contorno es el texto que el tema pone sobre ese fondo (currentColor): crema sobre
- * el kétchup del tema claro, marrón sobre el kétchup más claro del oscuro. Así cada capa
- * se despega del fondo en los dos temas, aunque el pan y el fondo se parezcan.
- */
-/**
  * El fondo del avatar y el color del trazo, fijos: los del tema oscuro (#195).
  *
  * Salían de los colores del tema, así que la hamburguesa de cada uno cambiaba al pasar
- * de oscuro a claro: el kétchup se oscurecía, el pepino pasaba a verde botella y la de
- * fondo crema se volvía marrón, con el trazo de otro color. Es la cara de alguien, y
- * tiene que ser la misma en los dos temas. Se quedó la del oscuro, que es como la
- * armó la mayoría.
+ * de oscuro a claro. Es la cara de alguien, y tiene que ser la misma en los dos temas.
+ *
+ * Diez fondos (#370), cada uno un degradé radial que va del tono claro, arriba a la
+ * izquierda, a uno más profundo y de otro matiz, no solo más oscuro: el kétchup va del
+ * coral al rojo quemado y la mostaza del limón al ámbar. Un filo de luz interior le da
+ * volumen al círculo. El trazo oscuro da 4,6 : 1 o más contra el extremo más oscuro de
+ * cada uno (el más justo es el kétchup), medido con la fórmula de WCAG. Las clases van
+ * escritas enteras y no armadas con una función: Tailwind solo ve las que están en el texto.
  */
 export const FONDOS = [
-  'bg-[#e5674f] text-[#17110d]',
-  'bg-[#f2b705] text-[#17110d]',
-  'bg-[#8fb56a] text-[#17110d]',
-  'bg-[#8cc0c9] text-[#17110d]',
+  'bg-[radial-gradient(circle_at_30%_25%,#f58a6a,#d9503a)] shadow-[inset_0_0_0_1.5px_rgb(255_255_255/0.4)] text-[#17110d]',
+  'bg-[radial-gradient(circle_at_30%_25%,#fbe27a,#dc9a1e)] shadow-[inset_0_0_0_1.5px_rgb(255_255_255/0.4)] text-[#17110d]',
+  'bg-[radial-gradient(circle_at_30%_25%,#b4d98a,#5f9248)] shadow-[inset_0_0_0_1.5px_rgb(255_255_255/0.4)] text-[#17110d]',
+  'bg-[radial-gradient(circle_at_30%_25%,#aee0e6,#4f93ad)] shadow-[inset_0_0_0_1.5px_rgb(255_255_255/0.4)] text-[#17110d]',
   // Crema. Sobre la página del tema claro, que es casi del mismo color, el círculo se
   // perdía: el borde, fijo, lo marca igual en los dos temas. Borde y no anillo, porque
   // el anillo es lo que marca el elegido en "Armá tu hamburguesa".
-  'bg-[#f3e8cf] text-[#241a13] border border-[#241a13]/20',
+  'bg-[radial-gradient(circle_at_30%_25%,#fbf2dc,#e0c994)] shadow-[inset_0_0_0_1.5px_rgb(255_255_255/0.4)] text-[#241a13] border border-[#241a13]/20',
+  'bg-[radial-gradient(circle_at_30%_25%,#fbb4c2,#d9657f)] shadow-[inset_0_0_0_1.5px_rgb(255_255_255/0.4)] text-[#17110d]',
+  'bg-[radial-gradient(circle_at_30%_25%,#d6c8f2,#8c72c6)] shadow-[inset_0_0_0_1.5px_rgb(255_255_255/0.4)] text-[#17110d]',
+  'bg-[radial-gradient(circle_at_30%_25%,#fcc88a,#da7a22)] shadow-[inset_0_0_0_1.5px_rgb(255_255_255/0.4)] text-[#17110d]',
+  'bg-[radial-gradient(circle_at_30%_25%,#c4f0dc,#5eb690)] shadow-[inset_0_0_0_1.5px_rgb(255_255_255/0.4)] text-[#17110d]',
+  'bg-[radial-gradient(circle_at_30%_25%,#fcdcc2,#e8966a)] shadow-[inset_0_0_0_1.5px_rgb(255_255_255/0.4)] text-[#17110d]',
 ] as const
+
+/** Los fondos que había antes de ampliarlos a diez (#370): de ellos sale el de quien no armó la suya. */
+const FONDOS_DE_ORIGEN = 5
 
 /** El pan va fijo y no sale del tema, igual que en el logo: es pan, no un color de la marca. */
 export const PANES = {
@@ -44,7 +49,18 @@ export const QUESOS = { cheddar: '#f2b705', dambo: '#f6dd8f', sin: null } as con
 export const VERDURAS = ['nada', 'lechuga', 'tomate', 'completa'] as const
 
 /** El color de cada fondo, para lo que se dibuja encima (los rayos del nivel 15). Mismo orden que FONDOS. */
-export const COLORES_DE_FONDOS = ['#e5674f', '#f2b705', '#8fb56a', '#8cc0c9', '#f3e8cf'] as const
+export const COLORES_DE_FONDOS = [
+  '#d9503a',
+  '#dc9a1e',
+  '#5f9248',
+  '#4f93ad',
+  '#e0c994',
+  '#d9657f',
+  '#8c72c6',
+  '#da7a22',
+  '#5eb690',
+  '#e8966a',
+] as const
 
 /**
  * El nivel en que se desbloquea cada premio de la hamburguesa (#313): el huevo frito, el
@@ -84,7 +100,9 @@ export function recetaDe(username: string): Receta {
     return valor
   }
   return {
-    fondo: elegir(FONDOS.length),
+    // De los cinco de origen y no de todos: sumar fondos no tiene que cambiarle la cara a quien
+    // nunca eligió una, ni correr lo que sale después del fondo.
+    fondo: elegir(FONDOS_DE_ORIGEN),
     pan: ORDEN_DE_PANES[elegir(ORDEN_DE_PANES.length)],
     // De los dos primeros. Sin queso existe, pero no sale solo: con sin queso, sin verdura y una carne, a uno
     // de cada treinta y seis le tocaba un pan con una carne y nada más.
@@ -110,7 +128,7 @@ export function recetaDe(username: string): Receta {
  */
 const ORDEN_DE_PANES = ['clasico', 'papa', 'negro'] as const
 const ORDEN_DE_QUESOS = ['cheddar', 'dambo', 'sin'] as const
-const CODIGO = /^([0-4])([0-2])([0-2])([0-3])([1-4])([01]{3})?$/
+const CODIGO = /^([0-9])([0-2])([0-2])([0-3])([1-4])([01]{3})?$/
 
 export function codigoDe(receta: Receta): string {
   const base = [
