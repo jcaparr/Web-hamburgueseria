@@ -58,7 +58,7 @@ class FeedServiceTest {
 
     private ItemDeFeedDto resenia(long id, Instant cuando) {
         return new ItemDeFeedDto(id, 9L, "juanca", null, 0, 5L, "un-local", "Un local", null, "Palermo",
-            4.2, 4, "buena", "/api/rating-photos/portada.jpg", cuando, null, false);
+            4.2, 4, "buena", "/api/rating-photos/portada.jpg", cuando, false);
     }
 
     /** Tantas como para que sobre una y haya página siguiente. */

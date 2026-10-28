@@ -301,8 +301,6 @@ export interface ItemDeFeed {
   fotosDeLaResenia: string[]
   /** Cuándo se escribió, no cuándo se editó. */
   createdAt: string
-  /** El día de la visita, o null en las de antes: ahí vale createdAt (#336). */
-  visitDate: string | null
   editada: boolean
   reacciones: Reacciones
 }
