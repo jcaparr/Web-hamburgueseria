@@ -49,13 +49,13 @@ export function CabeceraDePerfil({
   // cifras, que son cuatro capas de alto.
   return (
     <header className="flex flex-col gap-3">
-      <div className="flex flex-col gap-6 tarjeta p-5 md:flex-row md:items-center md:gap-10 md:p-6">
+      <div className="flex flex-col gap-6 tarjeta tarjeta-cheddar p-5 md:flex-row md:items-center md:gap-10 md:p-6">
         <div className="flex min-w-0 flex-1 flex-col items-center gap-3 text-center md:flex-row md:gap-6 md:text-left">
           <AvatarDeUsuario username={username} hamburguesa={hamburguesa} xp={xp} size={grande ? 144 : 96} />
           <div className="flex min-w-0 max-w-full flex-col items-center gap-1.5 md:items-start">
             {/* El arroba más apagado: es de todos los nombres y no dice nada de este. */}
             <h1 className="max-w-full titulo-pagina [overflow-wrap:anywhere] md:text-[1.875rem]">
-              <span className="text-base-content/60">@</span>
+              <span className="text-base-content/70">@</span>
               {username}
               <span className="sr-only">, nivel {nivelDe(xp)}</span>
             </h1>

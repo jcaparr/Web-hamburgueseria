@@ -275,6 +275,10 @@
   --arco-filo: transparent;
   /* El texto de los botones fantasma de acción: rojo en claro, crema en oscuro (#358). */
   --color-accion: var(--color-primary);
+  /* El extremo del degradé de la cabecera del perfil y el filo del sello del nivel (#370). */
+  --cheddar-fondo: #fbe9b4;
+  --sello-filo: #3a2a1e;
+  --sello-letra: #3a2a1e;
 }
 /* En oscuro, el filo de las tarjetas al 22 % y no al 7 (#245): al 7 casi no se veía. El
    del buscador y los filtros, al 40 %: son controles y su borde pide 3 : 1 (da 3,3). */
@@ -298,6 +302,9 @@
   --ancho-filo-primario: 1.5px;
   --brillo-primario: 0 0 14px rgb(255 90 60 / 0.4);
   --color-accion: #f4ead6;
+  --cheddar-fondo: #3b2a14;
+  --sello-filo: #fffdf8;
+  --sello-letra: #17110d;
   --calco-del-logo: #fffdf8;
   --halo-del-personaje: drop-shadow(1.5px 0 0 #f4ead6) drop-shadow(-1.5px 0 0 #f4ead6)
     drop-shadow(0 1.5px 0 #f4ead6) drop-shadow(0 -1.5px 0 #f4ead6);
@@ -320,6 +327,9 @@
     --ancho-filo-primario: 1.5px;
     --brillo-primario: 0 0 14px rgb(255 90 60 / 0.4);
     --color-accion: #f4ead6;
+    --cheddar-fondo: #3b2a14;
+    --sello-filo: #fffdf8;
+    --sello-letra: #17110d;
     --calco-del-logo: #fffdf8;
     --halo-del-personaje: drop-shadow(1.5px 0 0 #f4ead6) drop-shadow(-1.5px 0 0 #f4ead6)
       drop-shadow(0 1.5px 0 #f4ead6) drop-shadow(0 -1.5px 0 #f4ead6);
@@ -383,6 +393,14 @@
   background-color: var(--color-base-100);
   border-radius: var(--radius-box);
   box-shadow: var(--sombra-tarjeta);
+}
+/*
+ * La tarjeta de la cabecera del perfil (#370): el crema de siempre con un degradé suave
+ * hacia el queso en la esquina de abajo, y en oscuro hacia un marrón cálido. El texto
+ * oscuro sobre el extremo del queso da 11 : 1; el crema sobre el extremo oscuro, 11 : 1.
+ */
+@utility tarjeta-cheddar {
+  background-image: linear-gradient(160deg, var(--color-base-100) 30%, var(--cheddar-fondo));
 }
 /*
  * El borde de los campos de texto (#343). El de daisyUI (base-content al 20 %) daba 1,47 : 1
