@@ -500,6 +500,8 @@ app:
         - ChIJRcGmcSm1vJURQaSeqM3qx9A
         # "Aci2 Bar", Cucha Cucha 2595: figura como bar_and_grill (#237).
         - ChIJ96JLf5i3vJURMgf-h-YH-rM
+        # "Hamburguesas alodelnegro", Av. Acoyte 1293: figura como hamburger_restaurant (#378).
+        - ChIJdWQ2fADLvJURacfXambETYo
       # La foto de portada elegida a mano, para los locales donde la regla no acierta.
       #
       # La regla sabe elegir una foto bien sacada —apaisada, grande, no una captura de
@@ -534,6 +536,10 @@ app:
         # desmenuzada (#282). Es la única foto vertical de Julieta Di Marco; las otras
         # suyas son apaisadas o cuadradas.
         ChIJgxSL6nK3vJURxT_LFZVI5MU: "3204x4800|Julieta Di Marco"
+        # Hamburguesas alodelnegro, Av. Acoyte 1293: la hamburguesa en la mano con el cartel
+        # de fondo (#378). Pablo perazo subió tres fotos del mismo tamaño y la huella vale
+        # para las tres: es la primera que devuelve Google, y manda ese orden.
+        ChIJdWQ2fADLvJURacfXambETYo: "2268x4032|pablo perazo"
       # 3 es el máximo que devuelve Google por consulta (60 resultados); pedir más
       # no trae nada nuevo.
       # Cuántas fotos tiene que tener en Google un local que Google NO clasifica como
