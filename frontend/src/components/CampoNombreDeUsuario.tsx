@@ -10,9 +10,15 @@ import type { CampoDeNombre } from '../hooks/useNombreDeUsuario'
 export function CampoNombreDeUsuario({
   campo,
   autoFocus,
+  ayuda = 'Con esto te encuentran tus amigos. Al menos 3 caracteres: letras, números y guion bajo.',
+  cambiando = false,
 }: {
   campo: CampoDeNombre
   autoFocus?: boolean
+  /** El texto de abajo cuando no hay problema. */
+  ayuda?: string
+  /** Si es para cambiar el que ya tiene (#380): el gestor de contraseñas no tiene que completarlo. */
+  cambiando?: boolean
 }) {
   const marcado = campo.problema !== null
   const id = useId()
@@ -36,7 +42,7 @@ export function CampoNombreDeUsuario({
         <input
           required
           autoFocus={autoFocus}
-          autoComplete="username"
+          autoComplete={cambiando ? 'off' : 'username'}
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
@@ -71,7 +77,7 @@ export function CampoNombreDeUsuario({
         </p>
       ) : (
         <p id={`${id}-ayuda`} className="text-xs text-base-content/70">
-          Con esto te encuentran tus amigos. Al menos 3 caracteres: letras, números y guion bajo.
+          {ayuda}
         </p>
       )}
     </div>

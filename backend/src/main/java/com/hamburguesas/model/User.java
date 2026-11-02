@@ -83,6 +83,10 @@ public class User {
     @Column(name = "notificaciones_vistas_el")
     private Instant notificacionesVistasEl;
 
+    /** Cuándo cambió su nombre de usuario por última vez (#380). Nulo si nunca lo cambió. */
+    @Column(name = "username_changed_at")
+    private Instant usernameChangedAt;
+
     /**
      * Si muestra sus guardadas y sus recorridos en su perfil público (#264). Las
      * cuentas nuevas arrancan prendido (#270), las viejas quedan como estaban: quién los ve lo decide {@link com.hamburguesas.service.ListasDelPerfil}.

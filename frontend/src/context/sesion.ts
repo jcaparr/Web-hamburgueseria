@@ -22,6 +22,8 @@ export interface AuthContextValue {
   refrescar: () => Promise<User | null>
   /** Guarda la hamburguesa del avatar; con null vuelve a la que sale del nombre. */
   cambiarHamburguesa: (receta: string | null) => Promise<void>
+  /** Cambia tu nombre de usuario (#380). Si no se puede, el pedido falla con el error del servidor. */
+  cambiarNombreDeUsuario: (username: string) => Promise<void>
   /** Elige el logro que se muestra en tu perfil, o con null lo saca (#319). */
   exhibirLogro: (codigo: string | null) => Promise<void>
 }
