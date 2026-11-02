@@ -548,6 +548,9 @@ app:
         # de fondo (#378). Pablo perazo subió tres fotos del mismo tamaño y la huella vale
         # para las tres: es la primera que devuelve Google, y manda ese orden.
         ChIJdWQ2fADLvJURacfXambETYo: "2268x4032|pablo perazo"
+        # mamá tula, Neuquén 1506: la doble smash con papas en la caja (#386). Jorge Olaizola
+        # subió una sola foto de ese tamaño, así que la huella la identifica sin dudas.
+        ChIJz130QwDLvJUR3vWG2XA7yAQ: "3024x4032|Jorge Olaizola"
       # 3 es el máximo que devuelve Google por consulta (60 resultados); pedir más
       # no trae nada nuevo.
       # Cuántas fotos tiene que tener en Google un local que Google NO clasifica como
