@@ -91,7 +91,7 @@ export function BotonCambiarNombreDeUsuario() {
         type="button"
         onClick={abrir}
         aria-label="Cambiar nombre de usuario"
-        className="btn btn-ghost btn-square min-h-11 min-w-11 shrink-0"
+        className="btn btn-ghost btn-square min-h-11 min-w-11"
       >
         <IconPencil size={18} />
       </button>

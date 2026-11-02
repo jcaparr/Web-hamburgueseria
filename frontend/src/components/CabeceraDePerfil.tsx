@@ -57,13 +57,17 @@ export function CabeceraDePerfil({
           <AvatarDeUsuario username={username} hamburguesa={hamburguesa} xp={xp} size={grande ? 144 : 96} />
           <div className="flex min-w-0 max-w-full flex-col items-center gap-1.5 md:items-start">
             {/* El arroba más apagado: es de todos los nombres y no dice nada de este. */}
-            <div className="flex max-w-full items-center gap-1">
-              <h1 className="min-w-0 titulo-pagina [overflow-wrap:anywhere] md:text-[1.875rem]">
+            {/* El lápiz va aparte y posicionado: no ocupa lugar en la línea, así el nombre queda
+                centrado (o a la izquierda en la compu) igual que sin él. */}
+            <div className="relative max-w-full">
+              <h1 className="max-w-full titulo-pagina [overflow-wrap:anywhere] md:text-[1.875rem]">
                 <span className="text-base-content/70">@</span>
                 {username}
                 <span className="sr-only">, nivel {nivelDe(xp)}</span>
               </h1>
-              {alLadoDelNombre}
+              {alLadoDelNombre && (
+                <div className="absolute left-full top-1/2 -translate-y-1/2">{alLadoDelNombre}</div>
+              )}
             </div>
             {/* El logro exhibido, justo debajo del nombre (#319). */}
             {pastilla}
