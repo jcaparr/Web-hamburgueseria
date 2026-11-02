@@ -18,6 +18,7 @@ export function DialogoDeConfirmacion({
   textoDeConfirmar,
   onSeguir,
   onConfirmar,
+  confirmarAlFinal = false,
 }: {
   abierto: boolean
   titulo: string
@@ -28,6 +29,12 @@ export function DialogoDeConfirmacion({
   textoDeConfirmar: string
   onSeguir: () => void
   onConfirmar: () => void
+  /**
+   * El botón que sigue adelante, a la derecha en la compu y arriba en el celu, y el que
+   * vuelve, del otro lado. Para cuando confirmar es lo que se vino a hacer, como cambiar el
+   * nombre de usuario (#380); al cerrar una reseña, lo esperable sigue siendo seguir.
+   */
+  confirmarAlFinal?: boolean
 }) {
   const dialogo = useRef<HTMLDialogElement>(null)
   const botonDeSeguir = useRef<HTMLButtonElement>(null)
@@ -77,7 +84,9 @@ export function DialogoDeConfirmacion({
             {texto}
           </p>
         </div>
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <div
+          className={`flex gap-2 ${confirmarAlFinal ? 'flex-col sm:flex-row-reverse sm:justify-start' : 'flex-col-reverse sm:flex-row sm:justify-end'}`}
+        >
           <button type="button" onClick={onConfirmar} className="btn btn-ghost min-h-11 text-error">
             {textoDeConfirmar}
           </button>

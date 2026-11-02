@@ -284,6 +284,7 @@ export function BotonCambiarNombreDeUsuario() {
               textoDeConfirmar="Sí, cambiarlo"
               onSeguir={() => setConfirmando(false)}
               onConfirmar={guardar}
+              confirmarAlFinal
             />
           </dialog>
 
