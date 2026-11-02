@@ -480,6 +480,14 @@ app:
         - ChIJN6dPjS6VvJURnnncAT6bcqg  # Hamburguesería (Moreno)
         - ChIJAQORYgAno5UR96fDTHz_9s0  # BUNKER HAMBURGUESERIA (Plátanos)
         - ChIJwSpiZ30tvZUR9o8LZ3kU_aE  # Búnker hamburguesería (San Vicente)
+      # Los siete de abajo se sacaron de producción a pedido (#384).
+        - ChIJe_715a2lvJURLJNWedTUzfA  # Burger baires (Don Torcuato)
+        - ChIJU0lW7PwfvZUR1NlyfzlA614  # Central Station Cañuelas (Cañuelas)
+        - ChIJ63jQCgC9vJURPE4BcwMLf8Y  # Comidas Rapidas (San Miguel)
+        - ChIJaSFJkfCxvJUR5O2L5T4JOP4  # GOLDEN FOOD (San Isidro)
+        - ChIJ66GULkYvo5URNVgdV3JiZdU  # Master Fest (Berazategui)
+        - ChIJtfB7CgBhu5URe1pwix-qSLA  # Parador La Base (Belén de Escobar)
+        - ChIJN19iC3axvJUR3vVnifX3Z-0  # Tommy's (Martínez)
       # Hamburgueserías que Google clasifica como otra cosa y que ninguna regla rescata.
       # Entran acá solo si el local es una hamburguesería de hecho, no un bar que además
       # vende hamburguesas.
