@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Set;
 
 /** El podio de personas de quien tiene la sesión (#318). Pide sesión. */
@@ -22,6 +23,15 @@ public class PodioController {
     private static final Set<String> PERIODOS = Set.of(Podio.SEMANA, Podio.MES, Podio.GENERAL);
 
     private final Podio podio;
+
+    /** Los ganadores de las semanas o los meses que ya cerraron (#382). */
+    @GetMapping("/anteriores")
+    public List<PodioDto.Anterior> anteriores(@RequestParam String periodo) {
+        if (!Podio.SEMANA.equals(periodo) && !Podio.MES.equals(periodo)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ese período no tiene cierres");
+        }
+        return podio.anteriores(periodo, CurrentUser.requireId());
+    }
 
     @GetMapping
     public PodioDto podio(@RequestParam(defaultValue = Podio.SEMANA) String periodo) {

@@ -12,6 +12,13 @@ import java.util.List;
  */
 public record PodioDto(String periodo, Instant cierraEl, List<Puesto> top, Puesto yo) {
 
+    /**
+     * Un período ya cerrado (#382): de {@code desde} a {@code hasta}, ambos inclusive, con quienes
+     * salieron en los primeros puestos. Es el resultado guardado al cerrar; no se recalcula.
+     */
+    public record Anterior(java.time.LocalDate desde, java.time.LocalDate hasta, List<Puesto> top) {
+    }
+
     public record Puesto(int puesto, Long userId, String username, String hamburguesa, int xp, int xpDelPeriodo) {
     }
 }

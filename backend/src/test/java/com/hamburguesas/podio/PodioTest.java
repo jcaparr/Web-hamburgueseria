@@ -284,6 +284,94 @@ class PodioTest {
         assertThat(podio.de(Podio.SEMANA, ana.getId()).yo()).isNull();
     }
 
+    // --- Ganadores anteriores (#382) ---
+
+    private void guardado(String periodo, LocalDate desde, int puesto, User quien, int xp) {
+        resultados.save(new ResultadoDePodio(new ResultadoDePodio.Id(periodo, desde, puesto), quien.getId(), xp));
+    }
+
+    @Test
+    void losAnterioresVanDelMasNuevoAlMasViejoConLaXpGuardadaYSuUltimoDia() {
+        User ana = cuenta("podio_ant_ana");
+        User beto = cuenta("podio_ant_beto");
+        guardado(Podio.SEMANA, LUNES, 1, ana, 300);
+        guardado(Podio.SEMANA, LUNES, 2, beto, 200);
+        guardado(Podio.SEMANA, LUNES.plusWeeks(1), 1, beto, 500);
+        guardado(Podio.MES, LocalDate.of(2026, 2, 1), 1, ana, 900);
+
+        List<PodioDto.Anterior> semanas = podio.anteriores(Podio.SEMANA, ana.getId());
+        assertThat(semanas).extracting(PodioDto.Anterior::desde).containsExactly(LUNES.plusWeeks(1), LUNES);
+        assertThat(semanas.get(1).hasta()).isEqualTo(LocalDate.of(2026, 9, 13)); // el domingo
+        assertThat(semanas.get(1).top()).extracting(PodioDto.Puesto::puesto, PodioDto.Puesto::xpDelPeriodo)
+            .containsExactly(org.assertj.core.groups.Tuple.tuple(1, 300), org.assertj.core.groups.Tuple.tuple(2, 200));
+
+        // Febrero de 2026 tiene 28 días; el mes no se mezcla con las semanas.
+        List<PodioDto.Anterior> meses = podio.anteriores(Podio.MES, ana.getId());
+        assertThat(meses).singleElement().satisfies(m -> assertThat(m.hasta()).isEqualTo(LocalDate.of(2026, 2, 28)));
+    }
+
+    @Test
+    void soloSeMuestranLasUltimasOchoSemanasYLosUltimosSeisMeses() {
+        User ana = cuenta("podio_ant_tope");
+        for (int i = 0; i < 10; i++) {
+            guardado(Podio.SEMANA, LUNES.minusWeeks(i), 1, ana, 100);
+            guardado(Podio.MES, LocalDate.of(2026, 9, 1).minusMonths(i), 1, ana, 100);
+        }
+
+        assertThat(podio.anteriores(Podio.SEMANA, ana.getId())).hasSize(8)
+            .first().satisfies(s -> assertThat(s.desde()).isEqualTo(LUNES));
+        assertThat(podio.anteriores(Podio.MES, ana.getId())).hasSize(6);
+    }
+
+    @Test
+    void enLosAnterioresQuienTieneUnBloqueoSeOmiteSinCorrerAlDeAbajo() {
+        User ana = cuenta("podio_ant_bloq_ana");
+        User beto = cuenta("podio_ant_bloq_beto");
+        User carla = cuenta("podio_ant_bloq_carla");
+        guardado(Podio.SEMANA, LUNES, 1, ana, 300);
+        guardado(Podio.SEMANA, LUNES, 2, beto, 200);
+        guardado(Podio.SEMANA, LUNES, 3, carla, 100);
+        blockRepository.save(Block.builder().blocker(ana).blocked(beto).build());
+
+        // Ana bloqueó a Beto: ella no lo ve y Carla sigue tercera...
+        assertThat(podio.anteriores(Podio.SEMANA, ana.getId()).get(0).top())
+            .extracting(PodioDto.Puesto::userId, PodioDto.Puesto::puesto)
+            .containsExactly(org.assertj.core.groups.Tuple.tuple(ana.getId(), 1), org.assertj.core.groups.Tuple.tuple(carla.getId(), 3));
+        // ...y Beto tampoco la ve a ella.
+        assertThat(podio.anteriores(Podio.SEMANA, beto.getId()).get(0).top()).extracting(PodioDto.Puesto::userId)
+            .containsExactly(beto.getId(), carla.getId());
+    }
+
+    @Test
+    void unaSemanaQueSeQuedaSinNadieVisibleNoSeMuestra() {
+        User ana = cuenta("podio_ant_solo_ana");
+        User beto = cuenta("podio_ant_solo_beto");
+        guardado(Podio.SEMANA, LUNES, 1, beto, 300);
+        blockRepository.save(Block.builder().blocker(beto).blocked(ana).build());
+
+        assertThat(podio.anteriores(Podio.SEMANA, ana.getId())).isEmpty();
+    }
+
+    @Test
+    void sinCierresNoHayAnterioresYElGeneralNoTiene() {
+        User ana = cuenta("podio_ant_vacio");
+
+        assertThat(podio.anteriores(Podio.SEMANA, ana.getId())).isEmpty();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> podio.anteriores(Podio.GENERAL, ana.getId()))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void cerrarLaSemanaLaSumaALosAnteriores() {
+        User ana = cuenta("podio_ant_cierre");
+        resenia(ana, LARGO, LUNES_AL_MEDIODIA);
+
+        podio.cerrarSemana(LUNES);
+
+        assertThat(podio.anteriores(Podio.SEMANA, ana.getId())).singleElement()
+            .satisfies(s -> assertThat(s.top()).extracting(PodioDto.Puesto::userId).containsExactly(ana.getId()));
+    }
+
     private static Instant cierreDe(String periodo, Instant ahora) {
         return Podio.limites(periodo, ahora.atZone(Podio.ZONA).toLocalDate())[1];
     }

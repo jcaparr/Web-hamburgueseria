@@ -2,16 +2,16 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { usePedido } from '../hooks/usePedido'
-import type { Podio, PuestoDelPodio } from '../types'
-import { tiempoParaElCierre } from '../utils/cierreDelPodio'
+import type { PeriodoCerrado, Podio, PuestoDelPodio } from '../types'
+import { nombreDelPeriodoCerrado, tiempoParaElCierre } from '../utils/cierreDelPodio'
 import { nivelDe } from '../utils/niveles'
 import { AvatarDeUsuario } from './AvatarDeUsuario'
 import { LoadError } from './LoadError'
 
 const PERIODOS = [
-  { id: 'semana', texto: 'Semana', vacio: 'Todavía nadie ganó XP esta semana. Reseñá algo y salí primero.' },
-  { id: 'mes', texto: 'Mes', vacio: 'Todavía nadie ganó XP este mes. Reseñá algo y salí primero.' },
-  { id: 'general', texto: 'General', vacio: 'Todavía no hay nadie en el podio.' },
+  { id: 'semana', texto: 'Semana', enCurso: 'Esta semana', vacio: 'Todavía nadie ganó XP esta semana. Reseñá algo y salí primero.' },
+  { id: 'mes', texto: 'Mes', enCurso: 'Este mes', vacio: 'Todavía nadie ganó XP este mes. Reseñá algo y salí primero.' },
+  { id: 'general', texto: 'General', enCurso: null, vacio: 'Todavía no hay nadie en el podio.' },
 ] as const
 
 /**
@@ -20,12 +20,22 @@ const PERIODOS = [
  *
  * Escalones: oro al centro (el más alto), plata a la izquierda y bronce a la derecha. Debajo,
  * la lista con avatar, nivel y XP del período. Tu fila va resaltada, aunque estés fuera del top.
+ *
+ * En Semana y Mes, unas flechas llevan a los períodos ya cerrados (#382): se ve el top 3 que
+ * quedó guardado al cerrar, con los mismos escalones y sin la lista, que no se guarda.
  */
 export function PodioDePersonas({ yoId }: { yoId: number }) {
   const [periodo, setPeriodo] = useState<(typeof PERIODOS)[number]['id']>('semana')
+  // Cuántos períodos para atrás se está mirando: 0 es el que corre.
+  const [atras, setAtras] = useState(0)
   const pedido = usePedido(`podio:${periodo}`, () => apiClient.get<Podio>('/podio', { params: { periodo } }).then((r) => r.data))
+  const pedidoAnteriores = usePedido(periodo === 'general' ? null : `podio-anteriores:${periodo}`, () =>
+    apiClient.get<PeriodoCerrado[]>('/podio/anteriores', { params: { periodo } }).then((r) => r.data),
+  )
   const datos = pedido.datos
   const actual = PERIODOS.find((p) => p.id === periodo)!
+  const anteriores = periodo === 'general' ? [] : (pedidoAnteriores.datos ?? [])
+  const cerrado = atras > 0 ? anteriores[atras - 1] : undefined
 
   return (
     <div className="flex flex-col gap-4">
@@ -37,14 +47,62 @@ export function PodioDePersonas({ yoId }: { yoId: number }) {
               periodo === p.id ? 'bg-base-100 shadow-[var(--sombra-tarjeta)]' : 'text-base-content/70'
             }`}
           >
-            <input type="radio" name="periodo-del-podio" className="sr-only" checked={periodo === p.id} onChange={() => setPeriodo(p.id)} />
+            <input
+              type="radio"
+              name="periodo-del-podio"
+              className="sr-only"
+              checked={periodo === p.id}
+              onChange={() => {
+                setPeriodo(p.id)
+                setAtras(0)
+              }}
+            />
             {p.texto}
           </label>
         ))}
       </div>
 
-      {datos?.cierraEl && <CierraEn key={datos.cierraEl} cierraEl={datos.cierraEl} />}
+      {/* Sin cierres guardados no hay a dónde ir: las flechas no aparecen. */}
+      {actual.enCurso && anteriores.length > 0 && (
+        <EntrePeriodos
+          nombre={cerrado ? nombreDelPeriodoCerrado(periodo === 'mes' ? 'mes' : 'semana', cerrado) : actual.enCurso}
+          cerrado={!!cerrado}
+          hayAnterior={atras < anteriores.length}
+          onAnterior={() => setAtras((a) => a + 1)}
+          onSiguiente={() => setAtras((a) => a - 1)}
+        />
+      )}
 
+      {cerrado ? (
+        <>
+          <Escalones top={cerrado.top} yoId={yoId} />
+          <button type="button" className="btn btn-ghost min-h-11 self-center" onClick={() => setAtras(0)}>
+            Volver a {actual.enCurso?.toLowerCase()}
+          </button>
+        </>
+      ) : (
+        <>
+          {datos?.cierraEl && <CierraEn key={datos.cierraEl} cierraEl={datos.cierraEl} />}
+          <PodioEnCurso pedido={pedido} vacio={actual.vacio} yoId={yoId} />
+        </>
+      )}
+    </div>
+  )
+}
+
+/** El período en curso: el top con sus escalones y la lista, o el vacío o el error. */
+function PodioEnCurso({
+  pedido,
+  vacio,
+  yoId,
+}: {
+  pedido: { datos: Podio | undefined; error: unknown; reintentar: () => void }
+  vacio: string
+  yoId: number
+}) {
+  const datos = pedido.datos
+  return (
+    <>
       {pedido.error ? (
         <LoadError error={pedido.error} onRetry={pedido.reintentar} />
       ) : !datos ? (
@@ -52,7 +110,7 @@ export function PodioDePersonas({ yoId }: { yoId: number }) {
           Cargando…
         </p>
       ) : datos.top.length === 0 ? (
-        <p className="tarjeta p-4 text-sm text-base-content/80">{actual.vacio}</p>
+        <p className="tarjeta p-4 text-sm text-base-content/80">{vacio}</p>
       ) : (
         <>
           {!datos.yo && <p className="text-sm text-base-content/70">Todavía no sumaste XP en este período.</p>}
@@ -60,7 +118,45 @@ export function PodioDePersonas({ yoId }: { yoId: number }) {
           <ListaDelPodio datos={datos} yoId={yoId} />
         </>
       )}
+    </>
+  )
+}
+
+/** Flecha al período anterior, el nombre del que se mira y flecha al siguiente. */
+function EntrePeriodos({
+  nombre,
+  cerrado,
+  hayAnterior,
+  onAnterior,
+  onSiguiente,
+}: {
+  nombre: string
+  cerrado: boolean
+  hayAnterior: boolean
+  onAnterior: () => void
+  onSiguiente: () => void
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <button type="button" className="btn btn-circle btn-ghost size-11" onClick={onAnterior} disabled={!hayAnterior} aria-label="Período anterior">
+        <Flecha izquierda />
+      </button>
+      <p className="min-w-0 flex-1 text-center" aria-live="polite">
+        <span className="block truncate font-semibold">{nombre}</span>
+        {cerrado && <span className="block text-sm text-base-content/70">Ya cerró · top 3</span>}
+      </p>
+      <button type="button" className="btn btn-circle btn-ghost size-11" onClick={onSiguiente} disabled={!cerrado} aria-label="Período siguiente">
+        <Flecha />
+      </button>
     </div>
+  )
+}
+
+function Flecha({ izquierda = false }: { izquierda?: boolean }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+      <path d={izquierda ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'} />
+    </svg>
   )
 }
 
@@ -85,9 +181,13 @@ function CierraEn({ cierraEl }: { cierraEl: string }) {
   )
 }
 
-/** Oro al centro y más alto, plata a la izquierda, bronce a la derecha. */
+/**
+ * Oro al centro y más alto, plata a la izquierda, bronce a la derecha. Cada uno va en el
+ * escalón de su puesto: en un período cerrado, quien tiene un bloqueo con vos no está y su
+ * escalón queda vacío.
+ */
 function Escalones({ top, yoId }: { top: PuestoDelPodio[]; yoId: number }) {
-  const orden = [top[1], top[0], top[2]]
+  const orden = [2, 1, 3].map((n) => top.find((p) => p.puesto === n))
   const alto = ['h-20', 'h-28', 'h-14']
   const color = ['bg-[#c9c3b5] text-[#3a2a1e]', 'bg-[#f2b705] text-[#3a2a1e]', 'bg-[#c98a3d] text-[#3a2a1e]']
   return (
