@@ -32,6 +32,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     saveSession(data)
   }
 
+  async function cambiarNombreDeUsuario(username: string) {
+    const { data } = await apiClient.put('/profile/username', { username })
+    saveSession(data)
+  }
+
   async function refrescar(): Promise<User | null> {
     try {
       const { data } = await apiClient.get<User>('/auth/me')
@@ -104,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, verifyEmail, loginWithGoogle, logout, refrescar, cambiarHamburguesa, exhibirLogro }}
+      value={{ user, loading, login, register, verifyEmail, loginWithGoogle, logout, refrescar, cambiarHamburguesa, cambiarNombreDeUsuario, exhibirLogro }}
     >
       {children}
     </AuthContext.Provider>

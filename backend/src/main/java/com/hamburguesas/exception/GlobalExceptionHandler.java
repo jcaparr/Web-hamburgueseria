@@ -55,6 +55,14 @@ public class GlobalExceptionHandler {
         return body(HttpStatus.CONFLICT, ex.getMessage(), "USERNAME_TAKEN");
     }
 
+    /** 409: cambió el nombre hace menos de 30 días (#380). Lleva el día en que puede de nuevo. */
+    @ExceptionHandler(UsernameCooldownException.class)
+    public ResponseEntity<Map<String, Object>> handleUsernameCooldown(UsernameCooldownException ex) {
+        var respuesta = body(HttpStatus.CONFLICT, ex.getMessage(), "USERNAME_COOLDOWN");
+        respuesta.getBody().put("puedeCambiarDesde", ex.getPuedeCambiarDesde().toString());
+        return respuesta;
+    }
+
     /**
      * 409: entró con Google por primera vez y falta que elija cómo lo van a encontrar.
      *

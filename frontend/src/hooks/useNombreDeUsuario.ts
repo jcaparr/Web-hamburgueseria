@@ -8,7 +8,11 @@ import { apiClient } from '../api/client'
  * dos pantallas distintas con las mismas reglas, así que el estado del campo —lo
  * escrito, si está tomado, qué proponer en su lugar— vive acá una sola vez.
  */
-export function useNombreDeUsuario(inicial = '') {
+/**
+ * @param propio el nombre que la persona ya tiene, si está cambiándolo (#380): no se pregunta si
+ *   está libre, porque para el servidor ya está tomado... por ella.
+ */
+export function useNombreDeUsuario(inicial = '', propio?: string) {
   const [valor, setValor] = useState(inicial)
   const [problema, setProblema] = useState<string | null>(null)
   const [sugerencia, setSugerencia] = useState('')
@@ -40,7 +44,7 @@ export function useNombreDeUsuario(inicial = '') {
    * antes de terminar de escribir el nombre.
    */
   async function chequear() {
-    if (valor.length < 3) return
+    if (valor.length < 3 || valor === propio) return
 
     setChequeando(true)
     try {

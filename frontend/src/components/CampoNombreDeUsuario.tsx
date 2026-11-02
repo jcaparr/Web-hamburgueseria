@@ -10,9 +10,17 @@ import type { CampoDeNombre } from '../hooks/useNombreDeUsuario'
 export function CampoNombreDeUsuario({
   campo,
   autoFocus,
+  etiqueta = 'Nombre de usuario',
+  ayuda = 'Con esto te encuentran tus amigos. Al menos 3 caracteres: letras, números y guion bajo.',
+  cambiando = false,
 }: {
   campo: CampoDeNombre
   autoFocus?: boolean
+  etiqueta?: string
+  /** El texto de abajo cuando no hay problema. */
+  ayuda?: string
+  /** Si es para cambiar el que ya tiene (#380): el gestor de contraseñas no tiene que completarlo. */
+  cambiando?: boolean
 }) {
   const marcado = campo.problema !== null
   const id = useId()
@@ -20,12 +28,14 @@ export function CampoNombreDeUsuario({
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-semibold">
-        Nombre de usuario
+        {etiqueta}
       </label>
       {/* Un div y no otra etiqueta: con dos, el lector de pantalla anunciaba el campo
           como "arroba, Nombre de usuario". */}
       <div
-        className={`input campo flex items-center gap-0 ${
+        // daisyUI le da al input 20rem de ancho: en la ventana de cambiarlo quedaba más angosto que
+        // la ventana y corrido a la izquierda (#380). Ahí ocupa todo el ancho.
+        className={`input campo flex items-center gap-0 ${cambiando ? 'w-full' : ''} ${
           marcado ? 'input-error' : ''
         }`}
       >
@@ -36,11 +46,11 @@ export function CampoNombreDeUsuario({
         <input
           required
           autoFocus={autoFocus}
-          autoComplete="username"
+          autoComplete={cambiando ? 'off' : 'username'}
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
-          enterKeyHint="next"
+          enterKeyHint={cambiando ? 'done' : 'next'}
           minLength={3}
           value={campo.valor}
           onChange={(e) => campo.escribir(e.target.value)}
@@ -71,7 +81,7 @@ export function CampoNombreDeUsuario({
         </p>
       ) : (
         <p id={`${id}-ayuda`} className="text-xs text-base-content/70">
-          Con esto te encuentran tus amigos. Al menos 3 caracteres: letras, números y guion bajo.
+          {ayuda}
         </p>
       )}
     </div>

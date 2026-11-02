@@ -1,11 +1,14 @@
 package com.hamburguesas.controller;
 
 import com.hamburguesas.dto.AuthResponse;
+import com.hamburguesas.dto.CambioDeNombreRequest;
+import com.hamburguesas.dto.EstadoDelNombreDto;
 import com.hamburguesas.dto.HamburguesaRequest;
 import com.hamburguesas.dto.MostrarListasDto;
 import com.hamburguesas.dto.ProfileStatsDto;
 import com.hamburguesas.dto.ReseniaDePerfilDto;
 import com.hamburguesas.security.CurrentUser;
+import com.hamburguesas.service.CambioDeNombreDeUsuario;
 import com.hamburguesas.service.ListasDelPerfil;
 import com.hamburguesas.service.ProfileService;
 import jakarta.validation.Valid;
@@ -26,6 +29,8 @@ public class ProfileController {
     private final ProfileService profileService;
     private final ListasDelPerfil listasDelPerfil;
     private final com.hamburguesas.logros.Logros logros;
+    private final CambioDeNombreDeUsuario cambioDeNombre;
+
 
     @GetMapping("/stats")
     public ProfileStatsDto stats() {
@@ -41,6 +46,18 @@ public class ProfileController {
     @PutMapping("/hamburguesa")
     public AuthResponse hamburguesa(@Valid @RequestBody HamburguesaRequest pedido) {
         return profileService.cambiarHamburguesa(CurrentUser.requireId(), pedido.receta());
+    }
+
+    /** Si ya puede cambiar su nombre de usuario o desde cuándo (#380). */
+    @GetMapping("/username")
+    public EstadoDelNombreDto estadoDelNombre() {
+        return cambioDeNombre.estado(CurrentUser.requireId());
+    }
+
+    /** Cambia tu nombre de usuario, una vez cada 30 días (#380). */
+    @PutMapping("/username")
+    public AuthResponse cambiarNombre(@Valid @RequestBody CambioDeNombreRequest pedido) {
+        return cambioDeNombre.cambiar(CurrentUser.requireId(), pedido.username());
     }
 
     /** Elige el logro que se muestra en tu perfil, o lo saca con null (#319). */
