@@ -510,6 +510,24 @@ app:
         - ChIJ96JLf5i3vJURMgf-h-YH-rM
         # "Hamburguesas alodelnegro", Av. Acoyte 1293: figura como hamburger_restaurant (#378).
         - ChIJdWQ2fADLvJURacfXambETYo
+        # Las 8 sucursales de Ribs al Río (#388). Google las clasifica como restaurant o
+        # barbecue_restaurant, no como hamburguesería.
+        # "Ribs al río - Patio Costanera Norte", Av. Costanera Rafael Obligado 7010.
+        - ChIJp3Zqwba1vJURaKZh7t08V5A
+        # "Ribs al Río - Paseo Infanta", Av. del Libertador 3883 Arco 6.
+        - ChIJR2-m3US1vJURaqWuEr7h-ks
+        # "Ribs al Rio - Barrio Chino", Monroe 1850 Local 112.
+        - ChIJEdUQBi-1vJURpKfVVNn0--Y
+        # "Ribs al Río - Lanús", E. Del Valle Iberlucea 2676.
+        - ChIJS1owMADNvJURZaF423qfN3s
+        # "Ribs al río - Campo Argentino de Polo", Av. del Libertador 4096.
+        - ChIJ6WjMm5G1vJURTDYiadDARMQ
+        # "Ribs al rio - Unicenter", Paraná 3745 Local 3325.
+        - ChIJRZBRdrOxvJURX4HeboVNnUM
+        # "Ribs al Río - Lomas de Zamora", Italia 253.
+        - ChIJ19ei2vvTvJURM0KsOaC-fRo
+        # "Ribs al Río - Canning", Mariano Castex 2885.
+        - ChIJ4bCEsIjXvJURlSXT2osFnEE
       # La foto de portada elegida a mano, para los locales donde la regla no acierta.
       #
       # La regla sabe elegir una foto bien sacada —apaisada, grande, no una captura de
@@ -551,6 +569,17 @@ app:
         # mamá tula, Neuquén 1506: la doble smash con papas en la caja (#386). Jorge Olaizola
         # subió una sola foto de ese tamaño, así que la huella la identifica sin dudas.
         ChIJz130QwDLvJUR3vWG2XA7yAQ: "3024x4032|Jorge Olaizola"
+        # Las 8 sucursales de Ribs al Río (#388): la primera foto que devuelve Google, que
+        # según Juan es el frente del local. La regla no la elegiría sola: prefiere apaisadas
+        # grandes de clientes, y varias de estas primeras son verticales o las subió el local.
+        ChIJp3Zqwba1vJURaKZh7t08V5A: "4032x3024|Ariel Carbonaro"
+        ChIJR2-m3US1vJURaqWuEr7h-ks: "718x887|Ribs al Río - Paseo Infanta"
+        ChIJEdUQBi-1vJURpKfVVNn0--Y: "759x597|Ribs al Rio - Barrio Chino"
+        ChIJS1owMADNvJURZaF423qfN3s: "854x1280|Ribs al Río - Lanús"
+        ChIJ6WjMm5G1vJURTDYiadDARMQ: "3000x2000|Ribs al río - Campo Argentino de Polo"
+        ChIJRZBRdrOxvJURX4HeboVNnUM: "3779x2125|Silvi"
+        ChIJ19ei2vvTvJURM0KsOaC-fRo: "2340x4160|Ribs al Río - Lomas de Zamora"
+        ChIJ4bCEsIjXvJURlSXT2osFnEE: "2560x1440|Daniel alejandro Castillo"
       # 3 es el máximo que devuelve Google por consulta (60 resultados); pedir más
       # no trae nada nuevo.
       # Cuántas fotos tiene que tener en Google un local que Google NO clasifica como
