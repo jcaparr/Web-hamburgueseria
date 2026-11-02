@@ -48,7 +48,7 @@ export function CampoNombreDeUsuario({
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
-          enterKeyHint="next"
+          enterKeyHint={cambiando ? 'done' : 'next'}
           minLength={3}
           value={campo.valor}
           onChange={(e) => campo.escribir(e.target.value)}
