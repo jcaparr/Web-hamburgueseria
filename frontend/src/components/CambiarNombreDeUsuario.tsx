@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { useAuth } from '../context/useAuth'
@@ -133,7 +134,10 @@ export function BotonCambiarNombreDeUsuario() {
       if (campo.rechazar(err)) {
         // Queda marcado en el campo, que es donde se arregla.
       } else if (data?.code === 'USERNAME_COOLDOWN') {
-        setEstado({ puedeCambiarDesde: data.puedeCambiarDesde ?? null, texto: null })
+        setEstado({
+          puedeCambiarDesde: data.puedeCambiarDesde ?? null,
+          texto: null,
+        })
         setNoSeGuardo(true)
       } else if (isSessionExpired(err)) {
         navigate('/login')
@@ -158,121 +162,142 @@ export function BotonCambiarNombreDeUsuario() {
         disabled={preguntando || guardando}
         className="btn btn-ghost btn-square min-h-11 min-w-11"
       >
-        {preguntando ? <span className="loading loading-spinner loading-sm" aria-hidden="true" /> : <IconPencil size={18} />}
+        {preguntando ? (
+          <span className="loading loading-spinner loading-sm" aria-hidden="true" />
+        ) : (
+          <IconPencil size={18} />
+        )}
       </button>
 
-      <dialog
-        ref={dialogo}
-        aria-labelledby={idDelTitulo}
-        className="modal modal-bottom sm:modal-middle"
-        // Si el navegador la cierra por su cuenta, `abierto` no puede quedar en true con la
-        // ventana cerrada: la próxima vez no se volvería a abrir.
-        onClose={(e) => {
-          e.stopPropagation()
-          // Chrome deja frenar el Esc una sola vez: con un segundo Esc mientras se guarda, se
-          // vuelve a abrir para que la respuesta tenga dónde mostrarse.
-          if (guardando) {
-            dialogo.current?.showModal()
-            return
-          }
-          setAbierto(false)
-        }}
-        onCancel={(e) => {
-          if (guardando) e.preventDefault()
-        }}
-      >
-        {puede ? (
-          <form ref={formulario} onSubmit={seguir} className="modal-box flex flex-col gap-5 sm:max-w-sm">
-            <div className="flex flex-col gap-1">
-              <h2 id={idDelTitulo} className="font-display text-lg font-bold">
-                Cambiar nombre de usuario
-              </h2>
-              <p className="text-sm text-base-content/70">Hoy sos @{user.username}</p>
-            </div>
+      {/* Fuera de la cabecera: el lápiz va en una caja corrida con transform, y adentro de ella
+          la ventana y el aviso se ubicaban contra esa caja y no contra la pantalla, y además
+          heredaban el texto centrado del perfil. */}
+      {createPortal(
+        <>
+          <dialog
+            ref={dialogo}
+            aria-labelledby={idDelTitulo}
+            className="modal modal-bottom sm:modal-middle text-left"
+            // Si el navegador la cierra por su cuenta, `abierto` no puede quedar en true con la
+            // ventana cerrada: la próxima vez no se volvería a abrir.
+            onClose={(e) => {
+              e.stopPropagation()
+              // Chrome deja frenar el Esc una sola vez: con un segundo Esc mientras se guarda, se
+              // vuelve a abrir para que la respuesta tenga dónde mostrarse.
+              if (guardando) {
+                dialogo.current?.showModal()
+                return
+              }
+              setAbierto(false)
+            }}
+            onCancel={(e) => {
+              if (guardando) e.preventDefault()
+            }}
+          >
+            {puede ? (
+              <form ref={formulario} onSubmit={seguir} className="modal-box flex flex-col gap-5 sm:max-w-sm">
+                <div className="flex flex-col gap-1">
+                  <h2 id={idDelTitulo} className="font-display text-lg font-bold">
+                    Cambiar nombre de usuario
+                  </h2>
+                  <p className="text-sm text-base-content/70">Hoy sos @{user.username}</p>
+                </div>
 
-            <CampoNombreDeUsuario
-              campo={campo}
-              autoFocus
-              cambiando
-              etiqueta="Nuevo nombre"
-              ayuda="De 3 a 20 caracteres: letras, números y guion bajo."
-            />
+                <CampoNombreDeUsuario
+                  campo={campo}
+                  autoFocus
+                  cambiando
+                  etiqueta="Nuevo nombre"
+                  ayuda="De 3 a 20 caracteres: letras, números y guion bajo."
+                />
 
-            {error && (
-              <p role="alert" className="text-sm text-error">
-                {error}
-              </p>
-            )}
+                {error && (
+                  <p role="alert" className="text-sm text-error">
+                    {error}
+                  </p>
+                )}
 
-            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <button type="button" onClick={cerrar} className="btn btn-ghost min-h-11">
-                Cancelar
-              </button>
-              <button type="submit" disabled={guardando || campo.valor.length < 3 || campo.problema !== null} className="btn btn-primary min-h-11">
-                {guardando ? 'Guardando…' : 'Seguir'}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="modal-box flex flex-col gap-5 sm:max-w-sm">
-            <h2 id={idDelTitulo} className="font-display text-lg font-bold">
-              Cambiar nombre de usuario
-            </h2>
-            {estado ? (
-              <p role={noSeGuardo ? 'alert' : undefined} className="text-base-content/80">
-                {noSeGuardo && 'No se guardó. '}
-                Ya lo cambiaste hace poco. Se puede una vez cada {DIAS_ENTRE_CAMBIOS} días:{' '}
-                {cuandoPuede(estado)}.
-              </p>
+                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                  <button type="button" onClick={cerrar} className="btn btn-ghost min-h-11">
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={guardando || campo.valor.length < 3 || campo.problema !== null}
+                    className="btn btn-primary min-h-11"
+                  >
+                    {guardando ? 'Guardando…' : 'Seguir'}
+                  </button>
+                </div>
+              </form>
             ) : (
-              <p role="alert" className="text-error">
-                {falloElEstado ? 'No pudimos ver si podés cambiarlo.' : 'Algo salió mal.'}
-              </p>
+              <div className="modal-box flex flex-col gap-5 sm:max-w-sm">
+                <h2 id={idDelTitulo} className="font-display text-lg font-bold">
+                  Cambiar nombre de usuario
+                </h2>
+                {estado ? (
+                  <p role={noSeGuardo ? 'alert' : undefined} className="text-base-content/80">
+                    {noSeGuardo && 'No se guardó. '}
+                    Ya lo cambiaste hace poco. Se puede una vez cada {DIAS_ENTRE_CAMBIOS} días: {cuandoPuede(estado)}.
+                  </p>
+                ) : (
+                  <p role="alert" className="text-error">
+                    {falloElEstado ? 'No pudimos ver si podés cambiarlo.' : 'Algo salió mal.'}
+                  </p>
+                )}
+                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                  {!estado && (
+                    <button type="button" onClick={cerrar} className="btn btn-ghost min-h-11">
+                      Cerrar
+                    </button>
+                  )}
+                  {estado ? (
+                    <button type="button" onClick={cerrar} className="btn btn-primary min-h-11" autoFocus>
+                      Entendido
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={preguntarEstado}
+                      disabled={preguntando}
+                      className="btn btn-primary min-h-11"
+                    >
+                      {preguntando ? 'Probando…' : 'Reintentar'}
+                    </button>
+                  )}
+                </div>
+              </div>
             )}
-            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              {!estado && (
-                <button type="button" onClick={cerrar} className="btn btn-ghost min-h-11">
-                  Cerrar
-                </button>
-              )}
-              {estado ? (
-                <button type="button" onClick={cerrar} className="btn btn-primary min-h-11" autoFocus>
-                  Entendido
-                </button>
-              ) : (
-                <button type="button" onClick={preguntarEstado} disabled={preguntando} className="btn btn-primary min-h-11">
-                  {preguntando ? 'Probando…' : 'Reintentar'}
-                </button>
-              )}
-            </div>
+            {/* El clic afuera cierra, salvo mientras se guarda. */}
+            <form method="dialog" className="modal-backdrop">
+              <button type="button" tabIndex={-1} aria-hidden="true" onClick={cerrar}>
+                Cerrar
+              </button>
+            </form>
+
+            {/* Adentro de la ventana para que quede arriba de ella, en la misma capa. */}
+            <DialogoDeConfirmacion
+              abierto={confirmando}
+              titulo={`¿Pasar a @${campo.valor}?`}
+              texto={`Vas a tener que esperar ${DIAS_ENTRE_CAMBIOS} días, hasta el ${dentroDe(DIAS_ENTRE_CAMBIOS)}, para volver a cambiarlo.`}
+              textoDeSeguir="Volver"
+              textoDeConfirmar="Sí, cambiarlo"
+              onSeguir={() => setConfirmando(false)}
+              onConfirmar={guardar}
+            />
+          </dialog>
+
+          {/* Siempre montado, para que el lector de pantalla anuncie lo que aparece adentro. */}
+          {/* Por encima de la barra de abajo del teléfono, contando la zona segura del iPhone. */}
+          <div
+            role="status"
+            className="toast toast-center toast-bottom z-50 mb-[calc(4.5rem+env(safe-area-inset-bottom))] md:mb-4"
+          >
+            {listo && <div className="alert alert-success text-sm font-semibold">Listo, ahora sos @{listo}.</div>}
           </div>
-        )}
-        {/* El clic afuera cierra, salvo mientras se guarda. */}
-        <form method="dialog" className="modal-backdrop">
-          <button type="button" tabIndex={-1} aria-hidden="true" onClick={cerrar}>
-            Cerrar
-          </button>
-        </form>
-
-        {/* Adentro de la ventana para que quede arriba de ella, en la misma capa. */}
-        <DialogoDeConfirmacion
-          abierto={confirmando}
-          titulo={`¿Pasar a @${campo.valor}?`}
-          texto={`Vas a tener que esperar ${DIAS_ENTRE_CAMBIOS} días, hasta el ${dentroDe(DIAS_ENTRE_CAMBIOS)}, para volver a cambiarlo.`}
-          textoDeSeguir="Volver"
-          textoDeConfirmar="Sí, cambiarlo"
-          onSeguir={() => setConfirmando(false)}
-          onConfirmar={guardar}
-        />
-      </dialog>
-
-      {/* Siempre montado, para que el lector de pantalla anuncie lo que aparece adentro. */}
-      {/* Por encima de la barra de abajo del teléfono, contando la zona segura del iPhone. */}
-      <div role="status" className="toast toast-center toast-bottom z-50 mb-[calc(4.5rem+env(safe-area-inset-bottom))] md:mb-4">
-        {listo && (
-          <div className="alert alert-success text-sm font-semibold">Listo, ahora sos @{listo}.</div>
-        )}
-      </div>
+        </>,
+        document.body,
+      )}
     </>
   )
 }

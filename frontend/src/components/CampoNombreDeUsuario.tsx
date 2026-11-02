@@ -33,7 +33,9 @@ export function CampoNombreDeUsuario({
       {/* Un div y no otra etiqueta: con dos, el lector de pantalla anunciaba el campo
           como "arroba, Nombre de usuario". */}
       <div
-        className={`input campo flex items-center gap-0 ${
+        // daisyUI le da al input 20rem de ancho: en la ventana de cambiarlo quedaba más angosto que
+        // la ventana y corrido a la izquierda (#380). Ahí ocupa todo el ancho.
+        className={`input campo flex items-center gap-0 ${cambiando ? 'w-full' : ''} ${
           marcado ? 'input-error' : ''
         }`}
       >
