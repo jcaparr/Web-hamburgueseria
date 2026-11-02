@@ -19,12 +19,11 @@ import java.util.List;
  *
  * Se guarda para no pedirlo cada vez que alguien abre un local: eso sería una llamada
  * del tramo Enterprise por visita, y con un poco de tráfico la cuota del mes se iría en
- * un día. Guardado, cuesta una llamada por local cada tanto, y si el local está abierto
- * ahora se calcula en el navegador.
+ * un día. Guardado, cuesta una llamada por local una sola vez, y si el local está
+ * abierto ahora se calcula en el navegador.
  *
- * El tope del mes no alcanza para todos los locales, y no hace falta: se pregunta
- * primero por los que nunca se preguntaron, así que lo que no entra en un mes lo
- * completa el siguiente.
+ * Solo se pregunta por los locales sin horario guardado, así que lo que no entra en el
+ * tope de un mes lo completa el siguiente.
  */
 @Component
 @Slf4j
@@ -32,10 +31,10 @@ import java.util.List;
 public class HorariosDeLocales {
 
     /**
-     * Cada cuánto se vuelve a preguntar por un local que ya tiene horario.
+     * Cada cuánto se vuelve a preguntar por un local al que Google no le dio horario.
      *
-     * Los horarios cambian poco, y sin este mínimo, una vez completos todos, cada pasada
-     * volvería a preguntar por los que se preguntaron ayer.
+     * Los que ya tienen horario guardado no se vuelven a preguntar nunca (#390); sin
+     * este mínimo, cada pasada insistiría con los que Google dejó vacíos ayer.
      */
     static final Duration VIGENCIA = Duration.ofDays(30);
 
