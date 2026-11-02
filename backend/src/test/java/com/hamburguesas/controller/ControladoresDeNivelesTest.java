@@ -116,6 +116,15 @@ class ControladoresDeNivelesTest {
     // --- 400 y 409 ---
 
     @Test
+    void losGanadoresAnterioresPidenSesionYSoloExistenEnSemanaYMes() throws Exception {
+        mvc.perform(get("/api/podio/anteriores").param("periodo", "semana")).andExpect(status().isUnauthorized());
+        mvc.perform(conSesion(get("/api/podio/anteriores").param("periodo", "general"), ana)).andExpect(status().isBadRequest());
+        mvc.perform(conSesion(get("/api/podio/anteriores").param("periodo", "mes"), ana))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
     void unPeriodoInvalidoDelPodioEsUn400() throws Exception {
         mvc.perform(conSesion(get("/api/podio").param("periodo", "siglo"), ana)).andExpect(status().isBadRequest());
     }

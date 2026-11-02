@@ -356,6 +356,14 @@ export interface PuestoDelPodio {
   xpDelPeriodo: number
 }
 
+/** Una semana o un mes que ya cerró (#382), con el top 3 que quedó guardado. */
+export interface PeriodoCerrado {
+  /** Primer y último día, en "aaaa-mm-dd". */
+  desde: string
+  hasta: string
+  top: PuestoDelPodio[]
+}
+
 export interface Podio {
   periodo: 'semana' | 'mes' | 'general'
   /** Cuándo cierra el período (ISO); null en General. */

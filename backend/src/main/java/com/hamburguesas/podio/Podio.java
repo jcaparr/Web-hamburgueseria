@@ -10,6 +10,7 @@ import com.hamburguesas.repository.UserRepository;
 import com.hamburguesas.service.Bloqueos;
 import com.hamburguesas.service.Niveles;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +54,10 @@ public class Podio {
 
     /** Cuántos salen en el top de la pantalla. */
     static final int EN_EL_TOP = 10;
+
+    /** Cuántos períodos cerrados se muestran: dos meses de semanas y medio año de meses. */
+    static final int SEMANAS_ANTERIORES = 8;
+    static final int MESES_ANTERIORES = 6;
 
     private final jakarta.persistence.EntityManager em;
     private final UserRepository userRepository;
@@ -99,6 +104,46 @@ public class Podio {
             }
         }
         return new PodioDto(periodo, cierraEl, top, yo);
+    }
+
+    /**
+     * Los últimos períodos cerrados (#382), del más nuevo al más viejo, con su top 3 guardado. Pasa
+     * por los bloqueos como el podio en curso: quien no se puede ver se omite y su puesto queda
+     * vacío, no se corre el de abajo. Un período que se queda sin nadie visible no se muestra.
+     */
+    @Transactional(readOnly = true)
+    public List<PodioDto.Anterior> anteriores(String periodo, Long quienMira) {
+        boolean semana = SEMANA.equals(periodo);
+        if (!semana && !MES.equals(periodo)) {
+            throw new IllegalArgumentException("Solo la semana y el mes tienen períodos cerrados: " + periodo);
+        }
+        List<LocalDate> inicios = resultados.ultimosCierres(periodo,
+            PageRequest.of(0, semana ? SEMANAS_ANTERIORES : MESES_ANTERIORES));
+        if (inicios.isEmpty()) {
+            return List.of();
+        }
+        List<ResultadoDePodio> filas = resultados.deLosCierres(periodo, inicios);
+        Set<Long> ocultos = Set.copyOf(bloqueos.queNoPuedeVer(quienMira));
+        Map<Long, User> personas = userRepository.findAllById(
+            filas.stream().map(ResultadoDePodio::getUserId).collect(Collectors.toSet()))
+            .stream().collect(Collectors.toMap(User::getId, u -> u));
+
+        List<PodioDto.Anterior> salida = new ArrayList<>();
+        for (LocalDate desde : inicios) {
+            List<PodioDto.Puesto> top = filas.stream()
+                .filter(f -> f.getId().desde().equals(desde) && !ocultos.contains(f.getUserId()))
+                .map(f -> {
+                    User u = personas.get(f.getUserId());
+                    return new PodioDto.Puesto(f.getId().puesto(), f.getUserId(), u.getUsername(),
+                        u.getHamburguesa(), u.getXp(), f.getXp());
+                })
+                .toList();
+            if (!top.isEmpty()) {
+                LocalDate hasta = semana ? desde.plusDays(6) : YearMonth.from(desde).atEndOfMonth();
+                salida.add(new PodioDto.Anterior(desde, hasta, top));
+            }
+        }
+        return salida;
     }
 
     private PodioDto.Puesto puesto(int puesto, Marca marca, User persona, String periodo) {
