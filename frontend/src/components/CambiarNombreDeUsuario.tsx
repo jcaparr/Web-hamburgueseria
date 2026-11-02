@@ -1,7 +1,6 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { apiClient } from '../api/client'
 import { useAuth } from '../context/useAuth'
-import { usePedido } from '../hooks/usePedido'
 import { useNombreDeUsuario } from '../hooks/useNombreDeUsuario'
 import { CampoNombreDeUsuario } from './CampoNombreDeUsuario'
 import { IconPencil } from './icons'
@@ -13,48 +12,69 @@ interface EstadoDelNombre {
 }
 
 /**
- * Cambiar el nombre de usuario, una vez cada 30 días (#380).
+ * El lápiz junto al nombre de usuario, y la ventana que abre (#380).
  *
- * Cerrado es una fila con el nombre actual. Si todavía no puede cambiarlo, la fila dice
- * desde cuándo y no hay botón: el plazo lo decide el servidor, acá solo se avisa. Si
- * puede, el lápiz abre el campo, con el aviso del plazo antes de confirmar.
+ * El nombre se puede cambiar una vez cada 30 días. La ventana muestra el nombre de ahora
+ * y, debajo, el campo del nuevo. Si todavía no corresponde, en vez del campo dice desde
+ * cuándo: el plazo lo decide el servidor, acá solo se avisa. Es un `<dialog>` con
+ * showModal, como DialogoDeConfirmacion: el navegador atrapa el foco y se encarga del Esc.
  */
-export function CambiarNombreDeUsuario() {
+export function BotonCambiarNombreDeUsuario() {
   const { user, cambiarNombreDeUsuario } = useAuth()
-  const estado = usePedido('nombre-de-usuario', () =>
-    apiClient.get<EstadoDelNombre>('/profile/username').then(({ data }) => data),
-  )
-  const campo = useNombreDeUsuario(user?.username ?? '', user?.username)
+  const dialogo = useRef<HTMLDialogElement>(null)
+  const idDelTitulo = useId()
+  const campo = useNombreDeUsuario('', user?.username)
   const [abierto, setAbierto] = useState(false)
+  const [estado, setEstado] = useState<EstadoDelNombre | null>(null)
+  const [falloElEstado, setFalloElEstado] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // El estado del <dialog> lo maneja el navegador, así que hay que empujarlo.
+  useEffect(() => {
+    const ventana = dialogo.current
+    if (!ventana) return
+    if (abierto && !ventana.open) ventana.showModal()
+    if (!abierto && ventana.open) ventana.close()
+  }, [abierto])
+
+  // Cada vez que se abre se pregunta de nuevo: el plazo puede haber cambiado desde la vez anterior.
+  useEffect(() => {
+    if (!abierto) return
+    let vigente = true
+    apiClient
+      .get<EstadoDelNombre>('/profile/username')
+      .then(({ data }) => vigente && setEstado(data))
+      .catch(() => vigente && setFalloElEstado(true))
+    return () => {
+      vigente = false
+    }
+  }, [abierto])
+
   if (!user) return null
 
-  const igual = campo.valor === user.username
-
   function abrir() {
-    campo.escribir(user!.username)
+    campo.escribir('')
+    setEstado(null)
+    setFalloElEstado(false)
     setError(null)
     setAbierto(true)
   }
 
   async function guardar(e: FormEvent) {
     e.preventDefault()
-    if (guardando || igual || campo.valor.length < 3) return
+    if (guardando || campo.valor.length < 3 || campo.valor === user!.username) return
     setGuardando(true)
     setError(null)
     try {
       await cambiarNombreDeUsuario(campo.valor)
       setAbierto(false)
-      estado.reintentar()
     } catch (err: any) {
       const data = err?.response?.data
       if (campo.rechazar(err)) {
         // Queda marcado en el campo, que es donde se arregla.
       } else if (data?.code === 'USERNAME_COOLDOWN') {
-        setError(data.error)
-        estado.reintentar()
+        setEstado({ puedeCambiarDesde: data.puedeCambiarDesde, texto: null })
       } else {
         setError('No pudimos guardar el cambio. Probá de nuevo.')
       }
@@ -63,69 +83,97 @@ export function CambiarNombreDeUsuario() {
     }
   }
 
-  const bloqueadoHasta = estado.datos?.texto ?? null
-
-  if (!abierto) {
-    return (
-      <div className="px-2">
-        <div className="flex min-h-11 items-center justify-between gap-2">
-          <span className="min-w-0 truncate">
-            <span className="text-sm text-base-content/70">Usuario </span>
-            <span className="font-semibold">@{user.username}</span>
-          </span>
-          {estado.datos && !bloqueadoHasta && (
-            <button
-              type="button"
-              onClick={abrir}
-              aria-label="Cambiar nombre de usuario"
-              className="btn btn-ghost btn-square min-h-11 min-w-11"
-            >
-              <IconPencil size={18} />
-            </button>
-          )}
-        </div>
-        {bloqueadoHasta && (
-          <p className="pb-1 text-xs text-base-content/70">
-            Podés cambiarlo de nuevo el {bloqueadoHasta}.
-          </p>
-        )}
-        {estado.error != null && !estado.datos && (
-          <p role="alert" className="pb-1 text-sm text-error">
-            No pudimos ver si podés cambiarlo.{' '}
-            <button type="button" onClick={estado.reintentar} className="link font-semibold">
-              Reintentar
-            </button>
-          </p>
-        )}
-      </div>
-    )
-  }
+  const puede = estado !== null && estado.puedeCambiarDesde === null
 
   return (
-    <form onSubmit={guardar} className="flex flex-col gap-2 px-2 pb-1">
-      <CampoNombreDeUsuario
-        campo={campo}
-        autoFocus
-        cambiando
-        ayuda="Después no vas a poder cambiarlo hasta dentro de 30 días."
-      />
-      {error && (
-        <p role="alert" className="text-sm text-error">
-          {error}
-        </p>
-      )}
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={guardando || igual || campo.valor.length < 3 || campo.chequeando}
-          className="btn btn-primary min-h-11 flex-1"
-        >
-          {guardando ? 'Guardando…' : 'Guardar'}
-        </button>
-        <button type="button" onClick={() => setAbierto(false)} className="btn btn-ghost min-h-11">
-          Cancelar
-        </button>
-      </div>
-    </form>
+    <>
+      <button
+        type="button"
+        onClick={abrir}
+        aria-label="Cambiar nombre de usuario"
+        className="btn btn-ghost btn-square min-h-11 min-w-11 shrink-0"
+      >
+        <IconPencil size={18} />
+      </button>
+
+      <dialog
+        ref={dialogo}
+        aria-labelledby={idDelTitulo}
+        className="modal"
+        // Si el navegador la cierra por su cuenta (Esc), `abierto` no puede quedar en true
+        // con la ventana cerrada: la próxima vez no se volvería a abrir.
+        onClose={(e) => {
+          e.stopPropagation()
+          setAbierto(false)
+        }}
+      >
+        <form onSubmit={guardar} className="modal-box flex max-w-sm flex-col gap-4">
+          <h2 id={idDelTitulo} className="font-display text-lg font-bold">
+            Cambiar nombre de usuario
+          </h2>
+
+          <div className="flex flex-col gap-1">
+            <span className="text-sm font-semibold">Nombre actual</span>
+            <span className="min-h-11 content-center break-all text-base-content/80">@{user.username}</span>
+          </div>
+
+          {puede ? (
+            <CampoNombreDeUsuario
+              campo={campo}
+              autoFocus
+              cambiando
+              etiqueta="Nuevo nombre"
+              ayuda="Después no vas a poder cambiarlo hasta dentro de 30 días."
+            />
+          ) : falloElEstado ? (
+            <p role="alert" className="text-sm text-error">
+              No pudimos ver si podés cambiarlo. Cerrá la ventana y probá de nuevo.
+            </p>
+          ) : estado ? (
+            <p role="status" className="text-base-content/80">
+              Podés volver a cambiarlo el {estado.texto ?? fechaEnPalabras(estado.puedeCambiarDesde)}.
+            </p>
+          ) : (
+            <p role="status" className="min-h-11 content-center text-sm text-base-content/70">
+              Cargando…
+            </p>
+          )}
+
+          {error && (
+            <p role="alert" className="text-sm text-error">
+              {error}
+            </p>
+          )}
+
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button type="button" onClick={() => setAbierto(false)} className="btn btn-ghost min-h-11">
+              {puede ? 'Cancelar' : 'Cerrar'}
+            </button>
+            {puede && (
+              <button
+                type="submit"
+                disabled={guardando || campo.valor.length < 3 || campo.valor === user.username || campo.chequeando}
+                className="btn btn-primary min-h-11"
+              >
+                {guardando ? 'Guardando…' : 'Guardar'}
+              </button>
+            )}
+          </div>
+        </form>
+        {/* El clic afuera cierra: no se pierde nada, el nombre no cambió. */}
+        <form method="dialog" className="modal-backdrop">
+          <button type="button" tabIndex={-1} aria-hidden="true" onClick={() => setAbierto(false)}>
+            Cerrar
+          </button>
+        </form>
+      </dialog>
+    </>
   )
+}
+
+/** Solo si el servidor mandó la fecha y no el texto: "2026-12-01" pasa a "1 de diciembre". */
+function fechaEnPalabras(iso: string | null): string {
+  if (!iso) return 'más adelante'
+  const [anio, mes, dia] = iso.split('-').map(Number)
+  return new Date(anio, mes - 1, dia).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })
 }

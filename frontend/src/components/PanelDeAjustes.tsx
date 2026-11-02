@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
-import { CambiarNombreDeUsuario } from './CambiarNombreDeUsuario'
 import { CuentasBloqueadas } from './CuentasBloqueadas'
 import { IconSettings } from './icons'
 import { LinksDeRedes } from './LinksDeRedes'
@@ -44,7 +43,6 @@ export function PanelDeAjustes() {
           </div>
           {user && (
             <>
-              <CambiarNombreDeUsuario />
               <MostrarMisListas />
               <CuentasBloqueadas />
               {/* Lo último y en kétchup: es lo que se hace pocas veces y no se toca sin querer. */}

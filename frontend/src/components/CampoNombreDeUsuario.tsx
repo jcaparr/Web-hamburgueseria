@@ -10,11 +10,13 @@ import type { CampoDeNombre } from '../hooks/useNombreDeUsuario'
 export function CampoNombreDeUsuario({
   campo,
   autoFocus,
+  etiqueta = 'Nombre de usuario',
   ayuda = 'Con esto te encuentran tus amigos. Al menos 3 caracteres: letras, números y guion bajo.',
   cambiando = false,
 }: {
   campo: CampoDeNombre
   autoFocus?: boolean
+  etiqueta?: string
   /** El texto de abajo cuando no hay problema. */
   ayuda?: string
   /** Si es para cambiar el que ya tiene (#380): el gestor de contraseñas no tiene que completarlo. */
@@ -26,7 +28,7 @@ export function CampoNombreDeUsuario({
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-semibold">
-        Nombre de usuario
+        {etiqueta}
       </label>
       {/* Un div y no otra etiqueta: con dos, el lector de pantalla anunciaba el campo
           como "arroba, Nombre de usuario". */}
