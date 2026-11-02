@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -84,12 +85,27 @@ class HorariosDeLocalesTest {
     }
 
     @Test
-    void volverAPreguntarReemplazaElHorarioEnVezDeSumarle() {
+    void unLocalConHorarioGuardadoNoVuelveAPreguntarseNiPasadoElMes() {
         BurgerJoint local = guardar("ChIJ-a", null);
         when(placesClient.horarioDe("ChIJ-a")).thenReturn(List.of(new Franja(1, 720, 900)));
         horarios.completar();
 
-        // Pasado el mes vuelve a salir, y el local cambió de horario.
+        // Pasaron cuarenta días, pero ya tiene horario: no se gasta una llamada (#390).
+        repository.anotarHorarioConsultado(local.getId(), Instant.now().minus(40, ChronoUnit.DAYS));
+        HorariosPedidos pedidos = horarios.completar();
+
+        verify(placesClient, times(1)).horarioDe("ChIJ-a");
+        assertThat(pedidos.faltan()).isZero();
+        assertThat(service.horario(local.getId()).franjas())
+            .containsExactly(new HorarioDto.Franja(1, 720, 900));
+    }
+
+    @Test
+    void unLocalSinHorarioEnGoogleSeReintentaPasadoElMes() {
+        BurgerJoint local = guardar("ChIJ-a", null);
+        when(placesClient.horarioDe("ChIJ-a")).thenReturn(List.of());
+        horarios.completar();
+
         repository.anotarHorarioConsultado(local.getId(), Instant.now().minus(40, ChronoUnit.DAYS));
         when(placesClient.horarioDe("ChIJ-a")).thenReturn(List.of(new Franja(2, 1200, 1380)));
         horarios.completar();

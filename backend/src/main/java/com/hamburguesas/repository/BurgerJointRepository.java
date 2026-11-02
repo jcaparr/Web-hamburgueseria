@@ -120,13 +120,15 @@ public interface BurgerJointRepository
     /**
      * Los locales a los que hay que pedirles el horario, en el orden en que conviene.
      *
-     * Primero los que nunca se preguntaron y después los más viejos, así la cuota del
-     * mes va a lo que falta antes que a refrescar. Los que se preguntaron después de
-     * {@code antesDe} no salen: su horario todavía está fresco.
+     * Solo los que no tienen horario guardado: el que ya lo tiene no vuelve a salir, por
+     * viejo que sea (#390). Primero los que nunca se preguntaron y después los más
+     * viejos. Los que se preguntaron después de {@code antesDe} y Google no tenía horario
+     * tampoco salen todavía: se reintentan pasado ese plazo.
      */
     @Query("""
         select b from BurgerJoint b
         where b.placeId is not null
+          and not exists (select 1 from FranjaHoraria f where f.burgerJoint = b)
           and (b.horarioConsultadoEl is null or b.horarioConsultadoEl < :antesDe)
         order by b.horarioConsultadoEl asc nulls first, b.id
         """)
