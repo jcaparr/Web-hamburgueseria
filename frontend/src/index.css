@@ -653,8 +653,15 @@ body {
   font-size: 10px;
   box-shadow: 0 0 0 1.5px var(--color-base-100);
 }
+/* A la altura de la ciudad entera: foto de 24 px y sin sello, para que quepan sueltos. */
+.mapa-muy-lejos .pin-mapa__foto {
+  width: 24px;
+  height: 24px;
+  box-shadow: 0 0 0 1.5px var(--color-base-100), 0 0 0 3px var(--color-primary);
+}
+.mapa-muy-lejos .pin-mapa__nota { display: none; }
 .mapa-lejos .grupo-mapa { width: 40px; height: 40px; font-size: 14px; box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 6px color-mix(in srgb, var(--color-primary) 25%, transparent); }
-.pin-mapa--elegido { z-index: 5; }
+.pin-mapa--elegido { z-index: 100 !important; }
 .pin-mapa--elegido .pin-mapa__foto {
   transform: scale(1.3);
   box-shadow: 0 0 0 3px var(--color-base-100), 0 0 0 6px var(--color-primary), 0 0 0 14px color-mix(in srgb, var(--color-primary) 25%, transparent);

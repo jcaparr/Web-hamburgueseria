@@ -25,6 +25,8 @@ const LIMITES: [[number, number], [number, number]] = [[-80, -58], [-48, -19]]
 const FUENTE = 'locales'
 /** Desde este zoom (nivel de barrio) los puntos se dibujan grandes y con el sello completo. */
 const ZOOM_DE_PUNTO_GRANDE = 15
+/** Por debajo de este zoom (una ciudad entera a la vista) la foto va más chica todavía y sin sello. */
+const ZOOM_DE_PUNTO_MINI = 14
 
 let protocoloRegistrado = false
 
@@ -163,7 +165,10 @@ export function Mapa() {
       m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
     }
     // De lejos los puntos se dibujan más chicos para que no se encimen (ver index.css).
-    const ajustarTamanio = () => contenedor.current?.classList.toggle('mapa-lejos', m.getZoom() < ZOOM_DE_PUNTO_GRANDE)
+    const ajustarTamanio = () => {
+      contenedor.current?.classList.toggle('mapa-lejos', m.getZoom() < ZOOM_DE_PUNTO_GRANDE)
+      contenedor.current?.classList.toggle('mapa-muy-lejos', m.getZoom() < ZOOM_DE_PUNTO_MINI)
+    }
     m.on('zoom', ajustarTamanio)
     ajustarTamanio()
     m.on('load', () => setListo(true))
@@ -227,8 +232,8 @@ export function Mapa() {
           type: 'geojson',
           data: comoPuntos(locales),
           cluster: true,
-          clusterRadius: 44,
-          clusterMaxZoom: 13,
+          clusterRadius: 30,
+          clusterMaxZoom: 10,
         })
         // Sin dibujo propio: los puntos son del DOM. Hace falta una capa para que MapLibre
         // cargue los datos de la fuente y se puedan consultar.
@@ -295,12 +300,16 @@ export function Mapa() {
     m.on('sourcedata', dibujar)
     m.on('moveend', dibujar)
     m.on('zoomend', dibujar)
+    // El último mosaico de la fuente puede terminar de cargar después de su 'sourcedata': 'idle'
+    // salta cuando ya no queda nada pendiente, y ahí se completa lo que faltaba.
+    m.on('idle', dibujar)
     dibujar()
     return () => {
       m.off('style.load', alCambiarElEstilo)
       m.off('sourcedata', dibujar)
       m.off('moveend', dibujar)
       m.off('zoomend', dibujar)
+      m.off('idle', dibujar)
       for (const marcador of puestos.values()) marcador.remove()
       puestos.clear()
       // Si el mapa ya se destruyó (se salió de la página), no queda nada que sacarle.
@@ -429,6 +438,8 @@ function elementoDeLocal(local: LocalDelMapa | undefined, alTocar: (local: Local
   const boton = document.createElement('button')
   boton.type = 'button'
   boton.className = 'pin-mapa'
+  // Si se pisan, quedan arriba los de mejor nota.
+  boton.style.zIndex = String(Math.round((local.averageScore ?? 0) * 10))
   boton.setAttribute(
     'aria-label',
     local.averageScore != null ? `${local.name}, nota ${nota(local.averageScore)}` : `${local.name}, sin reseñas`,
