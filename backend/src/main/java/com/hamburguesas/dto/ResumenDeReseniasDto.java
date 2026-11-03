@@ -23,6 +23,13 @@ public record ResumenDeReseniasDto(
      * quien la muestra tiene que estar listo para no mostrar nada.
      */
     List<TemaDeReseniasDto> temas,
+    /**
+     * Una oración que resume esos temas, o null si no hay temas (#392).
+     *
+     * Armada con plantillas sobre los mismos números, no escrita por una IA: no dice
+     * nada que los temas no digan.
+     */
+    String frase,
     /** El promedio de local, atención y precio, con cuántas reseñas los pusieron (#336). */
     DesgloseDeNotasDto desglose
 ) {}

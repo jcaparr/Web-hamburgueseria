@@ -8,4 +8,15 @@ package com.hamburguesas.dto;
  * información. Un 80% construido sobre cinco reseñas y otro sobre doscientas se leen
  * igual, y no valen lo mismo.
  */
-public record TemaDeReseniasDto(String tema, int menciones, int aFavor) {}
+public record TemaDeReseniasDto(
+    String tema,
+    int menciones,
+    int aFavor,
+    /**
+     * A_FAVOR, EN_CONTRA o DIVIDIDO: en qué grupo va (#392).
+     *
+     * Viene calculado para que la pantalla no corte por su lado y termine agrupando
+     * distinto de lo que dice la oración del resumen.
+     */
+    String tono
+) {}

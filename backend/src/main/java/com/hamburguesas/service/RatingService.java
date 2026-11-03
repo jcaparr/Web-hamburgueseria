@@ -366,7 +366,13 @@ public class RatingService {
             .mapToObj(nota -> new NotaYCuantasDto(nota, cuantasPorNota.getOrDefault(nota, 0L)))
             .toList();
 
-        return new ResumenDeReseniasDto(distribucion, temas(burgerJointId),
+        List<TemasDeLasResenias.Tema> temas = temas(burgerJointId);
+        return new ResumenDeReseniasDto(distribucion,
+            temas.stream()
+                .map(tema -> new TemaDeReseniasDto(
+                    tema.nombre(), tema.menciones(), tema.aFavor(), tema.tono().name()))
+                .toList(),
+            FraseDeLasResenias.de(temas),
             ratingRepository.desgloseDeNotas(burgerJointId));
     }
 
@@ -374,18 +380,15 @@ public class RatingService {
      * De qué hablan las reseñas escritas de este local.
      *
      * El cálculo vive aparte, sin Spring ni base de datos, porque lo que hay que poder
-     * probar es qué cuenta como mención y qué no: acá adentro solo se traen las reseñas
-     * y se traduce el resultado.
+     * probar es qué cuenta como mención y qué no: acá adentro solo se traen las reseñas.
      */
-    private List<TemaDeReseniasDto> temas(Long burgerJointId) {
+    private List<TemasDeLasResenias.Tema> temas(Long burgerJointId) {
         List<TemasDeLasResenias.Mencion> menciones = ratingRepository
             .notasYComentarios(burgerJointId).stream()
             .map(fila -> new TemasDeLasResenias.Mencion(fila.nota(), fila.comentario()))
             .toList();
 
-        return TemasDeLasResenias.de(menciones).stream()
-            .map(tema -> new TemaDeReseniasDto(tema.nombre(), tema.menciones(), tema.aFavor()))
-            .toList();
+        return TemasDeLasResenias.de(menciones);
     }
 
     private byte[] leer(MultipartFile foto) {
