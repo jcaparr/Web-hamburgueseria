@@ -653,13 +653,21 @@ body {
   font-size: 10px;
   box-shadow: 0 0 0 1.5px var(--color-base-100);
 }
-/* A la altura de la ciudad entera: foto de 24 px y sin sello, para que quepan sueltos. */
+/* A la altura de la ciudad entera: foto de 24 px y sello mini, para que quepan sueltos. */
 .mapa-muy-lejos .pin-mapa__foto {
   width: 24px;
   height: 24px;
   box-shadow: 0 0 0 1.5px var(--color-base-100), 0 0 0 3px var(--color-primary);
 }
-.mapa-muy-lejos .pin-mapa__nota { display: none; }
+/* La nota se ve siempre, aunque sea chica: sin ella el mapa no dice cuál conviene. */
+.mapa-muy-lejos .pin-mapa__nota {
+  bottom: 3px;
+  padding: 1px 3px;
+  border-radius: 4px;
+  font-size: 10px;
+  line-height: 1.1;
+  box-shadow: 0 0 0 1px var(--color-base-100);
+}
 .mapa-lejos .grupo-mapa { width: 40px; height: 40px; font-size: 14px; box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 6px color-mix(in srgb, var(--color-primary) 25%, transparent); }
 .pin-mapa--elegido { z-index: 100 !important; }
 .pin-mapa--elegido .pin-mapa__foto {

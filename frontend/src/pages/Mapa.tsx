@@ -25,7 +25,7 @@ const LIMITES: [[number, number], [number, number]] = [[-80, -58], [-48, -19]]
 const FUENTE = 'locales'
 /** Desde este zoom (nivel de barrio) los puntos se dibujan grandes y con el sello completo. */
 const ZOOM_DE_PUNTO_GRANDE = 15
-/** Por debajo de este zoom (una ciudad entera a la vista) la foto va más chica todavía y sin sello. */
+/** Por debajo de este zoom (una ciudad entera a la vista) la foto va más chica todavía, con el sello mini. */
 const ZOOM_DE_PUNTO_MINI = 14
 
 let protocoloRegistrado = false
@@ -232,8 +232,8 @@ export function Mapa() {
           type: 'geojson',
           data: comoPuntos(locales),
           cluster: true,
-          clusterRadius: 30,
-          clusterMaxZoom: 10,
+          clusterRadius: 44,
+          clusterMaxZoom: 11,
         })
         // Sin dibujo propio: los puntos son del DOM. Hace falta una capa para que MapLibre
         // cargue los datos de la fuente y se puedan consultar.
@@ -367,7 +367,7 @@ export function Mapa() {
     <div className="relative h-[calc(100dvh-7.5rem)] min-h-[26rem] overflow-hidden bg-base-300 md:h-[calc(100dvh-9rem)] md:rounded-box md:ring-1 md:ring-inset md:ring-base-content/15">
       {/* MapLibre le pone position: relative a su contenedor, y eso pisaba el absolute y lo
           dejaba sin alto: el mapa va en un div propio que llena a este. */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 isolate">
         <div ref={contenedor} className="h-full w-full" role="region" aria-label="Mapa de hamburgueserías" />
       </div>
 
