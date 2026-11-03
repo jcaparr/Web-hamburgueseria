@@ -72,12 +72,24 @@
 	# que no existe da 404 en el backend.
 	@vistaprevia_slug {
 		path_regexp slug ^/([a-z0-9][a-z0-9-]*)/?$
-		not path_regexp reservada ^/(api|assets|e|u|cadenas|burger-joints|ranking|tour|buscar|feed|profile|reviews|wishlist|login|register|verify-email|forgot-password|terminos|privacidad)/?$
+		not path_regexp reservada ^/(api|assets|e|u|cadenas|burger-joints|ranking|tour|buscar|feed|profile|reviews|wishlist|login|register|verify-email|forgot-password|terminos|privacidad|mapa)/?$
 		header_regexp ua User-Agent (?i)(whatsapp|facebookexternalhit|facebot|meta-externalagent|twitterbot|telegrambot|slackbot|discordbot|linkedinbot|skypeuripreview|pinterest|redditbot)
 	}
 	handle @vistaprevia_slug {
 		rewrite * /api/burger-joints/por-slug/{re.slug.1}/vista-previa
 		reverse_proxy backend:8080
+	}
+
+	# El mapa base (#395): un solo archivo .pmtiles de Protomaps que el navegador lee a
+	# pedacitos con pedidos Range, sin servidor de mapas de por medio. Vive en
+	# deploy/tiles/ del servidor (no va al repo: ver deploy/README.md) y se monta de solo
+	# lectura. file_server contesta los Range solo. Se puede cachear un día: cambia a mano,
+	# cuando se baja un mapa nuevo.
+	handle /tiles/* {
+		root * /srv-tiles
+		uri strip_prefix /tiles
+		header Cache-Control "public, max-age=86400"
+		file_server
 	}
 
 	handle {
@@ -126,7 +138,7 @@
 		#
 		# En una sola línea a propósito: un valor de header no puede contener saltos
 		# de línea, y partido en varias Caddy lo descarta en silencio.
-		Content-Security-Policy "default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; frame-src https://accounts.google.com/gsi/; connect-src 'self' https://accounts.google.com/gsi/; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; font-src 'self'; img-src 'self' data: blob: https://lh3.googleusercontent.com; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'"
+		Content-Security-Policy "default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; frame-src https://accounts.google.com/gsi/; connect-src 'self' https://accounts.google.com/gsi/; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; font-src 'self'; img-src 'self' data: blob: https://lh3.googleusercontent.com; worker-src 'self' blob:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'"
 
 		# Nada de esto usa cámara, micrófono ni pagos, así que no están disponibles ni
 		# para un script que logre entrar. La ubicación sí: la pantalla de tour la pide

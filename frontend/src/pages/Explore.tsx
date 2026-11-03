@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
-import { IconRoute, IconSearch } from '../components/icons'
+import { IconPin, IconRoute, IconSearch } from '../components/icons'
 import { LoadError } from '../components/LoadError'
 import { MejorCalificadas } from '../components/MejorCalificadas'
 import { AvisoVacio } from '../components/Seccion'
@@ -386,6 +386,11 @@ export function Explore() {
           <Link to="/tour" aria-label="Armar recorrido" className={`btn btn-primary flex-none ${CLASE_DE_LOS_FILTROS}`}>
             <IconRoute size={18} />
             Recorrido
+          </Link>
+          {/* El mapa (#395) vive al lado del recorrido: los dos son otra forma de elegir adónde ir. */}
+          <Link to="/mapa" aria-label="Ver el mapa" className={`btn btn-outline flex-none ${CLASE_DE_LOS_FILTROS}`}>
+            <IconPin size={18} />
+            Mapa
           </Link>
           </div>
           <div className="flex flex-wrap items-center gap-2 md:gap-3">

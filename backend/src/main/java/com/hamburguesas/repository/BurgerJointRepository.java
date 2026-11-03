@@ -90,6 +90,25 @@ public interface BurgerJointRepository
         return findAll(FiltroDeLocales.con(nombre, barrios, orden, ubicacion, paraResenia), pagina);
     }
 
+    /**
+     * Los locales del mapa (#395): los que tienen coordenadas, sin las cadenas de comida
+     * rápida (igual que Explorar, #206), con su nota y su cantidad de reseñas.
+     *
+     * Una sola consulta que agrupa en la base: el mapa se pide en cada visita a /mapa y
+     * no puede traer los locales para sacarles el promedio en Java. El left join deja
+     * entrar a los que no tienen reseñas, con count 0 y nota nula.
+     */
+    @Query("""
+        select new com.hamburguesas.dto.FilaDelMapa(
+            b.id, b.placeId, b.slug, b.name, b.area, b.photoUrl, b.latitude, b.longitude,
+            avg(r.score), count(r))
+        from BurgerJoint b left join Rating r on r.burgerJoint = b
+        where b.latitude is not null and b.longitude is not null and b.fastFood = false
+        group by b.id, b.placeId, b.slug, b.name, b.area, b.photoUrl, b.latitude, b.longitude
+        order by b.id
+        """)
+    List<com.hamburguesas.dto.FilaDelMapa> paraElMapa();
+
     Optional<BurgerJoint> findByPlaceId(String placeId);
 
     /** Los locales de un puñado de fichas puntuales, para las fotos elegidas a mano. */

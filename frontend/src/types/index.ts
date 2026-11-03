@@ -374,3 +374,20 @@ export interface Podio {
   /** El puesto de quien mira, aunque esté fuera del top; null si no ganó XP en el período. */
   yo: PuestoDelPodio | null
 }
+
+/** Un local en el mapa (#395): lo justo para el punto y su tarjeta, sin la ficha entera. */
+export interface LocalDelMapa {
+  id: number
+  placeId: string | null
+  slug: string | null
+  name: string
+  area: string | null
+  /** La foto chica del punto; nula si el local no tiene foto. */
+  miniatura: string | null
+  latitude: number
+  longitude: number
+  /** Nula si todavía nadie lo reseñó: el punto lleva solo la foto. */
+  averageScore: number | null
+  ratingsCount: number
+  franjas: FranjaHoraria[]
+}
