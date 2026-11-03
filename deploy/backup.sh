@@ -37,6 +37,9 @@ RETENTION_DAYS="${RETENTION_DAYS:-14}"
 # Afuera se guarda lo mismo que adentro: la política de privacidad promete que lo que
 # alguien borra desaparece de las copias a los 14 días.
 REMOTE_RETENTION_DAYS="${REMOTE_RETENTION_DAYS:-$RETENTION_DAYS}"
+# El tar de fotos pesa cientos de MB y las fotos ya están sincronizadas afuera, así que
+# adentro alcanza con pocos días. Solo se acorta si la copia de afuera salió bien.
+PHOTOS_RETENTION_DAYS="${PHOTOS_RETENTION_DAYS:-3}"
 
 # La copia de afuera se revisa antes de empezar: mal configurada tiene que fallar
 # enseguida y a la vista, no quedar en un log que nadie lee mientras parece que anda.
@@ -86,7 +89,11 @@ LOCAL_OK=1
 
 echo "==> Deleting local backups older than $RETENTION_DAYS days"
 find "$BACKUP_DIR" -name 'db-*.sql.gz' -mtime "+$RETENTION_DAYS" -delete
-find "$BACKUP_DIR" -name 'photos-*.tar.gz' -mtime "+$RETENTION_DAYS" -delete
+# Con copia afuera, las fotos viejas se limpian al final (PHOTOS_RETENTION_DAYS), una vez
+# que el sync salió bien. Sin copia afuera, estas son las únicas: se conservan como la base.
+if [ -z "${RCLONE_REMOTE:-}" ]; then
+    find "$BACKUP_DIR" -name 'photos-*.tar.gz' -mtime "+$RETENTION_DAYS" -delete
+fi
 
 # --apparent-size, because a few-hundred-byte archive rounds to 0 with block sizes
 # and makes a perfectly good backup look like a failed one.
@@ -145,5 +152,10 @@ for dia in $(rclone lsf --dirs-only "$RCLONE_REMOTE/fotos/borradas" 2>/dev/null)
         rclone purge "$RCLONE_REMOTE/fotos/borradas/$dia"
     fi
 done
+
+# Llegar hasta acá (set -e) quiere decir que el sync de fotos salió bien: ya no hace
+# falta tener tantas copias enteras en el servidor.
+echo "==> Deleting local photo archives older than $PHOTOS_RETENTION_DAYS days"
+find "$BACKUP_DIR" -name 'photos-*.tar.gz' -mtime "+$PHOTOS_RETENTION_DAYS" -delete
 
 echo "==> Off-server copy done"

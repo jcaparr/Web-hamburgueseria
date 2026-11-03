@@ -209,6 +209,9 @@ docker compose -f docker-compose.prod.yml --env-file .env up -d --build
 ## Backups
 
 `backup.sh` guarda la base y las fotos en `deploy/backups` y borra lo que pasa de 14 días.
+Los `.tar.gz` de fotos pesan cientos de MB: con copia afuera se conservan solo 3 días
+(`PHOTOS_RETENTION_DAYS`) y se borran recién cuando el sync de fotos salió bien. Sin copia
+afuera se conservan 14, porque serían las únicas.
 Las fotos son de dos clases: las que bajan de Google y las que sube la gente con sus
 reseñas. Las segundas no se pueden volver a conseguir de ningún lado, así que van las dos.
 
