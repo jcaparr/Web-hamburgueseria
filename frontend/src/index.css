@@ -619,6 +619,10 @@ body {
   box-shadow: 0 0 0 3px var(--color-base-100), 0 0 0 5px var(--color-primary), 0 6px 14px -6px rgb(0 0 0 / 0.5);
   transition: transform 0.15s ease;
 }
+.pin-mapa__foto--vacia {
+  /* Un local sin foto: una hamburguesita en vez de un círculo vacío. */
+  background: var(--color-base-300) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 10.5a7 5.5 0 0 1 14 0z' fill='%23f2b705'/%3E%3Crect x='4' y='12' width='16' height='2.4' rx='1.2' fill='%237a4a2a'/%3E%3Cpath d='M5 15.4h14a2.4 2.4 0 0 1-2.4 2.4H7.4A2.4 2.4 0 0 1 5 15.4z' fill='%23f2b705'/%3E%3C/svg%3E") center / 62% no-repeat;
+}
 .pin-mapa__foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pin-mapa__nota {
   position: absolute;

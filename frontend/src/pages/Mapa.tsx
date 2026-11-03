@@ -166,6 +166,10 @@ export function Mapa() {
       const mensaje = String((e as { error?: Error }).error?.message ?? '')
       if (/pmtiles|tiles|Failed to fetch|404/i.test(mensaje)) setSinMapaBase(true)
     })
+    // El estilo pide íconos (escudos de rutas, aeropuertos) que no tenemos: se callan con uno vacío.
+    m.on('styleimagemissing', (e) => {
+      if (!m.hasImage(e.id)) m.addImage(e.id, { width: 1, height: 1, data: new Uint8Array(4) })
+    })
     m.on('click', () => setSeleccionadoId(null))
     m.on('move', acomodarTarjeta)
     mapa.current = m
@@ -209,27 +213,42 @@ export function Mapa() {
     const puestos = marcadores.current
     const poner = () => {
       if (m.getSource(FUENTE)) return
-      m.addSource(FUENTE, {
-        type: 'geojson',
-        data: comoPuntos(locales),
-        cluster: true,
-        clusterRadius: 56,
-        clusterMaxZoom: 16,
-      })
-      // Sin dibujo propio: los puntos son del DOM. Hace falta una capa para que MapLibre
-      // cargue los datos de la fuente y se puedan consultar.
-      m.addLayer({
-        id: `${FUENTE}-oculta`,
-        type: 'circle',
-        source: FUENTE,
-        paint: { 'circle-radius': 1, 'circle-opacity': 0 },
-      })
+      // Si el estilo todavía se está cargando (se acaba de cambiar el tema), MapLibre no deja
+      // agregar nada: se reintenta cuando termina, que es cuando salta style.load.
+      if (!m.getStyle()) return
+      try {
+        m.addSource(FUENTE, {
+          type: 'geojson',
+          data: comoPuntos(locales),
+          cluster: true,
+          clusterRadius: 56,
+          clusterMaxZoom: 16,
+        })
+        // Sin dibujo propio: los puntos son del DOM. Hace falta una capa para que MapLibre
+        // cargue los datos de la fuente y se puedan consultar.
+        m.addLayer({
+          id: `${FUENTE}-oculta`,
+          type: 'circle',
+          source: FUENTE,
+          paint: { 'circle-radius': 1, 'circle-opacity': 0 },
+        })
+      } catch {
+        m.once('style.load', poner)
+      }
     }
 
     const dibujar = () => {
       if (!m.getSource(FUENTE) || !m.isSourceLoaded(FUENTE)) return
       const vistos = new Map<string, Feature<Point>>()
+      // querySourceFeatures devuelve todo lo de los mosaicos cargados, también lo que quedó
+      // afuera de la pantalla: se dibuja solo lo que está a la vista, con un margen para que
+      // al arrastrar no aparezcan de golpe.
+      const [[oeste, sur], [este, norte]] = m.getBounds().toArray()
+      const margenX = (este - oeste) * 0.25
+      const margenY = (norte - sur) * 0.25
       for (const f of m.querySourceFeatures(FUENTE) as unknown as Feature<Point>[]) {
+        const [lon, lat] = f.geometry.coordinates
+        if (lon < oeste - margenX || lon > este + margenX || lat < sur - margenY || lat > norte + margenY) continue
         const p = f.properties ?? {}
         const clave = p.cluster ? `c${p.cluster_id}` : `l${p.id}`
         vistos.set(clave, f)
@@ -278,6 +297,8 @@ export function Mapa() {
       m.off('zoomend', dibujar)
       for (const marcador of puestos.values()) marcador.remove()
       puestos.clear()
+      // Si el mapa ya se destruyó (se salió de la página), no queda nada que sacarle.
+      if (mapa.current !== m) return
       if (m.getLayer(`${FUENTE}-oculta`)) m.removeLayer(`${FUENTE}-oculta`)
       if (m.getSource(FUENTE)) m.removeSource(FUENTE)
     }
@@ -409,6 +430,7 @@ function elementoDeLocal(local: LocalDelMapa | undefined, alTocar: (local: Local
 
   const foto = document.createElement('span')
   foto.className = 'pin-mapa__foto'
+  if (!local.miniatura) foto.classList.add('pin-mapa__foto--vacia')
   if (local.miniatura) {
     const img = document.createElement('img')
     img.src = local.miniatura

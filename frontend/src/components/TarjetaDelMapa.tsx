@@ -29,7 +29,7 @@ export function TarjetaDelMapa({ local, distancia, guardado, onGuardar, onCerrar
   const cuantas = local.ratingsCount
 
   return (
-    <div className="rounded-t-[1.375rem] bg-base-100 p-4 shadow-[0_-10px_30px_-12px_rgb(0_0_0/0.45)] ring-1 ring-inset ring-base-content/15 md:w-[19rem] md:rounded-box md:shadow-xl">
+    <div className="rounded-t-[1.375rem] bg-base-100 p-4 shadow-[0_-10px_30px_-12px_rgb(0_0_0/0.45)] ring-1 ring-inset ring-base-content/15 md:w-[21rem] md:rounded-box md:shadow-xl">
       <button
         type="button"
         onClick={onCerrar}

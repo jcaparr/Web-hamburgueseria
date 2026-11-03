@@ -8,10 +8,14 @@ import type { StyleSpecification } from 'maplibre-gl'
  * los estilos que trae Protomaps (LIGHT y DARK) y se pisan los colores del suelo, el agua,
  * los parques, los edificios y las calles; lo que no se nombra acá queda como viene.
  *
- * Cuentas de contraste (fórmula WCAG) de los nombres de calles sobre el suelo:
- * claro #5c4a3a sobre #f1e9d6, y oscuro #c9b89c sobre #1c1510. Los valores medidos están en
- * el PR.
+ * Contraste (fórmula WCAG) de los textos sobre su fondo: calles 6,96 : 1 de día (#5c4a3a
+ * sobre #f1e9d6) y 9,29 : 1 de noche (#c9b89c sobre #1c1510); nombres del agua 5,13 : 1 y
+ * 5,96 : 1. Todos pasan 4,5 : 1.
  */
+
+/** Los nombres de lugares (parques, estaciones, aeropuertos) venían en azul y verde: acá van en la paleta. */
+const POIS_CLARO = Object.fromEntries(Object.keys(LIGHT.pois ?? {}).map((k) => [k, '#5c4a3a'])) as unknown as NonNullable<Flavor['pois']>
+const POIS_OSCURO = Object.fromEntries(Object.keys(DARK.pois ?? {}).map((k) => [k, '#c9b89c'])) as unknown as NonNullable<Flavor['pois']>
 
 const CLARO: Flavor = {
   ...LIGHT,
@@ -58,9 +62,10 @@ const CLARO: Flavor = {
   state_label: '#6b5848',
   state_label_halo: '#f1e9d6',
   country_label: '#6b5848',
-  ocean_label: '#4f7478',
+  ocean_label: '#335659',
   address_label: '#6b5848',
   address_label_halo: '#f1e9d6',
+  pois: POIS_CLARO,
 }
 
 const OSCURO: Flavor = {
@@ -111,6 +116,7 @@ const OSCURO: Flavor = {
   ocean_label: '#7fa6ab',
   address_label: '#c9b89c',
   address_label_halo: '#1c1510',
+  pois: POIS_OSCURO,
 }
 
 /** Atribución obligatoria de OpenStreetMap (licencia ODbL) y de Protomaps: siempre visible. */
