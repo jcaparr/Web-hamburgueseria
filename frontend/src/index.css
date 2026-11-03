@@ -273,6 +273,9 @@
   /* El arco lleno del burgómetro grande: el rojo del tema, con su halo y sin filo. */
   --arco-lleno: var(--color-primary);
   --arco-filo: transparent;
+  /* Nota baja (menos de 4): naranja tostado, lejos del kétchup; #f7efd8 encima da 5,2 : 1 (#356 y #395). */
+  --nota-baja: #a24a07;
+  --nota-baja-c: #f7efd8;
   /* El texto de los botones fantasma de acción: rojo en claro, crema en oscuro (#358). */
   --color-accion: var(--color-primary);
   /* El extremo del degradé de la cabecera del perfil y el filo del sello del nivel (#370). */
@@ -291,6 +294,8 @@
   /* El arco del burgómetro usa el rojo vivo del tema y lleva un filo crema entre él y su halo. */
   --arco-lleno: var(--color-primary);
   --arco-filo: #f4ead6;
+  --nota-baja: #f59e5b;
+  --nota-baja-c: #17110d;
   /*
    * Lo rojo sólido en oscuro (#359): botón primario y lápiz de la barra llevan un filo
    * crema de 1,5 px y un brillo suave, el mismo recurso que el arco; el texto encima
@@ -323,6 +328,8 @@
     --pista-filo: #7a6652;
     --arco-lleno: var(--color-primary);
     --arco-filo: #f4ead6;
+    --nota-baja: #f59e5b;
+    --nota-baja-c: #17110d;
     --filo-primario: #f4ead6;
     --ancho-filo-primario: 1.5px;
     --brillo-primario: 0 0 14px rgb(255 90 60 / 0.4);
@@ -646,10 +653,10 @@ body {
   font-variant-numeric: tabular-nums;
   pointer-events: none;
 }
-/* Color por rango, también en la tarjeta. Contraste del número (claro / oscuro): verde 5,41 y 9,24; cheddar 7,55 y 10,29; neutro 10,47 y 11,59. */
+/* Color por rango, también en la tarjeta. Contraste del número (claro / oscuro): verde 5,41 y 9,24; cheddar 7,55 y 10,29; naranja tostado 5,2 y 8,84. */
 .nota-alta { background: var(--color-success); color: var(--color-success-content); }
 .nota-media { background: var(--color-secondary); color: var(--color-secondary-content); }
-.nota-baja { background: var(--color-base-300); color: var(--color-base-content); }
+.nota-baja { background: var(--nota-baja); color: var(--nota-baja-c); }
 /* De lejos (zoom menor a 15) la foto baja a 30 px y, por debajo del 14, a 22 px: así los locales de un barrio denso entran sueltos. La nota nunca baja de 12 px. */
 .mapa-lejos { --foto: 30px; --nota: 14px; }
 .mapa-muy-lejos { --foto: 22px; --nota: 12px; }

@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom'
 import type { LocalDelMapa } from '../types'
 import { estadoDeHoy, momentoEnBuenosAires } from '../utils/horario'
 import { comoLlegarUrl } from '../utils/maps'
-import { cantidad, nota } from '../utils/numeros'
-import { claseDeNota } from '../utils/rangoDeNota'
+import { cantidad } from '../utils/numeros'
+import { colorDelArco } from '../utils/rangoDeNota'
 import { rutaDelLocal } from '../utils/rutaDelLocal'
 import { IconHeart, IconRoute } from './icons'
+import { MedidorGrande } from './MedidorGrande'
 
 interface Props {
   local: LocalDelMapa
@@ -18,9 +19,10 @@ interface Props {
 }
 
 /**
- * Lo que se abre al tocar un punto del mapa (#395). La nota va grande y con su color por rango, a
- * la izquierda; el nombre —que lleva a la ficha, por eso no hay un "Ver ficha"—, el barrio, las
- * reseñas y el horario de hoy, en el medio; la foto, a la derecha. Abajo, Guardar y Cómo llegar:
+ * Lo que se abre al tocar un punto del mapa (#395). La foto va a la izquierda; el nombre —que
+ * lleva a la ficha, por eso no hay un "Ver ficha"—, el barrio, las reseñas y el horario de hoy, en
+ * el medio; la nota, a la derecha, en el medidor de la marca (el tablero del logo) con el arco del
+ * color de su rango. Abajo, Guardar y Cómo llegar:
  * este último es lo único en kétchup. En el teléfono sube desde abajo; en escritorio flota al lado
  * del punto.
  */
@@ -32,7 +34,7 @@ export function TarjetaDelMapa({ local, distancia, guardado, onGuardar, onCerrar
   const [estado, hasta] = horario ? horario.texto.split(' · ') : []
 
   return (
-    <div className="rounded-t-[1.375rem] bg-base-100 p-4 shadow-[0_-10px_30px_-12px_rgb(0_0_0/0.45)] ring-1 ring-inset ring-base-content/15 md:w-[22rem] md:rounded-box md:shadow-xl">
+    <div className="rounded-t-[1.375rem] bg-base-100 p-4 shadow-[0_-10px_30px_-12px_rgb(0_0_0/0.45)] ring-1 ring-inset ring-base-content/15 md:w-[24rem] md:rounded-box md:shadow-xl">
       <button
         type="button"
         onClick={onCerrar}
@@ -43,15 +45,9 @@ export function TarjetaDelMapa({ local, distancia, guardado, onGuardar, onCerrar
       </button>
 
       <div className="flex items-start gap-3 pr-9">
-        {local.averageScore != null && (
-          <p
-            className={`${claseDeNota(local.averageScore)} grid h-[3.875rem] w-[3.875rem] flex-none place-items-center rounded-2xl border-[1.5px] border-base-content font-display text-[1.625rem] font-extrabold leading-none tabular-nums`}
-          >
-            <span className="sr-only">Nota </span>
-            {nota(local.averageScore)}
-            <span className="sr-only"> de 5</span>
-          </p>
-        )}
+        <div className="h-16 w-16 flex-none overflow-hidden rounded-2xl bg-base-300">
+          {local.miniatura && <img src={local.miniatura} alt="" className="h-full w-full object-cover" />}
+        </div>
 
         <div className="flex min-w-0 flex-1 flex-col items-start">
           <Link
@@ -83,9 +79,15 @@ export function TarjetaDelMapa({ local, distancia, guardado, onGuardar, onCerrar
           )}
         </div>
 
-        <div className="h-14 w-14 flex-none overflow-hidden rounded-field bg-base-300">
-          {local.miniatura && <img src={local.miniatura} alt="" className="h-full w-full object-cover" />}
-        </div>
+        {local.averageScore != null && (
+          <MedidorGrande
+            valor={local.averageScore}
+            tamanio="sm"
+            etiqueta="Nota"
+            conLetraDelLogo
+            colorDelArco={colorDelArco(local.averageScore)}
+          />
+        )}
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2">
