@@ -31,8 +31,7 @@ class FraseDeLasReseniasTest {
     void loQueGustaYLoQueNoEnUnaOracion() {
         assertThat(FraseDeLasResenias.de(List.of(
             aFavor("Las papas"), aFavor("La carne"), enContra("La espera"), dividido("El precio"))))
-            .isEqualTo("Quienes escribieron destacan las papas y la carne, pero se quejan de la espera."
-                + " El precio divide opiniones.");
+            .isEqualTo("Quienes escribieron destacan las papas y la carne, pero se quejan de la espera.");
     }
 
     @Test
@@ -48,10 +47,10 @@ class FraseDeLasReseniasTest {
             .isEqualTo("Quienes escribieron se quejan del precio y la espera.");
     }
 
+    /** Lo dividido no se nombra: si es lo único que hay, no hay frase. */
     @Test
-    void soloDivididosEnPlural() {
-        assertThat(FraseDeLasResenias.de(List.of(dividido("El precio"), dividido("La atención"))))
-            .isEqualTo("El precio y la atención dividen opiniones.");
+    void soloDivididosNoDaFrase() {
+        assertThat(FraseDeLasResenias.de(List.of(dividido("El precio"), dividido("La atención")))).isNull();
     }
 
     /** Más de tres ya es una lista, y la lista está abajo en los chips. */

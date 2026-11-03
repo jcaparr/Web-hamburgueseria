@@ -21,19 +21,19 @@ import type { TemaDeResenias } from '../types'
  * opinión suelta disfrazada de tendencia, y las reseñas enteras ya están más abajo.
  */
 export function TemasDeLasResenias({ temas, frase }: { temas: TemaDeResenias[]; frase: string | null }) {
-  if (temas.length === 0) return null
-
+  // Lo dividido no se muestra (pedido de Juan en #392): un tema que no juega para
+  // ningún lado no ayuda a decidir, y la frase tampoco lo nombra.
   const gusta = temas.filter((t) => t.tono === 'A_FAVOR')
   const noGusta = temas.filter((t) => t.tono === 'EN_CONTRA')
-  const divide = temas.filter((t) => t.tono === 'DIVIDIDO')
+  if (gusta.length === 0 && noGusta.length === 0) return null
 
   return (
     <section className="flex flex-col gap-3 tarjeta p-3">
       <div className="flex flex-col gap-1">
         <h3 className="text-sm font-semibold">De qué hablan las reseñas</h3>
         {frase && <p className="text-sm">{frase}</p>}
-        {/* Una vez acá y no en cada chip: dice de dónde sale la frase y qué cuentan los
-            números, sin repetirlo seis veces. */}
+        {/* Una vez acá y no en cada chip: dice de dónde sale la frase y cómo se reparten
+            los temas, sin repetirlo seis veces. */}
         <p className="text-xs text-base-content/70">
           Resumen automático según la nota de quienes nombraron cada tema.
         </p>
@@ -41,29 +41,13 @@ export function TemasDeLasResenias({ temas, frase }: { temas: TemaDeResenias[]; 
 
       {gusta.length > 0 && (
         <Grupo titulo="Lo que gusta" signo="+" colorDelSigno="text-success">
-          {gusta.map((t) => (
-            <Chip key={t.tema} tema={t.tema} cuenta={`${t.aFavor} de ${t.menciones}`}
-              ayuda={`${t.aFavor} de ${t.menciones} con buena nota`} estilo="bg-success/15 text-success" />
-          ))}
+          {gusta.map((t) => <Chip key={t.tema} tema={t.tema} estilo="bg-success/15 text-success" />)}
         </Grupo>
       )}
 
       {noGusta.length > 0 && (
         <Grupo titulo="Lo que no" signo="−" colorDelSigno="text-error">
-          {noGusta.map((t) => (
-            <Chip key={t.tema} tema={t.tema} cuenta={`${t.menciones - t.aFavor} de ${t.menciones}`}
-              ayuda={`${t.menciones - t.aFavor} de ${t.menciones} con nota baja`} estilo="bg-error/15 text-error" />
-          ))}
-        </Grupo>
-      )}
-
-      {divide.length > 0 && (
-        <Grupo titulo="Dividido">
-          {divide.map((t) => (
-            <Chip key={t.tema} tema={t.tema} cuenta={`${t.aFavor} de ${t.menciones} a favor`}
-              ayuda={`${t.aFavor} de ${t.menciones} con buena nota`}
-              estilo="bg-base-content/10 text-base-content/80" />
-          ))}
+          {noGusta.map((t) => <Chip key={t.tema} tema={t.tema} estilo="bg-error/15 text-error" />)}
         </Grupo>
       )}
     </section>
@@ -72,14 +56,14 @@ export function TemasDeLasResenias({ temas, frase }: { temas: TemaDeResenias[]; 
 
 function Grupo({ titulo, signo, colorDelSigno, children }: {
   titulo: string
-  signo?: string
-  colorDelSigno?: string
+  signo: string
+  colorDelSigno: string
   children: ReactNode
 }) {
   return (
     <div className="flex flex-col gap-1.5">
       <h4 className="flex items-center gap-1.5 text-xs font-semibold">
-        {signo && <span aria-hidden="true" className={`font-bold ${colorDelSigno}`}>{signo}</span>}
+        <span aria-hidden="true" className={`font-bold ${colorDelSigno}`}>{signo}</span>
         {titulo}
       </h4>
       <ul className="flex flex-wrap gap-1.5">{children}</ul>
@@ -88,16 +72,14 @@ function Grupo({ titulo, signo, colorDelSigno, children }: {
 }
 
 /**
- * Un tema con su cuenta. No se toca, así que no necesita los 44 px de un botón. El
- * número va más chico y sin negrita, no más transparente: con transparencia el verde
- * sobre su fondo bajaba a 3,7 : 1, y así queda en 4,9 : 1 (claro) y 6,3 : 1 (oscuro).
+ * Un tema, sin la cuenta: "2 de 2" con números tan chicos se leía como una nota y no
+ * sumaba (#392). No se toca, así que no necesita los 44 px de un botón. El verde sobre
+ * su fondo da 4,9 : 1 en claro y 6,3 : 1 en oscuro.
  */
-function Chip({ tema, cuenta, ayuda, estilo }: { tema: string; cuenta: string; ayuda: string; estilo: string }) {
+function Chip({ tema, estilo }: { tema: string; estilo: string }) {
   return (
-    <li className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${estilo}`}>
+    <li className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${estilo}`}>
       {tema}
-      <span className="text-xs font-normal tabular-nums" aria-hidden="true">{cuenta}</span>
-      <span className="sr-only">{ayuda}</span>
     </li>
   )
 }

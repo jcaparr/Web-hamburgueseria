@@ -20,16 +20,17 @@ public final class FraseDeLasResenias {
     /** Más de tres en una enumeración ya es una lista, y la lista está abajo. */
     private static final int A_FAVOR_EN_LA_FRASE = 3;
     private static final int EN_CONTRA_EN_LA_FRASE = 2;
-    private static final int DIVIDIDOS_EN_LA_FRASE = 2;
 
     /**
-     * La oración, o null si no hay temas: sin temas no hay nada que resumir, y una frase
-     * genérica ("la gente opina cosas") es peor que ninguna.
+     * La oración, o null si no hay temas a favor ni en contra: sin eso no hay nada que
+     * resumir, y una frase genérica ("la gente opina cosas") es peor que ninguna.
+     *
+     * Lo dividido no se nombra, igual que en la pantalla (#392): Juan lo sacó porque no
+     * ayuda a decidir.
      */
     public static String de(List<Tema> temas) {
         List<String> aFavor = nombres(temas, Tono.A_FAVOR, A_FAVOR_EN_LA_FRASE);
         List<String> enContra = nombres(temas, Tono.EN_CONTRA, EN_CONTRA_EN_LA_FRASE);
-        List<String> divididos = nombres(temas, Tono.DIVIDIDO, DIVIDIDOS_EN_LA_FRASE);
 
         StringBuilder frase = new StringBuilder();
         if (!aFavor.isEmpty() && !enContra.isEmpty()) {
@@ -39,15 +40,6 @@ public final class FraseDeLasResenias {
             frase.append("Quienes escribieron destacan ").append(enumerar(aFavor)).append('.');
         } else if (!enContra.isEmpty()) {
             frase.append("Quienes escribieron se quejan ").append(conDe(enContra)).append('.');
-        }
-
-        if (!divididos.isEmpty()) {
-            if (!frase.isEmpty()) {
-                frase.append(' ');
-            }
-            String sujeto = enumerar(divididos);
-            frase.append(Character.toUpperCase(sujeto.charAt(0))).append(sujeto.substring(1))
-                .append(divididos.size() == 1 ? " divide opiniones." : " dividen opiniones.");
         }
 
         return frase.isEmpty() ? null : frase.toString();
