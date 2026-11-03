@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
-import { IconPin, IconRoute, IconSearch } from '../components/icons'
+import { IconRoute, IconSearch } from '../components/icons'
+import { SelectorDeVista } from '../components/SelectorDeVista'
 import { LoadError } from '../components/LoadError'
 import { MejorCalificadas } from '../components/MejorCalificadas'
 import { AvisoVacio } from '../components/Seccion'
@@ -387,11 +388,6 @@ export function Explore() {
             <IconRoute size={18} />
             Recorrido
           </Link>
-          {/* El mapa (#395) vive al lado del recorrido: los dos son otra forma de elegir adónde ir. */}
-          <Link to="/mapa" aria-label="Ver el mapa" className={`btn btn-outline flex-none ${CLASE_DE_LOS_FILTROS}`}>
-            <IconPin size={18} />
-            Mapa
-          </Link>
           </div>
           <div className="flex flex-wrap items-center gap-2 md:gap-3">
             <SelectorDeBarrios
@@ -416,6 +412,9 @@ export function Explore() {
           </div>
         </div>
       </header>
+
+      {/* La lista y el mapa son dos caras de Explorar (#395): el selector está arriba de la lista. */}
+      <SelectorDeVista vista="lista" />
 
       <section className="flex flex-col gap-4" aria-labelledby="titulo-de-la-lista">
         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">

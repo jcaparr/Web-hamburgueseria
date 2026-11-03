@@ -3,12 +3,13 @@ import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { Protocol } from 'pmtiles'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { BuscadorDelMapa } from '../components/BuscadorDelMapa'
 import { LoadError } from '../components/LoadError'
 import { TarjetaDelMapa } from '../components/TarjetaDelMapa'
-import { IconArrowLeft, IconMira } from '../components/icons'
+import { IconMira } from '../components/icons'
+import { SelectorDeVista } from '../components/SelectorDeVista'
 import { useAuth } from '../context/useAuth'
 import { usePedido } from '../hooks/usePedido'
 import { useTitulo } from '../hooks/useTitulo'
@@ -546,16 +547,10 @@ export function Mapa() {
         <div ref={contenedor} className="h-full w-full" role="region" aria-label="Mapa de hamburgueserías" />
       </div>
 
-      {/* Arriba: volver a la lista y buscar un local. En el teléfono "Lista" es solo la flecha, para que entren los dos. */}
-      <div className="absolute inset-x-3 top-3 z-20 flex items-start gap-2 md:right-16">
-        <Link
-          to="/"
-          aria-label="Volver a la lista"
-          className="inline-flex min-h-11 flex-none items-center gap-2 rounded-full bg-base-100 px-3.5 text-sm font-semibold shadow-[var(--sombra-control)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:px-4"
-        >
-          <IconArrowLeft size={16} />
-          <span className="max-md:sr-only">Lista</span>
-        </Link>
+      {/* Arriba: el selector de vista de Explorar (con él se vuelve a la lista) y el buscador de locales. En
+          el teléfono van uno sobre el otro; en escritorio, lado a lado, sin pisar los botones de zoom. */}
+      <div className="absolute inset-x-3 top-3 z-20 flex flex-col gap-2 md:right-16 md:flex-row md:items-start">
+        <SelectorDeVista vista="mapa" className="md:w-60 md:flex-none" />
         <BuscadorDelMapa locales={locales} onElegir={elegirDesdeElBuscador} />
       </div>
 

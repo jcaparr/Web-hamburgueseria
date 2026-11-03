@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom'
 import { AvisoDeLogro } from './components/AvisoDeLogro'
 import { AvisoDeXp } from './components/AvisoDeXp'
@@ -12,7 +12,7 @@ import { ReseniaRapidaProvider } from './context/ReseniaRapidaProvider'
 import { ArmarHamburguesa } from './pages/ArmarHamburguesa'
 import { BurgerJointDetail } from './pages/BurgerJointDetail'
 import { FichaPorSlug } from './pages/FichaPorSlug'
-import { Explore } from './pages/Explore'
+import { EntradaDeExplorar } from './pages/EntradaDeExplorar'
 import { Feed } from './pages/Feed'
 import { GenteDeUnPerfil } from './pages/GenteDeUnPerfil'
 import { ForgotPassword } from './pages/ForgotPassword'
@@ -31,16 +31,6 @@ import { Terminos } from './pages/Terminos'
 import { Tour } from './pages/Tour'
 import { VerifyEmail } from './pages/VerifyEmail'
 import { Wishlist } from './pages/Wishlist'
-
-const Mapa = lazy(() => import('./pages/Mapa').then((m) => ({ default: m.Mapa })))
-
-function CargandoElMapa() {
-  return (
-    <p role="status" className="p-6 text-center text-sm text-base-content/70">
-      Cargando el mapa…
-    </p>
-  )
-}
 
 export default function App() {
   return (
@@ -71,13 +61,13 @@ export default function App() {
             className="mx-auto w-full max-w-[480px] flex-1 focus:outline-none md:max-w-[75rem] md:px-6 md:pb-8 md:pt-6"
           >
             <Routes>
-              <Route path="/" element={<Explore />} />
+              <Route path="/" element={<EntradaDeExplorar />} />
               <Route path="/burger-joints/:id" element={<BurgerJointDetail />} />
               <Route path="/cadenas/:marca" element={<PaginaDeCadena />} />
               <Route path="/ranking" element={<Ranking />} />
               <Route path="/tour" element={<Tour />} />
-              {/* MapLibre pesa unos 250 KB: se baja recién al abrir el mapa (#395). */}
-              <Route path="/mapa" element={<Suspense fallback={<CargandoElMapa />}><Mapa /></Suspense>} />
+              {/* El mapa es una vista de Explorar (#395); esta dirección sigue andando y manda ahí. */}
+              <Route path="/mapa" element={<Navigate to="/?vista=mapa" replace />} />
               {/* Bajo /u/ para que un nombre de usuario no pueda chocar nunca con una
                   pantalla de la app: alguien que se llame "tour" no rompe nada. */}
               <Route path="/u/:username" element={<RequireAuth><PerfilPublico /></RequireAuth>} />
