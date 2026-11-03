@@ -11,23 +11,23 @@
   },
   "dependencies": {
     "@protomaps/basemaps": "^5.7.2",
-    "axios": "^1.20.0",
+    "axios": "^1.21.0",
     "maplibre-gl": "^5.24.0",
     "pmtiles": "^4.5.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.4"
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router-dom": "^7.18.5"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.6",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
-    "@vitejs/plugin-react": "^6.1.1",
-    "daisyui": "^5.7.47",
-    "oxlint": "^1.86.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "daisyui": "^5.7.50",
+    "oxlint": "^1.90.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~7.0.2",
-    "vite": "^8.3.2"
+    "vite": "^8.3.5"
   }
 }
