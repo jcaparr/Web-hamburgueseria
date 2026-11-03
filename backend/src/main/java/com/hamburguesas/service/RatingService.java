@@ -372,7 +372,6 @@ public class RatingService {
                 .map(tema -> new TemaDeReseniasDto(
                     tema.nombre(), tema.menciones(), tema.aFavor(), tema.tono().name()))
                 .toList(),
-            FraseDeLasResenias.de(temas),
             ratingRepository.desgloseDeNotas(burgerJointId));
     }
 

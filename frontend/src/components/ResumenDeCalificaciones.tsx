@@ -75,7 +75,7 @@ export function ResumenDeCalificaciones({
         </div>
       </div>
 
-      {resumen && <TemasDeLasResenias temas={resumen.temas} frase={resumen.frase} />}
+      {resumen && <TemasDeLasResenias temas={resumen.temas} />}
 
       {/* Lo que pusiste vos, al lado de lo que pusieron todos: sin esto, un local que ya
           calificaste se ve igual que uno donde nunca fuiste. */}

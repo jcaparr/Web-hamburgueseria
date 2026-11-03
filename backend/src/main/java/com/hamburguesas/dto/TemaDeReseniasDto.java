@@ -15,8 +15,8 @@ public record TemaDeReseniasDto(
     /**
      * A_FAVOR, EN_CONTRA o DIVIDIDO: en qué grupo va (#392).
      *
-     * Viene calculado para que la pantalla no corte por su lado y termine agrupando
-     * distinto de lo que dice la oración del resumen.
+     * Viene calculado para que el corte viva en un solo lugar, probado, y no en cada
+     * pantalla que lo muestre.
      */
     String tono
 ) {}

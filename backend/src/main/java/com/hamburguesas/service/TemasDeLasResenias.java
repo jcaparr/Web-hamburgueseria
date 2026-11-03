@@ -32,9 +32,7 @@ public final class TemasDeLasResenias {
     /**
      * Para qué lado juega un tema: lo que gusta, lo que no, o lo que divide.
      *
-     * Vive acá y no en la pantalla porque la oración del resumen y los grupos de abajo
-     * tienen que decir lo mismo: si cada uno cortara por su lado, la frase podría decir
-     * "se quejan del precio" arriba de un precio marcado como dividido.
+     * Vive acá y no en la pantalla para que el corte esté en un solo lugar y probado.
      */
     public enum Tono { A_FAVOR, EN_CONTRA, DIVIDIDO }
 

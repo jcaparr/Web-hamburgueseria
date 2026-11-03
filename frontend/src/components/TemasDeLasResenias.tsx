@@ -12,17 +12,16 @@ import type { TemaDeResenias } from '../types'
  * si se habló bien o mal lo decide la nota que puso esa misma persona, que es un dato
  * que ya está y que no se equivoca con la ironía.
  *
- * Arriba va una oración que lo resume, como la de Google Maps, y abajo los temas en tres
- * grupos: lo que gusta, lo que no y lo que divide (#392). La oración la arma el backend
- * con los mismos números, así que nunca dice algo que los grupos no muestren.
+ * Los temas van en dos grupos, lo que gusta y lo que no (#392). Se probó con una oración
+ * resumen arriba y con un grupo "Dividido", y Juan los sacó: con los chips alcanza.
  *
  * No aparece hasta que hay unas cuantas reseñas escritas, así que hoy casi ningún local
  * lo muestra. Es a propósito: con dos comentarios esto no sería un resumen sino una
  * opinión suelta disfrazada de tendencia, y las reseñas enteras ya están más abajo.
  */
-export function TemasDeLasResenias({ temas, frase }: { temas: TemaDeResenias[]; frase: string | null }) {
+export function TemasDeLasResenias({ temas }: { temas: TemaDeResenias[] }) {
   // Lo dividido no se muestra (pedido de Juan en #392): un tema que no juega para
-  // ningún lado no ayuda a decidir, y la frase tampoco lo nombra.
+  // ningún lado no ayuda a decidir.
   const gusta = temas.filter((t) => t.tono === 'A_FAVOR')
   const noGusta = temas.filter((t) => t.tono === 'EN_CONTRA')
   if (gusta.length === 0 && noGusta.length === 0) return null
@@ -31,11 +30,10 @@ export function TemasDeLasResenias({ temas, frase }: { temas: TemaDeResenias[]; 
     <section className="flex flex-col gap-3 tarjeta p-3">
       <div className="flex flex-col gap-1">
         <h3 className="text-sm font-semibold">De qué hablan las reseñas</h3>
-        {frase && <p className="text-sm">{frase}</p>}
-        {/* Una vez acá y no en cada chip: dice de dónde sale la frase y cómo se reparten
-            los temas, sin repetirlo seis veces. */}
+        {/* Una vez acá y no en cada chip: dice cómo se reparten los temas, sin repetirlo
+            seis veces. */}
         <p className="text-xs text-base-content/70">
-          Resumen automático según la nota de quienes nombraron cada tema.
+          Según la nota de quienes nombraron cada tema.
         </p>
       </div>
 

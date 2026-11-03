@@ -214,16 +214,12 @@ class ReseniasDeUnLocalTest {
         assertThat(resumen.temas().get(0).menciones()).isEqualTo(3);
         assertThat(resumen.temas().get(0).aFavor()).isEqualTo(2);
         assertThat(resumen.temas().get(0).tono()).isEqualTo("A_FAVOR");
-        assertThat(resumen.frase()).isEqualTo("Quienes escribieron destacan la carne.");
     }
 
     /** Un local sin reseñas escritas no muestra resumen, y eso no es un error. */
     @Test
     void sinReseniasEscritasElResumenViajaVacio() {
-        ResumenDeReseniasDto resumen = service.resumen(LOCAL, null);
-
-        assertThat(resumen.temas()).isEmpty();
-        assertThat(resumen.frase()).isNull();
+        assertThat(service.resumen(LOCAL, null).temas()).isEmpty();
     }
 
     private Rating unaResenia(Long id, String username, int nota) {

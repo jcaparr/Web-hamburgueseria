@@ -142,7 +142,7 @@ export interface TemaDeResenias {
   tema: string
   menciones: number
   aFavor: number
-  /** En qué grupo va; lo decide el backend para que coincida con la frase (#392). */
+  /** En qué grupo va; lo decide el backend (#392). */
   tono: 'A_FAVOR' | 'EN_CONTRA' | 'DIVIDIDO'
 }
 
@@ -152,8 +152,6 @@ export interface ResumenDeResenias {
   distribucion: NotaYCuantas[]
   /** De qué habla la gente. Vacía mientras no haya reseñas escritas suficientes. */
   temas: TemaDeResenias[]
-  /** Una oración que resume esos temas; null si no hay temas (#392). */
-  frase: string | null
   /** El promedio de local, atención y precio, con cuántas reseñas lo pusieron (#336). */
   desglose: DesgloseDeNotas
 }
