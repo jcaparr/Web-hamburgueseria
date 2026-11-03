@@ -595,15 +595,18 @@ body {
 
 /*
  * Los puntos del mapa (#395). Son botones del DOM que MapLibre coloca sobre el mapa, así
- * que usan los colores de la app y cambian solos con el tema. La caja del botón es el
- * círculo de la foto (46 px, más que los 44 de un toque): el sello de la nota cuelga
- * por abajo sin agrandarla, y por eso la coordenada cae justo en el centro de la foto.
+ * que usan los colores de la app y cambian solos con el tema. La caja del botón es de
+ * 46 px (más que los 44 de un toque) aunque la foto se dibuje más chica; la nota cuelga por
+ * debajo sin agrandarla, y por eso la coordenada cae justo en el centro de la foto.
+ *
+ * Diseño elegido por Juan: foto con aro fino (sin rojo: el kétchup queda para lo elegido),
+ * nota en una pastilla debajo con color por rango (el número va siempre; el color solo lo
+ * refuerza) y grupos que son una mini hamburguesa con la cantidad en el medallón.
  */
-/* El tamaño de la foto lo fija el zoom (ver .mapa-lejos): se hereda del contenedor del mapa. */
-.maplibregl-map { --foto: 46px; }
+/* El tamaño de la foto y de la nota lo fija el zoom (ver .mapa-lejos): se hereda del contenedor del mapa. */
+.maplibregl-map { --foto: 40px; --nota: 16px; }
 .pin-mapa {
   position: relative;
-  /* 46 px de área de toque aunque la foto se dibuje más chica: ver .mapa-lejos. */
   display: grid;
   place-items: center;
   width: 46px;
@@ -620,7 +623,7 @@ body {
   overflow: hidden;
   border-radius: 9999px;
   background: var(--color-base-300);
-  box-shadow: 0 0 0 3px var(--color-base-100), 0 0 0 5px var(--color-primary), 0 6px 14px -6px rgb(0 0 0 / 0.5);
+  box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 3px var(--color-base-content), 0 3px 8px -3px rgb(0 0 0 / 0.45);
   transition: transform 0.15s ease;
 }
 .pin-mapa__foto--vacia {
@@ -632,68 +635,75 @@ body {
   position: absolute;
   left: 50%;
   /* Siempre debajo de la foto, nunca encima: queda a 3 px de su borde, sea del tamaño que sea. */
-  top: calc(50% + var(--foto) / 2 + 3px);
+  top: calc(50% + var(--foto) / 2 + 4px);
   transform: translateX(-50%);
-  padding: 2px 6px;
-  border-radius: 7px;
-  background: var(--color-secondary);
-  color: var(--color-secondary-content);
-  font: 800 12px/1.1 var(--font-display, system-ui);
+  min-width: calc(var(--nota) * 2.3);
+  padding: 2px 7px;
+  border: 1.5px solid var(--color-base-content);
+  border-radius: 9px;
+  text-align: center;
+  font: 800 var(--nota)/1.1 var(--font-display, system-ui);
   font-variant-numeric: tabular-nums;
-  box-shadow: 0 0 0 2px var(--color-base-100);
   pointer-events: none;
 }
-/* De lejos (zoom menor a 15) la foto baja a 32 px y, por debajo del 14, a 24 px: así los locales de un barrio denso entran sueltos. La nota se queda en 11-12 px en todos los zooms. */
-.mapa-lejos { --foto: 32px; }
-.mapa-muy-lejos { --foto: 24px; }
-.mapa-lejos .pin-mapa__foto {
-  box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 4px var(--color-primary), 0 4px 10px -5px rgb(0 0 0 / 0.5);
-}
-.mapa-muy-lejos .pin-mapa__foto {
-  box-shadow: 0 0 0 1.5px var(--color-base-100), 0 0 0 3px var(--color-primary);
-}
-.mapa-muy-lejos .pin-mapa__nota {
-  padding: 1px 5px;
-  border-radius: 6px;
-  font-size: 11px;
-  box-shadow: 0 0 0 1.5px var(--color-base-100);
-}
-.mapa-lejos .grupo-mapa { width: 40px; height: 40px; font-size: 14px; box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 6px color-mix(in srgb, var(--color-primary) 25%, transparent); }
+/* Color por rango, también en la tarjeta. Contraste del número (claro / oscuro): verde 5,41 y 9,24; cheddar 7,55 y 10,29; neutro 10,47 y 12,3. */
+.nota-alta { background: var(--color-success); color: var(--color-success-content); }
+.nota-media { background: var(--color-secondary); color: var(--color-secondary-content); }
+.nota-baja { background: var(--color-base-300); color: var(--color-base-content); }
+/* De lejos (zoom menor a 15) la foto baja a 30 px y, por debajo del 14, a 22 px: así los locales de un barrio denso entran sueltos. La nota nunca baja de 12 px. */
+.mapa-lejos { --foto: 30px; --nota: 14px; }
+.mapa-muy-lejos { --foto: 22px; --nota: 12px; }
+.mapa-lejos .pin-mapa__foto { box-shadow: 0 0 0 1.5px var(--color-base-100), 0 0 0 2.5px var(--color-base-content), 0 3px 6px -3px rgb(0 0 0 / 0.45); }
+.mapa-muy-lejos .pin-mapa__foto { box-shadow: 0 0 0 1px var(--color-base-100), 0 0 0 2px var(--color-base-content); }
+.mapa-lejos .pin-mapa__nota { padding: 2px 6px; border-radius: 8px; }
+.mapa-muy-lejos .pin-mapa__nota { padding: 1px 5px; border-radius: 7px; border-width: 1.2px; }
 .pin-mapa--elegido { z-index: 100 !important; }
 .pin-mapa--elegido .pin-mapa__nota { margin-top: calc(var(--foto) * 0.15); }
+/* Lo elegido es lo único en kétchup. */
 .pin-mapa--elegido .pin-mapa__foto {
   transform: scale(1.3);
-  box-shadow: 0 0 0 3px var(--color-base-100), 0 0 0 6px var(--color-primary), 0 0 0 14px color-mix(in srgb, var(--color-primary) 25%, transparent);
+  box-shadow: 0 0 0 3px var(--color-base-100), 0 0 0 6px var(--color-primary);
 }
-/* El anillo de foco rodea la foto y, si hay, el sello de la nota: el botón es solo el cuadrado de la foto y el sello cuelga de él. */
+/* El anillo de foco rodea la foto y, si hay, la nota: el botón es solo el cuadrado de la foto y la nota cuelga de él. */
 .pin-mapa:focus-visible { outline: none; }
 .pin-mapa:focus-visible::after {
   content: "";
   position: absolute;
   left: 50%;
-  top: calc(50% - var(--foto) / 2 - 6px);
-  width: calc(var(--foto) + 12px);
-  height: calc(var(--foto) + 12px);
+  top: calc(50% - var(--foto) / 2 - 7px);
+  width: calc(var(--foto) + 14px);
+  height: calc(var(--foto) + 14px);
   transform: translateX(-50%);
-  border: 3px solid var(--color-base-content);
+  border: 3px solid var(--color-primary);
   border-radius: 9999px;
   pointer-events: none;
 }
-.pin-mapa--con-nota:focus-visible::after { height: calc(var(--foto) + 12px + 26px); }
+.pin-mapa--con-nota:focus-visible::after { height: calc(var(--foto) + 14px + var(--nota) * 1.1 + 14px); }
+/*
+ * El grupo: una mini hamburguesa, de arriba abajo pan con sésamo, cheddar, lechuga, medallón con
+ * la cantidad y pan de abajo. Cada capa lleva un contorno fino del color del texto, así se separa
+ * del mapa en claro y en oscuro. El ancho crece con la cantidad (46, 52 o 60 px) y el botón nunca
+ * baja de 44 px de toque.
+ */
 .grupo-mapa {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
+  width: max(44px, var(--g));
+  height: max(44px, calc(var(--g) * 0.96));
+  padding: 0;
   border: 0;
-  border-radius: 9999px;
-  background: var(--color-primary);
-  color: var(--color-primary-content);
-  font: 800 16px/1 var(--font-display, system-ui);
+  background: none;
   cursor: pointer;
-  box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 9px color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
-.grupo-mapa:focus-visible { outline: 3px solid var(--color-base-content); outline-offset: 6px; }
+.grupo-mapa svg { display: block; width: var(--g); height: auto; overflow: visible; }
+.grupo-mapa__borde { stroke: var(--color-base-content); stroke-width: 1.3; stroke-linejoin: round; }
+.grupo-mapa__pan { fill: #d98a2b; }
+.grupo-mapa__queso { fill: #f2b705; }
+.grupo-mapa__lechuga { fill: #52753a; }
+.grupo-mapa__carne { fill: #3a2a1e; }
+.grupo-mapa__semilla { fill: #fff6d6; }
+.grupo-mapa__cantidad { fill: #f7efd8; font: 800 13px var(--font-display, system-ui); text-anchor: middle; font-variant-numeric: tabular-nums; }
+.grupo-mapa:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; border-radius: 12px; }
 @media (prefers-reduced-motion: reduce) {
   .pin-mapa__foto { transition: none; }
 }

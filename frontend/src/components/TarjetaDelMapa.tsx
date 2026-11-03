@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom'
 import type { LocalDelMapa } from '../types'
 import { estadoDeHoy, momentoEnBuenosAires } from '../utils/horario'
 import { comoLlegarUrl } from '../utils/maps'
-import { cantidad } from '../utils/numeros'
+import { cantidad, nota } from '../utils/numeros'
+import { claseDeNota } from '../utils/rangoDeNota'
 import { rutaDelLocal } from '../utils/rutaDelLocal'
 import { IconHeart, IconRoute } from './icons'
-import { ScoreBadge } from './ScoreBadge'
 
 interface Props {
   local: LocalDelMapa
@@ -18,18 +18,21 @@ interface Props {
 }
 
 /**
- * Lo que se abre al tocar un punto del mapa (#395): foto, nombre —que lleva a la ficha, por
- * eso no hay un "Ver ficha"—, barrio, nota, horario de hoy, y los dos botones: Guardar y
- * Cómo llegar. En el teléfono sube desde abajo; en escritorio flota al lado del punto.
+ * Lo que se abre al tocar un punto del mapa (#395). La nota va grande y con su color por rango, a
+ * la izquierda; el nombre —que lleva a la ficha, por eso no hay un "Ver ficha"—, el barrio, las
+ * reseñas y el horario de hoy, en el medio; la foto, a la derecha. Abajo, Guardar y Cómo llegar:
+ * este último es lo único en kétchup. En el teléfono sube desde abajo; en escritorio flota al lado
+ * del punto.
  */
 export function TarjetaDelMapa({ local, distancia, guardado, onGuardar, onCerrar }: Props) {
   // La hora se toma al abrir la tarjeta: abierta durante horas se desactualiza, pero se cierra al tocar otro punto.
   const [ahora] = useState(() => new Date())
   const horario = estadoDeHoy(local.franjas, momentoEnBuenosAires(ahora))
   const cuantas = local.ratingsCount
+  const [estado, hasta] = horario ? horario.texto.split(' · ') : []
 
   return (
-    <div className="rounded-t-[1.375rem] bg-base-100 p-4 shadow-[0_-10px_30px_-12px_rgb(0_0_0/0.45)] ring-1 ring-inset ring-base-content/15 md:w-[21rem] md:rounded-box md:shadow-xl">
+    <div className="rounded-t-[1.375rem] bg-base-100 p-4 shadow-[0_-10px_30px_-12px_rgb(0_0_0/0.45)] ring-1 ring-inset ring-base-content/15 md:w-[22rem] md:rounded-box md:shadow-xl">
       <button
         type="button"
         onClick={onCerrar}
@@ -39,55 +42,58 @@ export function TarjetaDelMapa({ local, distancia, guardado, onGuardar, onCerrar
         <span aria-hidden="true">×</span>
       </button>
 
-      <div className="flex gap-3 pr-8">
-        <div className="h-[4.75rem] w-[4.75rem] flex-none overflow-hidden rounded-field bg-base-300">
-          {local.miniatura && <img src={local.miniatura} alt="" className="h-full w-full object-cover" />}
-        </div>
-        <div className="flex min-w-0 flex-col items-start gap-1">
+      <div className="flex items-start gap-3 pr-9">
+        {local.averageScore != null && (
+          <p
+            className={`${claseDeNota(local.averageScore)} grid h-[3.875rem] w-[3.875rem] flex-none place-items-center rounded-2xl border-[1.5px] border-base-content font-display text-[1.625rem] font-extrabold leading-none tabular-nums`}
+          >
+            <span className="sr-only">Nota </span>
+            {nota(local.averageScore)}
+            <span className="sr-only"> de 5</span>
+          </p>
+        )}
+
+        <div className="flex min-w-0 flex-1 flex-col items-start">
           <Link
             to={rutaDelLocal(local)}
-            className="inline-flex min-h-11 items-center break-words font-display text-lg font-extrabold leading-tight text-primary underline decoration-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="inline-flex min-h-11 items-center break-words font-display text-lg font-extrabold leading-tight text-base-content underline decoration-1 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             {local.name}
           </Link>
-          <p className="-mt-2 text-sm text-base-content/70">
-            {[local.area, distancia].filter(Boolean).join(' · ')}
+          <p className="-mt-1 text-sm text-base-content/70">
+            {[
+              local.area,
+              cuantas === 0 ? 'Sin reseñas todavía' : cuantas === 1 ? '1 reseña' : `${cantidad(cuantas)} reseñas`,
+              distancia,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
           </p>
+          {horario && (
+            <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm">
+              <span
+                aria-hidden="true"
+                className={`h-2.5 w-2.5 flex-none rounded-full ${horario.abierto ? 'bg-success' : 'bg-error'}`}
+              />
+              <span className={`whitespace-nowrap font-semibold ${horario.abierto ? 'text-success' : 'text-error'}`}>
+                {estado}
+              </span>
+              {hasta && <span className="whitespace-nowrap text-base-content/70">{hasta}</span>}
+            </p>
+          )}
+        </div>
+
+        <div className="h-14 w-14 flex-none overflow-hidden rounded-field bg-base-300">
+          {local.miniatura && <img src={local.miniatura} alt="" className="h-full w-full object-cover" />}
         </div>
       </div>
-
-      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-base-content/70">
-        {local.averageScore != null ? (
-          <>
-            <ScoreBadge score={local.averageScore} size="sm" />
-            <span>{cuantas === 1 ? "1 reseña" : `${cantidad(cuantas)} reseñas`}</span>
-          </>
-        ) : (
-          <span>Todavía sin reseñas</span>
-        )}
-      </div>
-
-      {horario && (
-        <p className="mt-2 flex items-center gap-2 text-sm">
-          <span
-            aria-hidden="true"
-            className={`h-2.5 w-2.5 flex-none rounded-full ${horario.abierto ? 'bg-success' : 'bg-error'}`}
-          />
-          <span className={horario.abierto ? 'font-semibold text-success' : 'font-semibold text-error'}>
-            {horario.texto.split(' · ')[0]}
-          </span>
-          {horario.texto.includes(' · ') && (
-            <span className="text-base-content/70">{horario.texto.split(' · ')[1]}</span>
-          )}
-        </p>
-      )}
 
       <div className="mt-3 grid grid-cols-2 gap-2">
         <button
           type="button"
           onClick={onGuardar}
           aria-pressed={guardado}
-          className={`btn min-h-11 ${guardado ? 'btn-primary' : 'btn-outline'}`}
+          className={`btn min-h-11 ${guardado ? 'btn-neutral' : 'btn-outline'}`}
         >
           <IconHeart size={18} filled={guardado} />
           {guardado ? 'Guardado' : 'Guardar'}

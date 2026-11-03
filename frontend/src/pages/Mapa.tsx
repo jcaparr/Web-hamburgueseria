@@ -17,6 +17,7 @@ import { distanciaLegible, metrosEntre } from '../utils/distancia'
 import { isSessionExpired } from '../utils/errors'
 import { estiloDelMapa } from '../utils/estiloDelMapa'
 import { nota } from '../utils/numeros'
+import { claseDeNota } from '../utils/rangoDeNota'
 
 /** El Obelisco: de donde arranca el mapa si no sabemos dónde está quien mira. */
 const CENTRO_INICIAL: [number, number] = [-58.4, -34.6]
@@ -465,12 +466,31 @@ export function Mapa() {
   )
 }
 
-/** El círculo con el número de locales que hay juntos; al tocarlo el mapa se acerca. */
+/**
+ * El grupo de locales: una mini hamburguesa con la cantidad en el medallón; al tocarlo el mapa se
+ * acerca. Está dibujada de arriba abajo: pan con sésamo, cheddar, lechuga, medallón y pan de abajo.
+ */
 function elementoDeGrupo(cuantos: number, alTocar: () => void): HTMLElement {
   const boton = document.createElement('button')
   boton.type = 'button'
   boton.className = 'grupo-mapa'
-  boton.textContent = String(cuantos)
+  // Más locales, más grande: 46, 52 o 60 px de ancho (con 46 el número queda de 12,5 px).
+  boton.style.setProperty('--g', `${cuantos >= 30 ? 60 : cuantos >= 10 ? 52 : 46}px`)
+  // La cantidad la cuenta MapLibre: es un número, no texto de nadie, así que entra tal cual.
+  boton.innerHTML =
+    '<svg viewBox="0 0 48 46" aria-hidden="true" focusable="false">' +
+    '<path class="grupo-mapa__borde grupo-mapa__pan" d="M4 15C4 6.5 13 1.5 24 1.5S44 6.5 44 15z"/>' +
+    '<ellipse class="grupo-mapa__semilla" cx="15" cy="8.5" rx="1.4" ry="0.85"/>' +
+    '<ellipse class="grupo-mapa__semilla" cx="24" cy="6" rx="1.4" ry="0.85"/>' +
+    '<ellipse class="grupo-mapa__semilla" cx="33" cy="8.5" rx="1.4" ry="0.85"/>' +
+    '<ellipse class="grupo-mapa__semilla" cx="19.5" cy="11.5" rx="1.4" ry="0.85"/>' +
+    '<ellipse class="grupo-mapa__semilla" cx="28.5" cy="11.5" rx="1.4" ry="0.85"/>' +
+    '<path class="grupo-mapa__borde grupo-mapa__lechuga" d="M2.5 16.5H45.5V21Q42 25 38.5 21Q35 25 31.5 21Q28 25 24.5 21Q21 25 17.5 21Q14 25 10.5 21Q7 25 2.5 21z"/>' +
+    '<path class="grupo-mapa__borde grupo-mapa__queso" d="M3 15H45V18H40.5L40 21.5Q39 23 37.5 21.5L37 18H11.5L11 20.5Q10 22 8.5 20.5L8 18H3z"/>' +
+    '<rect class="grupo-mapa__borde grupo-mapa__carne" x="3.5" y="23.5" width="41" height="13.5" rx="6.75"/>' +
+    '<path class="grupo-mapa__borde grupo-mapa__pan" d="M4 38.5H44V41C44 44 41.5 45 38 45H10C6.5 45 4 44 4 41z"/>' +
+    `<text class="grupo-mapa__cantidad" x="24" y="34.6">${Math.trunc(cuantos)}</text>` +
+    '</svg>'
   boton.setAttribute('aria-label', `${cuantos} hamburgueserías juntas. Acercar el mapa.`)
   boton.addEventListener('click', (e) => {
     e.stopPropagation()
@@ -512,7 +532,7 @@ function elementoDeLocal(
     // El anillo de foco del punto abarca también el sello (ver .pin-mapa--con-nota).
     boton.classList.add('pin-mapa--con-nota')
     const sello = document.createElement('span')
-    sello.className = 'pin-mapa__nota'
+    sello.className = `pin-mapa__nota ${claseDeNota(local.averageScore)}`
     sello.textContent = nota(local.averageScore)
     boton.appendChild(sello)
   }
