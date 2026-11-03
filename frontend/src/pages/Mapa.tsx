@@ -5,13 +5,14 @@ import { Protocol } from 'pmtiles'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
+import { BuscadorDelMapa } from '../components/BuscadorDelMapa'
 import { LoadError } from '../components/LoadError'
 import { TarjetaDelMapa } from '../components/TarjetaDelMapa'
-import { IconArrowLeft } from '../components/icons'
+import { IconArrowLeft, IconMira } from '../components/icons'
 import { useAuth } from '../context/useAuth'
 import { usePedido } from '../hooks/usePedido'
 import { useTitulo } from '../hooks/useTitulo'
-import { useUbicacion } from '../hooks/useUbicacion'
+import { useUbicacion, type PosicionExacta } from '../hooks/useUbicacion'
 import type { BurgerJoint, LocalDelMapa } from '../types'
 import { distanciaLegible, metrosEntre } from '../utils/distancia'
 import { isSessionExpired } from '../utils/errors'
@@ -24,6 +25,13 @@ const CENTRO_INICIAL: [number, number] = [-58.4, -34.6]
 /** Argentina entera con un margen: no tiene sentido arrastrar el mapa a otro continente. */
 const LIMITES: [[number, number], [number, number]] = [[-80, -58], [-48, -19]]
 const FUENTE = 'locales'
+/** Dónde está quien mira: el punto azul y, si se sabe, el círculo de cuánto se equivoca la ubicación. */
+const FUENTE_YO = 'mi-posicion'
+/** A este zoom un local nunca está agrupado (se agrupa hasta el 11) y se ve entero. */
+const ZOOM_AL_BUSCAR = 16
+const ZOOM_AL_UBICARSE = 14
+/** Si la ubicación tarda más que esto en llegar, el mapa arranca donde siempre y no se mueve de golpe. */
+const ESPERA_MAXIMA_DE_LA_UBICACION_MS = 5000
 /** Desde este zoom (nivel de barrio) los puntos se dibujan grandes y con el sello completo. */
 const ZOOM_DE_PUNTO_GRANDE = 15
 /** Por debajo de este zoom (una ciudad entera a la vista) la foto va más chica todavía, con el sello mini. */
@@ -54,6 +62,13 @@ function comoPuntos(locales: LocalDelMapa[]): FeatureCollection<Point> {
   }
 }
 
+function comoPunto(p: { lat: number; lon: number }): FeatureCollection<Point> {
+  return {
+    type: 'FeatureCollection',
+    features: [{ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [p.lon, p.lat] } }],
+  }
+}
+
 /**
  * El mapa de hamburgueserías (#395): el mapa base sale de un archivo nuestro (Protomaps,
  * datos de OpenStreetMap) y cada local es su foto en un círculo con la nota abajo.
@@ -66,7 +81,7 @@ export function Mapa() {
   useTitulo('Mapa')
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { ubicacion } = useUbicacion()
+  const { ubicacion, pedirAhora } = useUbicacion()
 
   const pedido = usePedido('mapa', () =>
     apiClient.get<LocalDelMapa[]>('/burger-joints/mapa').then((r) => r.data),
@@ -85,12 +100,19 @@ export function Mapa() {
   const [sinMapaBase, setSinMapaBase] = useState(false)
   const [seleccionadoId, setSeleccionadoId] = useState<number | null>(null)
   const [guardadas, setGuardadas] = useState<Set<number>>(new Set())
+  const [miPosicion, setMiPosicion] = useState<(Pick<PosicionExacta, 'lat' | 'lon'> & { precision: number }) | null>(null)
+  const [buscandoUbicacion, setBuscandoUbicacion] = useState(false)
+  const [avisoDeUbicacion, setAvisoDeUbicacion] = useState<string | null>(null)
+  /** Si se eligió desde el buscador: el mapa vuela y se acerca; con un punto tocado solo se centra. */
+  const zoomAlElegir = useRef<number | null>(null)
+  const seleccionadoIdRef = useRef<number | null>(null)
   const seleccionado = seleccionadoId != null ? (porId.get(seleccionadoId) ?? null) : null
   const seleccionadoRef = useRef<LocalDelMapa | null>(null)
 
   useEffect(() => {
     seleccionadoRef.current = seleccionado
-  }, [seleccionado])
+    seleccionadoIdRef.current = seleccionadoId
+  }, [seleccionado, seleccionadoId])
 
   // Los guardados de quien mira, para pintar el corazón. Sin sesión no hay nada que pedir.
   useEffect(() => {
@@ -298,6 +320,7 @@ export function Mapa() {
             .setLngLat(f.geometry.coordinates as [number, number])
             .addTo(m),
         )
+        elemento.classList.toggle('pin-mapa--elegido', clave === `l${seleccionadoIdRef.current}`)
       }
       // Con el teclado solo se recorren los puntos que están a la vista: los que quedaron en el
       // margen de afuera no son un lugar adonde tabular. Para saltear el mapa entero está el botón
@@ -346,12 +369,19 @@ export function Mapa() {
     const m = mapa.current
     if (!m || !seleccionado) return
     const esEscritorio = window.matchMedia('(min-width: 768px)').matches
-    m.easeTo({
-      center: [seleccionado.longitude, seleccionado.latitude],
+    const opciones = {
+      center: [seleccionado.longitude, seleccionado.latitude] as [number, number],
       // En el teléfono la hoja ocupa abajo: se corre el centro para que el punto quede arriba.
       padding: esEscritorio ? { top: 0, bottom: 0, left: 0, right: 0 } : { top: 0, bottom: 260, left: 0, right: 0 },
-      duration: sinMovimiento() ? 0 : 400,
-    })
+    }
+    const zoom = zoomAlElegir.current
+    zoomAlElegir.current = null
+    if (zoom != null) {
+      // Elegido en el buscador: el mapa vuela hasta el local, con zoom suficiente para que se separe del grupo.
+      m.flyTo({ ...opciones, zoom: Math.max(m.getZoom(), zoom), duration: sinMovimiento() ? 0 : 1400 })
+    } else {
+      m.easeTo({ ...opciones, duration: sinMovimiento() ? 0 : 400 })
+    }
     acomodarTarjeta()
   }, [seleccionado, acomodarTarjeta])
 
@@ -378,14 +408,111 @@ export function Mapa() {
     return () => window.removeEventListener('keydown', alTocarUnaTecla)
   }, [])
 
-  // Si se sabe dónde está quien mira y no hay nada elegido, el mapa arranca ahí.
+  // Si la ubicación llega enseguida, el mapa arranca centrado en la persona con su punto azul. Si la
+  // niega o tarda, queda en la vista de siempre, sin carteles: no hay nada que avisar.
+  const [abiertoEn] = useState(() => Date.now())
+  const llegoEnMs = useRef<number | null>(null)
   const yaCentrado = useRef(false)
+  useEffect(() => {
+    if (ubicacion && llegoEnMs.current == null) llegoEnMs.current = Date.now() - abiertoEn
+  }, [ubicacion, abiertoEn])
   useEffect(() => {
     const m = mapa.current
     if (!m || !listo || !ubicacion || yaCentrado.current) return
     yaCentrado.current = true
-    m.jumpTo({ center: [ubicacion.lon, ubicacion.lat], zoom: 13 })
+    // Lo que se sabe acá va redondeado a unos 100 m: se dibuja el punto, sin círculo de precisión.
+    setMiPosicion((previa) => previa ?? { lat: ubicacion.lat, lon: ubicacion.lon, precision: 0 })
+    if ((llegoEnMs.current ?? 0) <= ESPERA_MAXIMA_DE_LA_UBICACION_MS) {
+      m.jumpTo({ center: [ubicacion.lon, ubicacion.lat], zoom: ZOOM_AL_UBICARSE })
+    }
   }, [listo, ubicacion])
+
+  const elegirDesdeElBuscador = useCallback((local: LocalDelMapa) => {
+    zoomAlElegir.current = ZOOM_AL_BUSCAR
+    puntoQueAbrio.current = null
+    setSeleccionadoId(local.id)
+  }, [])
+
+  const centrarEnMiUbicacion = useCallback(async () => {
+    const m = mapa.current
+    if (!m || buscandoUbicacion) return
+    setBuscandoUbicacion(true)
+    setAvisoDeUbicacion(null)
+    try {
+      const posicion = await pedirAhora()
+      setMiPosicion(posicion)
+      m.flyTo({ center: [posicion.lon, posicion.lat], zoom: ZOOM_AL_UBICARSE, duration: sinMovimiento() ? 0 : 1200 })
+    } catch (err) {
+      const denegada = (err as { code?: number }).code === 1
+      setAvisoDeUbicacion(
+        denegada
+          ? 'Activá la ubicación de este sitio en el navegador para centrar el mapa donde estás.'
+          : 'No pudimos saber dónde estás. Probá de nuevo en un rato.',
+      )
+    } finally {
+      setBuscandoUbicacion(false)
+    }
+  }, [buscandoUbicacion, pedirAhora])
+
+  // El aviso se va solo.
+  useEffect(() => {
+    if (!avisoDeUbicacion) return
+    const espera = window.setTimeout(() => setAvisoDeUbicacion(null), 7000)
+    return () => window.clearTimeout(espera)
+  }, [avisoDeUbicacion])
+
+  // El punto azul y su círculo de precisión. Se vuelve a poner si cambia el estilo del mapa.
+  useEffect(() => {
+    const m = mapa.current
+    if (!m || !listo || !miPosicion) return
+    const poner = () => {
+      if (!m.getStyle()) return
+      try {
+        const fuente = m.getSource(FUENTE_YO) as maplibregl.GeoJSONSource | undefined
+        if (fuente) {
+          fuente.setData(comoPunto(miPosicion))
+          return
+        }
+        m.addSource(FUENTE_YO, { type: 'geojson', data: comoPunto(miPosicion) })
+        if (miPosicion.precision > 0) {
+          // Los metros de precisión pasados a píxeles: en cada zoom un metro mide el doble de píxeles que en
+          // el anterior, y la escala depende de la latitud.
+          const metrosPorPixelEnZoomCero = 78271.52 * Math.cos((miPosicion.lat * Math.PI) / 180)
+          const radioEnZoomCero = Math.max(miPosicion.precision, 10) / metrosPorPixelEnZoomCero
+          m.addLayer({
+            id: FUENTE_YO + '-precision',
+            type: 'circle',
+            source: FUENTE_YO,
+            paint: {
+              'circle-radius': ['interpolate', ['exponential', 2], ['zoom'], 0, radioEnZoomCero, 22, radioEnZoomCero * 2 ** 22],
+              'circle-color': '#2f7de1',
+              'circle-opacity': 0.16,
+              'circle-stroke-color': '#2f7de1',
+              'circle-stroke-opacity': 0.5,
+              'circle-stroke-width': 1,
+            },
+          })
+        }
+        m.addLayer({
+          id: FUENTE_YO + '-punto',
+          type: 'circle',
+          source: FUENTE_YO,
+          paint: { 'circle-radius': 8, 'circle-color': '#2f7de1', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 3 },
+        })
+      } catch {
+        m.once('style.load', poner)
+      }
+    }
+    poner()
+    m.on('style.load', poner)
+    return () => {
+      m.off('style.load', poner)
+      // Si el mapa ya se destruyó (se salió de la página), no queda nada que sacarle.
+      if (mapa.current !== m) return
+      for (const id of [FUENTE_YO + '-punto', FUENTE_YO + '-precision']) if (m.getLayer(id)) m.removeLayer(id)
+      if (m.getSource(FUENTE_YO)) m.removeSource(FUENTE_YO)
+    }
+  }, [listo, miPosicion])
 
   const distancia =
     seleccionado && ubicacion
@@ -411,13 +538,37 @@ export function Mapa() {
         <div ref={contenedor} className="h-full w-full" role="region" aria-label="Mapa de hamburgueserías" />
       </div>
 
-      <Link
-        to="/"
-        className="absolute left-3 top-3 z-10 inline-flex min-h-11 items-center gap-2 rounded-full bg-base-100 px-4 text-sm font-semibold shadow-[var(--sombra-control)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      {/* Arriba: volver a la lista y buscar un local. En el teléfono "Lista" es solo la flecha, para que entren los dos. */}
+      <div className="absolute inset-x-3 top-3 z-20 flex items-start gap-2 md:right-16">
+        <Link
+          to="/"
+          aria-label="Volver a la lista"
+          className="inline-flex min-h-11 flex-none items-center gap-2 rounded-full bg-base-100 px-3.5 text-sm font-semibold shadow-[var(--sombra-control)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:px-4"
+        >
+          <IconArrowLeft size={16} />
+          <span className="max-md:sr-only">Lista</span>
+        </Link>
+        <BuscadorDelMapa locales={locales} onElegir={elegirDesdeElBuscador} />
+      </div>
+
+      {/* Abajo a la derecha, arriba de la atribución de OpenStreetMap. En el teléfono, con la tarjeta abierta sube para no quedar tapado. */}
+      <button
+        type="button"
+        onClick={centrarEnMiUbicacion}
+        disabled={buscandoUbicacion}
+        aria-label="Centrar el mapa en mi ubicación"
+        className={`absolute right-3 z-10 grid h-11 w-11 place-items-center rounded-full bg-base-100 shadow-[var(--sombra-control)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${miPosicion ? 'text-primary' : 'text-base-content'} ${seleccionado ? 'max-md:bottom-[17rem] md:bottom-9' : 'bottom-9'}`}
       >
-        <IconArrowLeft size={16} />
-        Lista
-      </Link>
+        {buscandoUbicacion ? <span className="loading loading-spinner loading-sm" aria-hidden="true" /> : <IconMira size={22} />}
+      </button>
+      {avisoDeUbicacion && (
+        <p
+          role="status"
+          className={`absolute right-3 z-10 max-w-[18rem] rounded-box bg-base-100 p-3 text-sm shadow-[var(--sombra-control)] ${seleccionado ? 'max-md:bottom-[20.5rem] md:bottom-[5.5rem]' : 'bottom-[5.5rem]'}`}
+        >
+          {avisoDeUbicacion}
+        </p>
+      )}
 
       {pedido.error !== undefined && !pedido.datos && (
         <div className="absolute inset-x-3 top-16 z-10">

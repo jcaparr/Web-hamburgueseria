@@ -228,3 +228,14 @@ export function IconLogros({ size = 24, className }: IconProps) {
     </svg>
   )
 }
+
+/** La mira de "mi ubicación": un círculo con un punto al medio y cuatro marcas. */
+export function IconMira({ size = 22, className }: IconProps) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" className={className}>
+      <circle cx="12" cy="12" r="6.5" />
+      <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none" />
+      <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" />
+    </svg>
+  )
+}
