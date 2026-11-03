@@ -29,8 +29,30 @@ public final class TemasDeLasResenias {
     /** Una reseña, reducida a lo que hace falta para contar: la nota y el texto. */
     public record Mencion(int nota, String comentario) {}
 
+    /**
+     * Para qué lado juega un tema: lo que gusta, lo que no, o lo que divide.
+     *
+     * Vive acá y no en la pantalla para que el corte esté en un solo lugar y probado.
+     */
+    public enum Tono { A_FAVOR, EN_CONTRA, DIVIDIDO }
+
     /** De cuántas reseñas habla un tema y en cuántas de esas la nota fue buena. */
-    public record Tema(String nombre, int menciones, int aFavor) {}
+    public record Tema(String nombre, int menciones, int aFavor) {
+
+        /**
+         * Tres estados y no un degradé, con cortes holgados —dos tercios para cada
+         * lado— para que un tema no cambie de grupo por una sola reseña nueva.
+         */
+        public Tono tono() {
+            if (aFavor * 3 >= menciones * 2) {
+                return Tono.A_FAVOR;
+            }
+            if (aFavor * 3 <= menciones) {
+                return Tono.EN_CONTRA;
+            }
+            return Tono.DIVIDIDO;
+        }
+    }
 
     /**
      * Cuántas reseñas con comentario hacen falta para mostrar algo.
@@ -44,8 +66,13 @@ public final class TemasDeLasResenias {
     /** Un tema del que habló una sola persona tampoco es un tema. */
     private static final int MENCIONES_PARA_CONTAR = 2;
 
-    /** Cuántos se muestran: los de más abajo son ruido y la ficha no es un informe. */
-    private static final int TEMAS_A_MOSTRAR = 4;
+    /**
+     * Cuántos se muestran: los de más abajo son ruido y la ficha no es un informe.
+     *
+     * Eran cuatro en una lista; repartidos en "lo que gusta" y "lo que no" entran seis
+     * sin que se haga largo (#392).
+     */
+    private static final int TEMAS_A_MOSTRAR = 6;
 
     /** De 4 para arriba se cuenta como que habló bien. */
     private static final int NOTA_BUENA = 4;
@@ -61,14 +88,27 @@ public final class TemasDeLasResenias {
     private static final Map<String, List<String>> VOCABULARIO = new LinkedHashMap<>();
 
     static {
-        VOCABULARIO.put("La carne", List.of("carne", "medallon", "medallones", "smash", "blend"));
-        VOCABULARIO.put("El pan", List.of("pan", "brioche", "bollo"));
+        // Las palabras van sin acentos ni eñes, como queda el texto después de normalizarlo.
+        // Se dejan afuera las que cambian de sentido según la frase: "gusto" es también
+        // "me gustó", "punto" es también "punto de encuentro", "mayo" es también el mes.
+        VOCABULARIO.put("La carne", List.of("carne", "medallon", "medallones", "smash", "blend",
+            "jugosa", "jugosas", "jugoso"));
         VOCABULARIO.put("Las papas", List.of("papas", "fritas"));
+        VOCABULARIO.put("El pan", List.of("pan", "brioche", "bollo"));
         VOCABULARIO.put("El queso", List.of("queso", "cheddar"));
+        VOCABULARIO.put("La panceta", List.of("panceta", "bacon"));
+        VOCABULARIO.put("La salsa", List.of("salsa", "salsas", "alioli", "barbacoa"));
+        VOCABULARIO.put("La cebolla", List.of("cebolla", "cebollas", "caramelizada"));
+        VOCABULARIO.put("El sabor", List.of("sabor", "sabores", "sabrosa", "sabroso", "sabrosas"));
+        VOCABULARIO.put("El tamaño", List.of("tamano", "porcion", "porciones", "abundante", "abundantes"));
+        VOCABULARIO.put("Las bebidas", List.of("bebida", "bebidas", "cerveza", "cervezas", "birra",
+            "gaseosa", "limonada"));
         VOCABULARIO.put("El precio", List.of("precio", "precios", "caro", "cara", "barato", "barata"));
         VOCABULARIO.put("La atención", List.of("atencion", "atendieron", "amables", "mozo", "moza"));
-        VOCABULARIO.put("La espera", List.of("espera", "esperamos", "demora", "demoraron", "tardaron"));
+        VOCABULARIO.put("La espera", List.of("espera", "esperamos", "demora", "demoraron", "tardaron",
+            "rapido", "rapidez"));
         VOCABULARIO.put("El lugar", List.of("lugar", "local", "ambiente", "mesas"));
+        VOCABULARIO.put("El delivery", List.of("delivery", "envio", "rappi", "pedidosya"));
     }
 
     /**

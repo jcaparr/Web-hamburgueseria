@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { TemaDeResenias } from '../types'
 
 /**
@@ -11,51 +12,65 @@ import type { TemaDeResenias } from '../types'
  * si se habló bien o mal lo decide la nota que puso esa misma persona, que es un dato
  * que ya está y que no se equivoca con la ironía.
  *
+ * Los temas van en dos grupos, lo que gusta y lo que no (#392). Se probó con una oración
+ * resumen arriba y con un grupo "Dividido", y Juan los sacó: con los chips alcanza.
+ *
  * No aparece hasta que hay unas cuantas reseñas escritas, así que hoy casi ningún local
  * lo muestra. Es a propósito: con dos comentarios esto no sería un resumen sino una
  * opinión suelta disfrazada de tendencia, y las reseñas enteras ya están más abajo.
  */
 export function TemasDeLasResenias({ temas }: { temas: TemaDeResenias[] }) {
-  if (temas.length === 0) return null
+  // Lo dividido no se muestra (pedido de Juan en #392): un tema que no juega para
+  // ningún lado no ayuda a decidir.
+  const gusta = temas.filter((t) => t.tono === 'A_FAVOR')
+  const noGusta = temas.filter((t) => t.tono === 'EN_CONTRA')
+  if (gusta.length === 0 && noGusta.length === 0) return null
 
   return (
-    <section className="flex flex-col gap-2 tarjeta p-3">
-      <div className="flex flex-col">
-        <h3 className="text-sm font-semibold">
-          De qué hablan las reseñas
-        </h3>
-        {/* La aclaración va una vez acá y no en cada fila: repetir "hablan bien" cuatro
-            veces hace más ruido que el dato. */}
-        <p className="text-xs text-base-content/70">
-          Cuántos de los que lo nombraron pusieron buena nota.
-        </p>
-      </div>
+    <section className="flex flex-col gap-3 tarjeta p-3">
+      <h3 className="text-sm font-semibold">De qué hablan las reseñas</h3>
 
-      <ul className="flex flex-col gap-1.5">
-        {temas.map(({ tema, menciones, aFavor }) => (
-          <li key={tema} className="flex items-center justify-between gap-3 text-sm">
-            <span className="font-medium">{tema}</span>
-            <span className="flex flex-none items-center gap-1.5 text-xs tabular-nums text-base-content/70">
-              <span className={`h-1.5 w-1.5 rounded-full ${colorDe(aFavor, menciones)}`} />
-              {aFavor} de {menciones}
-            </span>
-          </li>
-        ))}
-      </ul>
+      {gusta.length > 0 && (
+        <Grupo titulo="Lo que gusta" signo="+" colorDelSigno="text-success">
+          {gusta.map((t) => <Chip key={t.tema} tema={t.tema} estilo="bg-success/15 text-success" />)}
+        </Grupo>
+      )}
+
+      {noGusta.length > 0 && (
+        <Grupo titulo="Lo que no" signo="−" colorDelSigno="text-error">
+          {noGusta.map((t) => <Chip key={t.tema} tema={t.tema} estilo="bg-error/15 text-error" />)}
+        </Grupo>
+      )}
     </section>
   )
 }
 
+function Grupo({ titulo, signo, colorDelSigno, children }: {
+  titulo: string
+  signo: string
+  colorDelSigno: string
+  children: ReactNode
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <h4 className="flex items-center gap-1.5 text-xs font-semibold">
+        <span aria-hidden="true" className={`font-bold ${colorDelSigno}`}>{signo}</span>
+        {titulo}
+      </h4>
+      <ul className="flex flex-wrap gap-1.5">{children}</ul>
+    </div>
+  )
+}
+
 /**
- * El punto de color, que es lo que se lee antes que el número.
- *
- * Tres estados y no un degradé: lo que importa es si el tema juega a favor del local,
- * en contra, o está dividido. Los cortes son holgados —dos tercios para cada lado— para
- * que el punto no cambie de color por una sola reseña nueva.
+ * Un tema, sin la cuenta: "2 de 2" con números tan chicos se leía como una nota y no
+ * sumaba (#392). No se toca, así que no necesita los 44 px de un botón. El verde sobre
+ * su fondo da 4,9 : 1 en claro y 6,3 : 1 en oscuro.
  */
-function colorDe(aFavor: number, menciones: number) {
-  const proporcion = aFavor / menciones
-  if (proporcion >= 2 / 3) return 'bg-success'
-  if (proporcion <= 1 / 3) return 'bg-error'
-  return 'bg-base-content/30'
+function Chip({ tema, estilo }: { tema: string; estilo: string }) {
+  return (
+    <li className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${estilo}`}>
+      {tema}
+    </li>
+  )
 }

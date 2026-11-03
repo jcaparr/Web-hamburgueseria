@@ -142,6 +142,8 @@ export interface TemaDeResenias {
   tema: string
   menciones: number
   aFavor: number
+  /** En qué grupo va; lo decide el backend (#392). */
+  tono: 'A_FAVOR' | 'EN_CONTRA' | 'DIVIDIDO'
 }
 
 /** Lo que va arriba de la lista de reseñas de un local. */

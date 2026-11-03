@@ -2,6 +2,7 @@ package com.hamburguesas.service;
 
 import com.hamburguesas.service.TemasDeLasResenias.Mencion;
 import com.hamburguesas.service.TemasDeLasResenias.Tema;
+import com.hamburguesas.service.TemasDeLasResenias.Tono;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -108,10 +109,35 @@ class TemasDeLasReseniasTest {
     @Test
     void noConfundeUnaPalabraConUnPedazoDeOtra() {
         assertThat(TemasDeLasResenias.de(List.of(
-            buena("Con panceta y cebolla"),
+            buena("Con panceta"),
             buena("La panceta crocante"),
             buena("Mucha panceta"))))
+            .extracting(Tema::nombre)
+            .containsExactly("La panceta");
+    }
+
+    /** "Mayo" es la salsa y también el mes: se deja afuera para no contar "fui en mayo". */
+    @Test
+    void noCuentaPalabrasQueSignificanOtraCosa() {
+        assertThat(TemasDeLasResenias.de(List.of(
+            buena("Fui en mayo"),
+            buena("Volví en mayo"),
+            buena("Otra vez en mayo"),
+            buena("Me gustó mucho"),
+            buena("Me gusto todo"))))
             .isEmpty();
+    }
+
+    /** Las palabras nuevas de #392, escritas como se escriben: con eñe y con acento. */
+    @Test
+    void reconoceLosTemasNuevos() {
+        List<Tema> temas = TemasDeLasResenias.de(List.of(
+            buena("Muy sabrosa, buen tamaño y la salsa barbacoa un golazo"),
+            buena("Rico sabor, porción abundante, salsas caseras"),
+            buena("La cerveza fría y la cebolla caramelizada")));
+
+        assertThat(temas).extracting(Tema::nombre)
+            .containsExactlyInAnyOrder("La salsa", "El sabor", "El tamaño");
     }
 
     /** Quien escribe "la carne, qué carne" habló de la carne una vez, no dos. */
@@ -125,14 +151,34 @@ class TemasDeLasReseniasTest {
         assertThat(temas.get(0).menciones()).isEqualTo(3);
     }
 
-    /** De los ocho posibles se muestran cuatro: la ficha no es un informe. */
+    /** De los ocho nombrados se muestran seis: la ficha no es un informe. */
     @Test
-    void muestraComoMuchoCuatroTemas() {
+    void muestraComoMuchoSeisTemas() {
         List<Mencion> resenias = List.of(
             buena("La carne, el pan, las papas, el queso, el precio, la atención, la espera y el lugar"),
             buena("La carne, el pan, las papas, el queso, el precio, la atención, la espera y el lugar"),
             buena("La carne, el pan, las papas, el queso, el precio, la atención, la espera y el lugar"));
 
-        assertThat(TemasDeLasResenias.de(resenias)).hasSize(4);
+        assertThat(TemasDeLasResenias.de(resenias)).hasSize(6);
+    }
+
+    // ---- para qué lado juega cada tema ----
+
+    @Test
+    void dosTerciosABuenaNotaEsAFavor() {
+        assertThat(new Tema("La carne", 3, 2).tono()).isEqualTo(Tono.A_FAVOR);
+    }
+
+    @Test
+    void unTercioOMenosEsEnContra() {
+        assertThat(new Tema("La espera", 3, 1).tono()).isEqualTo(Tono.EN_CONTRA);
+        assertThat(new Tema("La espera", 4, 0).tono()).isEqualTo(Tono.EN_CONTRA);
+    }
+
+    /** El borde: la mitad no juega para ningún lado. */
+    @Test
+    void laMitadEsDividido() {
+        assertThat(new Tema("El precio", 4, 2).tono()).isEqualTo(Tono.DIVIDIDO);
+        assertThat(new Tema("El precio", 5, 3).tono()).isEqualTo(Tono.DIVIDIDO);
     }
 }

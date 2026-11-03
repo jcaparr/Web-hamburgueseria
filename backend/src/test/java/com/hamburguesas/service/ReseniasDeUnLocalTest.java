@@ -213,6 +213,7 @@ class ReseniasDeUnLocalTest {
         assertThat(resumen.temas().get(0).tema()).isEqualTo("La carne");
         assertThat(resumen.temas().get(0).menciones()).isEqualTo(3);
         assertThat(resumen.temas().get(0).aFavor()).isEqualTo(2);
+        assertThat(resumen.temas().get(0).tono()).isEqualTo("A_FAVOR");
     }
 
     /** Un local sin reseñas escritas no muestra resumen, y eso no es un error. */
