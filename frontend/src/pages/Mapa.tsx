@@ -23,6 +23,8 @@ const CENTRO_INICIAL: [number, number] = [-58.4, -34.6]
 /** Argentina entera con un margen: no tiene sentido arrastrar el mapa a otro continente. */
 const LIMITES: [[number, number], [number, number]] = [[-80, -58], [-48, -19]]
 const FUENTE = 'locales'
+/** Desde este zoom (nivel de barrio) los puntos se dibujan grandes y con el sello completo. */
+const ZOOM_DE_PUNTO_GRANDE = 15
 
 let protocoloRegistrado = false
 
@@ -160,6 +162,10 @@ export function Mapa() {
     if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
       m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
     }
+    // De lejos los puntos se dibujan más chicos para que no se encimen (ver index.css).
+    const ajustarTamanio = () => contenedor.current?.classList.toggle('mapa-lejos', m.getZoom() < ZOOM_DE_PUNTO_GRANDE)
+    m.on('zoom', ajustarTamanio)
+    ajustarTamanio()
     m.on('load', () => setListo(true))
     // Si falta el archivo del mapa, los puntos siguen sirviendo: se avisa y listo.
     m.on('error', (e) => {
@@ -221,8 +227,8 @@ export function Mapa() {
           type: 'geojson',
           data: comoPuntos(locales),
           cluster: true,
-          clusterRadius: 56,
-          clusterMaxZoom: 16,
+          clusterRadius: 44,
+          clusterMaxZoom: 13,
         })
         // Sin dibujo propio: los puntos son del DOM. Hace falta una capa para que MapLibre
         // cargue los datos de la fuente y se puedan consultar.
