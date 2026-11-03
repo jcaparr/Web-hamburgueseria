@@ -665,7 +665,21 @@ body {
   transform: scale(1.3);
   box-shadow: 0 0 0 3px var(--color-base-100), 0 0 0 6px var(--color-primary), 0 0 0 14px color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
-.pin-mapa:focus-visible .pin-mapa__foto { outline: 3px solid var(--color-base-content); outline-offset: 5px; }
+/* El anillo de foco rodea la foto y, si hay, el sello de la nota: el botón es solo el cuadrado de la foto y el sello cuelga de él. */
+.pin-mapa:focus-visible { outline: none; }
+.pin-mapa:focus-visible::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(50% - var(--foto) / 2 - 6px);
+  width: calc(var(--foto) + 12px);
+  height: calc(var(--foto) + 12px);
+  transform: translateX(-50%);
+  border: 3px solid var(--color-base-content);
+  border-radius: 9999px;
+  pointer-events: none;
+}
+.pin-mapa--con-nota:focus-visible::after { height: calc(var(--foto) + 12px + 26px); }
 .grupo-mapa {
   display: grid;
   place-items: center;

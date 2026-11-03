@@ -30,6 +30,9 @@ const ZOOM_DE_PUNTO_MINI = 14
 
 let protocoloRegistrado = false
 
+/** Quien pidió menos movimiento no ve el mapa deslizarse: los saltos son instantáneos. */
+const sinMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
 /** El tema que se está viendo: el elegido en la app o, en automático, el del sistema. */
 function temaActual(): 'claro' | 'oscuro' {
   const elegido = document.documentElement.getAttribute('data-theme')
@@ -74,6 +77,9 @@ export function Mapa() {
   const mapa = useRef<maplibregl.Map | null>(null)
   const marcadores = useRef(new Map<string, maplibregl.Marker>())
   const tarjeta = useRef<HTMLDivElement>(null)
+  const alFinalDelMapa = useRef<HTMLDivElement>(null)
+  /** El punto que abrió la tarjeta: al cerrarla, el foco vuelve ahí. */
+  const puntoQueAbrio = useRef<HTMLElement | null>(null)
   const [listo, setListo] = useState(false)
   const [sinMapaBase, setSinMapaBase] = useState(false)
   const [seleccionadoId, setSeleccionadoId] = useState<number | null>(null)
@@ -277,10 +283,13 @@ export function Mapa() {
           ? elementoDeGrupo(Number(p.point_count), () => {
               const fuente = m.getSource(FUENTE) as maplibregl.GeoJSONSource
               fuente.getClusterExpansionZoom(Number(p.cluster_id)).then((zoom) => {
-                m.easeTo({ center: f.geometry.coordinates as [number, number], zoom })
+                m.easeTo({ center: f.geometry.coordinates as [number, number], zoom, duration: sinMovimiento() ? 0 : 500 })
               })
             })
-          : elementoDeLocal(porId.get(Number(p.id)), (local) => setSeleccionadoId(local.id))
+          : elementoDeLocal(porId.get(Number(p.id)), (local, boton) => {
+              puntoQueAbrio.current = boton
+              setSeleccionadoId(local.id)
+            })
         if (!elemento) continue
         marcadores.current.set(
           clave,
@@ -288,6 +297,13 @@ export function Mapa() {
             .setLngLat(f.geometry.coordinates as [number, number])
             .addTo(m),
         )
+      }
+      // Con el teclado solo se recorren los puntos que están a la vista: los que quedaron en el
+      // margen de afuera no son un lugar adonde tabular. Para saltear el mapa entero está el botón
+      // "Saltar el mapa".
+      for (const marcador of marcadores.current.values()) {
+        const { lng, lat } = marcador.getLngLat()
+        marcador.getElement().tabIndex = lng >= oeste && lng <= este && lat >= sur && lat <= norte ? 0 : -1
       }
     }
 
@@ -333,10 +349,24 @@ export function Mapa() {
       center: [seleccionado.longitude, seleccionado.latitude],
       // En el teléfono la hoja ocupa abajo: se corre el centro para que el punto quede arriba.
       padding: esEscritorio ? { top: 0, bottom: 0, left: 0, right: 0 } : { top: 0, bottom: 260, left: 0, right: 0 },
-      duration: 400,
+      duration: sinMovimiento() ? 0 : 400,
     })
     acomodarTarjeta()
   }, [seleccionado, acomodarTarjeta])
+
+  // Al abrir la tarjeta el foco pasa a ella (con el teclado, lo que sigue es su nombre y sus botones)
+  // y al cerrarla vuelve al punto que la abrió, para seguir recorriendo desde ahí.
+  const habiaTarjeta = useRef(false)
+  useEffect(() => {
+    if (seleccionadoId != null) {
+      habiaTarjeta.current = true
+      tarjeta.current?.focus({ preventScroll: true })
+    } else if (habiaTarjeta.current) {
+      habiaTarjeta.current = false
+      const punto = puntoQueAbrio.current
+      if (punto?.isConnected) punto.focus({ preventScroll: true })
+    }
+  }, [seleccionadoId])
 
   // Escape cierra la tarjeta.
   useEffect(() => {
@@ -364,9 +394,18 @@ export function Mapa() {
       : null
 
   return (
+    <>
     <div className="relative h-[calc(100dvh-7.5rem)] min-h-[26rem] overflow-hidden bg-base-300 md:h-[calc(100dvh-9rem)] md:rounded-box md:ring-1 md:ring-inset md:ring-base-content/15">
       {/* MapLibre le pone position: relative a su contenedor, y eso pisaba el absolute y lo
           dejaba sin alto: el mapa va en un div propio que llena a este. */}
+      {/* Hay hasta cientos de puntos: este botón es lo primero que se alcanza con el teclado y salta el mapa entero. */}
+      <button
+        type="button"
+        onClick={() => alFinalDelMapa.current?.focus()}
+        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-30 focus:inline-flex focus:min-h-11 focus:items-center focus:rounded-full focus:bg-neutral focus:px-4 focus:text-sm focus:font-semibold focus:text-secondary"
+      >
+        Saltar el mapa
+      </button>
       <div className="absolute inset-0 isolate">
         <div ref={contenedor} className="h-full w-full" role="region" aria-label="Mapa de hamburgueserías" />
       </div>
@@ -403,7 +442,10 @@ export function Mapa() {
       {seleccionado && (
         <div
           ref={tarjeta}
-          className="absolute inset-x-0 bottom-0 z-20 md:inset-x-auto md:bottom-auto md:left-0 md:top-0"
+          role="dialog"
+          aria-label={`Ficha de ${seleccionado.name}`}
+          tabIndex={-1}
+          className="absolute inset-x-0 bottom-0 z-20 focus:outline-none md:inset-x-auto md:bottom-auto md:left-0 md:top-0"
         >
           <TarjetaDelMapa
             local={seleccionado}
@@ -415,6 +457,11 @@ export function Mapa() {
         </div>
       )}
     </div>
+    {/* Adonde llega el foco al saltar el mapa. */}
+    <div ref={alFinalDelMapa} tabIndex={-1} className="sr-only focus:outline-none">
+      Fin del mapa
+    </div>
+    </>
   )
 }
 
@@ -433,7 +480,10 @@ function elementoDeGrupo(cuantos: number, alTocar: () => void): HTMLElement {
 }
 
 /** El punto de un local: su foto en un círculo y, si tiene reseñas, el sello con la nota. */
-function elementoDeLocal(local: LocalDelMapa | undefined, alTocar: (local: LocalDelMapa) => void): HTMLElement | null {
+function elementoDeLocal(
+  local: LocalDelMapa | undefined,
+  alTocar: (local: LocalDelMapa, boton: HTMLElement) => void,
+): HTMLElement | null {
   if (!local) return null
   const boton = document.createElement('button')
   boton.type = 'button'
@@ -459,6 +509,8 @@ function elementoDeLocal(local: LocalDelMapa | undefined, alTocar: (local: Local
   boton.appendChild(foto)
 
   if (local.averageScore != null) {
+    // El anillo de foco del punto abarca también el sello (ver .pin-mapa--con-nota).
+    boton.classList.add('pin-mapa--con-nota')
     const sello = document.createElement('span')
     sello.className = 'pin-mapa__nota'
     sello.textContent = nota(local.averageScore)
@@ -467,7 +519,7 @@ function elementoDeLocal(local: LocalDelMapa | undefined, alTocar: (local: Local
 
   boton.addEventListener('click', (e) => {
     e.stopPropagation()
-    alTocar(local)
+    alTocar(local, boton)
   })
   return boton
 }
