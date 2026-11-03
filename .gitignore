@@ -43,3 +43,7 @@ tools/
 # afuera y podía subirse con las claves adentro.
 .env.*
 !.env.example
+
+# El mapa base (#395): pesa cientos de MB y se genera a mano, ver deploy/README.md.
+*.pmtiles
+deploy/tiles/

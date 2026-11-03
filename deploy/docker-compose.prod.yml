@@ -92,6 +92,8 @@ services:
       - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # El mapa base (#395): el .pmtiles que se baja a mano, ver deploy/README.md.
+      - ./tiles:/srv-tiles:ro
       # Certificates: without these volumes Caddy would ask Let's Encrypt for a new
       # one on every restart and hit the rate limit.
       - caddy_data:/data

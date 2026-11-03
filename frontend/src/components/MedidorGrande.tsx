@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { nota } from '../utils/numeros'
 
 /**
  * El burgómetro grande: un tablero con la nota de un local, como en el logo.
  *
- * Es el momento en que la app hace honor al nombre, así que está en dos lugares nomás:
- * el resumen de la ficha y el primer puesto del ranking. En las listas va el sello
+ * Es el momento en que la app hace honor al nombre, así que está en pocos lugares: el resumen
+ * de la ficha, el primer puesto del ranking y, en chico, la tarjeta del mapa (#395). En las listas va el sello
  * chico (ScoreBadge), que es el mismo tablero en miniatura.
  *
  * El arco se llena hasta la nota sobre cinco y la aguja apunta ahí. Las seis semillas de
@@ -15,7 +15,9 @@ import { nota } from '../utils/numeros'
  * movimiento" aparece ya en su lugar.
  *
  * @param valor    la nota, de 1 a 5
- * @param tamanio  lg para la ficha, md para el primer puesto
+ * @param tamanio  lg para la ficha, md para el primer puesto, sm para la tarjeta del mapa
+ * @param colorDelArco el color del arco lleno, si no es el kétchup de siempre (la tarjeta del mapa lo
+ *                 pinta según el rango de la nota); lleva un filo del color del texto para que se vea
  * @param etiqueta lo que se le antepone al número para un lector de pantalla
  * @param conLetraDelLogo el número en Lexend, la letra del logo (#356): la ficha lo pide
  * @param children lo que va debajo del número, como cuántas reseñas lo dicen
@@ -23,12 +25,14 @@ import { nota } from '../utils/numeros'
 export function MedidorGrande({
   valor,
   tamanio = 'lg',
+  colorDelArco,
   etiqueta = 'Promedio',
   conLetraDelLogo = false,
   children,
 }: {
   valor: number
-  tamanio?: 'md' | 'lg'
+  tamanio?: 'sm' | 'md' | 'lg'
+  colorDelArco?: string
   etiqueta?: string
   conLetraDelLogo?: boolean
   children?: ReactNode
@@ -61,7 +65,14 @@ export function MedidorGrande({
   const grande = tamanio === 'lg'
 
   return (
-    <div className="flex flex-none flex-col items-center">
+    <div
+      className="flex flex-none flex-col items-center"
+      style={
+        colorDelArco
+          ? ({ '--arco-lleno': colorDelArco, '--arco-filo': 'var(--color-base-content)' } as CSSProperties)
+          : undefined
+      }
+    >
       <svg
         ref={tablero}
         viewBox="0 0 200 110"
@@ -69,7 +80,7 @@ export function MedidorGrande({
         // Bajo 360 px el tablero grande le dejaba a las barras de la ficha unos 20 px.
         // overflow-visible: el halo de las puntas redondeadas pasa un pixel del borde de
         // abajo, y ampliar el viewBox movería el tablero.
-        className={`overflow-visible ${grande ? 'w-36 max-[359px]:w-28 md:w-44' : 'w-24'}`}
+        className={`overflow-visible ${grande ? 'w-36 max-[359px]:w-28 md:w-44' : tamanio === 'sm' ? 'w-[76px]' : 'w-24'}`}
       >
         {/* La pista con su filo (#356): sola, el marrón al 10 % daba 1,3 : 1 contra la
             tarjeta y el arco vacío no se veía. */}
@@ -143,7 +154,7 @@ export function MedidorGrande({
         <circle cx="100" cy="100" r="3.5" className="fill-base-100" />
       </svg>
       <span
-        className={`${conLetraDelLogo ? 'font-logo' : 'font-display font-extrabold'} leading-none tabular-nums ${grande ? 'mt-2 text-5xl' : 'mt-0.5 text-2xl'}`}
+        className={`${conLetraDelLogo ? 'font-logo' : 'font-display font-extrabold'} leading-none tabular-nums ${grande ? 'mt-2 text-5xl' : tamanio === 'sm' ? 'mt-0.5 text-[22px]' : 'mt-0.5 text-2xl'}`}
       >
         <span className="sr-only">{etiqueta}: </span>
         {nota(valor)}

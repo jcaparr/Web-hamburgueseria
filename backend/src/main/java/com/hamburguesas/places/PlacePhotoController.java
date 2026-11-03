@@ -19,6 +19,23 @@ import java.nio.file.Files;
 public class PlacePhotoController {
 
     private final PhotoStorage photoStorage;
+    private final MiniaturasDeFotos miniaturas;
+
+    /**
+     * La foto chica para el mapa (#395). Sin miniatura posible —un WebP, por ejemplo— se
+     * sirve la foto entera: un punto con una foto pesada es mejor que un punto roto.
+     */
+    @GetMapping("/mini/{fileName}")
+    public ResponseEntity<Resource> miniatura(@PathVariable String fileName) {
+        var mini = miniaturas.de(fileName).orElse(null);
+        if (mini == null) {
+            return get(fileName);
+        }
+        return ResponseEntity.ok()
+            .contentType(MediaType.IMAGE_JPEG)
+            .cacheControl(org.springframework.http.CacheControl.maxAge(java.time.Duration.ofDays(30)))
+            .body(new FileSystemResource(mini));
+    }
 
     @GetMapping("/{fileName}")
     public ResponseEntity<Resource> get(@PathVariable String fileName) {

@@ -293,6 +293,45 @@ tar -czf backups/photos-de-afuera.tar.gz -C fotos-de-afuera place-photos rating-
 ./restore.sh backups/db-AAAAMMDD-HHMMSS.sql.gz backups/photos-de-afuera.tar.gz
 ```
 
+## El mapa (/mapa)
+
+El mapa base sale de un archivo propio, no de un servicio de terceros: un `.pmtiles` de
+[Protomaps](https://protomaps.com) (datos de OpenStreetMap, licencia ODbL) que el navegador lee
+a pedacitos con pedidos `Range`. No hay claves, ni cuotas, ni llamadas a Google. La
+atribución de OpenStreetMap se ve siempre en una esquina del mapa y no se saca.
+
+- **Dónde va:** `deploy/tiles/argentina.pmtiles`, al lado de `docker-compose.prod.yml`. La
+  carpeta `deploy/tiles/` no va al repo (`.gitignore`) y compose la monta de solo lectura en
+  Caddy, que la sirve en `/tiles/` con caché de un día. Sin el archivo, `/mapa` muestra los
+  locales igual, pero sin calles, y lo avisa.
+- **Cómo se genera:** con el programa `pmtiles` (go-pmtiles, de Protomaps). Primero se
+  mide, después se baja:
+
+  ```bash
+  # La compilación más reciente está en https://maps.protomaps.com/builds/
+  URL=https://build.protomaps.com/AAAAMMDD.pmtiles
+  # Argentina entera. --dry-run solo cuenta cuánto va a pesar, no baja nada.
+  pmtiles extract "$URL" argentina.pmtiles --bbox=-73.6,-55.1,-53.6,-21.7 --maxzoom=15 --dry-run
+  # El Área Metropolitana, para desarrollo.
+  pmtiles extract "$URL" amba.pmtiles --bbox=-59.2,-35.2,-57.8,-34.2 --maxzoom=15
+  ```
+
+  Si el país entero a zoom 15 pasa de unos 3 GB, se hace el país a zoom 13 y el AMBA a zoom
+  15 (dos archivos) o solo el país a zoom 13. Hay 21 GB libres en el servidor (31 GB
+  después de la limpieza de #394).
+- **En desarrollo:** `vite.config.ts` sirve `/tiles/` desde la carpeta `MAPA_TILES_DIR` del
+  `frontend/.env.local` (no se versiona), con soporte de `Range`. Con
+  `VITE_MAPA_ARCHIVO=/tiles/amba.pmtiles` el mapa usa el extracto chico en vez de
+  `/tiles/argentina.pmtiles`.
+- **Tipografías de las calles:** `frontend/public/mapa-fuentes/` (Noto Sans, licencia OFL,
+  de [basemaps-assets](https://github.com/protomaps/basemaps-assets)). Están en el repo para
+  que la política de contenido no tenga que dejar salir a ningún dominio de afuera.
+- **Política de contenido:** el mapa necesita `worker-src 'self' blob:` (MapLibre lee los
+  mosaicos en un worker). Ya está en el `Caddyfile`; el resto de la política no cambia.
+- **Fotos de los puntos:** `/api/place-photos/mini/<archivo>` genera una miniatura de 128 px
+  la primera vez que se pide y la deja en `place-photos/mini/` (unos 5 KB por local). Entra
+  en el backup de fotos y se regenera sola si falta.
+
 ## Probar el stack localmente
 
 Sin dominio ni HTTPS, con un `.env` aparte para no tocar el de verdad: copiá

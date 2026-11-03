@@ -98,3 +98,30 @@ export function estaAbierto(franjas: FranjaHoraria[], { dia, minuto }: Momento):
     return minutoDesdeQueAbre >= f.abre && minutoDesdeQueAbre < f.cierra
   })
 }
+
+/**
+ * Lo que dice la tarjeta del mapa (#395): "Abierto · cierra 00:00", "Cerrado · abre 12:00" o
+ * "Cerrado hoy". Sin horario no dice nada: es el mismo criterio que en la ficha.
+ *
+ * El cierre se lee de la franja que está abierta ahora, que puede haber empezado ayer
+ * (un viernes de 19 a 1 sigue abierto el sábado a las 0:30). La apertura es la próxima de
+ * hoy; si no queda ninguna, el local cerró por hoy.
+ */
+export function estadoDeHoy(franjas: FranjaHoraria[], momento: Momento): { abierto: boolean; texto: string } | null {
+  if (franjas.length === 0) return null
+
+  const abierta = franjas.find((f) => {
+    const desdeQueAbre = ((momento.dia - f.dia + 7) % 7) * MINUTOS_POR_DIA + momento.minuto
+    return desdeQueAbre >= f.abre && desdeQueAbre < f.cierra
+  })
+  if (abierta) {
+    const todoElDia = abierta.abre === 0 && abierta.cierra >= MINUTOS_POR_DIA
+    return { abierto: true, texto: todoElDia ? 'Abierto · 24 horas' : `Abierto · cierra ${hora(abierta.cierra)}` }
+  }
+
+  const proxima = franjasDelDia(franjas, momento.dia).find((f) => f.abre > momento.minuto)
+  return {
+    abierto: false,
+    texto: proxima ? `Cerrado · abre ${hora(proxima.abre)}` : 'Cerrado hoy',
+  }
+}

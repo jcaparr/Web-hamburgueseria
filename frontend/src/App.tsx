@@ -12,7 +12,7 @@ import { ReseniaRapidaProvider } from './context/ReseniaRapidaProvider'
 import { ArmarHamburguesa } from './pages/ArmarHamburguesa'
 import { BurgerJointDetail } from './pages/BurgerJointDetail'
 import { FichaPorSlug } from './pages/FichaPorSlug'
-import { Explore } from './pages/Explore'
+import { EntradaDeExplorar } from './pages/EntradaDeExplorar'
 import { Feed } from './pages/Feed'
 import { GenteDeUnPerfil } from './pages/GenteDeUnPerfil'
 import { ForgotPassword } from './pages/ForgotPassword'
@@ -61,11 +61,13 @@ export default function App() {
             className="mx-auto w-full max-w-[480px] flex-1 focus:outline-none md:max-w-[75rem] md:px-6 md:pb-8 md:pt-6"
           >
             <Routes>
-              <Route path="/" element={<Explore />} />
+              <Route path="/" element={<EntradaDeExplorar />} />
               <Route path="/burger-joints/:id" element={<BurgerJointDetail />} />
               <Route path="/cadenas/:marca" element={<PaginaDeCadena />} />
               <Route path="/ranking" element={<Ranking />} />
               <Route path="/tour" element={<Tour />} />
+              {/* El mapa es una vista de Explorar (#395); esta dirección sigue andando y manda ahí. */}
+              <Route path="/mapa" element={<Navigate to="/?vista=mapa" replace />} />
               {/* Bajo /u/ para que un nombre de usuario no pueda chocar nunca con una
                   pantalla de la app: alguien que se llame "tour" no rompe nada. */}
               <Route path="/u/:username" element={<RequireAuth><PerfilPublico /></RequireAuth>} />

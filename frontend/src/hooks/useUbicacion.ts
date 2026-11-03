@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 export interface Ubicacion {
   lat: number
@@ -13,6 +13,20 @@ const TOPE_DE_ESPERA_MS = 2_000
 /** Con tres decimales (unos 100 m) alcanza para ordenar por cercanía, y no mandamos más. */
 function redondeada(n: number) {
   return Math.round(n * 1000) / 1000
+}
+
+/** Lo que se recuerda mientras dure la pestaña, para no volver a pedirla ni reordenar la lista. */
+function recordar(encontrada: Ubicacion) {
+  try {
+    window.sessionStorage.setItem(CLAVE, JSON.stringify(encontrada))
+  } catch {
+    // Sin almacenamiento se vuelve a pedir la próxima vez, nada más.
+  }
+}
+
+/** La posición tal como la dio el navegador, con su precisión en metros: es lo que usa el mapa. */
+export interface PosicionExacta extends Ubicacion {
+  precision: number
 }
 
 function guardada(): Ubicacion | null {
@@ -44,8 +58,16 @@ function guardada(): Ubicacion | null {
  *
  * Negarse, o un navegador sin ubicación, es una respuesta válida: la lista sale por
  * relevancia, como antes.
+ *
+ * El mapa (#395) la comparte: si Explorar ya la tenía, la reusa sin pedirla otra vez. Además
+ * devuelve `pedirAhora`, que el botón de ubicación del mapa llama al tocarse para recibir la
+ * posición exacta con su precisión (el valor de `ubicacion` va redondeado a unos 100 m).
  */
-export function useUbicacion(): { ubicacion: Ubicacion | null; esperando: boolean } {
+export function useUbicacion(): {
+  ubicacion: Ubicacion | null
+  esperando: boolean
+  pedirAhora: () => Promise<PosicionExacta>
+} {
   const [ubicacion, setUbicacion] = useState<Ubicacion | null>(guardada)
   const [esperando, setEsperando] = useState(false)
 
@@ -60,11 +82,7 @@ export function useUbicacion(): { ubicacion: Ubicacion | null; esperando: boolea
           if (!vigente) return
           clearTimeout(tope)
           const encontrada = { lat: redondeada(coords.latitude), lon: redondeada(coords.longitude) }
-          try {
-            window.sessionStorage.setItem(CLAVE, JSON.stringify(encontrada))
-          } catch {
-            // Sin almacenamiento se vuelve a pedir la próxima vez, nada más.
-          }
+          recordar(encontrada)
           setUbicacion(encontrada)
           setEsperando(false)
         },
@@ -102,5 +120,26 @@ export function useUbicacion(): { ubicacion: Ubicacion | null; esperando: boolea
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  return { ubicacion, esperando }
+  const pedirAhora = useCallback(
+    () =>
+      new Promise<PosicionExacta>((resolver, rechazar) => {
+        if (!navigator.geolocation) {
+          rechazar(new Error('Este navegador no tiene ubicación'))
+          return
+        }
+        navigator.geolocation.getCurrentPosition(
+          ({ coords }) => {
+            const encontrada = { lat: redondeada(coords.latitude), lon: redondeada(coords.longitude) }
+            recordar(encontrada)
+            setUbicacion(encontrada)
+            resolver({ lat: coords.latitude, lon: coords.longitude, precision: coords.accuracy })
+          },
+          rechazar,
+          { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 },
+        )
+      }),
+    [],
+  )
+
+  return { ubicacion, esperando, pedirAhora }
 }

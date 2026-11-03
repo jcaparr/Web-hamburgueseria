@@ -41,7 +41,7 @@ public class SlugsDeLocales {
     public static final Set<String> RESERVADAS = Set.of(
         "api", "assets", "e", "u", "cadenas", "burger-joints", "ranking", "tour", "buscar",
         "feed", "profile", "reviews", "wishlist", "login", "register", "verify-email",
-        "forgot-password", "terminos", "privacidad");
+        "forgot-password", "terminos", "privacidad", "mapa");
 
     private static final int LARGO_MAXIMO = 80;
 

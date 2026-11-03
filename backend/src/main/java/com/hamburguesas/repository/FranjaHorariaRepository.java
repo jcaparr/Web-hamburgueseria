@@ -13,6 +13,20 @@ public interface FranjaHorariaRepository extends JpaRepository<FranjaHoraria, Lo
 
     List<FranjaHoraria> findByBurgerJoint_IdOrderByDiaAscAbreAsc(Long burgerJointId);
 
+    /**
+     * Las franjas de todos los locales del mapa (#395), de una: el mapa muestra el horario
+     * de hoy de cada uno y pedirlo de a uno serían mil consultas. Mismo criterio de locales
+     * que BurgerJointRepository.paraElMapa.
+     */
+    @Query("""
+        select new com.hamburguesas.dto.FranjaDeLocal(f.burgerJoint.id, f.dia, f.abre, f.cierra)
+        from FranjaHoraria f
+        where f.burgerJoint.latitude is not null and f.burgerJoint.longitude is not null
+          and f.burgerJoint.fastFood = false
+        order by f.burgerJoint.id, f.dia, f.abre
+        """)
+    List<com.hamburguesas.dto.FranjaDeLocal> paraElMapa();
+
     /** Para reemplazar el horario entero: Google lo devuelve completo cada vez. */
     @Modifying
     @Transactional
