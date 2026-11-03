@@ -28,14 +28,7 @@ export function TemasDeLasResenias({ temas }: { temas: TemaDeResenias[] }) {
 
   return (
     <section className="flex flex-col gap-3 tarjeta p-3">
-      <div className="flex flex-col gap-1">
-        <h3 className="text-sm font-semibold">De qué hablan las reseñas</h3>
-        {/* Una vez acá y no en cada chip: dice cómo se reparten los temas, sin repetirlo
-            seis veces. */}
-        <p className="text-xs text-base-content/70">
-          Según la nota de quienes nombraron cada tema.
-        </p>
-      </div>
+      <h3 className="text-sm font-semibold">De qué hablan las reseñas</h3>
 
       {gusta.length > 0 && (
         <Grupo titulo="Lo que gusta" signo="+" colorDelSigno="text-success">
