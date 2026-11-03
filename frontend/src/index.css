@@ -646,7 +646,7 @@ body {
   font-variant-numeric: tabular-nums;
   pointer-events: none;
 }
-/* Color por rango, también en la tarjeta. Contraste del número (claro / oscuro): verde 5,41 y 9,24; cheddar 7,55 y 10,29; neutro 10,47 y 12,3. */
+/* Color por rango, también en la tarjeta. Contraste del número (claro / oscuro): verde 5,41 y 9,24; cheddar 7,55 y 10,29; neutro 10,47 y 11,59. */
 .nota-alta { background: var(--color-success); color: var(--color-success-content); }
 .nota-media { background: var(--color-secondary); color: var(--color-secondary-content); }
 .nota-baja { background: var(--color-base-300); color: var(--color-base-content); }
