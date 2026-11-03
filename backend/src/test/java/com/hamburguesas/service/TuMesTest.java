@@ -122,6 +122,7 @@ class TuMesTest {
         assertThat(TuMes.mesQueSeResume(LocalDate.of(2027, 1, 1))).isEqualTo(YearMonth.of(2026, 12));
     }
 
+@Test    void unMesAbsurdoDaNoEncontradoYNoUnErrorDeFecha() {        User ana = cuenta("tumes_absurdo");        assertThatThrownBy(() -> servicio().resumen(ana.getId(), YearMonth.of(-999999999, 1)))            .isInstanceOf(ResourceNotFoundException.class);    }
     @Test
     void elDiaEnQueCambiaDeMesSeUsaLaHoraDeBuenosAires() {
         User ana = cuenta("tumes_hora");

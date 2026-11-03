@@ -38,6 +38,8 @@ public class TuMes {
     public static final ZoneId ZONA = ZoneId.of("America/Argentina/Buenos_Aires");
     /** Cuántos barrios muestra la tarjeta; el resto va como "+N". */
     static final int BARRIOS_VISIBLES = 3;
+    /** Antes de esto no hay reseñas: un año absurdo en la dirección daría un error de fecha, y acá un 404. */
+    static final int PRIMER_ANIO = 2020;
 
     private final RatingRepository ratingRepository;
     private final LogroDeUsuarioRepository logroRepository;
@@ -68,7 +70,7 @@ public class TuMes {
         YearMonth ultimo = mesQueSeResume(LocalDate.now(reloj.withZone(ZONA)));
         YearMonth elegido = mes == null ? ultimo : mes;
         // Un mes que todavía corre cambia con cada reseña: no es un resumen.
-        if (elegido.isAfter(ultimo)) {
+        if (elegido.isAfter(ultimo) || elegido.getYear() < PRIMER_ANIO) {
             throw new ResourceNotFoundException("Ese mes todavía no terminó");
         }
         User usuario = userRepository.findById(userId)

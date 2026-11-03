@@ -155,6 +155,8 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
   // tocado sea un botón o un enlace.
   function alTocar(e: MouseEvent<HTMLElement>) {
     if ((e.target as HTMLElement).closest('a, button')) return
+    // Soltar el mouse al terminar de seleccionar texto no es un toque.
+    if (window.getSelection()?.toString()) return
     const caja = e.currentTarget.getBoundingClientRect()
     irA((e.clientX - caja.left) / caja.width < 0.35 ? actual - 1 : actual + 1)
   }
@@ -211,6 +213,8 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
             aria-label={`${i + 1} de ${tarjetas.length}`}
             onClick={alTocar}
             className="flex w-full shrink-0 snap-center flex-col"
+            // Las que no se ven no entran en el orden de tabulación ni las lee el lector de pantalla.
+            inert={i !== actual}
             style={{ backgroundColor: FONDOS[tipo].fondo, color: FONDOS[tipo].texto }}
           >
             <div className="mx-auto flex w-full max-w-[480px] flex-1 flex-col justify-center gap-4 px-6 py-4">
