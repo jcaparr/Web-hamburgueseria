@@ -23,6 +23,7 @@ import { PaginaDeCadena } from './pages/PaginaDeCadena'
 import { PerfilPublico } from './pages/PerfilPublico'
 import { Privacidad } from './pages/Privacidad'
 import { Profile } from './pages/Profile'
+import { TuMes } from './pages/TuMes'
 import { Ranking } from './pages/Ranking'
 import { Register } from './pages/Register'
 import { ReseniasDeUnPerfil } from './pages/ReseniasDeUnPerfil'
@@ -78,6 +79,7 @@ export default function App() {
               <Route path="/buscar" element={<Navigate to="/feed" replace />} />
               <Route path="/feed" element={<RequireAuth><Feed /></RequireAuth>} />
               <Route path="/logros" element={<RequireAuth><Logros /></RequireAuth>} />
+              <Route path="/tu-mes" element={<RequireAuth><TuMes /></RequireAuth>} />
               <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
               <Route path="/profile/hamburguesa" element={<RequireAuth><ArmarHamburguesa /></RequireAuth>} />
               <Route path="/reviews" element={<RequireAuth><Reviews /></RequireAuth>} />

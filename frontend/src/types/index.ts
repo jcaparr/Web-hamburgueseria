@@ -391,3 +391,25 @@ export interface LocalDelMapa {
   ratingsCount: number
   franjas: FranjaHoraria[]
 }
+
+/** "Tu mes en Burgómetro" (#308): el resumen de un mes de reseñas. Con resenias = 0 no hay resumen. */
+export interface TuMes {
+  /** El mes que resume, "2026-11". */
+  mes: string
+  resenias: number
+  barrios: { nombre: string; resenias: number }[]
+  barriosEnTotal: number
+  mejor: {
+    localId: number
+    slug: string | null
+    nombre: string
+    barrio: string | null
+    foto: string | null
+    puntaje: number
+  } | null
+  nivel: number
+  xp: number
+  logros: number
+  /** Solo en el resumen de diciembre. */
+  anio: { resenias: number; locales: number } | null
+}

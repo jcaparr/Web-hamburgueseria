@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Rating } from '../types'
 import { armarTarjetaDeHistoria } from '../utils/tarjetaDeHistoria'
+import { compartirImagen } from '../utils/compartirImagen'
 import { IconShare } from './icons'
 
 /**
@@ -32,24 +33,7 @@ export function BotonCompartirEnHistorias({
         username: resenia.username,
         foto: resenia.fotos[0] ?? null,
       })
-      const archivo = new File([imagen], 'burgometro-resenia.png', { type: 'image/png' })
-
-      if (navigator.canShare?.({ files: [archivo] })) {
-        try {
-          await navigator.share({ files: [archivo] })
-        } catch {
-          // Cerrar el menú de compartir también llega acá, y no es un error.
-        }
-        return
-      }
-
-      const enlace = URL.createObjectURL(imagen)
-      const descarga = document.createElement('a')
-      descarga.href = enlace
-      descarga.download = archivo.name
-      descarga.click()
-      URL.revokeObjectURL(enlace)
-      setAviso('Se descargó la imagen. Subila a tu historia desde la galería.')
+      setAviso(await compartirImagen(imagen, 'burgometro-resenia.png'))
     } catch {
       setAviso('No pudimos armar la imagen. Probá de nuevo.')
     } finally {

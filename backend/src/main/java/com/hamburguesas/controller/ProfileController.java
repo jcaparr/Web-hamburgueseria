@@ -30,6 +30,7 @@ public class ProfileController {
     private final ListasDelPerfil listasDelPerfil;
     private final com.hamburguesas.logros.Logros logros;
     private final CambioDeNombreDeUsuario cambioDeNombre;
+    private final com.hamburguesas.service.TuMes tuMes;
 
 
     @GetMapping("/stats")
@@ -75,5 +76,20 @@ public class ProfileController {
     @PutMapping("/muestra-listas")
     public MostrarListasDto mostrarListas(@Valid @RequestBody MostrarListasDto pedido) {
         return new MostrarListasDto(listasDelPerfil.mostrar(CurrentUser.requireId(), pedido.muestra()));
+    }
+
+    /**
+     * El resumen de un mes, "Tu mes en Burgómetro" (#308). Sin parámetro, el del último mes
+     * terminado; con {@code mes=2026-11}, ese. El mes que todavía corre no se resume.
+     */
+    @GetMapping("/tu-mes")
+    public com.hamburguesas.dto.TuMesDto tuMes(@org.springframework.web.bind.annotation.RequestParam(required = false) String mes) {
+        java.time.YearMonth pedido;
+        try {
+            pedido = mes == null ? null : java.time.YearMonth.parse(mes);
+        } catch (java.time.format.DateTimeParseException e) {
+            throw new com.hamburguesas.exception.ResourceNotFoundException("Ese mes no existe");
+        }
+        return tuMes.resumen(CurrentUser.requireId(), pedido);
     }
 }

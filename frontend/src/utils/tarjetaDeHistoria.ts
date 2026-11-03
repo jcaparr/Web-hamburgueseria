@@ -8,23 +8,23 @@ import { nota } from './numeros'
  * Se dibuja en un canvas, en el teléfono: sin servidor y sin pedirle nada a Google.
  */
 
-const ANCHO = 1080
-const ALTO = 1920
-const MARGEN = 64
+export const ANCHO = 1080
+export const ALTO = 1920
+export const MARGEN = 64
 /**
  * Instagram tapa arriba con la fila del usuario (hasta unos 140 px de una historia de
  * 1920) y abajo con «Enviar mensaje». En el celular de Juan ese campo queda debajo de la
  * imagen, así que la línea del usuario puede apoyar casi en el borde de abajo; la marca
  * va pegada bajo la fila del usuario.
  */
-const MARCA_ARRIBA = 150
-const BORDE_LIBRE_ABAJO = 160
+export const MARCA_ARRIBA = 150
+export const BORDE_LIBRE_ABAJO = 160
 const MAXIMO_DEL_COMENTARIO = 150
 
 const TINTA = '#3a2a1e'
 const MOSTAZA = '#f2b705'
 const KETCHUP = '#b23a2e'
-const FUENTE = '"Roboto", system-ui, "Segoe UI", sans-serif'
+export const FUENTE = '"Roboto", system-ui, "Segoe UI", sans-serif'
 
 export interface DatosDeLaTarjeta {
   nombreDelLocal: string
@@ -49,7 +49,7 @@ function cargarImagen(src: string, conCors = false): Promise<HTMLImageElement> {
 }
 
 /** El logo como imagen: con ancho y alto escritos, porque un SVG sin ellos no se escala igual en todos los navegadores. */
-async function cargarLogo(): Promise<HTMLImageElement | null> {
+export async function cargarLogo(): Promise<HTMLImageElement | null> {
   try {
     const texto = await (await fetch('/favicon.svg')).text()
     const conMedidas = texto.replace('<svg ', '<svg width="284" height="240" ')
@@ -60,7 +60,7 @@ async function cargarLogo(): Promise<HTMLImageElement | null> {
 }
 
 /** Parte el texto en renglones que entren en el ancho; si sobran, el último termina en "…". */
-function renglones(ctx: CanvasRenderingContext2D, texto: string, ancho: number, maximo: number): string[] {
+export function renglones(ctx: CanvasRenderingContext2D, texto: string, ancho: number, maximo: number): string[] {
   const lineas: string[] = []
   let actual = ''
   const palabras = texto.split(/\s+/).filter(Boolean)
@@ -84,7 +84,7 @@ function renglones(ctx: CanvasRenderingContext2D, texto: string, ancho: number, 
 }
 
 /** El texto en un solo renglón, con "…" al final si no entra. */
-function recortar(ctx: CanvasRenderingContext2D, texto: string, ancho: number): string {
+export function recortar(ctx: CanvasRenderingContext2D, texto: string, ancho: number): string {
   if (ctx.measureText(texto).width <= ancho) return texto
   let corte = texto.length
   while (corte > 1 && ctx.measureText(`${texto.slice(0, corte).trimEnd()}…`).width > ancho) corte--
