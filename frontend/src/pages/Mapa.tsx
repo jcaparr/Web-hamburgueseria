@@ -30,8 +30,8 @@ const FUENTE_YO = 'mi-posicion'
 /** A este zoom un local nunca está agrupado (se agrupa hasta el 11) y se ve entero. */
 const ZOOM_AL_BUSCAR = 16
 const ZOOM_AL_UBICARSE = 14
-/** Si la ubicación tarda más que esto en llegar, el mapa arranca donde siempre y no se mueve de golpe. */
-const ESPERA_MAXIMA_DE_LA_UBICACION_MS = 5000
+/** Si la ubicación llega antes que esto, el mapa ya arranca ahí; si llega después, se desliza hasta ahí. */
+const ARRANQUE_DIRECTO_MS = 1500
 /** Desde este zoom (nivel de barrio) los puntos se dibujan grandes y con el sello completo. */
 const ZOOM_DE_PUNTO_GRANDE = 15
 /** Por debajo de este zoom (una ciudad entera a la vista) la foto va más chica todavía, con el sello mini. */
@@ -211,6 +211,10 @@ export function Mapa() {
       if (!m.hasImage(e.id)) m.addImage(e.id, { width: 1, height: 1, data: new Uint8Array(4) })
     })
     m.on('click', () => setSeleccionadoId(null))
+    // Si la persona ya movió o acercó el mapa con la mano, la ubicación que llegue después no se lo corre.
+    m.on('movestart', (e) => {
+      if ((e as { originalEvent?: unknown }).originalEvent) yaTocoElMapa.current = true
+    })
     m.on('move', acomodarTarjeta)
     mapa.current = m
 
@@ -408,11 +412,14 @@ export function Mapa() {
     return () => window.removeEventListener('keydown', alTocarUnaTecla)
   }, [])
 
-  // Si la ubicación llega enseguida, el mapa arranca centrado en la persona con su punto azul. Si la
-  // niega o tarda, queda en la vista de siempre, sin carteles: no hay nada que avisar.
+  // El mapa abre en donde está la persona, con su punto azul. La ubicación se pide apenas se abre la
+  // pantalla; el cartel del navegador lleva el tiempo que lleve contestarlo, así que si llega tarde el
+  // mapa se desliza hasta ahí, salvo que ya lo haya movido o haya elegido un local. Si la niega queda
+  // en la vista de siempre, sin carteles: no hay nada que avisar.
   const [abiertoEn] = useState(() => Date.now())
   const llegoEnMs = useRef<number | null>(null)
   const yaCentrado = useRef(false)
+  const yaTocoElMapa = useRef(false)
   useEffect(() => {
     if (ubicacion && llegoEnMs.current == null) llegoEnMs.current = Date.now() - abiertoEn
   }, [ubicacion, abiertoEn])
@@ -422,9 +429,10 @@ export function Mapa() {
     yaCentrado.current = true
     // Lo que se sabe acá va redondeado a unos 100 m: se dibuja el punto, sin círculo de precisión.
     setMiPosicion((previa) => previa ?? { lat: ubicacion.lat, lon: ubicacion.lon, precision: 0 })
-    if ((llegoEnMs.current ?? 0) <= ESPERA_MAXIMA_DE_LA_UBICACION_MS) {
-      m.jumpTo({ center: [ubicacion.lon, ubicacion.lat], zoom: ZOOM_AL_UBICARSE })
-    }
+    if (yaTocoElMapa.current || seleccionadoIdRef.current != null) return
+    const destino = { center: [ubicacion.lon, ubicacion.lat] as [number, number], zoom: ZOOM_AL_UBICARSE }
+    if ((llegoEnMs.current ?? 0) <= ARRANQUE_DIRECTO_MS) m.jumpTo(destino)
+    else m.flyTo({ ...destino, duration: sinMovimiento() ? 0 : 1200 })
   }, [listo, ubicacion])
 
   const elegirDesdeElBuscador = useCallback((local: LocalDelMapa) => {
