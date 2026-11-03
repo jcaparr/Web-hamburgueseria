@@ -599,6 +599,8 @@ body {
  * círculo de la foto (46 px, más que los 44 de un toque): el sello de la nota cuelga
  * por abajo sin agrandarla, y por eso la coordenada cae justo en el centro de la foto.
  */
+/* El tamaño de la foto lo fija el zoom (ver .mapa-lejos): se hereda del contenedor del mapa. */
+.maplibregl-map { --foto: 46px; }
 .pin-mapa {
   position: relative;
   /* 46 px de área de toque aunque la foto se dibuje más chica: ver .mapa-lejos. */
@@ -613,8 +615,8 @@ body {
 }
 .pin-mapa__foto {
   display: block;
-  width: 46px;
-  height: 46px;
+  width: var(--foto);
+  height: var(--foto);
   overflow: hidden;
   border-radius: 9999px;
   background: var(--color-base-300);
@@ -629,47 +631,36 @@ body {
 .pin-mapa__nota {
   position: absolute;
   left: 50%;
-  bottom: -10px;
+  /* Siempre debajo de la foto, nunca encima: queda a 3 px de su borde, sea del tamaño que sea. */
+  top: calc(50% + var(--foto) / 2 + 3px);
   transform: translateX(-50%);
-  padding: 3px 7px;
+  padding: 2px 6px;
   border-radius: 7px;
   background: var(--color-secondary);
   color: var(--color-secondary-content);
-  font: 800 13px/1 var(--font-display, system-ui);
+  font: 800 12px/1.1 var(--font-display, system-ui);
   font-variant-numeric: tabular-nums;
   box-shadow: 0 0 0 2px var(--color-base-100);
   pointer-events: none;
 }
-/* De lejos (zoom menor a 14) la foto baja a 32 px y el sello a uno mini: así los locales de un barrio denso no se encimen. */
+/* De lejos (zoom menor a 15) la foto baja a 32 px y, por debajo del 14, a 24 px: así los locales de un barrio denso entran sueltos. La nota se queda en 11-12 px en todos los zooms. */
+.mapa-lejos { --foto: 32px; }
+.mapa-muy-lejos { --foto: 24px; }
 .mapa-lejos .pin-mapa__foto {
-  width: 32px;
-  height: 32px;
   box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 4px var(--color-primary), 0 4px 10px -5px rgb(0 0 0 / 0.5);
 }
-.mapa-lejos .pin-mapa__nota {
-  bottom: 0;
-  padding: 2px 4px;
-  border-radius: 5px;
-  font-size: 10px;
-  box-shadow: 0 0 0 1.5px var(--color-base-100);
-}
-/* A la altura de la ciudad entera: foto de 24 px y sello mini, para que quepan sueltos. */
 .mapa-muy-lejos .pin-mapa__foto {
-  width: 24px;
-  height: 24px;
   box-shadow: 0 0 0 1.5px var(--color-base-100), 0 0 0 3px var(--color-primary);
 }
-/* La nota se ve siempre, aunque sea chica: sin ella el mapa no dice cuál conviene. */
 .mapa-muy-lejos .pin-mapa__nota {
-  bottom: 3px;
-  padding: 1px 3px;
-  border-radius: 4px;
-  font-size: 10px;
-  line-height: 1.1;
-  box-shadow: 0 0 0 1px var(--color-base-100);
+  padding: 1px 5px;
+  border-radius: 6px;
+  font-size: 11px;
+  box-shadow: 0 0 0 1.5px var(--color-base-100);
 }
 .mapa-lejos .grupo-mapa { width: 40px; height: 40px; font-size: 14px; box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 6px color-mix(in srgb, var(--color-primary) 25%, transparent); }
 .pin-mapa--elegido { z-index: 100 !important; }
+.pin-mapa--elegido .pin-mapa__nota { margin-top: calc(var(--foto) * 0.15); }
 .pin-mapa--elegido .pin-mapa__foto {
   transform: scale(1.3);
   box-shadow: 0 0 0 3px var(--color-base-100), 0 0 0 6px var(--color-primary), 0 0 0 14px color-mix(in srgb, var(--color-primary) 25%, transparent);
