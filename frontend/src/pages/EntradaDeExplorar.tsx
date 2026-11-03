@@ -3,7 +3,7 @@ import { Navigate, useSearchParams } from 'react-router-dom'
 import { leerVistaGuardada } from '../utils/vistaDeExplorar'
 import { Explore } from './Explore'
 
-// MapLibre pesa unos 250 KB: se baja recién al elegir el mapa. La lista no carga nada de esto (#395).
+// MapLibre pesa unos 300 KB comprimido: se baja recién al elegir el mapa. La lista no carga nada de esto (#395).
 const Mapa = lazy(() => import('./Mapa').then((m) => ({ default: m.Mapa })))
 
 /** Marca de que ya se aplicó la vista recordada en esta pestaña: se aplica al abrir, y solo ahí. */

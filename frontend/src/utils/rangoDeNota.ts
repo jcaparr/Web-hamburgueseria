@@ -6,8 +6,10 @@
  * mapa y la tarjeta.
  */
 export function claseDeNota(nota: number): 'nota-alta' | 'nota-media' | 'nota-baja' {
-  if (nota >= 4.5) return 'nota-alta'
-  if (nota >= 4) return 'nota-media'
+  // Se compara la nota como se escribe (un decimal): un 4,46 se lee "4,5" y tiene que pintarse verde.
+  const escrita = Math.round(nota * 10) / 10
+  if (escrita >= 4.5) return 'nota-alta'
+  if (escrita >= 4) return 'nota-media'
   return 'nota-baja'
 }
 

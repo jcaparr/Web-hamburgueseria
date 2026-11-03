@@ -185,6 +185,13 @@ export function Mapa() {
       maxBounds: LIMITES,
       // La atribución de OpenStreetMap tiene que verse siempre, no detrás de una "i".
       attributionControl: { compact: false },
+      // Los textos que lee el lector de pantalla, en castellano (por defecto vienen en inglés).
+      locale: {
+        'NavigationControl.ZoomIn': 'Acercar',
+        'NavigationControl.ZoomOut': 'Alejar',
+        'AttributionControl.ToggleAttribution': 'Mostrar la atribución',
+        'AttributionControl.MapFeedback': 'Comentarios sobre el mapa',
+      },
       // Sin giro: el mapa se usa para ubicarse, y rotarlo por error desorienta.
       dragRotate: false,
       pitchWithRotate: false,
@@ -312,6 +319,8 @@ export function Mapa() {
               const fuente = m.getSource(FUENTE) as maplibregl.GeoJSONSource
               fuente.getClusterExpansionZoom(Number(p.cluster_id)).then((zoom) => {
                 m.easeTo({ center: f.geometry.coordinates as [number, number], zoom, duration: sinMovimiento() ? 0 : 500 })
+              }).catch(() => {
+                // Si no se puede calcular el acercamiento, el grupo queda como está.
               })
             })
           : elementoDeLocal(porId.get(Number(p.id)), (local, boton) => {

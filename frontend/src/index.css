@@ -658,6 +658,8 @@ body {
 .nota-media { background: var(--color-secondary); color: var(--color-secondary-content); }
 .nota-baja { background: var(--nota-baja); color: var(--nota-baja-c); }
 /* De lejos (zoom menor a 15) la foto baja a 30 px y, por debajo del 14, a 22 px: así los locales de un barrio denso entran sueltos. La nota nunca baja de 12 px. */
+/* Los botones de acercar y alejar de MapLibre miden 29 px: se llevan a 44 px, el toque mínimo. */
+.maplibregl-ctrl-group button { width: 44px; height: 44px; }
 .mapa-lejos { --foto: 30px; --nota: 14px; }
 .mapa-muy-lejos { --foto: 22px; --nota: 12px; }
 .mapa-lejos .pin-mapa__foto { box-shadow: 0 0 0 1.5px var(--color-base-100), 0 0 0 2.5px var(--color-base-content), 0 3px 6px -3px rgb(0 0 0 / 0.45); }

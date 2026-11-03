@@ -91,7 +91,9 @@ public class MiniaturasDeFotos {
         // Se escribe en un temporal y se mueve: dos pedidos a la vez no pueden dejar a uno
         // leyendo una miniatura a medio escribir.
         Path temporal = Files.createTempFile(destino.getParent(), "mini-", ".tmp");
-        try (ImageOutputStream salida = ImageIO.createImageOutputStream(Files.newOutputStream(temporal))) {
+        // El flujo de archivo se abre aparte: cerrar el ImageOutputStream no cierra el de abajo.
+        try (java.io.OutputStream flujo = Files.newOutputStream(temporal);
+             ImageOutputStream salida = ImageIO.createImageOutputStream(flujo)) {
             ImageWriter escritor = ImageIO.getImageWritersByFormatName("jpeg").next();
             try {
                 ImageWriteParam parametros = escritor.getDefaultWriteParam();
