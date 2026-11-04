@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
-import { IconClock, IconExternal, IconPin, IconRoute } from '../components/icons'
+import { IconClock, IconExternal, IconPin } from '../components/icons'
 import { HorarioDelLocal } from '../components/HorarioDelLocal'
 import { LoadError } from '../components/LoadError'
 import { MasEnElBarrio } from '../components/MasEnElBarrio'
@@ -19,7 +19,7 @@ import { anclaDeResenia, reseniaDelAncla } from '../utils/aLaResenia'
 import { descripcionDe, restauranteDe } from '../utils/datosEstructurados'
 import { isNotFound, isSessionExpired } from '../utils/errors'
 import { shortAddress } from '../utils/address'
-import { comoLlegarUrl, mapsUrl } from '../utils/maps'
+import { comoLlegarUrl } from '../utils/maps'
 
 /**
  * Se llega con esto puesto desde "Mis reseñas", para editar sin tener que buscar el
@@ -273,7 +273,11 @@ export function BurgerJointDetail({ idDelLocal }: { idDelLocal?: string }) {
     )
   }
 
-  const comoLlegar = comoLlegarUrl(burgerJoint)
+  // Los locales sin coordenadas no están en el mapa propio: ahí no hay botón.
+  const verEnElMapa =
+    burgerJoint.latitude != null && burgerJoint.longitude != null
+      ? `/?vista=mapa&local=${burgerJoint.id}`
+      : null
 
   return (
     <div className="flex flex-col gap-6 p-4 md:mx-auto md:max-w-3xl md:p-0 md:pt-2">
@@ -308,22 +312,16 @@ export function BurgerJointDetail({ idDelLocal }: { idDelLocal?: string }) {
           Reseñar es la acción principal de la app, así que va en rojo; ir, al lado y
           del mismo tamaño, porque en el teléfono es la que más se usa. */}
       <div className="-mt-2 grid grid-cols-2 gap-3 md:flex">
-        {comoLlegar && (
-          <a
-            href={comoLlegar}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-outline gap-2 whitespace-nowrap md:px-6"
-          >
-            <IconRoute size={18} />
-            Cómo llegar
-            <span className="sr-only"> (se abre en otra pestaña)</span>
-          </a>
+        {verEnElMapa && (
+          <Link to={verEnElMapa} className="btn btn-outline gap-2 whitespace-nowrap md:px-6">
+            <IconPin size={18} />
+            Ver en el mapa
+          </Link>
         )}
         <button
           type="button"
           onClick={abrirOpinion}
-          className={`btn btn-primary whitespace-nowrap md:px-6 ${comoLlegar ? '' : 'col-span-2'}`}
+          className={`btn btn-primary whitespace-nowrap md:px-6 ${verEnElMapa ? '' : 'col-span-2'}`}
         >
           {myRating ? 'Editar tu reseña' : 'Escribir reseña'}
         </button>
@@ -340,7 +338,7 @@ export function BurgerJointDetail({ idDelLocal }: { idDelLocal?: string }) {
           </div>
         )}
         <a
-          href={mapsUrl(burgerJoint.placeId, burgerJoint.name, burgerJoint.latitude, burgerJoint.longitude)}
+          href={comoLlegarUrl(burgerJoint)}
           target="_blank"
           rel="noopener noreferrer"
           className="group flex items-start gap-3 px-4 py-3 text-sm"
@@ -349,7 +347,7 @@ export function BurgerJointDetail({ idDelLocal }: { idDelLocal?: string }) {
           <span className="min-w-0 flex-1">
             <span className="block">{shortAddress(burgerJoint.address, burgerJoint.area)}</span>
             <span className="text-xs font-semibold text-primary group-hover:underline">
-              Ver en Maps
+              Cómo llegar
               <span className="sr-only"> (se abre en otra pestaña)</span>
             </span>
           </span>

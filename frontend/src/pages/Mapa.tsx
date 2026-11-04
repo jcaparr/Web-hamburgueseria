@@ -3,7 +3,7 @@ import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { Protocol } from 'pmtiles'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { BuscadorDelMapa } from '../components/BuscadorDelMapa'
 import { LoadError } from '../components/LoadError'
@@ -82,6 +82,7 @@ export function Mapa() {
   useTitulo('Mapa')
   const { user } = useAuth()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
   const { ubicacion, pedirAhora } = useUbicacion()
 
   const pedido = usePedido('mapa', () =>
@@ -450,6 +451,18 @@ export function Mapa() {
     puntoQueAbrio.current = null
     setSeleccionadoId(local.id)
   }, [])
+
+  // "?local=<id>" (el botón "Ver en el mapa" de la ficha): una sola vez, cuando el mapa y los puntos
+  // están listos, se elige ese local como si se lo hubiera buscado. Un id que no está en el mapa se ignora.
+  const localPedido = Number(params.get('local'))
+  const yaElegidoPorLaDireccion = useRef(false)
+  useEffect(() => {
+    if (yaElegidoPorLaDireccion.current || !listo || !localPedido) return
+    const local = porId.get(localPedido)
+    if (!local) return
+    yaElegidoPorLaDireccion.current = true
+    elegirDesdeElBuscador(local)
+  }, [listo, localPedido, porId, elegirDesdeElBuscador])
 
   const centrarEnMiUbicacion = useCallback(async () => {
     const m = mapa.current
