@@ -414,6 +414,14 @@ export interface TuMes {
   logrosGanados: { codigo: string; detalle: string | null }[]
   /** Sus puestos en los podios que empezaron en el mes: solo los de esta persona. */
   podios: { periodo: "semana" | "mes"; desde: string; puesto: number }[]
-  /** Solo en el resumen de diciembre. */
-  anio: { resenias: number; locales: number } | null
+  /** Si es el recuento del año entero (el resumen de diciembre, que sale el 1 de enero). */
+  anual: boolean
+  /** Las reseñas del período anterior: el mes anterior, o el año anterior en el anual. */
+  reseniasAnteriores: number
+  /** Su día favorito para reseñar (1 lunes a 7 domingo) y la franja; nulo con menos de tres reseñas. */
+  dia: { diaDeLaSemana: number; franja: "madrugada" | "mañana" | "tarde" | "noche" } | null
+  /** Las reacciones recibidas (sin las de personas bloqueadas); nulo si no hubo. */
+  reacciones: { total: number; masUsada: TipoDeReaccion } | null
+  /** Solo en el anual: su mes más activo y el nivel con el que empezó y terminó el año. */
+  recuento: { mesMasActivo: number; reseniasDelMes: number; nivelAlEmpezar: number; nivelAlTerminar: number } | null
 }

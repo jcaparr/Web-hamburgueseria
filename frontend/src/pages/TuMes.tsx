@@ -13,7 +13,9 @@ import { compartirImagen } from '../utils/compartirImagen'
 import { cantidad, nota } from '../utils/numeros'
 import { rutaDelLocal } from '../utils/rutaDelLocal'
 import { armarTarjetaDeResumen } from '../utils/tarjetaDeResumen'
-import { NITIDEZ, anioDelMes, diaDe, nombreDelMes, tarjetasDe, type TipoDeTarjeta } from '../utils/tuMes'
+import { NITIDEZ, anioDelMes, comparacionCon, diaDe, franjaEnPalabras, nombreDelDia, nombreDelMes, nombreDelMesNumero, periodoDe, tarjetasDe, type TipoDeTarjeta } from '../utils/tuMes'
+import { DibujoDeReaccion } from '../components/DibujoDeReaccion'
+import { reaccion } from '../utils/reacciones'
 import { MedallaDeLogro } from '../components/MedallaDeLogro'
 import { nombreDe } from '../utils/logros'
 import './TuMes.css'
@@ -287,7 +289,10 @@ const ETIQUETAS: Record<TipoDeTarjeta, string> = {
   mejor: "Mejor nota",
   logros: "Logros del mes",
   podio: "Podio",
-  anio: "El año",
+  mesActivo: "Mes más activo",
+  dia: "Día favorito",
+  reacciones: "Reacciones recibidas",
+  nivel: "Tu nivel en el año",
   cierre: "Cierre",
 }
 
@@ -320,7 +325,7 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
   hamburguesa: string | null
   xp: number
 }) {
-  const mes = nombreDelMes(resumen.mes)
+  const mes = periodoDe(resumen)
   switch (tipo) {
     case 'portada':
       return (
@@ -335,7 +340,7 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
             <span className="tm-linea grande"><span style={{ '--d': 2 } as CSSProperties}>en Burgómetro</span></span>
           </h1>
           <div className="tm-sello" aria-hidden="true">
-            {mes.slice(0, 3).toUpperCase()}
+            {resumen.anual ? "TODO" : mes.slice(0, 3).toUpperCase()}
             <br />
             {anioDelMes(resumen.mes)}
           </div>
@@ -353,8 +358,11 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
             className="tm-cifra tm-gran tm-parte"
           />
           <p className="tm-pie tm-parte" style={{ '--d': 3 } as CSSProperties}>
-            {resumen.resenias === 1 ? 'reseña' : 'reseñas'} en {mes}
+            {resumen.resenias === 1 ? "reseña" : "reseñas"} en {mes}
           </p>
+          {comparacionCon(resumen) && (
+            <p className="tm-comparacion tm-parte" style={{ '--d': 5 } as CSSProperties}>{comparacionCon(resumen)}</p>
+          )}
         </div>
       )
     case 'barrios':
@@ -434,7 +442,11 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
       )
     }
     case 'podio': {
-      const filas = resumen.podios.slice(0, 4)
+      // En el recuento del año, los mejores puestos primero; en un mes, en orden de fechas.
+      const ordenados = resumen.anual
+        ? [...resumen.podios].sort((a, b) => a.puesto - b.puesto || a.desde.localeCompare(b.desde))
+        : resumen.podios
+      const filas = ordenados.slice(0, 4)
       return (
         <div className="tm-vidrio">
           <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>
@@ -443,7 +455,7 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
           <ol className="tm-barrios">
             {filas.map((p, i) => (
               <li key={`${p.periodo}-${p.desde}`} style={{ '--d': i } as CSSProperties}>
-                <b>{p.periodo === 'mes' ? `Todo ${mes}` : `Semana del ${diaDe(p.desde)}`}</b>
+                <b>{p.periodo === 'mes' ? `Todo ${nombreDelMes(p.desde.slice(0, 7))}` : `Semana del ${diaDe(p.desde)}`}</b>
                 <span className={`tm-nota puesto-${Math.min(p.puesto, 4)}`} role="img" aria-label={`Puesto ${p.puesto}`}>{p.puesto}º</span>
               </li>
             ))}
@@ -454,22 +466,67 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
         </div>
       )
     }
-    case 'anio':
-      return resumen.anio ? (
+    case 'mesActivo': {
+      const r = resumen.recuento
+      if (!r) return null
+      return (
         <div className="tm-vidrio">
-          <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>Y en todo {anioDelMes(resumen.mes)}</p>
-          <Cuenta
-            valor={resumen.anio.resenias}
-            activa={activa}
-            demora={500}
-            etiqueta={`${resumen.anio.resenias} ${resumen.anio.resenias === 1 ? 'reseña' : 'reseñas'}`}
-            className="tm-cifra tm-gran tm-parte"
-          />
+          <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>Tu mes más activo fue</p>
+          <p className="tm-cifra tm-mes tm-parte" style={{ '--d': 1 } as CSSProperties}>{nombreDelMesNumero(r.mesMasActivo)}</p>
           <p className="tm-pie tm-parte" style={{ '--d': 3 } as CSSProperties}>
-            {resumen.anio.resenias === 1 ? 'reseña' : 'reseñas'} en {cantidad(resumen.anio.locales)} {resumen.anio.locales === 1 ? 'local' : 'locales'}
+            con {r.reseniasDelMes} {r.reseniasDelMes === 1 ? 'reseña' : 'reseñas'}
           </p>
         </div>
-      ) : null
+      )
+    }
+    case 'dia': {
+      const d = resumen.dia
+      if (!d) return null
+      return (
+        <div className="tm-vidrio">
+          <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>Tu día para reseñar</p>
+          <p className="tm-cifra tm-mes tm-parte" style={{ '--d': 1 } as CSSProperties}>{nombreDelDia(d.diaDeLaSemana)}</p>
+          <p className="tm-pie tm-parte" style={{ '--d': 3 } as CSSProperties}>sobre todo {franjaEnPalabras(d.franja)}</p>
+        </div>
+      )
+    }
+    case 'reacciones': {
+      const r = resumen.reacciones
+      if (!r) return null
+      const la = reaccion(r.masUsada)
+      return (
+        <div className="tm-vidrio claro">
+          <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>
+            {r.total === 1 ? 'Tus reseñas recibieron una reacción' : `Tus reseñas recibieron ${cantidad(r.total)} reacciones`}
+          </p>
+          <div className="tm-reaccion tm-parte" style={{ '--d': 1 } as CSSProperties}>
+            <DibujoDeReaccion tipo={r.masUsada} className="h-32 w-auto" />
+          </div>
+          <p className="tm-pie tm-parte" style={{ '--d': 3 } as CSSProperties}>
+            {r.total === 1 ? 'Fue' : 'La que más'}: {la.nombre.toLowerCase()}
+          </p>
+        </div>
+      )
+    }
+    case 'nivel': {
+      const r = resumen.recuento
+      if (!r) return null
+      const subio = r.nivelAlTerminar > r.nivelAlEmpezar
+      return (
+        <div className="tm-vidrio">
+          <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>
+            {subio ? `Empezaste el año en el nivel ${r.nivelAlEmpezar} y lo terminaste en el` : 'Terminaste el año en el'}
+          </p>
+          <p className="tm-cifra tm-gran tm-parte" style={{ '--d': 1 } as CSSProperties}>
+            <span className="sr-only">Nivel </span>
+            {r.nivelAlTerminar}
+          </p>
+          <p className="tm-pie tm-parte" style={{ '--d': 3 } as CSSProperties}>
+            {subio ? `Subiste ${r.nivelAlTerminar - r.nivelAlEmpezar} ${r.nivelAlTerminar - r.nivelAlEmpezar === 1 ? 'nivel' : 'niveles'}` : 'Seguís firme'}
+          </p>
+        </div>
+      )
+    }
     case 'cierre':
       return (
         <div className="tm-vidrio tm-cierre">
@@ -482,7 +539,7 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
           </h1>
           <p className="tm-parte" style={{ '--d': 5 } as CSSProperties}>
             {resumen.logros > 0
-              ? `Ganaste ${resumen.logros === 1 ? 'un logro' : `${resumen.logros} logros`} este mes.`
+              ? `Ganaste ${resumen.logros === 1 ? "un logro" : `${resumen.logros} logros`} ${resumen.anual ? "este año" : "este mes"}.`
               : 'Mostrales a tus amigos cómo te fue.'}
           </p>
           <p className="tm-nivel tm-parte" style={{ '--d': 6 } as CSSProperties}>Hoy sos nivel {resumen.nivel}</p>

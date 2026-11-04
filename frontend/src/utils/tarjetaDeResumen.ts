@@ -67,7 +67,7 @@ export async function armarTarjetaDeResumen(resumen: TuMes, username: string, fo
   const interior = ancho - 112
   let y = panelY + 130
   ctx.font = `700 60px ${FUENTE}`
-  ctx.fillText(`Mi ${nombreDelMes(resumen.mes)} de ${anioDelMes(resumen.mes)}`, x, y)
+  ctx.fillText(resumen.anual ? `Mi ${anioDelMes(resumen.mes)} en Burgómetro` : `Mi ${nombreDelMes(resumen.mes)} de ${anioDelMes(resumen.mes)}`, x, y)
   y += 250
   ctx.font = `700 260px ${FUENTE}`
   ctx.fillText(String(resumen.resenias), x, y)
