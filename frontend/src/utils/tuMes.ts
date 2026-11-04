@@ -11,21 +11,21 @@ export function anioDelMes(mes: string): number {
   return Number(mes.split('-')[0])
 }
 
-/**
- * Los colores de cada tarjeta. Son fijos y no cambian con el tema: la tarjeta es una
- * pieza propia, como una historia, y así el contraste es el mismo en claro y en oscuro.
- * Cada par se midió con la fórmula de WCAG: todos pasan 4,5 : 1 (de 4,88 a 12,42).
- */
-export const FONDOS = {
-  portada: { fondo: '#b23a2e', texto: '#fffdf8' },
-  resenias: { fondo: '#f2b705', texto: '#3a2a1e' },
-  barrios: { fondo: '#2f4f23', texto: '#f7efd8' },
-  mejor: { fondo: '#3a2a1e', texto: '#f3e8cf' },
-  anio: { fondo: '#2c545d', texto: '#f7efd8' },
-  cierre: { fondo: '#faf3e3', texto: '#3a2a1e' },
-} as const
+export type TipoDeTarjeta = 'portada' | 'resenias' | 'barrios' | 'mejor' | 'anio' | 'cierre'
 
-export type TipoDeTarjeta = keyof typeof FONDOS
+/**
+ * Qué tan nítida se ve la foto de fondo en cada tarjeta, de 0 (solo la desenfocada) a 1
+ * (la foto entera). La foto se va revelando de la portada a la mejor nota y vuelve a
+ * velarse un poco en el cierre. Es la opacidad de la capa nítida: no se anima el desenfoque.
+ */
+export const NITIDEZ: Record<TipoDeTarjeta, number> = {
+  portada: 0,
+  resenias: 0.25,
+  barrios: 0.45,
+  mejor: 1,
+  anio: 0.4,
+  cierre: 0.6,
+}
 
 /** Qué tarjetas lleva el resumen: la del año solo en diciembre, y la de la mejor nota si hay. */
 export function tarjetasDe(resumen: TuMes): TipoDeTarjeta[] {

@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
+import { AvatarDeUsuario } from '../components/AvatarDeUsuario'
 import { IconArrowLeft, IconChevronRight, IconShare } from '../components/icons'
 import { LoadError } from '../components/LoadError'
 import { Personaje } from '../components/Personaje'
@@ -12,14 +13,17 @@ import { compartirImagen } from '../utils/compartirImagen'
 import { cantidad, nota } from '../utils/numeros'
 import { rutaDelLocal } from '../utils/rutaDelLocal'
 import { armarTarjetaDeResumen } from '../utils/tarjetaDeResumen'
-import { FONDOS, anioDelMes, nombreDelMes, tarjetasDe, type TipoDeTarjeta } from '../utils/tuMes'
+import { NITIDEZ, anioDelMes, nombreDelMes, tarjetasDe, type TipoDeTarjeta } from '../utils/tuMes'
+import './TuMes.css'
 
 /**
  * "Tu mes en Burgómetro" (#308): el resumen del mes en tarjetas a pantalla completa, como
  * las historias. Se pasa deslizando, tocando los costados, con los botones o con las
  * flechas del teclado. Una cifra por tarjeta.
  *
- * Los colores de cada tarjeta son fijos (ver FONDOS): no dependen del tema.
+ * El fondo es la foto del local de la mejor nota, que se va revelando de una tarjeta a la
+ * otra; sin foto, un fondo de marca. Los estilos y por qué no se anima el desenfoque,
+ * en TuMes.css.
  */
 export function TuMes() {
   const [parametros] = useSearchParams()
@@ -58,7 +62,7 @@ export function TuMes() {
 
   if (error) {
     return (
-      <Pantalla fondo="#faf3e3" texto="#3a2a1e" alCerrar={cerrar}>
+      <Pantalla alCerrar={cerrar}>
         <div className="mx-auto w-full max-w-[480px] p-4">
           <LoadError error={error} onRetry={() => { setError(null); setIntento((n) => n + 1) }} />
         </div>
@@ -67,14 +71,14 @@ export function TuMes() {
   }
   if (!resumen) {
     return (
-      <Pantalla fondo="#faf3e3" texto="#3a2a1e" alCerrar={cerrar}>
+      <Pantalla alCerrar={cerrar}>
         <p role="status" className="p-8 text-center text-lg">Armando tu mes…</p>
       </Pantalla>
     )
   }
   if (resumen.resenias === 0) {
     return (
-      <Pantalla fondo="#faf3e3" texto="#3a2a1e" alCerrar={cerrar}>
+      <Pantalla alCerrar={cerrar}>
         <div className="mx-auto flex w-full max-w-[480px] flex-col items-center gap-4 p-8 text-center">
           <Personaje pose="lupa" className="h-32 w-auto" />
           <p className="text-lg font-semibold">En {nombreDelMes(resumen.mes)} no hiciste reseñas.</p>
@@ -87,34 +91,60 @@ export function TuMes() {
   return <Tarjetas resumen={resumen} alCerrar={cerrar} />
 }
 
-/** La capa que tapa la barra y la navegación: es una pantalla aparte, no una página más. */
-function Pantalla({
-  fondo,
-  texto,
-  alCerrar,
-  centro,
-  children,
-}: {
-  fondo: string
-  texto: string
-  alCerrar: () => void
-  centro?: ReactNode
-  children: ReactNode
-}) {
+/** Las pantallas de estado (cargando, error, vacío): crema, con el botón de cerrar. */
+function Pantalla({ alCerrar, children }: { alCerrar: () => void; children: ReactNode }) {
   return (
-    <div
-      className="fixed inset-0 z-40 flex flex-col transition-colors duration-300 motion-reduce:transition-none"
-      style={{ backgroundColor: fondo, color: texto }}
-    >
+    <div className="fixed inset-0 z-40 flex flex-col bg-[#faf3e3] text-[#3a2a1e]">
       <header className="mx-auto flex w-full max-w-[480px] items-center gap-2 px-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
-        <button type="button" onClick={alCerrar} className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-field px-2 font-semibold" aria-label="Cerrar y volver al perfil">
+        <button type="button" onClick={alCerrar} className="flex min-h-12 min-w-12 items-center justify-center gap-1.5 rounded-field px-2 font-semibold" aria-label="Cerrar y volver al perfil">
           <IconArrowLeft size={20} />
           <span className="text-sm">Cerrar</span>
         </button>
-        <div className="flex-1">{centro}</div>
       </header>
       {children}
     </div>
+  )
+}
+
+/** Si conviene dejar el fondo quieto: pidió menos movimiento, o el celular es modesto. */
+function sinMovimiento(): boolean {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true
+  const memoria = (navigator as Navigator & { deviceMemory?: number }).deviceMemory
+  return (navigator.hardwareConcurrency ?? 8) <= 4 || (memoria !== undefined && memoria <= 4)
+}
+
+/**
+ * Una cifra que cuenta desde cero hasta su valor. Para el lector de pantalla es el valor
+ * final desde el principio (el conteo va oculto): no anuncia 0, 1, 2.
+ */
+function Cuenta({ valor, decimales = 0, activa, demora = 0, etiqueta, className }: {
+  valor: number
+  decimales?: number
+  activa: boolean
+  demora?: number
+  etiqueta: string
+  className?: string
+}) {
+  // Cuánto del conteo va hecho, de 0 a 1. Solo cambia dentro del cuadro de animación, así
+  // sin movimiento (o sin estar a la vista) queda en 1 y se ve el valor final.
+  const [avance, setAvance] = useState(1)
+  useEffect(() => {
+    if (!activa || sinMovimiento()) return
+    let raf = 0
+    const t0 = performance.now() + demora
+    const paso = (ahora: number) => {
+      const t = Math.min(1, Math.max(0, (ahora - t0) / 1000))
+      setAvance(1 - Math.pow(1 - t, 3))
+      if (t < 1) raf = requestAnimationFrame(paso)
+    }
+    raf = requestAnimationFrame(paso)
+    return () => cancelAnimationFrame(raf)
+  }, [activa, demora])
+  const visto = decimales ? nota(valor * avance) : cantidad(Math.round(valor * avance))
+  return (
+    <p className={className} aria-label={etiqueta}>
+      <span aria-hidden="true">{visto}</span>
+    </p>
   )
 }
 
@@ -125,17 +155,18 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
   const pista = useRef<HTMLDivElement>(null)
   const [armando, setArmando] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
+  const [fotoRota, setFotoRota] = useState(false)
+  const [quieta] = useState(sinMovimiento)
+  const foto = !fotoRota ? resumen.mejor?.foto ?? null : null
 
   const irA = useCallback(
     (indice: number) => {
       const el = pista.current
       if (!el) return
       const i = Math.min(Math.max(indice, 0), tarjetas.length - 1)
-      // Sin animación si la persona pidió menos movimiento.
-      const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      el.scrollTo({ left: i * el.clientWidth, behavior: sinMovimiento ? 'auto' : 'smooth' })
+      el.scrollTo({ left: i * el.clientWidth, behavior: quieta ? 'auto' : 'smooth' })
     },
-    [tarjetas.length],
+    [tarjetas.length, quieta],
   )
 
   // Foco inicial en las tarjetas: las flechas del teclado andan sin tocar nada.
@@ -151,22 +182,12 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
     else if (e.key === 'ArrowLeft') irA(actual - 1)
   }
 
-  // Tocar un costado de la tarjeta pasa a la anterior o a la siguiente, salvo que lo
-  // tocado sea un botón o un enlace.
-  function alTocar(e: MouseEvent<HTMLElement>) {
-    if ((e.target as HTMLElement).closest('a, button')) return
-    // Soltar el mouse al terminar de seleccionar texto no es un toque.
-    if (window.getSelection()?.toString()) return
-    const caja = e.currentTarget.getBoundingClientRect()
-    irA((e.clientX - caja.left) / caja.width < 0.35 ? actual - 1 : actual + 1)
-  }
-
   async function compartir() {
     if (!user) return
     setArmando(true)
     setAviso(null)
     try {
-      const imagen = await armarTarjetaDeResumen(resumen, user.username)
+      const imagen = await armarTarjetaDeResumen(resumen, user.username, foto)
       setAviso(await compartirImagen(imagen, `burgometro-${resumen.mes}.png`))
     } catch {
       setAviso('No pudimos armar la imagen. Probá de nuevo.')
@@ -175,26 +196,32 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
     }
   }
 
-  const { fondo, texto } = FONDOS[tarjetas[actual] ?? 'portada']
+  const escena = { '--nitidez': NITIDEZ[tarjetas[actual] ?? 'portada'] } as CSSProperties
+  const ultima = actual === tarjetas.length - 1
 
   return (
-    <Pantalla
-      fondo={fondo}
-      texto={texto}
-      alCerrar={alCerrar}
-      centro={
-        // Los puntitos son adorno: lo que se anuncia es "1 de 5".
-        <div className="flex items-center justify-center gap-1.5" aria-hidden="true">
+    <div className={`tm ${quieta ? 'tm-quieta' : ''}`} style={escena}>
+      {foto ? (
+        <div className="tm-deriva" aria-hidden="true">
+          <img className="tm-borrosa" src={foto} alt="" decoding="async" onError={() => setFotoRota(true)} />
+          <img className="tm-nitida" src={foto} alt="" decoding="async" />
+        </div>
+      ) : (
+        <div className="tm-marca" aria-hidden="true" />
+      )}
+      <div className="tm-velo" aria-hidden="true" />
+
+      <header className="tm-arriba">
+        <div className="tm-pasos" aria-hidden="true">
           {tarjetas.map((t, i) => (
-            <span
-              key={t}
-              className="h-1.5 rounded-full transition-all motion-reduce:transition-none"
-              style={{ backgroundColor: texto, width: i === actual ? 24 : 8, opacity: i === actual ? 1 : 0.6 }}
-            />
+            <b key={t} className={i <= actual ? 'hecho' : ''} />
           ))}
         </div>
-      }
-    >
+        <button type="button" className="tm-cerrar" onClick={alCerrar} aria-label="Cerrar y volver al perfil">
+          <IconArrowLeft size={20} className="text-[#faf3e3]" />
+        </button>
+      </header>
+
       <div
         ref={pista}
         role="region"
@@ -203,7 +230,7 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
         tabIndex={0}
         onKeyDown={alTeclear}
         onScroll={alDeslizar}
-        className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth [scrollbar-width:none] motion-reduce:scroll-auto focus-visible:outline-none [&::-webkit-scrollbar]:hidden"
+        className="tm-pista"
       >
         {tarjetas.map((tipo, i) => (
           <section
@@ -211,148 +238,200 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
             role="group"
             aria-roledescription="tarjeta"
             aria-label={`${i + 1} de ${tarjetas.length}`}
-            onClick={alTocar}
-            className="flex w-full shrink-0 snap-center flex-col"
             // Las que no se ven no entran en el orden de tabulación ni las lee el lector de pantalla.
             inert={i !== actual}
-            style={{ backgroundColor: FONDOS[tipo].fondo, color: FONDOS[tipo].texto }}
+            className={`tm-tarjeta ${i === actual ? 'on' : ''} ${tipo === 'mejor' ? 'tm-mejor' : ''} ${tipo === 'cierre' ? 'fin' : ''}`}
           >
-            <div className="mx-auto flex w-full max-w-[480px] flex-1 flex-col justify-center gap-4 px-6 py-4">
-              <Contenido tipo={tipo} resumen={resumen} compartir={compartir} armando={armando} aviso={aviso} />
-            </div>
+            <Contenido tipo={tipo} resumen={resumen} activa={i === actual} username={user?.username ?? ''} hamburguesa={user?.hamburguesa ?? null} xp={resumen.xp} />
           </section>
         ))}
       </div>
-      <nav
-        aria-label="Cambiar de tarjeta"
-        className="mx-auto flex w-full max-w-[480px] items-center justify-between px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
-      >
-        <button type="button" onClick={() => irA(actual - 1)} disabled={actual === 0} className="flex min-h-11 min-w-11 items-center gap-1 rounded-field px-3 font-semibold disabled:opacity-40">
+
+      {aviso && <p role="status" className="tm-aviso">{aviso}</p>}
+      <nav className="tm-abajo" aria-label="Cambiar de tarjeta">
+        <button type="button" onClick={() => irA(actual - 1)} disabled={actual === 0}>
           <IconChevronRight size={20} className="rotate-180" />
           Anterior
         </button>
-        <p className="text-sm font-semibold" aria-live="polite">
-          {actual + 1} de {tarjetas.length}
-        </p>
-        <button type="button" onClick={() => irA(actual + 1)} disabled={actual === tarjetas.length - 1} className="flex min-h-11 min-w-11 items-center gap-1 rounded-field px-3 font-semibold disabled:opacity-40">
-          Siguiente
-          <IconChevronRight size={20} />
-        </button>
+        {ultima ? (
+          <button type="button" className="comp" onClick={compartir} disabled={armando}>
+            <IconShare size={20} />
+            {armando ? 'Armando…' : 'Compartir'}
+          </button>
+        ) : (
+          <button type="button" className="sig" onClick={() => irA(actual + 1)}>
+            Siguiente
+            <IconChevronRight size={20} />
+          </button>
+        )}
+        {!ultima && (
+          <button type="button" className="comp" onClick={compartir} disabled={armando} aria-label="Compartir mi mes">
+            <IconShare size={20} />
+            Compartir
+          </button>
+        )}
       </nav>
-    </Pantalla>
+      <p className="sr-only" aria-live="polite">{actual + 1} de {tarjetas.length}</p>
+    </div>
   )
 }
 
-/** Un número grande, en la letra del logo. */
-function Cifra({ children }: { children: ReactNode }) {
-  return <p className="font-logo text-[clamp(5rem,32vw,9rem)] leading-none">{children}</p>
+/** Las líneas de un título, que suben de a una. */
+function Lineas({ children, desde = 1, className }: { children: string[]; desde?: number; className?: string }) {
+  return (
+    <>
+      {children.map((l, i) => (
+        <span key={l} className={`tm-linea ${className ?? ''}`}>
+          <span style={{ '--d': desde + i } as CSSProperties}>{l}</span>
+        </span>
+      ))}
+    </>
+  )
 }
 
-function Contenido({
-  tipo,
-  resumen,
-  compartir,
-  armando,
-  aviso,
-}: {
+function Arco() {
+  return (
+    <svg className="tm-arco" viewBox="0 0 335 170" aria-hidden="true">
+      <path d="M16 170A151.5 151.5 0 0 1 319 170" />
+    </svg>
+  )
+}
+
+function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
   tipo: TipoDeTarjeta
   resumen: TuMesDatos
-  compartir: () => void
-  armando: boolean
-  aviso: string | null
+  activa: boolean
+  username: string
+  hamburguesa: string | null
+  xp: number
 }) {
   const mes = nombreDelMes(resumen.mes)
   switch (tipo) {
     case 'portada':
       return (
-        <>
-          <Personaje pose="mapa" className="h-40 w-auto self-start" />
-          <h1 className="font-logo text-[clamp(2.5rem,12vw,3.75rem)] leading-tight [text-wrap:balance]">
-            Tu {mes} en Burgómetro
+        <div className="tm-vidrio tm-portada">
+          <Arco />
+          <div className="tm-avatar">
+            <AvatarDeUsuario username={username} hamburguesa={hamburguesa} xp={xp} size={140} />
+          </div>
+          <p className="tm-usuario tm-parte" style={{ '--d': 1 } as CSSProperties}>@{username}</p>
+          <h1>
+            <Lineas>{[`Tu ${mes}`]}</Lineas>
+            <span className="tm-linea grande"><span style={{ '--d': 2 } as CSSProperties}>en Burgómetro</span></span>
           </h1>
-          <p className="text-lg">Deslizá para ver cómo te fue.</p>
-        </>
+          <div className="tm-sello" aria-hidden="true">
+            {mes.slice(0, 3).toUpperCase()}
+            <br />
+            {anioDelMes(resumen.mes)}
+          </div>
+        </div>
       )
     case 'resenias':
       return (
-        <>
-          <p className="text-lg font-semibold">En {mes} hiciste</p>
-          <Cifra>{cantidad(resumen.resenias)}</Cifra>
-          <p className="text-2xl font-semibold">{resumen.resenias === 1 ? 'reseña' : 'reseñas'}</p>
-        </>
+        <div className="tm-vidrio">
+          <Arco />
+          <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>Escribiste</p>
+          <Cuenta
+            valor={resumen.resenias}
+            activa={activa}
+            demora={500}
+            etiqueta={`${resumen.resenias} ${resumen.resenias === 1 ? 'reseña' : 'reseñas'}`}
+            className="tm-cifra tm-gran"
+          />
+          <p className="tm-pie tm-parte" style={{ '--d': 3 } as CSSProperties}>
+            {resumen.resenias === 1 ? 'reseña' : 'reseñas'} en {mes}
+          </p>
+        </div>
       )
     case 'barrios':
       return (
-        <>
-          <p className="text-lg font-semibold">
+        <div className="tm-vidrio">
+          <Arco />
+          <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>
             {resumen.barriosEnTotal === 1 ? 'Comiste en un barrio' : `Comiste en ${resumen.barriosEnTotal} barrios`}
           </p>
-          <ol className="flex flex-col gap-3">
-            {resumen.barrios.map((b) => (
-              <li key={b.nombre} className="line-clamp-2 break-words font-logo text-[clamp(1.75rem,9vw,2.5rem)] leading-tight">
-                {b.nombre}
-                <span className="ml-2 font-sans text-lg font-semibold">{b.resenias === 1 ? '1 reseña' : `${b.resenias} reseñas`}</span>
+          <ol className="tm-barrios">
+            {resumen.barrios.map((b, i) => (
+              <li key={b.nombre} style={{ '--d': i } as CSSProperties}>
+                <b>{b.nombre}</b>
+                <span className="tm-nota" aria-label={b.resenias === 1 ? '1 reseña' : `${b.resenias} reseñas`}>{b.resenias}</span>
               </li>
             ))}
           </ol>
           {resumen.barriosEnTotal > resumen.barrios.length && (
-            <p className="text-lg font-semibold">+{resumen.barriosEnTotal - resumen.barrios.length} más</p>
+            <p className="tm-pie tm-parte" style={{ '--d': 5, marginTop: 12 } as CSSProperties}>
+              +{resumen.barriosEnTotal - resumen.barrios.length} más
+            </p>
           )}
-        </>
+        </div>
       )
     case 'mejor': {
       const mejor = resumen.mejor
       if (!mejor) return null
+      const fin = `${-90 + (180 * mejor.puntaje) / 5}deg`
       return (
         <>
-          <p className="text-lg font-semibold">Tu mejor nota de {mes}</p>
-          <Cifra>{nota(mejor.puntaje)}</Cifra>
-          <div className="flex items-center gap-4">
-            {mejor.foto && (
-              <img src={mejor.foto} alt="" className="size-20 shrink-0 rounded-box object-cover" loading="lazy" />
-            )}
-            <div className="min-w-0">
-              <p className="line-clamp-3 break-words text-2xl font-bold leading-tight">{mejor.nombre}</p>
-              {mejor.barrio && <p className="text-base">{mejor.barrio}</p>}
-            </div>
+          <div className="tm-cartel"><h2>Tu mejor nota</h2></div>
+          <div className="tm-vidrio claro">
+            <svg className="tm-medidor" viewBox="0 0 260 150" aria-hidden="true">
+              <path d="M23.0 127.3A107 107 0 0 1 93.8 29.3" fill="none" stroke="#b23a2e" strokeWidth="24" />
+              <path d="M100.1 27.2A107 107 0 0 1 190.1 41.5" fill="none" stroke="#f2b705" strokeWidth="24" />
+              <path d="M195.6 45.5A107 107 0 0 1 237.0 127.3" fill="none" stroke="#2f4f23" strokeWidth="24" />
+              <g stroke="#3a2a1e" strokeWidth="3" strokeLinecap="round">
+                <line x1="7" y1="130" x2="0" y2="130" /><line x1="30.5" y1="57.7" x2="24.8" y2="53.6" />
+                <line x1="92" y1="13" x2="89.8" y2="6.4" /><line x1="168" y1="13" x2="170.2" y2="6.4" />
+                <line x1="229.5" y1="57.7" x2="235.2" y2="53.6" /><line x1="253" y1="130" x2="260" y2="130" />
+              </g>
+              <g className="tm-aguja" style={{ '--fin': fin } as CSSProperties}>
+                <line x1="130" y1="130" x2="130" y2="40" stroke="#3a2a1e" strokeWidth="7" strokeLinecap="round" />
+              </g>
+              <circle cx="130" cy="130" r="11" fill="#3a2a1e" />
+              <circle cx="130" cy="130" r="4" fill="#f2b705" />
+            </svg>
+            <Cuenta valor={mejor.puntaje} decimales={1} activa={activa} demora={700} etiqueta={`Nota ${nota(mejor.puntaje)}`} className="tm-cifra" />
+            <h2 className="tm-local tm-parte" style={{ '--d': 6 } as CSSProperties}>{mejor.nombre}</h2>
+            {mejor.barrio && <p className="tm-barrio tm-parte" style={{ '--d': 7 } as CSSProperties}>{mejor.barrio}</p>}
+            <Link to={rutaDelLocal({ id: mejor.localId, slug: mejor.slug })} className="tm-ver tm-parte" style={{ '--d': 8 } as CSSProperties}>
+              Ver el local
+            </Link>
           </div>
-          <Link
-            to={rutaDelLocal({ id: mejor.localId, slug: mejor.slug })}
-            className="flex min-h-11 w-fit items-center font-semibold underline underline-offset-4"
-          >
-            Ver el local
-          </Link>
         </>
       )
     }
     case 'anio':
       return resumen.anio ? (
-        <>
-          <p className="text-lg font-semibold">Y en todo {anioDelMes(resumen.mes)}</p>
-          <Cifra>{cantidad(resumen.anio.resenias)}</Cifra>
-          <p className="text-2xl font-semibold">
-            {resumen.anio.resenias === 1 ? 'reseña' : 'reseñas'} en {cantidad(resumen.anio.locales)}{' '}
-            {resumen.anio.locales === 1 ? 'local' : 'locales'}
+        <div className="tm-vidrio">
+          <Arco />
+          <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>Y en todo {anioDelMes(resumen.mes)}</p>
+          <Cuenta
+            valor={resumen.anio.resenias}
+            activa={activa}
+            demora={500}
+            etiqueta={`${resumen.anio.resenias} ${resumen.anio.resenias === 1 ? 'reseña' : 'reseñas'}`}
+            className="tm-cifra tm-gran"
+          />
+          <p className="tm-pie tm-parte" style={{ '--d': 3 } as CSSProperties}>
+            {resumen.anio.resenias === 1 ? 'reseña' : 'reseñas'} en {cantidad(resumen.anio.locales)} {resumen.anio.locales === 1 ? 'local' : 'locales'}
           </p>
-        </>
+        </div>
       ) : null
     case 'cierre':
       return (
-        <>
-          <Personaje pose="celu" className="h-36 w-auto self-start" />
-          <p className="text-lg font-semibold">Hoy sos</p>
-          <p className="font-logo text-[clamp(3rem,16vw,4.5rem)] leading-none">Nivel {resumen.nivel}</p>
-          {resumen.logros > 0 && (
-            <p className="text-lg font-semibold">
-              Y ganaste {resumen.logros === 1 ? 'un logro' : `${resumen.logros} logros`} en {mes}.
-            </p>
-          )}
-          <button type="button" onClick={compartir} disabled={armando} className="btn btn-primary min-h-11 w-fit gap-2">
-            <IconShare size={16} />
-            {armando ? 'Armando la imagen…' : 'Compartir mi mes'}
-          </button>
-          {aviso && <p role="status" className="text-sm font-semibold">{aviso}</p>}
-        </>
+        <div className="tm-vidrio tm-cierre">
+          <Arco />
+          <div className="tm-burgui">
+            <Personaje pose="celu" className="h-40 w-auto" />
+          </div>
+          <h1>
+            <Lineas desde={3}>{[`Listo, tu ${mes}.`]}</Lineas>
+          </h1>
+          <p className="tm-parte" style={{ '--d': 5 } as CSSProperties}>
+            {resumen.logros > 0
+              ? `Ganaste ${resumen.logros === 1 ? 'un logro' : `${resumen.logros} logros`} este mes.`
+              : 'Mostrales a tus amigos cómo te fue.'}
+          </p>
+          <p className="tm-nivel tm-parte" style={{ '--d': 6 } as CSSProperties}>Hoy sos nivel {resumen.nivel}</p>
+        </div>
       )
   }
 }

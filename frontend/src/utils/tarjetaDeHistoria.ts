@@ -36,7 +36,7 @@ export interface DatosDeLaTarjeta {
   foto: string | null
 }
 
-function cargarImagen(src: string, conCors = false): Promise<HTMLImageElement> {
+export function cargarImagen(src: string, conCors = false): Promise<HTMLImageElement> {
   return new Promise((resolver, rechazar) => {
     const img = new Image()
     // Sin CORS el canvas queda "manchado" y no se puede exportar; en producción las
@@ -91,7 +91,7 @@ export function recortar(ctx: CanvasRenderingContext2D, texto: string, ancho: nu
   return `${texto.slice(0, corte).trimEnd()}…`
 }
 
-function dibujarFoto(ctx: CanvasRenderingContext2D, img: HTMLImageElement) {
+export function dibujarFoto(ctx: CanvasRenderingContext2D, img: HTMLImageElement) {
   // "cover": llena toda la historia recortando lo que sobre, centrado.
   const escala = Math.max(ANCHO / img.width, ALTO / img.height)
   const w = img.width * escala
@@ -156,7 +156,7 @@ function dibujarTablero(ctx: CanvasRenderingContext2D, x: number, y: number, anc
   ctx.fill()
 }
 
-function rectanguloRedondeado(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+export function rectanguloRedondeado(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath()
   ctx.moveTo(x + r, y)
   ctx.arcTo(x + w, y, x + w, y + h, r)
