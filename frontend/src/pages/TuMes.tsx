@@ -142,8 +142,8 @@ function Cuenta({ valor, decimales = 0, activa, demora = 0, etiqueta, className 
   }, [activa, demora])
   const visto = decimales ? nota(valor * avance) : cantidad(Math.round(valor * avance))
   return (
-    <p className={className} aria-label={etiqueta}>
-      <span aria-hidden="true">{visto}</span>
+    <p className={className} role="img" aria-label={etiqueta}>
+      {visto}
     </p>
   )
 }
@@ -237,7 +237,7 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
             key={tipo}
             role="group"
             aria-roledescription="tarjeta"
-            aria-label={`${i + 1} de ${tarjetas.length}`}
+            aria-label={ETIQUETAS[tipo]}
             // Las que no se ven no entran en el orden de tabulación ni las lee el lector de pantalla.
             inert={i !== actual}
             className={`tm-tarjeta ${i === actual ? 'on' : ''} ${tipo === 'mejor' ? 'tm-mejor' : ''} ${tipo === 'cierre' ? 'fin' : ''}`}
@@ -247,9 +247,9 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
         ))}
       </div>
 
-      {aviso && <p role="status" className="tm-aviso">{aviso}</p>}
+      <p role="status" className="tm-aviso">{aviso}</p>
       <nav className="tm-abajo" aria-label="Cambiar de tarjeta">
-        <button type="button" onClick={() => irA(actual - 1)} disabled={actual === 0}>
+        <button type="button" onClick={() => irA(actual - 1)} aria-disabled={actual === 0}>
           <IconChevronRight size={20} className="rotate-180" />
           Anterior
         </button>
@@ -274,6 +274,16 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
       <p className="sr-only" aria-live="polite">{actual + 1} de {tarjetas.length}</p>
     </div>
   )
+}
+
+/** Cómo se anuncia cada tarjeta: el "n de N" lo anuncia aparte la región en vivo. */
+const ETIQUETAS: Record<TipoDeTarjeta, string> = {
+  portada: "Portada",
+  resenias: "Reseñas del mes",
+  barrios: "Barrios",
+  mejor: "Mejor nota",
+  anio: "El año",
+  cierre: "Cierre",
 }
 
 /** Las líneas de un título, que suben de a una. */
@@ -329,14 +339,13 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
     case 'resenias':
       return (
         <div className="tm-vidrio">
-          <Arco />
           <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>Escribiste</p>
           <Cuenta
             valor={resumen.resenias}
             activa={activa}
             demora={500}
             etiqueta={`${resumen.resenias} ${resumen.resenias === 1 ? 'reseña' : 'reseñas'}`}
-            className="tm-cifra tm-gran"
+            className="tm-cifra tm-gran tm-parte"
           />
           <p className="tm-pie tm-parte" style={{ '--d': 3 } as CSSProperties}>
             {resumen.resenias === 1 ? 'reseña' : 'reseñas'} en {mes}
@@ -346,7 +355,6 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
     case 'barrios':
       return (
         <div className="tm-vidrio">
-          <Arco />
           <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>
             {resumen.barriosEnTotal === 1 ? 'Comiste en un barrio' : `Comiste en ${resumen.barriosEnTotal} barrios`}
           </p>
@@ -354,7 +362,7 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
             {resumen.barrios.map((b, i) => (
               <li key={b.nombre} style={{ '--d': i } as CSSProperties}>
                 <b>{b.nombre}</b>
-                <span className="tm-nota" aria-label={b.resenias === 1 ? '1 reseña' : `${b.resenias} reseñas`}>{b.resenias}</span>
+                <span className="tm-nota" role="img" aria-label={b.resenias === 1 ? "1 reseña" : `${b.resenias} reseñas`}>{b.resenias}</span>
               </li>
             ))}
           </ol>
@@ -388,7 +396,7 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
               <circle cx="130" cy="130" r="11" fill="#3a2a1e" />
               <circle cx="130" cy="130" r="4" fill="#f2b705" />
             </svg>
-            <Cuenta valor={mejor.puntaje} decimales={1} activa={activa} demora={700} etiqueta={`Nota ${nota(mejor.puntaje)}`} className="tm-cifra" />
+            <Cuenta valor={mejor.puntaje} decimales={1} activa={activa} demora={700} etiqueta={`Nota ${nota(mejor.puntaje)}`} className="tm-cifra tm-parte" />
             <h2 className="tm-local tm-parte" style={{ '--d': 6 } as CSSProperties}>{mejor.nombre}</h2>
             {mejor.barrio && <p className="tm-barrio tm-parte" style={{ '--d': 7 } as CSSProperties}>{mejor.barrio}</p>}
             <Link to={rutaDelLocal({ id: mejor.localId, slug: mejor.slug })} className="tm-ver tm-parte" style={{ '--d': 8 } as CSSProperties}>
@@ -401,14 +409,13 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
     case 'anio':
       return resumen.anio ? (
         <div className="tm-vidrio">
-          <Arco />
           <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>Y en todo {anioDelMes(resumen.mes)}</p>
           <Cuenta
             valor={resumen.anio.resenias}
             activa={activa}
             demora={500}
             etiqueta={`${resumen.anio.resenias} ${resumen.anio.resenias === 1 ? 'reseña' : 'reseñas'}`}
-            className="tm-cifra tm-gran"
+            className="tm-cifra tm-gran tm-parte"
           />
           <p className="tm-pie tm-parte" style={{ '--d': 3 } as CSSProperties}>
             {resumen.anio.resenias === 1 ? 'reseña' : 'reseñas'} en {cantidad(resumen.anio.locales)} {resumen.anio.locales === 1 ? 'local' : 'locales'}

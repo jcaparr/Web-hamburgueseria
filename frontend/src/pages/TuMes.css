@@ -43,7 +43,7 @@
   position: absolute;
   inset: -9%;
   z-index: 0;
-  animation: tm-deriva 26s ease-in-out infinite alternate;
+  animation: tm-deriva 40s ease-in-out 1 forwards;
   will-change: transform;
 }
 .tm-deriva img {
@@ -134,7 +134,7 @@
   overscroll-behavior-x: contain;
 }
 .tm-pista::-webkit-scrollbar { display: none; }
-.tm-pista:focus-visible { outline: none; }
+.tm-pista:focus-visible { outline: 3px solid var(--mostaza); outline-offset: -6px; }
 .tm-tarjeta {
   flex: none;
   width: 100%;
@@ -161,7 +161,7 @@
   backdrop-filter: blur(22px) saturate(1.4);
   box-shadow: inset 0 1px 0 rgba(250, 243, 227, 0.45), inset 0 0 0 1px rgba(250, 243, 227, 0.22), 0 18px 40px rgba(20, 10, 5, 0.28);
   text-align: center;
-  padding: 84px 24px 30px;
+  padding: 64px 24px 30px;
 }
 .tm-vidrio.claro {
   background: var(--vidrio-cla);
@@ -345,13 +345,12 @@
   background: rgba(58, 42, 30, 0.84);
   color: var(--crema);
   box-shadow: inset 0 0 0 1.5px rgba(250, 243, 227, 0.5);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
 }
 .tm-abajo .sig { background: var(--mostaza); color: var(--cafe); box-shadow: none; }
 .tm-abajo .comp { background: var(--ketchup); color: #fffdf8; box-shadow: inset 0 0 0 1.5px rgba(250, 243, 227, 0.6); }
-.tm-abajo button:disabled { opacity: 0.45; cursor: default; }
+.tm-abajo button:disabled, .tm-abajo button[aria-disabled="true"] { opacity: 0.45; cursor: default; }
 .tm-abajo button:focus-visible, .tm-cerrar:focus-visible, .tm-ver:focus-visible { outline: 3px solid var(--mostaza); outline-offset: 3px; }
+.tm-aviso:empty { display: none; }
 .tm-aviso {
   position: absolute;
   z-index: 6;

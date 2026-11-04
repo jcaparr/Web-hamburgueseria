@@ -23,7 +23,7 @@ export async function armarTarjetaDeResumen(resumen: TuMes, username: string, fo
   await Promise.all([document.fonts.load(`700 60px ${FUENTE}`), document.fonts.load(`400 40px ${FUENTE}`)])
   const [logo, foto] = await Promise.all([
     cargarLogo(),
-    fotoDelFondo ? cargarImagen(fotoDelFondo, true).catch(() => null) : Promise.resolve(null),
+    fotoDelFondo ? cargarImagen(`${fotoDelFondo}${fotoDelFondo.includes('?') ? '&' : '?'}cors=1`, true).catch(() => null) : Promise.resolve(null),
   ])
 
   const canvas = document.createElement('canvas')
