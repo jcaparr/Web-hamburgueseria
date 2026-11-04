@@ -7,8 +7,11 @@ import com.hamburguesas.logros.LogroDeUsuarioId;
 import com.hamburguesas.logros.LogroDeUsuarioRepository;
 import com.hamburguesas.podio.ResultadoDePodio;
 import com.hamburguesas.podio.ResultadoDePodioRepository;
+import com.hamburguesas.model.Block;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.Rating;
+import com.hamburguesas.model.Reaccion;
+import com.hamburguesas.model.TipoDeReaccion;
 import com.hamburguesas.model.User;
 import com.hamburguesas.repository.BurgerJointRepository;
 import com.hamburguesas.repository.RatingRepository;
@@ -39,6 +42,8 @@ class TuMesTest {
     @Autowired private ReaccionRepository reaccionRepository;
     @Autowired private LogroDeUsuarioRepository logroRepository;
     @Autowired private ResultadoDePodioRepository podioRepository;
+    @Autowired private com.hamburguesas.service.Bloqueos bloqueos;
+    @Autowired private com.hamburguesas.repository.BlockRepository blockRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private BurgerJointRepository burgerJointRepository;
 
@@ -46,6 +51,7 @@ class TuMesTest {
 
     @AfterEach
     void limpiar() {
+        blockRepository.deleteAll();
         reaccionRepository.deleteAll();
         ratingRepository.deleteAll();
         logroRepository.deleteAll();
@@ -53,7 +59,7 @@ class TuMesTest {
     }
 
     private TuMes servicioAl(String instante) {
-        return new TuMes(ratingRepository, logroRepository, podioRepository, userRepository,
+        return new TuMes(ratingRepository, logroRepository, podioRepository, reaccionRepository, bloqueos, userRepository,
             Clock.fixed(Instant.parse(instante), TuMes.ZONA));
     }
 
@@ -68,14 +74,15 @@ class TuMesTest {
     }
 
     private BurgerJoint local(String barrio) {
-        String id = "tumes-" + (++contador);
+        // Único por prueba: los locales quedan en la base y otro test podía haberlo creado con otro barrio.
+        String id = "tumes-" + System.nanoTime() + "-" + (++contador);
         return burgerJointRepository.findByPlaceId(id).orElseGet(() -> burgerJointRepository.save(
             BurgerJoint.builder().name("Local " + id).address("c").area(barrio).slug(id).placeId(id).build()));
     }
 
-    private void resenia(User quien, String barrio, int nota, String enBuenosAires) {
+    private Rating resenia(User quien, String barrio, int nota, String enBuenosAires) {
         Instant cuando = ZonedDateTime.of(LocalDateTime.parse(enBuenosAires), TuMes.ZONA).toInstant();
-        ratingRepository.save(Rating.builder().user(quien).burgerJoint(local(barrio)).score(nota)
+        return ratingRepository.save(Rating.builder().user(quien).burgerJoint(local(barrio)).score(nota)
             .createdAt(cuando).build());
     }
 
@@ -97,7 +104,7 @@ class TuMesTest {
         // Palermo (2) primero; después empatan en 1 y desempata el nombre. Muestra tres de cuatro.
         assertThat(resumen.barrios()).extracting(TuMesDto.Barrio::nombre).containsExactly("Palermo", "Almagro", "Belgrano");
         assertThat(resumen.barriosEnTotal()).isEqualTo(4);
-        assertThat(resumen.anio()).isNull();
+        assertThat(resumen.anual()).isFalse();
     }
 
     @Test
@@ -170,19 +177,147 @@ class TuMesTest {
     }
 
     @Test
-    void elDeDiciembreTraeLoDelAnioEntero() {
+    void elResumenDeDiciembreEsElRecuentoDelAnioEntero() {
         User ana = cuenta("tumes_anio");
-        resenia(ana, "Palermo", 4, "2026-03-10T20:00:00");
-        resenia(ana, "Palermo", 4, "2026-07-10T20:00:00");
-        resenia(ana, "Belgrano", 5, "2026-12-10T20:00:00");
-        resenia(ana, "Belgrano", 4, "2027-01-01T00:30:00");   // ya es del año siguiente
+        resenia(ana, "Palermo", 4, "2025-06-10T20:00:00");      // el año anterior
+        resenia(ana, "Palermo", 4, "2026-01-01T00:30:00");      // primer borde del año
+        resenia(ana, "Palermo", 5, "2026-03-10T20:00:00");
+        resenia(ana, "Belgrano", 3, "2026-03-20T20:00:00");
+        resenia(ana, "Belgrano", 4, "2026-07-10T20:00:00");
+        resenia(ana, "Almagro", 2, "2026-12-31T23:30:00");      // último borde del año
+        resenia(ana, "Almagro", 4, "2027-01-01T00:30:00");      // ya es del año siguiente
 
         TuMesDto resumen = servicioAl("2027-01-02T15:00:00Z").resumen(ana.getId(), null);
 
         assertThat(resumen.mes()).isEqualTo("2026-12");
-        assertThat(resumen.resenias()).isEqualTo(1);
-        assertThat(resumen.anio()).isEqualTo(new TuMesDto.Anio(3, 3));
+        assertThat(resumen.anual()).isTrue();
+        assertThat(resumen.resenias()).isEqualTo(5);
+        assertThat(resumen.reseniasAnteriores()).isEqualTo(1);
+        assertThat(resumen.mejor().puntaje()).isEqualTo(5);
+        assertThat(resumen.barriosEnTotal()).isEqualTo(3);
+        // Marzo tiene dos, y es el mes con más reseñas.
+        assertThat(resumen.recuento().mesMasActivo()).isEqualTo(3);
+        assertThat(resumen.recuento().reseniasDelMes()).isEqualTo(2);
+        // Empezó el año con una reseña (30 + 70 = 100 XP: nivel 2) y lo terminó con seis (30 + 6 x 70 = 450 XP: nivel 4).
+        assertThat(resumen.recuento().nivelAlEmpezar()).isEqualTo(2);
+        assertThat(resumen.recuento().nivelAlTerminar()).isEqualTo(4);
     }
+
+    @Test
+    void unMesComunNoTraeElRecuento() {
+        User ana = cuenta("tumes_nomes");
+        resenia(ana, "Palermo", 4, "2026-11-15T20:00:00");
+
+        TuMesDto resumen = servicio().resumen(ana.getId(), YearMonth.of(2026, 11));
+
+        assertThat(resumen.anual()).isFalse();
+        assertThat(resumen.recuento()).isNull();
+    }
+
+    @Test
+    void comparaConElMesAnteriorYConCeroSiNoReseno() {
+        User ana = cuenta("tumes_compara");
+        resenia(ana, "Palermo", 4, "2026-10-31T23:30:00");   // octubre
+        resenia(ana, "Palermo", 4, "2026-10-05T20:00:00");
+        resenia(ana, "Palermo", 4, "2026-11-01T00:30:00");   // noviembre
+        resenia(ana, "Palermo", 4, "2026-11-15T20:00:00");
+        resenia(ana, "Palermo", 4, "2026-11-20T20:00:00");
+        User beto = cuenta("tumes_compara_b");
+        resenia(beto, "Palermo", 4, "2026-11-15T20:00:00");
+
+        assertThat(servicio().resumen(ana.getId(), YearMonth.of(2026, 11)).reseniasAnteriores()).isEqualTo(2);
+        // Beto no reseñó en octubre: el anterior es 0 y la pantalla lo dice.
+        assertThat(servicio().resumen(beto.getId(), YearMonth.of(2026, 11)).reseniasAnteriores()).isZero();
+    }
+
+    @Test
+    void elDiaFavoritoEsElQueMasReseniaConLaFranjaDeEsoDiaEnHoraDeBuenosAires() {
+        User ana = cuenta("tumes_dia");
+        // Jueves 5, 12 y 19 de noviembre de 2026, de noche; y un lunes de mañana.
+        resenia(ana, "Palermo", 4, "2026-11-05T21:00:00");
+        resenia(ana, "Palermo", 4, "2026-11-12T22:30:00");
+        resenia(ana, "Palermo", 4, "2026-11-19T20:15:00");
+        resenia(ana, "Palermo", 4, "2026-11-09T09:00:00");
+
+        TuMesDto.Dia dia = servicio().resumen(ana.getId(), YearMonth.of(2026, 11)).dia();
+
+        assertThat(dia).isEqualTo(new TuMesDto.Dia(4, "noche"));
+    }
+
+    @Test
+    void elDiaFavoritoRespetaLaMedianocheDeBuenosAiresYElEmpateGanaElDiaMasTemprano() {
+        User ana = cuenta("tumes_dia_borde");
+        // Domingo 23:30 en Buenos Aires ya es lunes en UTC: tiene que contar como domingo.
+        resenia(ana, "Palermo", 4, "2026-11-08T23:30:00");
+        resenia(ana, "Palermo", 4, "2026-11-15T23:45:00");
+        // Lunes 00:30: es lunes.
+        resenia(ana, "Palermo", 4, "2026-11-09T00:30:00");
+        resenia(ana, "Palermo", 4, "2026-11-16T00:30:00");
+
+        TuMesDto.Dia dia = servicio().resumen(ana.getId(), YearMonth.of(2026, 11)).dia();
+
+        // Dos domingos y dos lunes: gana el lunes (día 1). La franja de las 00:30 es de madrugada.
+        assertThat(dia).isEqualTo(new TuMesDto.Dia(1, "madrugada"));
+    }
+
+    @Test
+    void conMenosDeTresReseniasNoHayDiaFavorito() {
+        User ana = cuenta("tumes_dia_poco");
+        resenia(ana, "Palermo", 4, "2026-11-05T21:00:00");
+        resenia(ana, "Palermo", 4, "2026-11-12T22:30:00");
+
+        assertThat(servicio().resumen(ana.getId(), YearMonth.of(2026, 11)).dia()).isNull();
+    }
+
+    private void reaccion(Rating resenia, User quien, TipoDeReaccion tipo, String enBuenosAires) {
+        Instant cuando = ZonedDateTime.of(LocalDateTime.parse(enBuenosAires), TuMes.ZONA).toInstant();
+        reaccionRepository.save(Reaccion.builder().rating(resenia).user(quien).tipo(tipo).createdAt(cuando).build());
+    }
+
+    @Test
+    void cuentaLasReaccionesRecibidasEnElPeriodoYDiceCualFueLaMasUsada() {
+        User ana = cuenta("tumes_reac");
+        User beto = cuenta("tumes_reac_b");
+        User carla = cuenta("tumes_reac_c");
+        Rating r = resenia(ana, "Palermo", 4, "2026-11-05T20:00:00");
+        reaccion(r, beto, TipoDeReaccion.ENCANTA, "2026-11-06T10:00:00");
+        reaccion(r, carla, TipoDeReaccion.ENCANTA, "2026-11-07T10:00:00");
+        reaccion(r, cuenta("tumes_reac_d"), TipoDeReaccion.HAMBRE, "2026-11-08T10:00:00");
+        reaccion(r, cuenta("tumes_reac_e"), TipoDeReaccion.RISA, "2026-10-31T23:30:00");   // de octubre
+        reaccion(r, cuenta("tumes_reac_f"), TipoDeReaccion.RISA, "2026-12-01T00:30:00");   // de diciembre
+        reaccion(r, ana, TipoDeReaccion.HAMBRE, "2026-11-09T10:00:00");                    // la propia no cuenta
+
+        TuMesDto.Reacciones reacciones = servicio().resumen(ana.getId(), YearMonth.of(2026, 11)).reacciones();
+
+        assertThat(reacciones).isEqualTo(new TuMesDto.Reacciones(3, "ENCANTA"));
+    }
+
+    @Test
+    void lasReaccionesDeQuienBloqueasONoTeBloqueanNoCuentanEnNingunSentido() {
+        User ana = cuenta("tumes_bloq");
+        User yoBloqueo = cuenta("tumes_bloq_a");
+        User meBloquea = cuenta("tumes_bloq_b");
+        User normal = cuenta("tumes_bloq_c");
+        Rating r = resenia(ana, "Palermo", 4, "2026-11-05T20:00:00");
+        reaccion(r, yoBloqueo, TipoDeReaccion.HAMBRE, "2026-11-06T10:00:00");
+        reaccion(r, meBloquea, TipoDeReaccion.HAMBRE, "2026-11-06T11:00:00");
+        reaccion(r, normal, TipoDeReaccion.RISA, "2026-11-06T12:00:00");
+        blockRepository.save(Block.builder().blocker(ana).blocked(yoBloqueo).build());
+        blockRepository.save(Block.builder().blocker(meBloquea).blocked(ana).build());
+
+        TuMesDto.Reacciones reacciones = servicio().resumen(ana.getId(), YearMonth.of(2026, 11)).reacciones();
+
+        assertThat(reacciones).isEqualTo(new TuMesDto.Reacciones(1, "RISA"));
+    }
+
+    @Test
+    void sinReaccionesNoHayTarjeta() {
+        User ana = cuenta("tumes_sinreac");
+        resenia(ana, "Palermo", 4, "2026-11-05T20:00:00");
+
+        assertThat(servicio().resumen(ana.getId(), YearMonth.of(2026, 11)).reacciones()).isNull();
+    }
+
 
     private void logro(User quien, String codigo, String enBuenosAires, boolean activo, boolean retroactivo, String detalle) {
         Instant cuando = ZonedDateTime.of(LocalDateTime.parse(enBuenosAires), TuMes.ZONA).toInstant();
