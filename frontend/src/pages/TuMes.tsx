@@ -39,7 +39,8 @@ export function TuMes() {
     let vigente = true
     apiClient
       .get<TuMesDatos>('/profile/tu-mes', { params: mesPedido ? { mes: mesPedido } : undefined })
-      .then((res) => vigente && setResumen(res.data))
+      // Con un servidor que todavía no manda logros ni podios (despliegue a medias), listas vacías.
+      .then((res) => vigente && setResumen({ ...res.data, logrosGanados: res.data.logrosGanados ?? [], podios: res.data.podios ?? [] }))
       .catch((err) => {
         if (!vigente) return
         if (isSessionExpired(err)) navigate('/login')
