@@ -515,7 +515,7 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
       return (
         <div className="tm-vidrio">
           <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>
-            {subio ? `Empezaste el año en el nivel ${r.nivelAlEmpezar} y lo terminaste en el` : 'Terminaste el año en el'}
+            {subio ? `Del nivel ${r.nivelAlEmpezar} al` : 'Terminaste el año en el nivel'}
           </p>
           <p className="tm-cifra tm-gran tm-parte" style={{ '--d': 1 } as CSSProperties}>
             <span className="sr-only">Nivel </span>
