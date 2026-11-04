@@ -184,7 +184,7 @@ function Hoja({ tipo, resumen, alCerrar }: { tipo: TipoDeHoja; resumen: TuMesDat
             <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16" /></svg>
           </button>
         </div>
-        <div className="tm-hoja-cuerpo">
+        <div className="tm-hoja-cuerpo" tabIndex={0} role="region" aria-label={tipo === "barrios" ? "Lista de barrios" : "Lista de logros"}>
           {tipo === 'barrios' ? (
             <ol className="tm-barrios">
               {resumen.barrios.map((b) => (
@@ -330,7 +330,7 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
         ))}
       </div>
 
-      <p role="status" className="tm-aviso">{aviso}</p>
+      <p role="status" className="tm-aviso" inert={hoja !== null}>{aviso}</p>
       <nav className="tm-abajo" aria-label="Cambiar de tarjeta" inert={hoja !== null}>
         <button type="button" onClick={() => irA(actual - 1)} aria-disabled={actual === 0}>
           <IconChevronRight size={20} className="rotate-180" />
@@ -354,7 +354,7 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
           </button>
         )}
       </nav>
-      <p className="sr-only" aria-live="polite">{actual + 1} de {tarjetas.length}</p>
+      <p className="sr-only" aria-live="polite" inert={hoja !== null}>{actual + 1} de {tarjetas.length}</p>
       {hoja && <Hoja tipo={hoja} resumen={resumen} alCerrar={() => setHoja(null)} />}
     </div>
   )
