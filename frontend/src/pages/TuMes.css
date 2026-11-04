@@ -1,14 +1,13 @@
 /*
  * "Tu mes en Burgómetro" (#308): la escena de las tarjetas.
  *
- * El fondo es la foto del local de la mejor nota. Se "revela" tarjeta a tarjeta con dos
- * capas de la misma foto, una desenfocada con un radio fijo y otra nítida, y lo único que
- * cambia entre tarjetas es la opacidad de la nítida. Nunca se anima `filter` ni el radio
- * del desenfoque: eso obliga a repintar la foto a pantalla completa en cada cuadro y en
- * un celular modesto se traba. Solo se mueven `transform` y `opacity`.
+ * El fondo es siempre el de marca (ver .tm-marca), sin foto del local: así todas las
+ * tarjetas se ven igual, y no hay una imagen que cargar. De lo que se mueve, solo se anima
+ * `transform` y `opacity`, nunca `filter` ni un desenfoque: eso obliga a repintar a pantalla
+ * completa en cada cuadro y en un celular modesto se traba.
  *
- * Los colores son fijos y no cambian con el tema: el contraste está medido contra la foto
- * más clara y la más oscura posibles (ver los paneles de vidrio, más abajo).
+ * Los colores son fijos y no cambian con el tema: el contraste está medido con el vidrio
+ * sobre el fondo más claro y el más oscuro posibles (ver los paneles de vidrio, más abajo).
  */
 .tm {
   --ketchup: #b23a2e;
@@ -28,42 +27,42 @@
   background: var(--cafe);
 }
 
-/* Sin foto: un fondo de marca (brasa y mostaza), quieto. */
+/*
+ * El fondo de marca: brasa y mostaza, y encima unos rayos (el medidor del logo abierto en
+ * abanico) que se van prendiendo de una tarjeta a la otra: casi apagados en la portada y
+ * a pleno en la mejor nota. Lo único que cambia entre tarjetas es la opacidad de la capa de
+ * rayos, y lo único que se mueve es esa capa, girando muy despacio con `transform`.
+ */
 .tm-marca {
   position: absolute;
   inset: 0;
   z-index: 0;
+  overflow: hidden;
   background:
     radial-gradient(120% 70% at 85% 12%, rgba(242, 183, 5, 0.75), transparent 60%),
     radial-gradient(110% 80% at 8% 92%, rgba(178, 58, 46, 0.95), transparent 62%),
     linear-gradient(160deg, #6b2a1c, #3a2a1e 70%);
 }
-
-.tm-deriva {
-  position: absolute;
-  inset: -9%;
-  z-index: 0;
-  animation: tm-deriva 40s ease-in-out 1 forwards;
-  will-change: transform;
-}
-.tm-deriva img {
+.tm-rayos {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.tm-borrosa {
-  filter: blur(26px) saturate(1.4);
-}
-.tm-nitida {
-  opacity: var(--nitidez, 0);
+  opacity: calc(0.25 + var(--nitidez, 0) * 0.75);
   transition: opacity 1.2s var(--suave);
   will-change: opacity;
 }
-@keyframes tm-deriva {
-  from { transform: scale(1.04) translate3d(-2.5%, 1.5%, 0); }
-  to { transform: scale(1.18) translate3d(2.5%, -2%, 0); }
+.tm-giro {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: 220vmax;
+  height: 220vmax;
+  margin: -110vmax 0 0 -110vmax;
+  background: repeating-conic-gradient(rgba(250, 243, 227, 0.14) 0deg 6deg, transparent 6deg 16deg);
+  animation: tm-giro 240s linear infinite;
+  will-change: transform;
+}
+@keyframes tm-giro {
+  to { transform: rotate(360deg); }
 }
 
 /* El velo y las manchas de color son estáticos: sumar capas que se mueven es lo que pesa. */
@@ -168,7 +167,7 @@
   color: var(--cafe);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 0 0 1px rgba(58, 42, 30, 0.18), 0 18px 40px rgba(20, 10, 5, 0.28);
 }
-/* Sin backdrop-filter el panel pasa a ser sólido: no queda texto sobre una foto sin velo. */
+/* Sin backdrop-filter el panel pasa a ser sólido: no queda texto sobre un fondo con rayos. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .tm-vidrio { background: #3a2a1e; }
   .tm-vidrio.claro, .tm-chip { background: #f7efd8; }
@@ -411,10 +410,10 @@
 }
 
 /* Sin movimiento (la persona lo pidió, o el celular es modesto): todo en su estado final. */
-.tm-quieta .tm-deriva { animation: none; transform: scale(1.12); }
+.tm-quieta .tm-giro { animation: none; }
 .tm-quieta *, .tm-quieta *::before, .tm-quieta *::after { animation: none !important; transition-duration: 0.01s !important; scroll-behavior: auto !important; }
 @media (prefers-reduced-motion: reduce) {
-  .tm-deriva { animation: none; transform: scale(1.12); }
+  .tm-giro { animation: none; }
   .tm *, .tm *::before, .tm *::after { animation: none !important; transition-duration: 0.01s !important; scroll-behavior: auto !important; }
 }
 
@@ -423,7 +422,7 @@
 .tm-logros.dos { grid-template-columns: repeat(2, 1fr); }
 .tm-logros.uno { grid-template-columns: 1fr; }
 .tm-logros li { display: flex; flex-direction: column; align-items: center; gap: 16px; min-width: 0; }
-.tm-logros span { font-size: 14px; font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tm-logros li > .tm-nombre { font-size: 14px; font-weight: 700; line-height: 1.15; overflow-wrap: break-word; hyphens: manual; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .tm-tarjeta.on .tm-logros li { animation: tm-pop 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) both; animation-delay: calc(0.5s + var(--d, 0) * 0.12s); }
 
 /* 6 · podio: el puesto, con el color de la medalla */

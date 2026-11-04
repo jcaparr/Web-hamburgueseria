@@ -25,8 +25,8 @@ import './TuMes.css'
  * las historias. Se pasa deslizando, tocando los costados, con los botones o con las
  * flechas del teclado. Una cifra por tarjeta.
  *
- * El fondo es la foto del local de la mejor nota, que se va revelando de una tarjeta a la
- * otra; sin foto, un fondo de marca. Los estilos y por qué no se anima el desenfoque,
+ * El fondo es de marca (brasa y mostaza, con rayos que se van prendiendo de una tarjeta a la
+ * otra), sin la foto del local: así todas se ven igual. Los estilos y qué se anima,
  * en TuMes.css.
  */
 export function TuMes() {
@@ -160,9 +160,7 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
   const pista = useRef<HTMLDivElement>(null)
   const [armando, setArmando] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
-  const [fotoRota, setFotoRota] = useState(false)
   const [quieta] = useState(sinMovimiento)
-  const foto = !fotoRota ? resumen.mejor?.foto ?? null : null
 
   const irA = useCallback(
     (indice: number) => {
@@ -192,7 +190,7 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
     setArmando(true)
     setAviso(null)
     try {
-      const imagen = await armarTarjetaDeResumen(resumen, user.username, foto)
+      const imagen = await armarTarjetaDeResumen(resumen, user.username)
       setAviso(await compartirImagen(imagen, `burgometro-${resumen.mes}.png`))
     } catch {
       setAviso('No pudimos armar la imagen. Probá de nuevo.')
@@ -206,14 +204,12 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
 
   return (
     <div className={`tm ${quieta ? 'tm-quieta' : ''}`} style={escena}>
-      {foto ? (
-        <div className="tm-deriva" aria-hidden="true">
-          <img className="tm-borrosa" src={foto} alt="" decoding="async" onError={() => setFotoRota(true)} />
-          <img className="tm-nitida" src={foto} alt="" decoding="async" />
+      {/* El fondo de marca: brasa y mostaza, con rayos que se van prendiendo de una tarjeta a la otra. */}
+      <div className="tm-marca" aria-hidden="true">
+        <div className="tm-rayos">
+          <div className="tm-giro" />
         </div>
-      ) : (
-        <div className="tm-marca" aria-hidden="true" />
-      )}
+      </div>
       <div className="tm-velo" aria-hidden="true" />
 
       <header className="tm-arriba">
@@ -431,7 +427,7 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
             {visibles.map((l, i) => (
               <li key={l.codigo} style={{ '--d': i } as CSSProperties}>
                 <MedallaDeLogro codigo={l.codigo} ganado size={visibles.length <= 2 ? 88 : 68} />
-                <span>{nombreDe(l.codigo, l.detalle)}</span>
+                <span className="tm-nombre">{nombreDe(l.codigo, l.detalle)}</span>
               </li>
             ))}
           </ul>
@@ -486,7 +482,9 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
         <div className="tm-vidrio">
           <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>Tu día para reseñar</p>
           <p className="tm-cifra tm-mes tm-parte" style={{ '--d': 1 } as CSSProperties}>{nombreDelDia(d.diaDeLaSemana)}</p>
-          <p className="tm-pie tm-parte" style={{ '--d': 3 } as CSSProperties}>sobre todo {franjaEnPalabras(d.franja)}</p>
+          <p className="tm-pie tm-parte" style={{ '--d': 3 } as CSSProperties}>
+            {d.resenias} {d.resenias === 1 ? 'reseña' : 'reseñas'}, sobre todo {franjaEnPalabras(d.franja)}
+          </p>
         </div>
       )
     }

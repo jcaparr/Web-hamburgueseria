@@ -65,9 +65,9 @@ export type TipoDeTarjeta =
   | 'logros' | 'podio' | 'reacciones' | 'nivel' | 'cierre'
 
 /**
- * Qué tan nítida se ve la foto de fondo en cada tarjeta, de 0 (solo la desenfocada) a 1
- * (la foto entera). La foto se va revelando de la portada a la mejor nota y vuelve a
- * velarse un poco en el cierre. Es la opacidad de la capa nítida: no se anima el desenfoque.
+ * Qué tan prendidos están los rayos del fondo en cada tarjeta, de 0 (casi apagados) a 1
+ * (a pleno). Se van prendiendo de la portada a la mejor nota y vuelven a bajar en el
+ * cierre. Es la opacidad de la capa de rayos (la variable --nitidez de TuMes.css).
  */
 export const NITIDEZ: Record<TipoDeTarjeta, number> = {
   portada: 0,

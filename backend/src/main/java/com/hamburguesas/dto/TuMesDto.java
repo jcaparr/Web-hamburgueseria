@@ -43,7 +43,7 @@ public record TuMesDto(
 
     public record Barrio(String nombre, int resenias) {}
 
-    public record Mejor(Long localId, String slug, String nombre, String barrio, String foto, int puntaje) {}
+    public record Mejor(Long localId, String slug, String nombre, String barrio, int puntaje) {}
 
     /** Un logro ganado: su código y, si lo lleva, el detalle (el barrio del Intendente). */
     public record LogroGanado(String codigo, String detalle) {}
@@ -51,8 +51,8 @@ public record TuMesDto(
     /** Un puesto en un podio: "semana" o "mes", desde qué día y en qué puesto salió. */
     public record Puesto(String periodo, LocalDate desde, int puesto) {}
 
-    /** El día favorito: de 1 (lunes) a 7 (domingo), y la franja: madrugada, mañana, tarde o noche. */
-    public record Dia(int diaDeLaSemana, String franja) {}
+    /** El día favorito: de 1 (lunes) a 7 (domingo), la franja (madrugada, mañana, tarde o noche) y cuántas reseñas hizo ese día. */
+    public record Dia(int diaDeLaSemana, String franja, int resenias) {}
 
     /** Las reacciones recibidas: cuántas y cuál fue la más usada (el nombre del tipo). */
     public record Reacciones(int total, String masUsada) {}

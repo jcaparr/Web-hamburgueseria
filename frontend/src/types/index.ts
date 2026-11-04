@@ -404,7 +404,6 @@ export interface TuMes {
     slug: string | null
     nombre: string
     barrio: string | null
-    foto: string | null
     puntaje: number
   } | null
   nivel: number
@@ -419,7 +418,7 @@ export interface TuMes {
   /** Las reseñas del período anterior: el mes anterior, o el año anterior en el anual. */
   reseniasAnteriores: number
   /** Su día favorito para reseñar (1 lunes a 7 domingo) y la franja; nulo con menos de tres reseñas. */
-  dia: { diaDeLaSemana: number; franja: "madrugada" | "mañana" | "tarde" | "noche" } | null
+  dia: { diaDeLaSemana: number; franja: "madrugada" | "mañana" | "tarde" | "noche"; resenias: number } | null
   /** Las reacciones recibidas (sin las de personas bloqueadas); nulo si no hubo. */
   reacciones: { total: number; masUsada: TipoDeReaccion } | null
   /** Solo en el anual: su mes más activo y el nivel con el que empezó y terminó el año. */

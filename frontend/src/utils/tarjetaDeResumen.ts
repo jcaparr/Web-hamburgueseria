@@ -2,7 +2,7 @@ import type { TuMes } from '../types'
 import { nota } from './numeros'
 import {
   ALTO, ANCHO, BORDE_LIBRE_ABAJO, FUENTE, MARCA_ARRIBA, MARGEN,
-  cargarImagen, cargarLogo, dibujarFoto, recortar, rectanguloRedondeado, renglones,
+  cargarLogo, recortar, rectanguloRedondeado, renglones,
 } from './tarjetaDeHistoria'
 import { anioDelMes, nombreDelMes } from './tuMes'
 
@@ -10,21 +10,17 @@ const CAFE = '#3a2a1e'
 
 /**
  * La imagen vertical de "Tu mes en Burgómetro" (#308), para compartir en historias: una
- * sola, la del cierre, con el mismo estilo que las tarjetas. La foto del local de la mejor
- * nota a pantalla completa (o un fondo de marca si no hay) y, encima, un panel crema casi
- * opaco con las cifras del mes. El texto va siempre sobre el panel, en café pleno: pasa
- * 4,5 : 1 aunque la foto detrás sea blanca o negra.
+ * sola, la del cierre, con el mismo estilo que las tarjetas: el fondo de marca (brasa y
+ * mostaza, con rayos) y, encima, un panel crema casi opaco con las cifras. El texto va
+ * siempre sobre el panel, en café pleno: pasa 4,5 : 1 sin importar lo que haya detrás.
  *
  * Mismas zonas seguras que la historia de una reseña (#278): la marca bajo el encabezado
  * de Instagram y la línea de la persona casi al borde de abajo. Se dibuja en el teléfono,
  * sin servidor ni Google.
  */
-export async function armarTarjetaDeResumen(resumen: TuMes, username: string, fotoDelFondo: string | null): Promise<Blob> {
+export async function armarTarjetaDeResumen(resumen: TuMes, username: string): Promise<Blob> {
   await Promise.all([document.fonts.load(`700 60px ${FUENTE}`), document.fonts.load(`400 40px ${FUENTE}`)])
-  const [logo, foto] = await Promise.all([
-    cargarLogo(),
-    fotoDelFondo ? cargarImagen(`${fotoDelFondo}${fotoDelFondo.includes('?') ? '&' : '?'}cors=1`, true).catch(() => null) : Promise.resolve(null),
-  ])
+  const logo = await cargarLogo()
 
   const canvas = document.createElement('canvas')
   canvas.width = ANCHO
@@ -32,19 +28,36 @@ export async function armarTarjetaDeResumen(resumen: TuMes, username: string, fo
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('El navegador no puede dibujar la imagen')
 
-  if (foto) {
-    dibujarFoto(ctx, foto)
-  } else {
-    const fondo = ctx.createLinearGradient(0, 0, ANCHO, ALTO)
-    fondo.addColorStop(0, '#b23a2e')
-    fondo.addColorStop(0.6, '#6b2a1c')
-    fondo.addColorStop(1, CAFE)
-    ctx.fillStyle = fondo
-    ctx.fillRect(0, 0, ANCHO, ALTO)
-  }
-  // Velo oscuro: la foto se ve, pero el panel y la marca no dependen de cómo sea.
-  ctx.fillStyle = 'rgba(58,42,30,0.45)'
+  // Brasa y mostaza, como el fondo de las tarjetas.
+  const fondo = ctx.createLinearGradient(0, 0, ANCHO * 0.5, ALTO)
+  fondo.addColorStop(0, '#6b2a1c')
+  fondo.addColorStop(1, CAFE)
+  ctx.fillStyle = fondo
   ctx.fillRect(0, 0, ANCHO, ALTO)
+  const mostaza = ctx.createRadialGradient(ANCHO * 0.85, ALTO * 0.12, 0, ANCHO * 0.85, ALTO * 0.12, ALTO * 0.55)
+  mostaza.addColorStop(0, 'rgba(242,183,5,0.75)')
+  mostaza.addColorStop(1, 'rgba(242,183,5,0)')
+  ctx.fillStyle = mostaza
+  ctx.fillRect(0, 0, ANCHO, ALTO)
+  const brasa = ctx.createRadialGradient(ANCHO * 0.08, ALTO * 0.92, 0, ANCHO * 0.08, ALTO * 0.92, ALTO * 0.55)
+  brasa.addColorStop(0, 'rgba(178,58,46,0.95)')
+  brasa.addColorStop(1, 'rgba(178,58,46,0)')
+  ctx.fillStyle = brasa
+  ctx.fillRect(0, 0, ANCHO, ALTO)
+  // Los rayos del medidor, abiertos en abanico desde el centro del panel.
+  const cx = ANCHO / 2
+  const cy = ALTO * 0.38
+  ctx.fillStyle = 'rgba(250,243,227,0.14)'
+  for (let angulo = 0; angulo < 360; angulo += 16) {
+    const a0 = (angulo * Math.PI) / 180
+    const a1 = ((angulo + 6) * Math.PI) / 180
+    ctx.beginPath()
+    ctx.moveTo(cx, cy)
+    ctx.lineTo(cx + Math.cos(a0) * ALTO * 2, cy + Math.sin(a0) * ALTO * 2)
+    ctx.lineTo(cx + Math.cos(a1) * ALTO * 2, cy + Math.sin(a1) * ALTO * 2)
+    ctx.closePath()
+    ctx.fill()
+  }
 
   ctx.textBaseline = 'alphabetic'
   ctx.textAlign = 'left'

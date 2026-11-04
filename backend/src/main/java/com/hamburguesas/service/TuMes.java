@@ -158,7 +158,7 @@ public class TuMes {
 
         return new TuMesDto(clave, p.anual(), resenias.size(), reseniasAnteriores,
             barrios.stream().limit(BARRIOS_VISIBLES).toList(), barrios.size(),
-            new TuMesDto.Mejor(mejor.localId(), mejor.slug(), mejor.nombre(), mejor.barrio(), mejor.foto(), mejor.puntaje()),
+            new TuMesDto.Mejor(mejor.localId(), mejor.slug(), mejor.nombre(), mejor.barrio(), mejor.puntaje()),
             nivelDeHoy, usuario.getXp(), ganados.size(), ganados, podios,
             diaFavorito(resenias), reacciones(usuario.getId(), desde, hasta),
             p.anual() ? recuento(usuario.getId(), resenias, desde, hasta) : null);
@@ -196,7 +196,7 @@ public class TuMes {
                 mejorFranja = i;
             }
         }
-        return new TuMesDto.Dia(mejorDia.getValue(), FRANJAS.get(mejorFranja));
+        return new TuMesDto.Dia(mejorDia.getValue(), FRANJAS.get(mejorFranja), porDia.get(mejorDia).size());
     }
 
     static String franjaDe(int hora) {

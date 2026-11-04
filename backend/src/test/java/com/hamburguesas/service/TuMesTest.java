@@ -241,7 +241,7 @@ class TuMesTest {
 
         TuMesDto.Dia dia = servicio().resumen(ana.getId(), YearMonth.of(2026, 11)).dia();
 
-        assertThat(dia).isEqualTo(new TuMesDto.Dia(4, "noche"));
+        assertThat(dia).isEqualTo(new TuMesDto.Dia(4, "noche", 3));
     }
 
     @Test
@@ -257,7 +257,7 @@ class TuMesTest {
         TuMesDto.Dia dia = servicio().resumen(ana.getId(), YearMonth.of(2026, 11)).dia();
 
         // Dos domingos y dos lunes: gana el lunes (día 1). La franja de las 00:30 es de madrugada.
-        assertThat(dia).isEqualTo(new TuMesDto.Dia(1, "madrugada"));
+        assertThat(dia).isEqualTo(new TuMesDto.Dia(1, "madrugada", 2));
     }
 
     @Test
@@ -400,7 +400,7 @@ class TuMesTest {
 
             TuMesDto.Dia favorito = servicio().resumen(ana.getId(), YearMonth.of(2026, 11)).dia();
 
-            assertThat(favorito).as("día %d de noviembre", dia).isEqualTo(new TuMesDto.Dia(dia - 1, "tarde"));
+            assertThat(favorito).as("día %d de noviembre", dia).isEqualTo(new TuMesDto.Dia(dia - 1, "tarde", 3));
         }
     }
 

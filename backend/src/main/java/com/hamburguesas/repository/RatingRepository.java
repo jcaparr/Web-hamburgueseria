@@ -303,7 +303,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
      */
     @Query("""
         select new com.hamburguesas.dto.ReseniaDelMesDto(
-            b.id, b.slug, b.name, b.area, b.photoUrl, r.score, r.createdAt, r.id, r.comment)
+            b.id, b.slug, b.name, b.area, r.score, r.createdAt, r.id, r.comment)
         from Rating r join r.burgerJoint b
         where r.user.id = :userId and r.createdAt >= :desde and r.createdAt < :hasta
         """)
