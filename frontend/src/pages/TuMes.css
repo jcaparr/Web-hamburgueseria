@@ -441,3 +441,69 @@
 @media (max-width: 340px) {
   .tm-abajo button svg { display: none; }
 }
+
+/* "Ver todos (N)": un botón de buen tamaño, no un enlace chico. */
+.tm .tm-vertodos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin: 14px auto 0;
+  padding: 0 22px;
+  border-radius: 24px;
+  font: 700 16px/1.2 'Lexend', system-ui, sans-serif;
+  background: var(--mostaza);
+  color: var(--cafe);
+  cursor: pointer;
+}
+.tm .tm-vertodos:focus-visible { outline: 3px solid var(--cafe); outline-offset: 3px; }
+
+/* La hoja con la lista completa: sube desde abajo, tapa el resto y se desplaza por dentro. */
+.tm-hoja-fondo {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(20, 10, 5, 0.6);
+}
+.tm-hoja {
+  width: 100%;
+  max-width: 480px;
+  max-height: 82%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 30px 30px 0 0;
+  background: var(--crema);
+  color: var(--cafe);
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -14px 40px rgba(20, 10, 5, 0.4);
+  animation: tm-hoja-sube 0.32s var(--suave) both;
+}
+@keyframes tm-hoja-sube { from { transform: translateY(100%); } }
+.tm-hoja-cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 10px 22px;
+  border-bottom: 1px solid rgba(58, 42, 30, 0.2);
+}
+.tm-hoja-cab h2 { font: 700 22px/1.15 'Lexend', system-ui, sans-serif; margin: 0; }
+.tm-hoja-cerrar {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--cafe);
+  color: var(--crema);
+  cursor: pointer;
+}
+.tm-hoja-cerrar:focus-visible { outline: 3px solid var(--ketchup); outline-offset: 3px; }
+.tm-hoja-cuerpo { overflow-y: auto; overscroll-behavior: contain; padding: 14px 18px 22px; }
+.tm-hoja .tm-logros { margin-top: 0; }
+.tm-hoja .tm-barrios { margin-top: 0; }
+.tm-hoja .tm-logros li, .tm-hoja .tm-nombre { text-align: center; }

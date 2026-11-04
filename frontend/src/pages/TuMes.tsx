@@ -153,6 +153,63 @@ function Cuenta({ valor, decimales = 0, activa, demora = 0, etiqueta, className 
   )
 }
 
+type TipoDeHoja = 'logros' | 'barrios'
+
+/**
+ * La lista completa de los logros o de los barrios, en una hoja que sube desde abajo.
+ *
+ * Mientras está abierta, lo de atrás (la barra de arriba, las tarjetas y los botones) queda
+ * `inert`: no se puede deslizar, ni tocar, ni llegar con el teclado, así que el resumen no
+ * avanza por debajo. El foco pasa al botón de cerrar y vuelve al botón que la abrió.
+ */
+function Hoja({ tipo, resumen, alCerrar }: { tipo: TipoDeHoja; resumen: TuMesDatos; alCerrar: () => void }) {
+  const cerrar = useRef<HTMLButtonElement>(null)
+  useEffect(() => cerrar.current?.focus({ preventScroll: true }), [])
+  const titulo =
+    tipo === 'barrios'
+      ? resumen.barriosEnTotal === 1 ? 'Recorriste un barrio' : `Recorriste ${resumen.barriosEnTotal} barrios`
+      : resumen.logrosGanados.length === 1 ? 'Ganaste un logro' : `Ganaste ${resumen.logrosGanados.length} logros`
+  return (
+    <div className="tm-hoja-fondo" onClick={alCerrar}>
+      <div
+        className="tm-hoja"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tm-hoja-titulo"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="tm-hoja-cab">
+          <h2 id="tm-hoja-titulo">{titulo}</h2>
+          <button ref={cerrar} type="button" className="tm-hoja-cerrar" onClick={alCerrar} aria-label="Cerrar la lista">
+            <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16" /></svg>
+          </button>
+        </div>
+        <div className="tm-hoja-cuerpo">
+          {tipo === 'barrios' ? (
+            <ol className="tm-barrios">
+              {resumen.barrios.map((b) => (
+                <li key={b.nombre}>
+                  <b>{b.nombre}</b>
+                  <span className="tm-nota" role="img" aria-label={b.resenias === 1 ? '1 reseña' : `${b.resenias} reseñas`}>{b.resenias}</span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <ul className="tm-logros">
+              {resumen.logrosGanados.map((l) => (
+                <li key={l.codigo}>
+                  <MedallaDeLogro codigo={l.codigo} ganado size={68} />
+                  <span className="tm-nombre">{nombreDe(l.codigo, l.detalle)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => void }) {
   const { user } = useAuth()
   const tarjetas = tarjetasDe(resumen)
@@ -161,6 +218,30 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
   const [armando, setArmando] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
   const [quieta] = useState(sinMovimiento)
+  // La lista completa de logros o de barrios, y el botón que la abrió para devolverle el foco.
+  const [hoja, setHoja] = useState<TipoDeHoja | null>(null)
+  const quienAbrio = useRef<HTMLElement | null>(null)
+  function abrirHoja(tipo: TipoDeHoja, boton: HTMLElement) {
+    quienAbrio.current = boton
+    setHoja(tipo)
+  }
+  useEffect(() => {
+    if (hoja) return
+    quienAbrio.current?.focus({ preventScroll: true })
+    quienAbrio.current = null
+  }, [hoja])
+  // Esc cierra primero la lista, y recién con la lista cerrada, el resumen: por eso va en la
+  // fase de captura y corta el aviso al otro oyente.
+  useEffect(() => {
+    if (!hoja) return
+    function alTeclear(e: globalThis.KeyboardEvent) {
+      if (e.key !== "Escape") return
+      e.stopImmediatePropagation()
+      setHoja(null)
+    }
+    window.addEventListener("keydown", alTeclear, true)
+    return () => window.removeEventListener("keydown", alTeclear, true)
+  }, [hoja])
 
   const irA = useCallback(
     (indice: number) => {
@@ -212,7 +293,7 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
       </div>
       <div className="tm-velo" aria-hidden="true" />
 
-      <header className="tm-arriba">
+      <header className="tm-arriba" inert={hoja !== null}>
         <div className="tm-pasos" aria-hidden="true">
           {tarjetas.map((t, i) => (
             <b key={t} className={i <= actual ? 'hecho' : ''} />
@@ -232,6 +313,7 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
         onKeyDown={alTeclear}
         onScroll={alDeslizar}
         className="tm-pista"
+        inert={hoja !== null}
       >
         {tarjetas.map((tipo, i) => (
           <section
@@ -243,13 +325,13 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
             inert={i !== actual}
             className={`tm-tarjeta ${i === actual ? 'on' : ''} ${tipo === 'mejor' ? 'tm-mejor' : ''} ${tipo === 'cierre' ? 'fin' : ''}`}
           >
-            <Contenido tipo={tipo} resumen={resumen} activa={i === actual} username={user?.username ?? ''} hamburguesa={user?.hamburguesa ?? null} xp={resumen.xp} />
+            <Contenido tipo={tipo} resumen={resumen} activa={i === actual} abrir={abrirHoja} username={user?.username ?? ''} hamburguesa={user?.hamburguesa ?? null} xp={resumen.xp} />
           </section>
         ))}
       </div>
 
       <p role="status" className="tm-aviso">{aviso}</p>
-      <nav className="tm-abajo" aria-label="Cambiar de tarjeta">
+      <nav className="tm-abajo" aria-label="Cambiar de tarjeta" inert={hoja !== null}>
         <button type="button" onClick={() => irA(actual - 1)} aria-disabled={actual === 0}>
           <IconChevronRight size={20} className="rotate-180" />
           Anterior
@@ -273,6 +355,7 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
         )}
       </nav>
       <p className="sr-only" aria-live="polite">{actual + 1} de {tarjetas.length}</p>
+      {hoja && <Hoja tipo={hoja} resumen={resumen} alCerrar={() => setHoja(null)} />}
     </div>
   )
 }
@@ -313,10 +396,11 @@ function Arco() {
   )
 }
 
-function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
+function Contenido({ tipo, resumen, activa, abrir, username, hamburguesa, xp }: {
   tipo: TipoDeTarjeta
   resumen: TuMesDatos
   activa: boolean
+  abrir: (tipo: TipoDeHoja, boton: HTMLElement) => void
   username: string
   hamburguesa: string | null
   xp: number
@@ -361,27 +445,34 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
           )}
         </div>
       )
-    case 'barrios':
+    case 'barrios': {
+      const primeros = resumen.barrios.slice(0, 3)
       return (
         <div className="tm-vidrio">
           <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>
-            {resumen.barriosEnTotal === 1 ? 'Comiste en un barrio' : `Comiste en ${resumen.barriosEnTotal} barrios`}
+            {resumen.barriosEnTotal === 1 ? 'Recorriste un barrio' : `Recorriste ${resumen.barriosEnTotal} barrios`}
           </p>
           <ol className="tm-barrios">
-            {resumen.barrios.map((b, i) => (
+            {primeros.map((b, i) => (
               <li key={b.nombre} style={{ '--d': i } as CSSProperties}>
                 <b>{b.nombre}</b>
-                <span className="tm-nota" role="img" aria-label={b.resenias === 1 ? "1 reseña" : `${b.resenias} reseñas`}>{b.resenias}</span>
+                <span className="tm-nota" role="img" aria-label={b.resenias === 1 ? '1 reseña' : `${b.resenias} reseñas`}>{b.resenias}</span>
               </li>
             ))}
           </ol>
-          {resumen.barriosEnTotal > resumen.barrios.length && (
-            <p className="tm-pie tm-parte" style={{ '--d': 5, marginTop: 12 } as CSSProperties}>
-              +{resumen.barriosEnTotal - resumen.barrios.length} más
-            </p>
+          {resumen.barrios.length > primeros.length && (
+            <button
+              type="button"
+              className="tm-vertodos tm-parte"
+              style={{ '--d': 5 } as CSSProperties}
+              onClick={(e) => abrir('barrios', e.currentTarget)}
+            >
+              Ver todos ({resumen.barriosEnTotal})
+            </button>
           )}
         </div>
       )
+    }
     case 'mejor': {
       const mejor = resumen.mejor
       if (!mejor) return null
@@ -432,7 +523,14 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
             ))}
           </ul>
           {ganados.length > visibles.length && (
-            <p className="tm-pie tm-parte" style={{ '--d': 6, marginTop: 10 } as CSSProperties}>+{ganados.length - visibles.length} más</p>
+            <button
+              type="button"
+              className="tm-vertodos tm-parte"
+              style={{ '--d': 6 } as CSSProperties}
+              onClick={(e) => abrir('logros', e.currentTarget)}
+            >
+              Ver todos ({ganados.length})
+            </button>
           )}
         </div>
       )
