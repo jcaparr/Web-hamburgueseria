@@ -20,4 +20,13 @@ public interface ResultadoDePodioRepository extends JpaRepository<ResultadoDePod
     @Query("select r from ResultadoDePodio r where r.id.periodo = :periodo and r.id.desde in :desdes "
         + "order by r.id.desde desc, r.id.puesto")
     List<ResultadoDePodio> deLosCierres(@Param("periodo") String periodo, @Param("desdes") List<LocalDate> desdes);
+
+    /**
+     * Los puestos de una persona en los podios (semanales y mensuales) que empezaron en
+     * [desde, hasta) (#308). Filtra por usuario y por fecha: no lee la tabla entera.
+     */
+    @Query("select r from ResultadoDePodio r where r.userId = :userId and r.id.desde >= :desde and r.id.desde < :hasta "
+        + "order by r.id.desde, r.id.periodo")
+    List<ResultadoDePodio> deLaPersonaEntre(@Param("userId") Long userId,
+                                            @Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
 }

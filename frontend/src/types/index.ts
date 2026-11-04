@@ -410,6 +410,10 @@ export interface TuMes {
   nivel: number
   xp: number
   logros: number
+  /** Cuáles ganó en el mes, del primero al último (el Intendente trae su barrio en detalle). */
+  logrosGanados: { codigo: string; detalle: string | null }[]
+  /** Sus puestos en los podios que empezaron en el mes: solo los de esta persona. */
+  podios: { periodo: "semana" | "mes"; desde: string; puesto: number }[]
   /** Solo en el resumen de diciembre. */
   anio: { resenias: number; locales: number } | null
 }

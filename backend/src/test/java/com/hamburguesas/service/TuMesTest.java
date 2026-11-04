@@ -2,7 +2,11 @@ package com.hamburguesas.service;
 
 import com.hamburguesas.dto.TuMesDto;
 import com.hamburguesas.exception.ResourceNotFoundException;
+import com.hamburguesas.logros.LogroDeUsuario;
+import com.hamburguesas.logros.LogroDeUsuarioId;
 import com.hamburguesas.logros.LogroDeUsuarioRepository;
+import com.hamburguesas.podio.ResultadoDePodio;
+import com.hamburguesas.podio.ResultadoDePodioRepository;
 import com.hamburguesas.model.BurgerJoint;
 import com.hamburguesas.model.Rating;
 import com.hamburguesas.model.User;
@@ -34,6 +38,7 @@ class TuMesTest {
     @Autowired private RatingRepository ratingRepository;
     @Autowired private ReaccionRepository reaccionRepository;
     @Autowired private LogroDeUsuarioRepository logroRepository;
+    @Autowired private ResultadoDePodioRepository podioRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private BurgerJointRepository burgerJointRepository;
 
@@ -44,10 +49,11 @@ class TuMesTest {
         reaccionRepository.deleteAll();
         ratingRepository.deleteAll();
         logroRepository.deleteAll();
+        podioRepository.deleteAll();
     }
 
     private TuMes servicioAl(String instante) {
-        return new TuMes(ratingRepository, logroRepository, userRepository,
+        return new TuMes(ratingRepository, logroRepository, podioRepository, userRepository,
             Clock.fixed(Instant.parse(instante), TuMes.ZONA));
     }
 
@@ -176,5 +182,75 @@ class TuMesTest {
         assertThat(resumen.mes()).isEqualTo("2026-12");
         assertThat(resumen.resenias()).isEqualTo(1);
         assertThat(resumen.anio()).isEqualTo(new TuMesDto.Anio(3, 3));
+    }
+
+    private void logro(User quien, String codigo, String enBuenosAires, boolean activo, boolean retroactivo, String detalle) {
+        Instant cuando = ZonedDateTime.of(LocalDateTime.parse(enBuenosAires), TuMes.ZONA).toInstant();
+        logroRepository.save(new LogroDeUsuario(new LogroDeUsuarioId(quien.getId(), codigo), cuando, activo, cuando, null, retroactivo, detalle));
+    }
+
+    @Test
+    void losLogrosDelMesSonLosGanadosEnElPeriodoEnHoraDeBuenosAires() {
+        User ana = cuenta("tumes_logros");
+        resenia(ana, "Palermo", 4, "2026-11-15T20:00:00");
+        logro(ana, "NIVEL_3", "2026-10-31T23:30:00", true, false, null);       // octubre
+        logro(ana, "NIVEL_5", "2026-11-01T00:30:00", true, false, null);       // noviembre, primer borde
+        logro(ana, "INTENDENTE", "2026-11-30T23:30:00", true, false, "Palermo"); // noviembre, último borde
+        logro(ana, "NIVEL_10", "2026-12-01T00:30:00", true, false, null);      // diciembre
+        logro(ana, "NIVEL_15", "2026-11-10T12:00:00", false, false, null);     // lo perdió: no cuenta
+        logro(ana, "NIVEL_20", "2026-11-10T12:00:00", true, true, null);       // de la carga inicial: no cuenta
+
+        TuMesDto resumen = servicio().resumen(ana.getId(), YearMonth.of(2026, 11));
+
+        assertThat(resumen.logros()).isEqualTo(2);
+        assertThat(resumen.logrosGanados()).extracting(TuMesDto.LogroGanado::codigo).containsExactly("NIVEL_5", "INTENDENTE");
+        assertThat(resumen.logrosGanados().get(1).detalle()).isEqualTo("Palermo");
+    }
+
+    @Test
+    void sinLogrosEnElMesLaListaVieneVacia() {
+        User ana = cuenta("tumes_sinlogros");
+        resenia(ana, "Palermo", 4, "2026-11-15T20:00:00");
+
+        assertThat(servicio().resumen(ana.getId(), YearMonth.of(2026, 11)).logrosGanados()).isEmpty();
+    }
+
+    private void podio(User quien, String periodo, LocalDate desde, int puesto) {
+        podioRepository.save(new ResultadoDePodio(new ResultadoDePodio.Id(periodo, desde, puesto), quien.getId(), 100));
+    }
+
+    @Test
+    void losPodiosDelMesSonLosQueEmpezaronEnElMesYSoloDeEstaPersona() {
+        User ana = cuenta("tumes_podio");
+        User beto = cuenta("tumes_podio_b");
+        resenia(ana, "Palermo", 4, "2026-11-15T20:00:00");
+        podio(ana, "semana", LocalDate.of(2026, 10, 26), 2);   // la semana que empezó en octubre
+        podio(ana, "semana", LocalDate.of(2026, 11, 2), 1);
+        podio(ana, "semana", LocalDate.of(2026, 11, 30), 3);   // lunes 30: empieza en noviembre
+        podio(ana, "semana", LocalDate.of(2026, 12, 7), 1);    // diciembre
+        podio(ana, "mes", LocalDate.of(2026, 11, 1), 2);
+        podio(beto, "semana", LocalDate.of(2026, 11, 9), 1);   // de otra persona: no aparece
+
+        TuMesDto resumen = servicio().resumen(ana.getId(), YearMonth.of(2026, 11));
+
+        assertThat(resumen.podios())
+            .extracting(TuMesDto.Puesto::periodo, TuMesDto.Puesto::desde, TuMesDto.Puesto::puesto)
+            .containsExactly(
+                org.assertj.core.groups.Tuple.tuple("mes", LocalDate.of(2026, 11, 1), 2),
+                org.assertj.core.groups.Tuple.tuple("semana", LocalDate.of(2026, 11, 2), 1),
+                org.assertj.core.groups.Tuple.tuple("semana", LocalDate.of(2026, 11, 30), 3));
+    }
+
+    @Test
+    void sinPodiosLaListaVieneVaciaYPedirloDeNuevoDaLoMismo() {
+        User ana = cuenta("tumes_sinpodio");
+        resenia(ana, "Palermo", 4, "2026-11-15T20:00:00");
+        logro(ana, "NIVEL_5", "2026-11-05T12:00:00", true, false, null);
+
+        TuMesDto primero = servicio().resumen(ana.getId(), YearMonth.of(2026, 11));
+        TuMesDto segundo = servicio().resumen(ana.getId(), YearMonth.of(2026, 11));
+
+        assertThat(primero.podios()).isEmpty();
+        assertThat(segundo).isEqualTo(primero);
     }
 }

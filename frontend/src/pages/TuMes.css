@@ -417,3 +417,17 @@
   .tm-deriva { animation: none; transform: scale(1.12); }
   .tm *, .tm *::before, .tm *::after { animation: none !important; transition-duration: 0.01s !important; scroll-behavior: auto !important; }
 }
+
+/* 5 · logros del mes: las chapitas reales, con su nombre debajo */
+.tm-logros { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 6px; }
+.tm-logros.dos { grid-template-columns: repeat(2, 1fr); }
+.tm-logros.uno { grid-template-columns: 1fr; }
+.tm-logros li { display: flex; flex-direction: column; align-items: center; gap: 16px; min-width: 0; }
+.tm-logros span { font-size: 14px; font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tm-tarjeta.on .tm-logros li { animation: tm-pop 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) both; animation-delay: calc(0.5s + var(--d, 0) * 0.12s); }
+
+/* 6 · podio: el puesto, con el color de la medalla */
+.tm-nota.puesto-1 { background: var(--mostaza); color: var(--cafe); }
+.tm-nota.puesto-2 { background: #c9c3b5; color: var(--cafe); }
+.tm-nota.puesto-3 { background: #c98a3d; color: var(--cafe); }
+.tm-nota.puesto-4 { background: var(--papel); color: var(--cafe); box-shadow: inset 0 0 0 2px var(--cafe); }

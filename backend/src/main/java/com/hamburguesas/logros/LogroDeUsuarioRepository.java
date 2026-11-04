@@ -38,4 +38,8 @@ public interface LogroDeUsuarioRepository extends JpaRepository<LogroDeUsuario, 
     /** Cuántos ganó en el período [desde, hasta), sin los de la carga inicial (#308). */
     @Query("select count(l) from LogroDeUsuario l where l.id.userId = :userId and l.activo = true and l.retroactivo = false and l.ganadoEl >= :desde and l.ganadoEl < :hasta")
     long ganadosEntre(@Param("userId") Long userId, @Param("desde") java.time.Instant desde, @Param("hasta") java.time.Instant hasta);
+
+    /** Los logros que ganó en el período [desde, hasta), del primero al último, sin los de la carga inicial (#308). */
+    @Query("select l from LogroDeUsuario l where l.id.userId = :userId and l.activo = true and l.retroactivo = false and l.ganadoEl >= :desde and l.ganadoEl < :hasta order by l.ganadoEl, l.id.logro")
+    List<LogroDeUsuario> ganadosEnElPeriodo(@Param("userId") Long userId, @Param("desde") java.time.Instant desde, @Param("hasta") java.time.Instant hasta);
 }

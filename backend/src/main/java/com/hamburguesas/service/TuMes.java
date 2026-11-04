@@ -4,6 +4,7 @@ import com.hamburguesas.dto.ReseniaDelMesDto;
 import com.hamburguesas.dto.TuMesDto;
 import com.hamburguesas.exception.ResourceNotFoundException;
 import com.hamburguesas.logros.LogroDeUsuarioRepository;
+import com.hamburguesas.podio.ResultadoDePodioRepository;
 import com.hamburguesas.model.User;
 import com.hamburguesas.repository.RatingRepository;
 import com.hamburguesas.repository.UserRepository;
@@ -43,18 +44,20 @@ public class TuMes {
 
     private final RatingRepository ratingRepository;
     private final LogroDeUsuarioRepository logroRepository;
+    private final ResultadoDePodioRepository podioRepository;
     private final UserRepository userRepository;
     private final Clock reloj;
 
     @Autowired
-    public TuMes(RatingRepository ratingRepository, LogroDeUsuarioRepository logroRepository, UserRepository userRepository) {
-        this(ratingRepository, logroRepository, userRepository, Clock.systemUTC());
+    public TuMes(RatingRepository ratingRepository, LogroDeUsuarioRepository logroRepository, ResultadoDePodioRepository podioRepository, UserRepository userRepository) {
+        this(ratingRepository, logroRepository, podioRepository, userRepository, Clock.systemUTC());
     }
 
     /** Con otro reloj, para los tests. */
-    TuMes(RatingRepository ratingRepository, LogroDeUsuarioRepository logroRepository, UserRepository userRepository, Clock reloj) {
+    TuMes(RatingRepository ratingRepository, LogroDeUsuarioRepository logroRepository, ResultadoDePodioRepository podioRepository, UserRepository userRepository, Clock reloj) {
         this.ratingRepository = ratingRepository;
         this.logroRepository = logroRepository;
+        this.podioRepository = podioRepository;
         this.userRepository = userRepository;
         this.reloj = reloj;
     }
@@ -84,7 +87,7 @@ public class TuMes {
         List<ReseniaDelMesDto> resenias = ratingRepository.deLaPersonaEntre(usuario.getId(), desde, hasta);
         String clave = mes.toString();
         if (resenias.isEmpty()) {
-            return new TuMesDto(clave, 0, List.of(), 0, null, Niveles.nivelDe(usuario.getXp()), usuario.getXp(), 0, null);
+            return new TuMesDto(clave, 0, List.of(), 0, null, Niveles.nivelDe(usuario.getXp()), usuario.getXp(), 0, List.of(), List.of(), null);
         }
 
         Map<String, Integer> porBarrio = new HashMap<>();
@@ -105,11 +108,17 @@ public class TuMes {
                 .thenComparing(ReseniaDelMesDto::cuando).thenComparing(ReseniaDelMesDto::id))
             .orElseThrow();
 
-        int logros = (int) logroRepository.ganadosEntre(usuario.getId(), desde, hasta);
+        var ganados = logroRepository.ganadosEnElPeriodo(usuario.getId(), desde, hasta).stream()
+            .map(l -> new TuMesDto.LogroGanado(l.getId().logro(), l.getDetalle()))
+            .toList();
+        // Los podios que empezaron en el mes: solo los puestos de esta persona, sin nadie más.
+        var podios = podioRepository.deLaPersonaEntre(usuario.getId(), mes.atDay(1), mes.plusMonths(1).atDay(1)).stream()
+            .map(r -> new TuMesDto.Puesto(r.getId().periodo(), r.getId().desde(), r.getId().puesto()))
+            .toList();
         return new TuMesDto(clave, resenias.size(),
             barrios.stream().limit(BARRIOS_VISIBLES).toList(), barrios.size(),
             new TuMesDto.Mejor(mejor.localId(), mejor.slug(), mejor.nombre(), mejor.barrio(), mejor.foto(), mejor.puntaje()),
-            Niveles.nivelDe(usuario.getXp()), usuario.getXp(), logros,
+            Niveles.nivelDe(usuario.getXp()), usuario.getXp(), ganados.size(), ganados, podios,
             mes.getMonth() == Month.DECEMBER ? delAnio(usuario.getId(), mes.getYear()) : null);
     }
 

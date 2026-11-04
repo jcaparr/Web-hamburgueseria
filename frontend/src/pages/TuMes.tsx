@@ -13,7 +13,9 @@ import { compartirImagen } from '../utils/compartirImagen'
 import { cantidad, nota } from '../utils/numeros'
 import { rutaDelLocal } from '../utils/rutaDelLocal'
 import { armarTarjetaDeResumen } from '../utils/tarjetaDeResumen'
-import { NITIDEZ, anioDelMes, nombreDelMes, tarjetasDe, type TipoDeTarjeta } from '../utils/tuMes'
+import { NITIDEZ, anioDelMes, diaDe, nombreDelMes, tarjetasDe, type TipoDeTarjeta } from '../utils/tuMes'
+import { MedallaDeLogro } from '../components/MedallaDeLogro'
+import { nombreDe } from '../utils/logros'
 import './TuMes.css'
 
 /**
@@ -282,6 +284,8 @@ const ETIQUETAS: Record<TipoDeTarjeta, string> = {
   resenias: "Reseñas del mes",
   barrios: "Barrios",
   mejor: "Mejor nota",
+  logros: "Logros del mes",
+  podio: "Podio",
   anio: "El año",
   cierre: "Cierre",
 }
@@ -404,6 +408,49 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
             </Link>
           </div>
         </>
+      )
+    }
+    case 'logros': {
+      const ganados = resumen.logrosGanados
+      const visibles = ganados.slice(0, 6)
+      return (
+        <div className="tm-vidrio claro">
+          <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>
+            {ganados.length === 1 ? 'Ganaste un logro' : `Ganaste ${ganados.length} logros`}
+          </p>
+          <ul className={`tm-logros ${visibles.length === 1 ? 'uno' : visibles.length === 2 ? 'dos' : ''}`}>
+            {visibles.map((l, i) => (
+              <li key={l.codigo} style={{ '--d': i } as CSSProperties}>
+                <MedallaDeLogro codigo={l.codigo} ganado size={visibles.length <= 2 ? 88 : 68} />
+                <span>{nombreDe(l.codigo, l.detalle)}</span>
+              </li>
+            ))}
+          </ul>
+          {ganados.length > visibles.length && (
+            <p className="tm-pie tm-parte" style={{ '--d': 6, marginTop: 10 } as CSSProperties}>+{ganados.length - visibles.length} más</p>
+          )}
+        </div>
+      )
+    }
+    case 'podio': {
+      const filas = resumen.podios.slice(0, 4)
+      return (
+        <div className="tm-vidrio">
+          <p className="tm-dec tm-parte" style={{ '--d': 0 } as CSSProperties}>
+            {resumen.podios.length === 1 ? 'Estuviste en el podio' : `Estuviste ${resumen.podios.length} veces en el podio`}
+          </p>
+          <ol className="tm-barrios">
+            {filas.map((p, i) => (
+              <li key={`${p.periodo}-${p.desde}`} style={{ '--d': i } as CSSProperties}>
+                <b>{p.periodo === 'mes' ? `Todo ${mes}` : `Semana del ${diaDe(p.desde)}`}</b>
+                <span className={`tm-nota puesto-${Math.min(p.puesto, 4)}`} role="img" aria-label={`Puesto ${p.puesto}`}>{p.puesto}º</span>
+              </li>
+            ))}
+          </ol>
+          {resumen.podios.length > filas.length && (
+            <p className="tm-pie tm-parte" style={{ '--d': 6, marginTop: 12 } as CSSProperties}>+{resumen.podios.length - filas.length} más</p>
+          )}
+        </div>
       )
     }
     case 'anio':
