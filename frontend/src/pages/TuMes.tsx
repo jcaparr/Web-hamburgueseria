@@ -340,7 +340,7 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
             <span className="tm-linea grande"><span style={{ '--d': 2 } as CSSProperties}>en Burgómetro</span></span>
           </h1>
           <div className="tm-sello" aria-hidden="true">
-            {resumen.anual ? "TODO" : mes.slice(0, 3).toUpperCase()}
+            {resumen.anual ? "AÑO" : mes.slice(0, 3).toUpperCase()}
             <br />
             {anioDelMes(resumen.mes)}
           </div>
@@ -503,7 +503,7 @@ function Contenido({ tipo, resumen, activa, username, hamburguesa, xp }: {
             <DibujoDeReaccion tipo={r.masUsada} className="h-32 w-auto" />
           </div>
           <p className="tm-pie tm-parte" style={{ '--d': 3 } as CSSProperties}>
-            {r.total === 1 ? 'Fue' : 'La que más'}: {la.nombre.toLowerCase()}
+            {r.total === 1 ? "Fue" : "La favorita"}: {la.nombre.toLowerCase()}
           </p>
         </div>
       )

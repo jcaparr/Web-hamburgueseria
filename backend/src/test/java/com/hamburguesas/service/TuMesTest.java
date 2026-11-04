@@ -388,4 +388,30 @@ class TuMesTest {
         assertThat(primero.podios()).isEmpty();
         assertThat(segundo).isEqualTo(primero);
     }
+
+    @Test
+    void elDiaFavoritoEsCorrectoParaCadaDiaDeLaSemana() {
+        // Del lunes 2 al domingo 8 de noviembre de 2026: tres reseñas al mediodía el mismo día.
+        for (int dia = 2; dia <= 8; dia++) {
+            User ana = cuenta("tumes_semana_" + dia);
+            for (int hora = 12; hora <= 14; hora++) {
+                resenia(ana, "Palermo", 4, String.format("2026-11-%02dT%02d:00:00", dia, hora));
+            }
+
+            TuMesDto.Dia favorito = servicio().resumen(ana.getId(), YearMonth.of(2026, 11)).dia();
+
+            assertThat(favorito).as("día %d de noviembre", dia).isEqualTo(new TuMesDto.Dia(dia - 1, "tarde"));
+        }
+    }
+
+    @Test
+    void enElEmpateDeReaccionesGanaLaPrimeraDelCatalogo() {
+        User ana = cuenta("tumes_empate_reac");
+        Rating r = resenia(ana, "Palermo", 4, "2026-11-05T20:00:00");
+        reaccion(r, cuenta("tumes_empate_a"), TipoDeReaccion.ENCANTA, "2026-11-06T10:00:00");
+        reaccion(r, cuenta("tumes_empate_b"), TipoDeReaccion.HAMBRE, "2026-11-06T11:00:00");
+
+        assertThat(servicio().resumen(ana.getId(), YearMonth.of(2026, 11)).reacciones())
+            .isEqualTo(new TuMesDto.Reacciones(2, "HAMBRE"));
+    }
 }
