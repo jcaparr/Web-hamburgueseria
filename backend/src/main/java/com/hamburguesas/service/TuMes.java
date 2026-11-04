@@ -42,8 +42,6 @@ import java.util.Map;
 public class TuMes {
 
     public static final ZoneId ZONA = ZoneId.of("America/Argentina/Buenos_Aires");
-    /** Cuántos barrios muestra la tarjeta; el resto va como "+N". */
-    static final int BARRIOS_VISIBLES = 3;
     /** Antes de esto no hay reseñas: un año absurdo en la dirección daría un error de fecha, y acá un 404. */
     static final int PRIMER_ANIO = 2020;
 
@@ -157,7 +155,7 @@ public class TuMes {
             .cuantasEntre(usuario.getId(), antes.instanteDesde(), antes.instanteHasta()).get(0)[0]).intValue();
 
         return new TuMesDto(clave, p.anual(), resenias.size(), reseniasAnteriores,
-            barrios.stream().limit(BARRIOS_VISIBLES).toList(), barrios.size(),
+            barrios, barrios.size(),
             new TuMesDto.Mejor(mejor.localId(), mejor.slug(), mejor.nombre(), mejor.barrio(), mejor.puntaje()),
             nivelDeHoy, usuario.getXp(), ganados.size(), ganados, podios,
             diaFavorito(resenias), reacciones(usuario.getId(), desde, hasta),

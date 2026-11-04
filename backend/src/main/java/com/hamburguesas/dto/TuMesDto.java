@@ -12,8 +12,8 @@ import java.util.List;
  * @param mes          el mes que resume, "2026-11"; en el anual, "2026-12"
  * @param anual        si es el recuento del año entero (el resumen de diciembre)
  * @param reseniasAnteriores las reseñas del período anterior (el mes anterior, o el año anterior en el anual)
- * @param barrios      los barrios con más reseñas del período, hasta tres
- * @param barriosEnTotal cuántos barrios distintos visitó, para el "+N"
+ * @param barrios      todos los barrios del período, del que más reseñas tuvo al que menos (la tarjeta muestra tres y el resto va en "Ver todos")
+ * @param barriosEnTotal cuántos barrios distintos visitó
  * @param mejor        la reseña con la nota más alta del período
  * @param nivel        el nivel de hoy, no el del fin del período: para eso está {@code recuento}
  * @param logros       cuántos logros ganó durante el período

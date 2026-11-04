@@ -101,8 +101,8 @@ class TuMesTest {
         assertThat(resumen.resenias()).isEqualTo(5);
         assertThat(resumen.mejor().puntaje()).isEqualTo(5);
         assertThat(resumen.mejor().barrio()).isEqualTo("Palermo");
-        // Palermo (2) primero; después empatan en 1 y desempata el nombre. Muestra tres de cuatro.
-        assertThat(resumen.barrios()).extracting(TuMesDto.Barrio::nombre).containsExactly("Palermo", "Almagro", "Belgrano");
+        // Palermo (2) primero; después empatan en 1 y desempata el nombre. Vienen todos: la tarjeta recorta, la lista completa no.
+        assertThat(resumen.barrios()).extracting(TuMesDto.Barrio::nombre).containsExactly("Palermo", "Almagro", "Belgrano", "Colegiales");
         assertThat(resumen.barriosEnTotal()).isEqualTo(4);
         assertThat(resumen.anual()).isFalse();
     }
