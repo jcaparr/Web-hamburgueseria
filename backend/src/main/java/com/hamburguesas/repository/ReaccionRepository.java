@@ -62,4 +62,18 @@ public interface ReaccionRepository extends JpaRepository<Reaccion, Long> {
         where r.user.id = :userId and r.rating.id in :ids
         """)
     List<Object[]> deUnoEn(@Param("userId") Long userId, @Param("ids") Collection<Long> ids);
+
+    /**
+     * Las reacciones que recibieron las reseñas de una persona en [desde, hasta), por tipo
+     * (#308). Sin las propias ni las de quien tiene un bloqueo de por medio, en cualquiera
+     * de los dos sentidos. "ocultos" nunca llega vacía (ver Bloqueos).
+     */
+    @Query("""
+        select r.tipo, count(r) from Reaccion r
+        where r.rating.user.id = :yo and r.user.id <> :yo and r.user.id not in :ocultos
+          and r.createdAt >= :desde and r.createdAt < :hasta
+        group by r.tipo
+        """)
+    List<Object[]> recibidasEntre(@Param("yo") Long yo, @Param("ocultos") Collection<Long> ocultos,
+                                  @Param("desde") java.time.Instant desde, @Param("hasta") java.time.Instant hasta);
 }

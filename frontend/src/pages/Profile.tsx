@@ -4,6 +4,7 @@ import { apiClient } from '../api/client'
 import { BotonCambiarNombreDeUsuario } from '../components/CambiarNombreDeUsuario'
 import { CabeceraDePerfil } from '../components/CabeceraDePerfil'
 import { PastillaDeLogro } from '../components/PastillaDeLogro'
+import { BannerTuMes } from '../components/BannerTuMes'
 import { IconPencil } from '../components/icons'
 import { LoadError } from '../components/LoadError'
 import { BarraDePestanias, GrillaDeLocales, VerTodas } from '../components/PestaniasDePerfil'
@@ -127,6 +128,8 @@ export function Profile() {
           },
         ]}
       />
+
+      <BannerTuMes />
 
       {error !== null && (
         <LoadError

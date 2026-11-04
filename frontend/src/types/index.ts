@@ -391,3 +391,36 @@ export interface LocalDelMapa {
   ratingsCount: number
   franjas: FranjaHoraria[]
 }
+
+/** "Tu mes en Burgómetro" (#308): el resumen de un mes de reseñas. Con resenias = 0 no hay resumen. */
+export interface TuMes {
+  /** El mes que resume, "2026-11". */
+  mes: string
+  resenias: number
+  barrios: { nombre: string; resenias: number }[]
+  barriosEnTotal: number
+  mejor: {
+    localId: number
+    slug: string | null
+    nombre: string
+    barrio: string | null
+    puntaje: number
+  } | null
+  nivel: number
+  xp: number
+  logros: number
+  /** Cuáles ganó en el mes, del primero al último (el Intendente trae su barrio en detalle). */
+  logrosGanados: { codigo: string; detalle: string | null }[]
+  /** Sus puestos en los podios que empezaron en el mes: solo los de esta persona. */
+  podios: { periodo: "semana" | "mes"; desde: string; puesto: number }[]
+  /** Si es el recuento del año entero (el resumen de diciembre, que sale el 1 de enero). */
+  anual: boolean
+  /** Las reseñas del período anterior: el mes anterior, o el año anterior en el anual. */
+  reseniasAnteriores: number
+  /** Su día favorito para reseñar (1 lunes a 7 domingo) y la franja; nulo con menos de tres reseñas. */
+  dia: { diaDeLaSemana: number; franja: "madrugada" | "mañana" | "tarde" | "noche"; resenias: number } | null
+  /** Las reacciones recibidas (sin las de personas bloqueadas); nulo si no hubo. */
+  reacciones: { total: number; masUsada: TipoDeReaccion } | null
+  /** Solo en el anual: su mes más activo y el nivel con el que empezó y terminó el año. */
+  recuento: { mesMasActivo: number; reseniasDelMes: number; nivelAlEmpezar: number; nivelAlTerminar: number } | null
+}

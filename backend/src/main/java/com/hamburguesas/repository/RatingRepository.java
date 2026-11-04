@@ -6,6 +6,7 @@ import com.hamburguesas.dto.NotaDeLocalDto;
 import com.hamburguesas.dto.NotaYComentarioDto;
 import com.hamburguesas.dto.NotaYCuantasDto;
 import com.hamburguesas.dto.RankingItemDto;
+import com.hamburguesas.dto.ReseniaDelMesDto;
 import com.hamburguesas.dto.ReseniaDePerfilDto;
 import com.hamburguesas.dto.ReseniasPorUsuarioDto;
 import com.hamburguesas.model.Rating;
@@ -295,4 +296,32 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
                                @Param("fecha") Instant fecha, @Param("id") Long id,
                                @Param("ocultos") Collection<Long> ocultos,
                                Pageable pagina);
+
+    /**
+     * Las reseñas de una persona en un período [desde, hasta) (#308). Filtra por usuario y
+     * por fecha, así que lee las pocas de esa persona y no la tabla entera.
+     */
+    @Query("""
+        select new com.hamburguesas.dto.ReseniaDelMesDto(
+            b.id, b.slug, b.name, b.area, r.score, r.createdAt, r.id, r.comment)
+        from Rating r join r.burgerJoint b
+        where r.user.id = :userId and r.createdAt >= :desde and r.createdAt < :hasta
+        """)
+    List<ReseniaDelMesDto> deLaPersonaEntre(@Param("userId") Long userId,
+                                            @Param("desde") Instant desde, @Param("hasta") Instant hasta);
+
+    /** Cuántas reseñas y cuántos locales distintos tuvo una persona en el período [desde, hasta) (#308). */
+    @Query("""
+        select count(r), count(distinct r.burgerJoint.id) from Rating r
+        where r.user.id = :userId and r.createdAt >= :desde and r.createdAt < :hasta
+        """)
+    List<Object[]> cuantasEntre(@Param("userId") Long userId,
+                                @Param("desde") Instant desde, @Param("hasta") Instant hasta);
+
+    /**
+     * Los comentarios de las reseñas de una persona hechas antes de {@code hasta}: de ahí sale
+     * la XP que tenía en esa fecha, para el nivel con el que empezó y terminó el año (#308).
+     */
+    @Query("select r.comment from Rating r where r.user.id = :userId and r.createdAt < :hasta")
+    List<String> comentariosAntesDe(@Param("userId") Long userId, @Param("hasta") Instant hasta);
 }
