@@ -13,6 +13,8 @@ import { MedallaDeLogro } from './MedallaDeLogro'
 import { BotonSeguir } from './BotonSeguir'
 import { IconBell } from './icons'
 import { PanelDeBarra } from './PanelDeBarra'
+import { Personaje } from './Personaje'
+import { anioDelMes, nombreDelMes } from '../utils/tuMes'
 
 /**
  * La campana del buzón de notificaciones, con su panel (#210).
@@ -149,7 +151,9 @@ function Grupo({ titulo, avisos, onCambioDeSeguimiento }: {
       {titulo && <h3 className="px-2 pb-1 pt-2 text-xs font-semibold text-base-content/70">{titulo}</h3>}
       <ul className="flex flex-col">
         {avisos.map((aviso) =>
-          aviso.tipo === 'LOGRO' ? (
+          aviso.tipo === 'RESUMEN' ? (
+            <AvisoDeResumen key={`resumen-${aviso.mes}`} aviso={aviso} />
+          ) : aviso.tipo === 'LOGRO' ? (
             <AvisoDeUnLogro key={`logro-${aviso.logro}-${aviso.cuando}`} aviso={aviso} />
           ) : (
           <li
@@ -213,6 +217,28 @@ function AvisoDeUnLogro({ aviso }: { aviso: Notificacion }) {
               Ganaste <span className="font-semibold">{nombreDe(codigo)}</span>: {texto}
             </>
           )}
+          <span className="block text-xs text-base-content/70">{fechaYHora(aviso.cuando)}</span>
+        </p>
+      </Link>
+    </li>
+  )
+}
+
+/**
+ * "Tu mes en Burgómetro ya está" (#405): el aviso del resumen, que sale el primer día del mes
+ * y queda en la campana para volver a abrirlo cuando quiera. Lleva a /tu-mes.
+ */
+function AvisoDeResumen({ aviso }: { aviso: Notificacion }) {
+  const mes = aviso.mes ?? ''
+  // El resumen de diciembre es el recuento de todo el año.
+  const anual = mes.endsWith('-12')
+  const periodo = anual ? String(anioDelMes(mes)) : nombreDelMes(mes)
+  return (
+    <li className={`rounded-field ${aviso.nueva ? 'bg-primary/8' : ''}`}>
+      <Link to="/tu-mes" className="flex min-h-14 items-center gap-3 px-2 py-2">
+        <Personaje pose="mapa" className="h-9 w-auto flex-none" />
+        <p className="min-w-0 flex-1 text-sm leading-snug">
+          <span className="font-semibold">Tu {periodo} en Burgómetro</span> ya está. Tocá para verlo.
           <span className="block text-xs text-base-content/70">{fechaYHora(aviso.cuando)}</span>
         </p>
       </Link>

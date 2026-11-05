@@ -97,7 +97,7 @@ export type TipoDeReaccion = 'HAMBRE' | 'MARAVILLOSO' | 'ENCANTA' | 'RISA' | 'SO
  * Los campos de cada tipo vienen vacíos en el otro.
  */
 export interface Notificacion {
-  tipo: 'SEGUIMIENTO' | 'REACCION' | 'LOGRO'
+  tipo: 'SEGUIMIENTO' | 'REACCION' | 'LOGRO' | 'RESUMEN'
   cuando: string
   /** Si llegó después de la última vez que se abrió el buzón. */
   nueva: boolean
@@ -116,6 +116,8 @@ export interface Notificacion {
   logro?: string | null
   /** Solo en el aviso de retroactivos: cuántos eran. */
   cantidad?: number | null
+  /** Solo en el aviso de "Tu mes en Burgómetro" (#405): el mes del resumen, "2026-10"; en el anual, "2026-12". */
+  mes?: string | null
 }
 
 export interface Buzon {
