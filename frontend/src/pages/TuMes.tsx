@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { AvatarDeUsuario } from '../components/AvatarDeUsuario'
@@ -221,6 +221,14 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
   const tarjetas = tarjetasDe(resumen)
   const [actual, setActual] = useState(0)
   const pista = useRef<HTMLDivElement>(null)
+  const escenaRef = useRef<HTMLDivElement>(null)
+  const gesto = useRef<{ id: number; x: number; y: number; t: number; modo: "?" | "v" | "h" } | null>(null)
+  // Después de arrastrar hacia abajo, el "click" que el navegador suelta al levantar el dedo no cuenta.
+  const sinClick = useRef(false)
+  // El cierre por deslizamiento tarda un instante en animarse: una sola vez, y no si ya se cerró por otro lado.
+  const cerrando = useRef(false)
+  const temporizadorDeCierre = useRef<number | undefined>(undefined)
+  useEffect(() => () => window.clearTimeout(temporizadorDeCierre.current), [])
   const [armando, setArmando] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
   const [quieta] = useState(sinMovimiento)
@@ -267,6 +275,88 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
     if (el) setActual(Math.round(el.scrollLeft / el.clientWidth))
   }
 
+  /**
+   * Deslizar hacia abajo para cerrar, como en las historias (#407). El gesto se decide por la
+   * dirección que domina en los primeros píxeles: hacia abajo es cerrar, y todo lo demás (de
+   * costado, hacia arriba) se lo deja al navegador, que desliza las tarjetas. La pista tiene
+   * `touch-action: pan-x`, así el navegador no se queda con el movimiento vertical.
+   *
+   * Mientras se arrastra, la escena baja con el dedo y se desvanece. Al soltar, cierra si pasó
+   * de cierta distancia o iba rápido; si no, vuelve a su lugar. Con `prefers-reduced-motion`
+   * no se anima el arrastre: se cierra, o no, al soltar. La cruz y Esc siguen siendo la vía
+   * accesible. La hoja «Ver todos» no pasa por acá: queda fuera de la pista.
+   */
+  function moverEscena(y: number) {
+    const el = escenaRef.current
+    if (!el) return
+    el.style.transform = y > 0 ? `translateY(${y}px)` : ''
+    el.style.opacity = y > 0 ? String(1 - Math.min(0.75, y / (window.innerHeight * 0.7))) : ''
+  }
+
+  function soltarEscena(cerrar: boolean) {
+    const el = escenaRef.current
+    if (!el) return
+    el.classList.remove('arrastrando')
+    if (quieta) {
+      moverEscena(0)
+      if (cerrar) alCerrar()
+      return
+    }
+    el.classList.add('suelta')
+    if (cerrar) {
+      el.style.transform = 'translateY(100%)'
+      el.style.opacity = '0'
+      if (cerrando.current) return
+      cerrando.current = true
+      temporizadorDeCierre.current = window.setTimeout(alCerrar, 220)
+    } else {
+      moverEscena(0)
+      window.setTimeout(() => el.classList.remove('suelta'), 260)
+    }
+  }
+
+  function alPresionar(e: PointerEvent<HTMLDivElement>) {
+    if (e.pointerType === "mouse" && e.button !== 0) return
+    // Un segundo dedo (o un gesto que ya cierra) no pisa el gesto en curso: lo dejaba a medio bajar.
+    if (gesto.current || cerrando.current) return
+    gesto.current = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), modo: '?' }
+  }
+
+  function alMover(e: PointerEvent<HTMLDivElement>) {
+    const g = gesto.current
+    if (!g || g.id !== e.pointerId) return
+    const dx = e.clientX - g.x
+    const dy = e.clientY - g.y
+    if (g.modo === '?') {
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return
+      g.modo = dy > 0 && Math.abs(dy) > Math.abs(dx) * 1.2 ? 'v' : 'h'
+      if (g.modo === 'v') {
+        e.currentTarget.setPointerCapture(e.pointerId)
+        escenaRef.current?.classList.add('arrastrando')
+      }
+    }
+    if (g.modo === 'v' && !quieta) moverEscena(Math.max(0, dy))
+  }
+
+  function alSoltar(e: PointerEvent<HTMLDivElement>) {
+    const g = gesto.current
+    if (!g || g.id !== e.pointerId) return
+    gesto.current = null
+    if (g.modo !== 'v') return
+    sinClick.current = true
+    window.setTimeout(() => { sinClick.current = false }, 0)
+    const dy = e.clientY - g.y
+    const velocidad = dy / Math.max(1, performance.now() - g.t)
+    const lejos = dy > Math.min(160, window.innerHeight * 0.2)
+    soltarEscena(lejos || (dy > 60 && velocidad > 0.5))
+  }
+
+  function alCancelar() {
+    const g = gesto.current
+    gesto.current = null
+    if (g?.modo === 'v') soltarEscena(false)
+  }
+
   function alTeclear(e: KeyboardEvent) {
     if (e.key === 'ArrowRight') irA(actual + 1)
     else if (e.key === 'ArrowLeft') irA(actual - 1)
@@ -290,7 +380,7 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
   const ultima = actual === tarjetas.length - 1
 
   return (
-    <div className={`tm ${quieta ? 'tm-quieta' : ''}`} style={escena}>
+    <div ref={escenaRef} className={`tm ${quieta ? "tm-quieta" : ""}`} style={escena}>
       {/* El fondo de marca: brasa y mostaza, con rayos que se van prendiendo de una tarjeta a la otra. */}
       <div className="tm-marca" aria-hidden="true">
         <div className="tm-rayos">
@@ -305,8 +395,8 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
             <b key={t} className={i <= actual ? 'hecho' : ''} />
           ))}
         </div>
-        <button type="button" className="tm-cerrar" onClick={alCerrar} aria-label="Cerrar y volver al perfil">
-          <IconArrowLeft size={20} className="text-[#faf3e3]" />
+        <button type="button" className="tm-cerrar" onClick={alCerrar} aria-label="Cerrar">
+          <svg viewBox="0 0 20 20" width="22" height="22" fill="none" stroke="#faf3e3" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16" /></svg>
         </button>
       </header>
 
@@ -319,6 +409,16 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
         onKeyDown={alTeclear}
         onScroll={alDeslizar}
         className="tm-pista"
+        onPointerDown={alPresionar}
+        onPointerMove={alMover}
+        onPointerUp={alSoltar}
+        onPointerCancel={alCancelar}
+        onClickCapture={(e) => {
+          if (sinClick.current) {
+            e.preventDefault()
+            e.stopPropagation()
+          }
+        }}
         inert={hoja !== null}
       >
         {tarjetas.map((tipo, i) => (
