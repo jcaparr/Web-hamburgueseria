@@ -1,6 +1,10 @@
 import type { Feature, FeatureCollection, Point } from 'geojson'
 import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+// Con un empaquetador, MapLibre 6 no encuentra solo su worker (el archivo que dibuja los
+// mosaicos): hay que decirle dónde está. Vite lo copia a /assets, del mismo origen, así que
+// el CSP necesita `worker-src 'self'` y ya no hace falta `blob:`.
+import workerDeMaplibre from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { Protocol } from 'pmtiles'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -20,6 +24,8 @@ import { isSessionExpired } from '../utils/errors'
 import { estiloDelMapa } from '../utils/estiloDelMapa'
 import { nota } from '../utils/numeros'
 import { claseDeNota } from '../utils/rangoDeNota'
+
+maplibregl.setWorkerUrl(workerDeMaplibre)
 
 /** El Obelisco: de donde arranca el mapa si no sabemos dónde está quien mira. */
 const CENTRO_INICIAL: [number, number] = [-58.4, -34.6]
