@@ -103,7 +103,7 @@ services:
   # cookies y sin guardar IPs: ver frontend/src/analitica.ts.
   umami:
     # Versión fija: una nueva puede cambiar la base, y se sube a propósito.
-    image: docker.umami.is/umami-software/umami:3.4.0
+    image: docker.umami.is/umami-software/umami:3.4.1
     restart: unless-stopped
     logging: *logs
     depends_on:

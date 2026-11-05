@@ -1,6 +1,10 @@
 import type { Feature, FeatureCollection, Point } from 'geojson'
-import maplibregl from 'maplibre-gl'
+import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+// Con un empaquetador, MapLibre 6 no encuentra solo su worker (el archivo que dibuja los
+// mosaicos): hay que decirle dónde está. Vite lo copia a /assets, del mismo origen, así que
+// el CSP necesita `worker-src 'self'` y ya no hace falta `blob:`.
+import workerDeMaplibre from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { Protocol } from 'pmtiles'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -20,6 +24,8 @@ import { isSessionExpired } from '../utils/errors'
 import { estiloDelMapa } from '../utils/estiloDelMapa'
 import { nota } from '../utils/numeros'
 import { claseDeNota } from '../utils/rangoDeNota'
+
+maplibregl.setWorkerUrl(workerDeMaplibre)
 
 /** El Obelisco: de donde arranca el mapa si no sabemos dónde está quien mira. */
 const CENTRO_INICIAL: [number, number] = [-58.4, -34.6]
@@ -212,12 +218,13 @@ export function Mapa() {
     m.on('load', () => setListo(true))
     // Si falta el archivo del mapa, los puntos siguen sirviendo: se avisa y listo.
     m.on('error', (e) => {
-      const mensaje = String((e as { error?: Error }).error?.message ?? '')
+      const mensaje = String(e.error?.message ?? '')
       if (/pmtiles|tiles|Failed to fetch|404/i.test(mensaje)) setSinMapaBase(true)
     })
     // El estilo pide íconos (escudos de rutas, aeropuertos) que no tenemos: se callan con uno vacío.
-    m.on('styleimagemissing', (e) => {
-      if (!m.hasImage(e.id)) m.addImage(e.id, { width: 1, height: 1, data: new Uint8Array(4) })
+    // Desde MapLibre 6 el evento solo avisa; las imágenes que faltan se resuelven con esta función.
+    m.setMissingStyleImageResolver((id) => {
+      if (!m.hasImage(id)) m.addImage(id, { width: 1, height: 1, data: new Uint8Array(4) })
     })
     m.on('click', () => setSeleccionadoId(null))
     // Si la persona ya movió o acercó el mapa con la mano, la ubicación que llegue después no se lo corre.

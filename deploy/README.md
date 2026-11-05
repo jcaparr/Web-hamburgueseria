@@ -329,8 +329,10 @@ atribución de OpenStreetMap se ve siempre en una esquina del mapa y no se saca.
 - **Tipografías de las calles:** `frontend/public/mapa-fuentes/` (Noto Sans, licencia OFL,
   de [basemaps-assets](https://github.com/protomaps/basemaps-assets)). Están en el repo para
   que la política de contenido no tenga que dejar salir a ningún dominio de afuera.
-- **Política de contenido:** el mapa necesita `worker-src 'self' blob:` (MapLibre lee los
-  mosaicos en un worker). Ya está en el `Caddyfile`; el resto de la política no cambia.
+- **Política de contenido:** el mapa necesita `worker-src 'self'` (MapLibre lee los mosaicos
+  en un worker; desde la 6 el worker es un archivo de `/assets`, del mismo origen). El
+  `Caddyfile` sigue con `worker-src 'self' blob:`: el `blob:` ya no hace falta, y se deja por
+  si hay que volver atrás; se puede sacar más adelante. El resto de la política no cambia.
 - **Fotos de los puntos:** `/api/place-photos/mini/<archivo>` genera una miniatura de 128 px
   la primera vez que se pide y la deja en `place-photos/mini/` (unos 5 KB por local). Entra
   en el backup de fotos y se regenera sola si falta.
