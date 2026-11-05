@@ -1,5 +1,6 @@
 package com.hamburguesas.service;
 
+import com.hamburguesas.dto.AvisoDeTuMesDto;
 import com.hamburguesas.dto.ReseniaDelMesDto;
 import com.hamburguesas.dto.TuMesDto;
 import com.hamburguesas.exception.ResourceNotFoundException;
@@ -109,6 +110,41 @@ public class TuMes {
         Periodo anterior() {
             LocalDate d = anual ? desde.minusYears(1) : desde.minusMonths(1);
             return new Periodo(mes, anual, d, desde);
+        }
+    }
+
+    /**
+     * Si hay un resumen para avisar hoy (#405): el del último mes terminado, que sale a las
+     * 00:00 de Buenos Aires del primer día del mes siguiente (el de noviembre, el 1 de
+     * diciembre; el anual, el 1 de enero). Solo cuenta si hubo al menos una reseña en el
+     * período. Se arma al preguntar, sin tabla ni tarea: es correcto cualquier día y hora, y
+     * pedirlo de nuevo da lo mismo.
+     */
+    @Transactional(readOnly = true)
+    public AvisoDeTuMesDto aviso(Long userId) {
+        LocalDate hoy = LocalDate.now(reloj.withZone(ZONA));
+        YearMonth ultimo = mesQueSeResume(hoy);
+        Instant desde = hoy.withDayOfMonth(1).atStartOfDay(ZONA).toInstant();
+        Periodo p = Periodo.de(ultimo);
+        Object[] fila = ratingRepository.cuantasEntre(userId, p.instanteDesde(), p.instanteHasta()).get(0);
+        if (((Number) fila[0]).intValue() == 0) {
+            return new AvisoDeTuMesDto(false, ultimo.toString(), p.anual(), false, desde);
+        }
+        User usuario = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        boolean visto = usuario.getResumenVisto() != null && usuario.getResumenVisto().compareTo(ultimo.toString()) >= 0;
+        return new AvisoDeTuMesDto(true, ultimo.toString(), p.anual(), visto, desde);
+    }
+
+    /** Anota que la persona ya vio el resumen de hoy, para no mostrarle el pop up de nuevo. Nunca retrocede. */
+    @Transactional
+    public void marcarVisto(Long userId) {
+        String ultimo = mesQueSeResume(LocalDate.now(reloj.withZone(ZONA))).toString();
+        User usuario = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        if (usuario.getResumenVisto() == null || usuario.getResumenVisto().compareTo(ultimo) < 0) {
+            usuario.setResumenVisto(ultimo);
+            userRepository.save(usuario);
         }
     }
 

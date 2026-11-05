@@ -53,6 +53,12 @@ export function TuMes() {
     }
   }, [mesPedido, navigate, intento])
 
+  // Entrar al resumen (desde la campana, el pop up o la dirección) es verlo: el pop up no vuelve (#405).
+  const esElDeHoy = resumen !== null && !mesPedido
+  useEffect(() => {
+    if (esElDeHoy) apiClient.post('/profile/tu-mes/visto').catch(() => {})
+  }, [esElDeHoy])
+
   useTitulo(resumen ? `Tu ${nombreDelMes(resumen.mes)}` : 'Tu mes')
 
   const cerrar = useCallback(() => navigate('/profile', { replace: true }), [navigate])
