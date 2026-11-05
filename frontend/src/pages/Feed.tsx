@@ -9,6 +9,7 @@ import { estadoDeLaBusqueda, useBuscarGente } from '../hooks/useBuscarGente'
 import { usePedido } from '../hooks/usePedido'
 import { useTitulo } from '../hooks/useTitulo'
 import type { ItemDeFeed, PaginaDeFeed } from '../types'
+import { cerrarTecladoConEnter } from '../utils/teclado'
 
 type Fuente = 'TODOS' | 'SIGUIENDO'
 
@@ -108,6 +109,7 @@ export function Feed() {
           onChange={(e) => escribir(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Escape') escribir('')
+            else cerrarTecladoConEnter(e)
           }}
           placeholder="Buscá gente para seguir…"
           aria-label="Buscar gente por nombre de usuario"

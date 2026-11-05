@@ -21,6 +21,7 @@ import { useTitulo } from '../hooks/useTitulo'
 import { useUbicacion } from '../hooks/useUbicacion'
 import type { BurgerJoint, Cadena, PageResponse } from '../types'
 import { isSessionExpired } from '../utils/errors'
+import { cerrarTecladoConEnter } from '../utils/teclado'
 
 // Múltiplo de 1 y 3, las columnas en celu y en la compu: con 20, la última fila quedaba
 // con un hueco (#175). Se bajó de 18 a 9 para recorrer menos antes de paginar (#261); en
@@ -381,6 +382,7 @@ export function Explore() {
               aria-label="Buscar hamburguesería por nombre"
               autoComplete="off"
               enterKeyHint="search"
+              onKeyDown={cerrarTecladoConEnter}
               className="w-full bg-transparent text-base outline-none placeholder:text-base-content/70"
             />
           </label>
