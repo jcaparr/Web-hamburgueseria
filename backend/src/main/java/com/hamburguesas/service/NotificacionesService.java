@@ -73,15 +73,18 @@ public class NotificacionesService {
         List<Reaccion> reacciones = reaccionRepository.aLasReseniasDe(yo, ocultos, corte, primeras);
         Set<Long> sigo = aCualesSigue(yo, seguimientos);
 
-        List<NotificacionDto> avisos = Stream.of(
+        List<NotificacionDto> avisos = new java.util.ArrayList<>(Stream.of(
                 seguimientos.stream().map(f -> deSeguimiento(f, vistas, sigo)),
                 reacciones.stream().map(r -> deReaccion(r, vistas)),
-                deLogros(yo, vistas, corte).stream(),
-                deResumen(yo, vistas).stream())
+                deLogros(yo, vistas, corte).stream())
             .flatMap(s -> s)
             .sorted(Comparator.comparing(NotificacionDto::cuando).reversed())
             .limit(CUANTAS)
-            .toList();
+            .toList());
+        // El aviso del resumen va aparte del límite: es del primer día del mes y, con muchos
+        // avisos más nuevos, lo cortaría pero la campana lo seguiría contando.
+        avisos.addAll(deResumen(yo, vistas));
+        avisos.sort(Comparator.comparing(NotificacionDto::cuando).reversed());
 
         return new BuzonDto(avisos, avisos.stream().filter(NotificacionDto::nueva).count());
     }

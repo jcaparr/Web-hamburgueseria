@@ -29,7 +29,8 @@ export function PopupDeTuMes() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const [aviso, setAviso] = useState<AvisoDeTuMes | null>(null)
+  // El aviso lleva de quién es: al cambiar de cuenta no se hereda el de la anterior.
+  const [pendiente, setPendiente] = useState<{ para: number; aviso: AvisoDeTuMes } | null>(null)
   const dialogo = useRef<HTMLDialogElement>(null)
   const botonDeVerlo = useRef<HTMLButtonElement>(null)
   const idDelTitulo = useId()
@@ -40,20 +41,25 @@ export function PopupDeTuMes() {
     rutaActual.current = pathname
   }, [pathname])
   const userId = user?.userId ?? null
+  const aviso = pendiente && pendiente.para === userId ? pendiente.aviso : null
 
   useEffect(() => {
     if (userId === null) {
+      // Se perdió la sesión: si el pop up estaba abierto, no queda una ventana vacía tapando todo.
+      dialogo.current?.close()
       preguntado.current = null
       return
     }
     if (preguntado.current === userId) return
-    preguntado.current = userId
     let vigente = true
     let espera: number | undefined
     apiClient
       .get<AvisoDeTuMes>('/profile/tu-mes/aviso')
       .then(({ data }) => {
-        if (!vigente || !data.hayResumen || data.visto) return
+        if (!vigente) return
+        // Se anota acá y no antes: con StrictMode el efecto corre dos veces y la primera respuesta se descarta.
+        preguntado.current = userId
+        if (!data.hayResumen || data.visto) return
         const desde = Date.now()
         const intentar = () => {
           if (!vigente) return
@@ -63,7 +69,7 @@ export function PopupDeTuMes() {
             espera = window.setTimeout(intentar, 400)
             return
           }
-          setAviso(data)
+          setPendiente({ para: userId, aviso: data })
         }
         intentar()
       })
@@ -89,7 +95,7 @@ export function PopupDeTuMes() {
 
   function cerrar(ir: boolean) {
     dialogo.current?.close()
-    setAviso(null)
+    setPendiente(null)
     if (ir) navigate('/tu-mes')
   }
 

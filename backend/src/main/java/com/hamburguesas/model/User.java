@@ -83,7 +83,6 @@ public class User {
     @Column(name = "notificaciones_vistas_el")
     private Instant notificacionesVistasEl;
 
-    /** Cuándo cambió su nombre de usuario por última vez (#380). Nulo si nunca lo cambió. */
     /**
      * El último resumen de "Tu mes en Burgómetro" cuyo pop up ya vio, como "2026-10" (#405).
      * Se compara como texto: los meses con cero adelante se ordenan igual que las fechas.
@@ -91,6 +90,7 @@ public class User {
     @Column(name = "resumen_visto", length = 7)
     private String resumenVisto;
 
+    /** Cuándo cambió su nombre de usuario por última vez (#380). Nulo si nunca lo cambió. */
     @Column(name = "username_changed_at")
     private Instant usernameChangedAt;
 
