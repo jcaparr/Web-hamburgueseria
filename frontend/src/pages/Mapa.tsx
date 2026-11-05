@@ -1,5 +1,5 @@
 import type { Feature, FeatureCollection, Point } from 'geojson'
-import maplibregl from 'maplibre-gl'
+import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { Protocol } from 'pmtiles'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -212,12 +212,13 @@ export function Mapa() {
     m.on('load', () => setListo(true))
     // Si falta el archivo del mapa, los puntos siguen sirviendo: se avisa y listo.
     m.on('error', (e) => {
-      const mensaje = String((e as { error?: Error }).error?.message ?? '')
+      const mensaje = String(e.error?.message ?? '')
       if (/pmtiles|tiles|Failed to fetch|404/i.test(mensaje)) setSinMapaBase(true)
     })
     // El estilo pide íconos (escudos de rutas, aeropuertos) que no tenemos: se callan con uno vacío.
-    m.on('styleimagemissing', (e) => {
-      if (!m.hasImage(e.id)) m.addImage(e.id, { width: 1, height: 1, data: new Uint8Array(4) })
+    // Desde MapLibre 6 el evento solo avisa; las imágenes que faltan se resuelven con esta función.
+    m.setMissingStyleImageResolver((id) => {
+      if (!m.hasImage(id)) m.addImage(id, { width: 1, height: 1, data: new Uint8Array(4) })
     })
     m.on('click', () => setSeleccionadoId(null))
     // Si la persona ya movió o acercó el mapa con la mano, la ubicación que llegue después no se lo corre.
