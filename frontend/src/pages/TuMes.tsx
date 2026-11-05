@@ -219,6 +219,10 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
   const gesto = useRef<{ id: number; x: number; y: number; t: number; modo: "?" | "v" | "h" } | null>(null)
   // Después de arrastrar hacia abajo, el "click" que el navegador suelta al levantar el dedo no cuenta.
   const sinClick = useRef(false)
+  // El cierre por deslizamiento tarda un instante en animarse: una sola vez, y no si ya se cerró por otro lado.
+  const cerrando = useRef(false)
+  const temporizadorDeCierre = useRef<number | undefined>(undefined)
+  useEffect(() => () => window.clearTimeout(temporizadorDeCierre.current), [])
   const [armando, setArmando] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
   const [quieta] = useState(sinMovimiento)
@@ -296,7 +300,9 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
     if (cerrar) {
       el.style.transform = 'translateY(100%)'
       el.style.opacity = '0'
-      window.setTimeout(alCerrar, 220)
+      if (cerrando.current) return
+      cerrando.current = true
+      temporizadorDeCierre.current = window.setTimeout(alCerrar, 220)
     } else {
       moverEscena(0)
       window.setTimeout(() => el.classList.remove('suelta'), 260)
@@ -304,7 +310,9 @@ function Tarjetas({ resumen, alCerrar }: { resumen: TuMesDatos; alCerrar: () => 
   }
 
   function alPresionar(e: PointerEvent<HTMLDivElement>) {
-    if (e.pointerType === 'mouse' && e.button !== 0) return
+    if (e.pointerType === "mouse" && e.button !== 0) return
+    // Un segundo dedo (o un gesto que ya cierra) no pisa el gesto en curso: lo dejaba a medio bajar.
+    if (gesto.current || cerrando.current) return
     gesto.current = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), modo: '?' }
   }
 

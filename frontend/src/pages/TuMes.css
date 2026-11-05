@@ -510,5 +510,5 @@
 
 /* Deslizar hacia abajo para cerrar (#407): el navegador solo se queda con el movimiento de costado. */
 .tm-pista { touch-action: pan-x; }
-.tm.arrastrando { user-select: none; -webkit-user-select: none; cursor: grabbing; }
+.tm.arrastrando { user-select: none; -webkit-user-select: none; cursor: grabbing; will-change: transform, opacity; }
 .tm.suelta { transition: transform 0.22s var(--suave), opacity 0.22s var(--suave); }
