@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from 'react'
 import { apiClient } from '../api/client'
 import type { BurgerJoint, PageResponse } from '../types'
 import { BotonSugerirUnLocal } from './SugerirUnLocal'
+import { cerrarTecladoConEnter } from '../utils/teclado'
 
 /** Cuánto se espera después de la última letra antes de buscar. */
 const ESPERA_EN_MS = 300
@@ -83,6 +84,7 @@ export function BuscadorDeLocal({ onElegir }: { onElegir: (local: BurgerJoint) =
         placeholder="Nombre del local (y barrio, si querés)"
         autoComplete="off"
         enterKeyHint="search"
+        onKeyDown={cerrarTecladoConEnter}
         className="input campo h-12 w-full"
       />
 

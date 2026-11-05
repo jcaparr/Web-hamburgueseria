@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { IconChevronRight, IconSearch } from './icons'
+import { cerrarTecladoConEnter } from '../utils/teclado'
 
 /**
  * Elegir uno o varios barrios para filtrar Explorar.
@@ -123,6 +124,8 @@ export function SelectorDeBarrios({
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
+              enterKeyHint="search"
+              onKeyDown={cerrarTecladoConEnter}
               className="w-full bg-transparent text-base outline-none placeholder:text-base-content/70 md:text-sm"
             />
           </label>
