@@ -12,6 +12,10 @@ RUN mvn -B -q clean package -DskipTests
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 
+# La imagen base sale con paquetes del sistema que ya tienen arreglo publicado (apt, #411).
+# Se actualizan al construir; con una imagen base más nueva esto no hace nada.
+RUN apt-get update && apt-get -y --no-install-recommends upgrade && rm -rf /var/lib/apt/lists/*
+
 # Running as root inside the container would mean a container escape lands as root
 # on the VPS too.
 RUN groupadd --system app && useradd --system --gid app --no-create-home --shell /usr/sbin/nologin app
