@@ -54,6 +54,7 @@ public class NotificacionesService {
     private final UserRepository userRepository;
     private final Bloqueos bloqueos;
     private final LogroDeUsuarioRepository logroRepository;
+    private final TuMes tuMes;
 
     /**
      * Los avisos más recientes, mezclados y por fecha.
@@ -75,7 +76,8 @@ public class NotificacionesService {
         List<NotificacionDto> avisos = Stream.of(
                 seguimientos.stream().map(f -> deSeguimiento(f, vistas, sigo)),
                 reacciones.stream().map(r -> deReaccion(r, vistas)),
-                deLogros(yo, vistas, corte).stream())
+                deLogros(yo, vistas, corte).stream(),
+                deResumen(yo, vistas).stream())
             .flatMap(s -> s)
             .sorted(Comparator.comparing(NotificacionDto::cuando).reversed())
             .limit(CUANTAS)
@@ -98,7 +100,8 @@ public class NotificacionesService {
         return new NotificacionesNuevasDto(
             followRepository.seguimientosNuevosA(yo, ocultos, desde)
                 + reaccionRepository.nuevasALasReseniasDe(yo, ocultos, desde)
-                + logrosNuevos,
+                + logrosNuevos
+                + (resumenNuevo(yo, desde) ? 1 : 0),
             logrosSinVer);
     }
 
@@ -121,14 +124,36 @@ public class NotificacionesService {
             }
             avisos.add(new NotificacionDto(NotificacionDto.Tipo.LOGRO, logro.getGanadoEl(),
                 logro.getGanadoEl().isAfter(vistas), null, null, null, 0, false, null, null, null, null,
-                logro.getId().logro(), null));
+                logro.getId().logro(), null, null));
         }
         if (retroactivos > 0) {
             avisos.add(new NotificacionDto(NotificacionDto.Tipo.LOGRO, ultimoRetroactivo,
                 false, null, null, null, 0, false, null, null, null, null,
-                "RETROACTIVOS", retroactivos));
+                "RETROACTIVOS", retroactivos, null));
         }
         return avisos;
+    }
+
+    /**
+     * "Tu mes en Burgómetro ya está" (#405): el aviso del resumen, que sale el primer día del
+     * mes y queda en el buzón todo el mes para poder volver a verlo, aunque venza el resto de
+     * los avisos. No tiene fila propia: se arma al preguntar, así que no puede duplicarse y es
+     * correcto cualquier día y hora. Solo si hubo al menos una reseña en el período.
+     */
+    private List<NotificacionDto> deResumen(Long yo, Instant vistas) {
+        var aviso = tuMes.aviso(yo);
+        if (!aviso.hayResumen()) {
+            return List.of();
+        }
+        return List.of(new NotificacionDto(NotificacionDto.Tipo.RESUMEN, aviso.desde(),
+            aviso.desde().isAfter(vistas), null, null, null, 0, false, null, null, null, null,
+            null, null, aviso.mes()));
+    }
+
+    /** Si el aviso del resumen llegó después de {@code desde}: cuenta en la campana. */
+    private boolean resumenNuevo(Long yo, Instant desde) {
+        var aviso = tuMes.aviso(yo);
+        return aviso.hayResumen() && aviso.desde().isAfter(desde);
     }
 
     /** Da por visto todo lo que llegó hasta ahora: la campana vuelve a cero. */
@@ -164,7 +189,7 @@ public class NotificacionesService {
         User quien = seguimiento.getFollower();
         return new NotificacionDto(NotificacionDto.Tipo.SEGUIMIENTO, seguimiento.getCreatedAt(),
             seguimiento.getCreatedAt().isAfter(vistas), quien.getId(), quien.getUsername(),
-            quien.getHamburguesa(), quien.getXp(), sigo.contains(quien.getId()), null, null, null, null, null, null);
+            quien.getHamburguesa(), quien.getXp(), sigo.contains(quien.getId()), null, null, null, null, null, null, null);
     }
 
     private static NotificacionDto deReaccion(Reaccion reaccion, Instant vistas) {
@@ -172,6 +197,6 @@ public class NotificacionesService {
         var local = reaccion.getRating().getBurgerJoint();
         return new NotificacionDto(NotificacionDto.Tipo.REACCION, reaccion.getCreatedAt(),
             reaccion.getCreatedAt().isAfter(vistas), quien.getId(), quien.getUsername(),
-            quien.getHamburguesa(), quien.getXp(), false, reaccion.getTipo(), local.getId(), local.getSlug(), local.getName(), null, null);
+            quien.getHamburguesa(), quien.getXp(), false, reaccion.getTipo(), local.getId(), local.getSlug(), local.getName(), null, null, null);
     }
 }

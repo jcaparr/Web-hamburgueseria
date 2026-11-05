@@ -92,4 +92,16 @@ public class ProfileController {
         }
         return tuMes.resumen(CurrentUser.requireId(), pedido);
     }
+
+    /** Si hay un resumen de "Tu mes" para avisar hoy, y si ya vio el pop up (#405). */
+    @GetMapping("/tu-mes/aviso")
+    public com.hamburguesas.dto.AvisoDeTuMesDto avisoDeTuMes() {
+        return tuMes.aviso(CurrentUser.requireId());
+    }
+
+    /** Anota que vio el pop up del resumen de hoy (#405). */
+    @org.springframework.web.bind.annotation.PostMapping("/tu-mes/visto")
+    public void tuMesVisto() {
+        tuMes.marcarVisto(CurrentUser.requireId());
+    }
 }

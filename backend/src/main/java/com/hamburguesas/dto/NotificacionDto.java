@@ -34,8 +34,10 @@ public record NotificacionDto(
     /** Solo en un logro (#320): su código, o RETROACTIVOS en el aviso único de la carga inicial. */
     String logro,
     /** Solo en el aviso de retroactivos: cuántos logros eran. */
-    Long cantidad
+    Long cantidad,
+    /** Solo en el aviso de "Tu mes en Burgómetro" (#405): el mes del resumen, "2026-10". */
+    String mes
 ) {
 
-    public enum Tipo { SEGUIMIENTO, REACCION, LOGRO }
+    public enum Tipo { SEGUIMIENTO, REACCION, LOGRO, RESUMEN }
 }

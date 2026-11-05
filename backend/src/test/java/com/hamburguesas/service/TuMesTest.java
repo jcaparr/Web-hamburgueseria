@@ -415,4 +415,71 @@ class TuMesTest {
         assertThat(servicio().resumen(ana.getId(), YearMonth.of(2026, 11)).reacciones())
             .isEqualTo(new TuMesDto.Reacciones(2, "HAMBRE"));
     }
+
+    @Test
+    void elAvisoSaleALasCeroHorasDeBuenosAiresDelPrimerDiaDelMes() {
+        User ana = cuenta("tumes_aviso_borde");
+        resenia(ana, "Palermo", 4, "2026-10-15T20:00:00");
+
+        // 31/10 23:59 en Buenos Aires (02:59 UTC): todavía se resume septiembre, y no hay reseñas en septiembre.
+        TuMes antes = servicioAl("2026-11-01T02:59:00Z");
+        assertThat(antes.aviso(ana.getId()).hayResumen()).isFalse();
+        // 1/11 00:00 en Buenos Aires (03:00 UTC): sale el de octubre.
+        TuMes despues = servicioAl("2026-11-01T03:00:00Z");
+        var aviso = despues.aviso(ana.getId());
+        assertThat(aviso.hayResumen()).isTrue();
+        assertThat(aviso.mes()).isEqualTo("2026-10");
+        assertThat(aviso.anual()).isFalse();
+    }
+
+    @Test
+    void elRecuentoAnualSaleElPrimeroDeEneroALasCeroHorasDeBuenosAires() {
+        User ana = cuenta("tumes_aviso_anual");
+        resenia(ana, "Palermo", 4, "2026-03-10T20:00:00");
+
+        // 31/12 23:30 en Buenos Aires (02:30 UTC del 1/1): se resume noviembre, en el que no hay reseñas.
+        assertThat(servicioAl("2027-01-01T02:30:00Z").aviso(ana.getId()).hayResumen()).isFalse();
+        // 1/1 00:30 en Buenos Aires: sale el anual, con todo 2026.
+        var aviso = servicioAl("2027-01-01T03:30:00Z").aviso(ana.getId());
+        assertThat(aviso.hayResumen()).isTrue();
+        assertThat(aviso.mes()).isEqualTo("2026-12");
+        assertThat(aviso.anual()).isTrue();
+    }
+
+    @Test
+    void elAvisoDeUnMesEsElMismoTodosLosDiasDelMesSiguiente() {
+        User ana = cuenta("tumes_aviso_dias");
+        resenia(ana, "Palermo", 4, "2026-10-15T20:00:00");
+
+        // Todos los días de noviembre, a cualquier hora, el aviso es el de octubre, con la misma fecha de salida.
+        for (int dia = 1; dia <= 30; dia++) {
+            for (String hora : new String[] {"03:00:00", "15:00:00", "23:59:00"}) {
+                var aviso = servicioAl(String.format("2026-11-%02dT%sZ", dia, hora)).aviso(ana.getId());
+                String quien = "día " + dia + " " + hora;
+                // 23:59 UTC es 20:59 en Buenos Aires: sigue siendo el mismo día.
+                assertThat(aviso.mes()).as(quien).isEqualTo("2026-10");
+                assertThat(aviso.hayResumen()).as(quien).isTrue();
+            }
+        }
+    }
+
+    @Test
+    void elVistoDeUnMesNoAlcanzaAlSiguiente() {
+        User ana = cuenta("tumes_aviso_visto");
+        resenia(ana, "Palermo", 4, "2026-10-15T20:00:00");
+        resenia(ana, "Palermo", 4, "2026-11-15T20:00:00");
+
+        servicioAl("2026-11-05T15:00:00Z").marcarVisto(ana.getId());
+
+        assertThat(servicioAl("2026-11-20T15:00:00Z").aviso(ana.getId()).visto()).isTrue();
+        // El 1 de diciembre sale el de noviembre: ese no se vio.
+        var diciembre = servicioAl("2026-12-01T15:00:00Z").aviso(ana.getId());
+        assertThat(diciembre.mes()).isEqualTo("2026-11");
+        assertThat(diciembre.visto()).isFalse();
+        // Y marcar de nuevo un mes viejo no hace retroceder lo visto.
+        servicioAl("2026-11-05T15:00:00Z").marcarVisto(ana.getId());
+        servicioAl("2026-12-02T15:00:00Z").marcarVisto(ana.getId());
+        servicioAl("2026-11-06T15:00:00Z").marcarVisto(ana.getId());
+        assertThat(servicioAl("2026-12-03T15:00:00Z").aviso(ana.getId()).visto()).isTrue();
+    }
 }
