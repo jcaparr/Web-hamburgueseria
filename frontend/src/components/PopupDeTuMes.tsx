@@ -120,7 +120,7 @@ export function PopupDeTuMes() {
       className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
     >
       {cartel && userId !== null && (
-        <p className="pointer-events-auto flex min-h-11 max-w-sm items-center gap-2 rounded-box bg-neutral px-4 py-2 text-sm text-neutral-content shadow-lg">
+        <p className="pointer-events-auto flex min-h-11 max-w-sm items-center gap-2 rounded-box border border-base-content/20 bg-base-100 px-4 py-2 text-sm text-base-content shadow-lg">
           <IconBell size={18} />
           Queda en notificaciones para volver a verlo.
         </p>
