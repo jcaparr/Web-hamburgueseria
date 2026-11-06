@@ -1,6 +1,6 @@
 import { useEffect, useRef, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { direccionDeLaVista, guardarVista, type Vista } from '../utils/vistaDeExplorar'
+import { direccionDeLaVista, type Vista } from '../utils/vistaDeExplorar'
 import { IconFeed, IconPin } from './icons'
 
 const OPCIONES: { vista: Vista; nombre: string; Icono: typeof IconFeed }[] = [
@@ -34,7 +34,6 @@ export function SelectorDeVista({ vista, className = '' }: { vista: Vista; class
 
   function elegir(nueva: Vista, conTeclado = false) {
     if (nueva === vista) return
-    guardarVista(nueva)
     navigate(direccionDeLaVista(nueva), { state: conTeclado ? { enfocarElSelector: true } : undefined })
   }
 

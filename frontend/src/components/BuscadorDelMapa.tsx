@@ -1,7 +1,6 @@
 import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { Link } from 'react-router-dom'
 import type { LocalDelMapa } from '../types'
-import { guardarVista } from '../utils/vistaDeExplorar'
 import { IconSearch } from './icons'
 
 const MAXIMO_DE_SUGERENCIAS = 6
@@ -168,8 +167,6 @@ export function BuscadorDelMapa({
               <Link
                 to={`/?q=${encodeURIComponent(texto.trim())}`}
                 onMouseDown={(e) => e.preventDefault()}
-                // La búsqueda se hace en la lista: que Explorar no vuelva al mapa por la última vista elegida.
-                onClick={() => guardarVista('lista')}
                 className="mt-1 inline-flex min-h-11 items-center font-semibold text-primary underline underline-offset-4"
               >
                 Buscarlo en la lista
