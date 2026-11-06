@@ -105,6 +105,24 @@
   font-weight: 700;
 }
 
+/*
+ * El cartel de "Tu mes" (#418) va invertido al tema: claro con letra negra de noche, oscuro con
+ * letra crema de día. La letra negra solo de noche: sobre el fondo oscuro del tema claro no se leería.
+ * Sin data-theme, el tema lo decide el sistema, así que se mira prefers-color-scheme.
+ */
+.cartel-de-tu-mes {
+  background-color: var(--color-base-content);
+  color: var(--color-base-100);
+}
+:root[data-theme="burger-noche"] .cartel-de-tu-mes {
+  color: #000;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .cartel-de-tu-mes {
+    color: #000;
+  }
+}
+
 @plugin "daisyui" {
   themes: burger --default, burger-noche --prefersdark;
 }

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { apiClient } from '../api/client'
 import { useAuth } from '../context/useAuth'
 import { anioDelMes, nombreDelMes } from '../utils/tuMes'
+import { IconBell } from './icons'
 import { Personaje } from './Personaje'
 
 interface AvisoDeTuMes {
@@ -14,6 +15,9 @@ interface AvisoDeTuMes {
 
 /** Cuánto espera, en total, a que se cierre otra ventana antes de dejar el aviso para la campana. */
 const ESPERA_MAXIMA_MS = 15000
+
+/** Cuánto se queda el cartel que apunta a la campana después de tocar "Después" (#418). */
+const CARTEL_MS = 6000
 
 /**
  * El pop up de "Tu mes en Burgómetro" (#405): al abrir la app con sesión, la primera vez que
@@ -33,6 +37,8 @@ export function PopupDeTuMes() {
   const [pendiente, setPendiente] = useState<{ para: number; aviso: AvisoDeTuMes } | null>(null)
   const dialogo = useRef<HTMLDialogElement>(null)
   const botonDeVerlo = useRef<HTMLButtonElement>(null)
+  // Cartel de "queda en notificaciones": solo al elegir "Después", no al ir a verlo.
+  const [cartel, setCartel] = useState(false)
   const idDelTitulo = useId()
   // A quién ya se le preguntó: una vez por sesión de la persona, no en cada pantalla.
   const preguntado = useRef<number | null>(null)
@@ -93,17 +99,48 @@ export function PopupDeTuMes() {
     }
   }, [aviso])
 
+  // El cartel se va solo. Se limpia el temporizador si se desmonta o si se pierde la sesión.
+  useEffect(() => {
+    if (!cartel) return
+    const t = window.setTimeout(() => setCartel(false), CARTEL_MS)
+    return () => window.clearTimeout(t)
+  }, [cartel])
+
   function cerrar(ir: boolean) {
     dialogo.current?.close()
     setPendiente(null)
     if (ir) navigate('/tu-mes')
+    else setCartel(true)
   }
 
+  // El contenedor role="status" está siempre montado y solo cambia lo de adentro: así el lector de pantalla lo anuncia.
+  const cartelDeLaCampana = (
+    <div
+      role="status"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+    >
+      {cartel && userId !== null && (
+        <p className="pointer-events-auto flex min-h-11 max-w-sm items-center gap-2 cartel-de-tu-mes rounded-box px-4 py-2 text-sm shadow-lg">
+          <IconBell size={18} />
+          Queda en notificaciones para volver a verlo.
+        </p>
+      )}
+    </div>
+  )
+
   // Sin sesión no se muestra nada (si se pierde con el aviso abierto, tampoco queda tapando).
-  if (!aviso || userId === null) return <dialog ref={dialogo} />
+  if (!aviso || userId === null) {
+    return (
+      <>
+        <dialog ref={dialogo} />
+        {cartelDeLaCampana}
+      </>
+    )
+  }
 
   const periodo = aviso.anual ? String(anioDelMes(aviso.mes)) : nombreDelMes(aviso.mes)
   return (
+    <>
     <dialog
       ref={dialogo}
       aria-labelledby={idDelTitulo}
@@ -143,5 +180,7 @@ export function PopupDeTuMes() {
         </button>
       </form>
     </dialog>
+    {cartelDeLaCampana}
+    </>
   )
 }
