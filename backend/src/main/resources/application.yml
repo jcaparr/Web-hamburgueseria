@@ -528,6 +528,13 @@ app:
         - ChIJ19ei2vvTvJURM0KsOaC-fRo
         # "Ribs al Río - Canning", Mariano Castex 2885.
         - ChIJ4bCEsIjXvJURlSXT2osFnEE
+        # Agregados a mano (#423). Google los clasifica como hamburger_restaurant, así que
+        # la regla ya los dejaría pasar; se anotan igual para asegurar que la limpieza no
+        # los saque.
+        # "Naked Lukas", Soler 6048 Local.
+        - ChIJ572XzPi1vJURWjKEnS-yYto
+        # "GRASA 2", 11 de Septiembre de 1888 3510.
+        - ChIJyUpdTgC1vJURllX-fnGzDes
       # La foto de portada elegida a mano, para los locales donde la regla no acierta.
       #
       # La regla sabe elegir una foto bien sacada —apaisada, grande, no una captura de
