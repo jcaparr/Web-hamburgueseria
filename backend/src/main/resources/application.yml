@@ -535,6 +535,9 @@ app:
         - ChIJ572XzPi1vJURWjKEnS-yYto
         # "GRASA 2", 11 de Septiembre de 1888 3510.
         - ChIJyUpdTgC1vJURllX-fnGzDes
+        # "BURGUER HOUSE PALERMO", Dr. Emilio Ravignani 1732: figura como hamburger_restaurant
+        # (#425). Se anota igual para asegurar que la limpieza no lo saque.
+        - ChIJdysOS0m1vJURf68MzlzNSZI
       # La foto de portada elegida a mano, para los locales donde la regla no acierta.
       #
       # La regla sabe elegir una foto bien sacada —apaisada, grande, no una captura de
@@ -565,6 +568,11 @@ app:
         # Aci2 Bar, Cucha Cucha 2595: la fachada con el cartel «El Bar» (#237). Es la primera
         # foto del local en Google, la que subió el propio bar.
         ChIJ96JLf5i3vJURMgf-h-YH-rM: "3024x1702|Aci2 Bar"
+        # Burguer House Palermo, Ravignani 1732: la bolsa con el logo y las hamburguesas smash
+        # (#425). La primera foto de Google es la fachada del edificio con el cartel de «Radio
+        # 750» y ninguna marca del local, y comparte tamaño y autor con otras dos, así que la
+        # huella no la podría fijar. Esta es la única de 3600x4800.
+        ChIJdysOS0m1vJURf68MzlzNSZI: "3600x4800|BURGUER HOUSE PALERMO"
         # American Way, Belgrano 4398: la hamburguesa con pepinillos, cheddar y carne
         # desmenuzada (#282). Es la única foto vertical de Julieta Di Marco; las otras
         # suyas son apaisadas o cuadradas.
